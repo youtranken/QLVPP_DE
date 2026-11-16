@@ -1,17 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { customRow, plan, planRow } from './arrivals-fixtures';
-import { CUSTOM_URL, PLAN, PLAN_URL, RECEIPT_URL, bodiesOf, box, callsTo, groupBtn, open, receiveAll, stub, type } from './arrivals-test-fixtures';
+import { CUSTOM_URL, PLAN, PLAN_URL, RECEIPT_URL, bodiesOf, box, callsTo, groupBtn, open, receiveAll, stub, type, confirmReceive, confirmAdmOut } from './arrivals-test-fixtures';
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('Nhận đủ hàng — lưu ngay, không hộp xác nhận', () => {
-  it('nhận 3/7 Bút bi → không hộp "khác bản in", 1 request gửi đúng 3', async () => {
+describe('Nhận đủ hàng — một hộp xác nhận rồi lưu', () => {
+  it('nhận 3/7 Bút bi → xác nhận, không hộp "khác bản in", 1 request gửi đúng 3', async () => {
     const f = stub({ plan: plan([planRow({ item_id: 'i-a', remaining: 7 }), planRow({ item_id: 'i-b', name: 'Kẹp giấy', remaining: 2 })]) });
     await open();
     await screen.findByDisplayValue('7');
     await type(box('Bút bi'), '3');
     await userEvent.click(groupBtn('Bút'));
+    await confirmReceive();
     await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(bodiesOf(f, RECEIPT_URL)[0].lines).toEqual([
@@ -20,7 +21,7 @@ describe('Nhận đủ hàng — lưu ngay, không hộp xác nhận', () => {
     ]);
   });
 
-  it('tick hai nhóm → 0 hộp, 1 request đúng body (expected_stock_qty = tủ, ym kỳ khóa, ghi chú)', async () => {
+  it('tick hai nhóm → một hộp xác nhận, 1 request đúng body (expected_stock_qty = tủ, ym kỳ khóa, ghi chú)', async () => {
     const f = stub();
     await open();
     await screen.findByDisplayValue('6');
@@ -207,6 +208,7 @@ describe('Món ngoài danh mục', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Ghi đã về: Kéo cắt giấy' }));
     await waitFor(() => expect(bodiesOf(f, CUSTOM_URL)).toEqual([{ line_key: key, qty: 1, expected_received: 1, snapshot_id: 's-1' }]));
     await userEvent.click(screen.getByRole('button', { name: 'NCC hết hàng: Kéo cắt giấy' }));
+    await confirmAdmOut();
     await waitFor(() => expect(callsTo(f, admUrl, 'PUT')).toEqual([admUrl]));
   });
 });

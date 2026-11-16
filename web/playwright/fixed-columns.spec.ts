@@ -94,7 +94,7 @@ for (const width of [768, 1024]) {
   }
 }
 
-// Nhận hàng: gõ thiếu (chữ "Nhập/NCC còn nợ", số Còn thiếu), nút nhóm đổi "Nhận đủ hàng" ↔ "Nhận hàng" — cột không được nhảy.
+// Nhận hàng: gõ thiếu (chữ "Nhập/NCC còn nợ", số Còn thiếu), nút nhóm đổi "Nhận đủ hàng" ↔ "Nhận theo số đã nhập" — cột không được nhảy.
 // Kỳ riêng của PW với bản gửi NCC thật; không bấm "NCC hết hàng" vì nút đó ghi xuống server
 test('Vòng7 Nhận hàng: cột đứng yên khi gõ thiếu/đủ và khi nút nhóm đổi chữ', async ({ page, request }, info) => {
   test.skip(isMobile(info), '390 xếp bảng thành thẻ');
@@ -120,7 +120,7 @@ test('Vòng7 Nhận hàng: cột đứng yên khi gõ thiếu/đủ và khi nút
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${width}px trang không cuộn ngang`).toBe(true);
       await box.fill('2');
       await expect(page.getByText('NCC còn nợ: 3', { exact: true })).toBeVisible();
-      await expect(page.getByRole('button', { name: /^Nhận hàng: / })).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Nhận theo số đã nhập: / })).toBeVisible();
       expect(await xs(), `${width}px gõ thiếu`).toEqual(base);
       await box.fill('5');
       await expect(page.getByRole('button', { name: /^Nhận đủ hàng: / })).toBeVisible();

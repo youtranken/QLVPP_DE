@@ -23,6 +23,7 @@ import { ArrivalsSource, ArrivalsToolbar } from './arrivals-toolbar';
 import { useAdmOutToggle, useArrivalsPlan, useArrivalsPlanCached } from './use-arrivals-plan';
 import { useArrivalsDraft } from './use-arrivals-draft';
 import { useArrivalsSave, type Notice } from './use-arrivals-save';
+import { useArrivalsConfirm } from './use-arrivals-confirm';
 import './arrivals.m1.css';
 
 const CLEAR_FILTER = { q: null, g: null, short: null };
@@ -86,6 +87,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
   const [params, patchUrl] = useUrlPatch();
   const draft = useArrivalsDraft();
   const saver = useArrivalsSave(ym);
+  const ask = useArrivalsConfirm();
   const adm = useAdmOutToggle(ym);
   const [note, setNote] = useState('');
   // Nhóm đã tick cho nút "Nhận đủ hàng / Nhận hàng (n nhóm)" trên thanh
@@ -107,7 +109,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
   const done = isAllArrived(plan);
   const nameOf = (id: string) => {
     const r = rows.find((x) => x.item_id === id);
-    return r ? fmt.name(r) : id;
+    return r ? fmt.name(r) : (plan.custom.find((c) => c.key === id)?.name ?? id);
   };
 
   const afterSide = async (code: string | null, saved?: number, failedYm?: string) => {
@@ -143,15 +145,16 @@ function ArrivalsBoard({ ym }: { ym: string }) {
   const pickedRows = rowsOfGroups(pickedIds);
   const toSend = receivableLines(pickedRows, draft.qtyOf);
 
-  // Lưu ngay, không hỏi xác nhận: xóa số đã gõ của các nhóm vừa lưu (ô gõ 0 về lại phần còn thiếu cho đợt sau),
-  // bỏ tick các nhóm vừa lưu;
-  // ghi chú đã đi theo đợt vừa lưu nên xóa để không gắn lại vào đợt sau
-  const receive = (groupIds: ReadonlySet<string>, lines: { row: ArrivalRow; qty: number }[]) =>
-    saver.save(lines, note, snapshot.id, () => {
+  // Hỏi một lần rồi lưu: xóa số đã gõ của các nhóm vừa lưu (ô gõ 0 về lại phần còn thiếu cho đợt sau),
+  // bỏ tick các nhóm vừa lưu; ghi chú đã đi theo đợt vừa lưu nên xóa để không gắn lại vào đợt sau
+  const receive = async (groupIds: ReadonlySet<string>, lines: { row: ArrivalRow; qty: number }[]) => {
+    if (!(await ask.receive(lines))) return;
+    await saver.save(lines, note, snapshot.id, () => {
       draft.clearMany(rowsOfGroups(groupIds).map((r) => r.item_id));
       setNote('');
       setPicked((prev) => new Set([...prev].filter((id) => !groupIds.has(id))));
     });
+  };
   const pickOf = (id: string) => {
     const rs = rowsOfGroups(new Set([id]));
     const lines = receivableLines(rs, draft.qtyOf);
@@ -169,6 +172,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
     };
   };
   const toggleAdm = async (key: string, on: boolean) => {
+    if (on && !(await ask.admOut(nameOf(key)))) return;
     const code = await adm.toggle(key, on);
     draft.clear(key);
     saver.setNotice(code ? { kind: 'error', code } : null);

@@ -20,8 +20,8 @@ describe('Nhận hàng — nhãn "Nhận đủ hàng" / "Nhận hàng"', () => {
     expect(groupBtn('Kẹp & dán')).toHaveTextContent('Nhận đủ hàng');
     expect(groupBtn('Kẹp & dán')).toHaveAccessibleName('Nhận đủ hàng: Kẹp & dán');
     await type(box('Kẹp 2'), '1');
-    expect(groupBtn('Kẹp & dán')).toHaveTextContent(/^Nhận hàng$/);
-    expect(groupBtn('Kẹp & dán')).toHaveAccessibleName('Nhận hàng: Kẹp & dán');
+    expect(groupBtn('Kẹp & dán')).toHaveTextContent(/^Nhận theo số đã nhập$/);
+    expect(groupBtn('Kẹp & dán')).toHaveAccessibleName('Nhận theo số đã nhập: Kẹp & dán');
     expect(groupBtn('Bút')).toHaveAccessibleName('Nhận đủ hàng: Bút');
     await type(box('Kẹp 2'), '4');
     expect(groupBtn('Kẹp & dán')).toHaveAccessibleName('Nhận đủ hàng: Kẹp & dán');
@@ -31,7 +31,7 @@ describe('Nhận hàng — nhãn "Nhận đủ hàng" / "Nhận hàng"', () => {
     stub({ plan: plan([BUT, ...KEP, planRow({ item_id: 'k3', name: 'Kẹp 3', category_id: 'c-kep', adm_out: true })]) });
     await open();
     await screen.findByDisplayValue('6');
-    expect(groupBtn('Kẹp & dán')).toHaveAccessibleName('Nhận hàng: Kẹp & dán');
+    expect(groupBtn('Kẹp & dán')).toHaveAccessibleName('Nhận theo số đã nhập: Kẹp & dán');
   });
 
   it('nút trên thanh theo các nhóm đã tick: "Nhận đủ hàng (1 nhóm)" → gõ thiếu trong nhóm đã tick → "Nhận hàng (1 nhóm)"', async () => {
@@ -43,7 +43,7 @@ describe('Nhận hàng — nhãn "Nhận đủ hàng" / "Nhận hàng"', () => {
     await type(box('Bút 1'), '2');
     expect(pickedBtn()).toHaveAccessibleName('Nhận đủ hàng (1 nhóm)');
     await type(box('Kẹp 1'), '2');
-    expect(pickedBtn()).toHaveAccessibleName('Nhận hàng (1 nhóm)');
+    expect(pickedBtn()).toHaveAccessibleName('Nhận theo số đã nhập (1 nhóm)');
   });
 
   it('nhập dư (đề nghị 8, gõ 10) → "Dư 2", không "Thiếu 8"; nhóm vẫn "Nhận đủ hàng"', async () => {

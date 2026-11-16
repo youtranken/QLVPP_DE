@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { plan, planRow } from './arrivals-fixtures';
-import { GROUP_BTN, PLAN, PLAN_URL, RECEIPT_URL, bodiesOf, box, callsTo, groupBtn, open, pickBox, pickedBtn, stub, type } from './arrivals-test-fixtures';
+import { GROUP_BTN, PLAN, PLAN_URL, RECEIPT_URL, bodiesOf, box, callsTo, groupBtn, open, pickBox, pickedBtn, stub, type, confirmReceive, confirmAdmOut } from './arrivals-test-fixtures';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -26,6 +26,7 @@ describe('Nhận hàng — "Nhận đủ hàng" theo nhóm', () => {
     await userEvent.click(pickBox('Kẹp & dán'));
     expect(pickBox('Kẹp & dán')).toBeChecked();
     await userEvent.click(pickedBtn());
+    await confirmReceive();
     await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(bodiesOf(f, RECEIPT_URL)[0].lines).toEqual([
@@ -36,12 +37,13 @@ describe('Nhận hàng — "Nhận đủ hàng" theo nhóm', () => {
     await waitFor(() => expect(pickBox('Kẹp & dán')).not.toBeChecked());
   });
 
-  it('nút "Nhận đủ hàng" đầu nhóm lưu ngay nhóm đó (1 POST, không hộp), giữ số đang gõ ở nhóm khác', async () => {
+  it('nút "Nhận đủ hàng" đầu nhóm xác nhận rồi lưu nhóm đó (1 POST), giữ số đang gõ ở nhóm khác', async () => {
     const f = stub({ plan: plan([BUT, ...KEP]) });
     await open();
     await screen.findByDisplayValue('6');
     await type(box('Bút 1'), '2');
     await userEvent.click(groupBtn('Kẹp & dán'));
+    await confirmReceive();
     await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(bodiesOf(f, RECEIPT_URL)[0].lines.map((l: { item_id: string }) => l.item_id)).toEqual(['k1', 'k2', 'k4']);
@@ -55,11 +57,13 @@ describe('Nhận hàng — "Nhận đủ hàng" theo nhóm', () => {
     await screen.findByDisplayValue('6');
     await type(box('Kẹp 2'), '0');
     await userEvent.click(groupBtn('Kẹp & dán'));
+    await confirmReceive();
     await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1));
     expect(bodiesOf(f, RECEIPT_URL)[0].lines.map((l: { item_id: string }) => l.item_id)).toEqual(['k1', 'k4']);
     expect(await screen.findByText('Đã nhập 2 món vào tủ.')).toBeInTheDocument();
     await waitFor(() => expect(box('Kẹp 2')).toHaveValue(4));
     await userEvent.click(groupBtn('Kẹp & dán'));
+    await confirmReceive();
     await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(2));
     expect(bodiesOf(f, RECEIPT_URL)[1].lines.map((l: { item_id: string }) => l.item_id)).toContain('k2');
   });
@@ -70,6 +74,7 @@ describe('Nhận hàng — "Nhận đủ hàng" theo nhóm', () => {
     await screen.findByDisplayValue('6');
     await userEvent.type(screen.getByLabelText('Ghi chú cho đợt này (không bắt buộc)'), 'đợt 1');
     await userEvent.click(groupBtn('Kẹp & dán'));
+    await confirmReceive();
     await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1));
     const body = bodiesOf(f, RECEIPT_URL)[0];
     expect(body.lines.map((l: { item_id: string }) => l.item_id)).toEqual(['i-b']);
@@ -109,6 +114,7 @@ describe('Hàng về — NCC hết hàng', () => {
     const btn = screen.getByRole('button', { name: 'NCC hết hàng: Bút bi' });
     expect(btn).toHaveAttribute('aria-pressed', 'false');
     await userEvent.click(btn);
+    await confirmAdmOut();
     await waitFor(() => expect(btn).toHaveAttribute('aria-pressed', 'true'));
     expect(callsTo(f, ADM_URL, 'PUT')).toEqual([`${ADM_URL}i-a`]);
     expect(box('Bút bi')).toHaveValue(0);

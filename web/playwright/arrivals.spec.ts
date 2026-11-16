@@ -7,15 +7,16 @@ asRole('admin');
 
 const fitsWidth = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
-// Tick mọi nhóm đang hiện (đã lọc theo tag của seed) rồi bấm "Nhận đủ hàng / Nhận hàng (n nhóm)": lưu ngay, không hộp xác nhận
+// Tick mọi nhóm đang hiện (đã lọc theo tag của seed) rồi bấm "Nhận đủ hàng / Nhận theo số đã nhập (n nhóm)" → hộp "Ghi n món vào tủ?" → "Ghi vào tủ"
 async function receivePicked(page: Page) {
   const boxes = page.getByRole('checkbox', { name: /^Chọn nhóm / });
   for (const box of await boxes.all()) if (await box.isEnabled()) await box.check();
-  await page.getByRole('button', { name: /^Nhận (đủ )?hàng \(\d+ nhóm\)$/ }).click();
+  await page.getByRole('button', { name: /^Nhận (đủ hàng|theo số đã nhập) \(\d+ nhóm\)$/ }).click();
+  await page.getByRole('dialog', { name: /vào tủ\?$/ }).getByRole('button', { name: 'Ghi vào tủ' }).click();
 }
 
 test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
-  test('Vòng3-HV lưu thiếu rồi lưu nốt: gõ thiếu ra hai dòng "Nhập: n" / "NCC còn nợ: m", chip theo số đã lưu, cột Còn thiếu luôn có; nút nhóm "Nhận hàng"/"Nhận đủ hàng", không hộp xác nhận', async ({ page, request }, info) => {
+  test('Vòng3-HV lưu thiếu rồi lưu nốt: gõ thiếu ra hai dòng "Nhập: n" / "NCC còn nợ: m", chip theo số đã lưu, cột Còn thiếu luôn có; nút nhóm "Nhận theo số đã nhập"/"Nhận đủ hàng", một hộp xác nhận', async ({ page, request }, info) => {
     // Kỳ riêng của PW: bản in thật của server (chỉ món PW), không ghi vào kỳ trước thật trên dev
     const release = await acquireLock('prev-period');
     clearPrivateSnapshots();
@@ -53,7 +54,7 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
       await expect(page.getByRole('columnheader', { name: 'Còn thiếu' })).toBeVisible();
       await expect(rowA.getByText('Nhập: 2', { exact: true })).toBeVisible();
       await expect(rowA.getByText('NCC còn nợ: 3', { exact: true })).toBeVisible();
-      await expect(page.getByRole('button', { name: /^Nhận hàng: / })).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Nhận theo số đã nhập: / })).toBeVisible();
       await settled(page);
       await shot(page, info, 'arrivals-partial');
       if (isMobile(info)) {
@@ -124,7 +125,7 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
       await expect(page.getByText(`Chưa gửi NCC báo cáo tháng ${month}. Vào Báo cáo & gửi NCC để chốt trước khi nhận hàng.`)).toBeVisible();
       await expect(page.getByRole('main').getByRole('link', { name: 'Báo cáo & gửi NCC', exact: true }).last()).toHaveAttribute('href', '/admin/reports');
       await expect(page.getByRole('spinbutton', { name: /^Nhận đợt này: / })).toHaveCount(0);
-      await expect(page.getByRole('button', { name: /^Nhận (đủ )?hàng/ })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: /^Nhận (đủ hàng|theo số đã nhập)/ })).toHaveCount(0);
       const res = await request.post('/api/admin/stock/receipts', {
         headers: devHeaders('admin'),
         data: { ym: PRIVATE_YM, lines: [{ item_id: a.id, qty: 1, expected_stock_qty: 0 }] },

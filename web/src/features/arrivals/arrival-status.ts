@@ -42,4 +42,9 @@ export function groupCounts(rows: ArrivalRow[]): { done: number; total: number }
   return { total: rows.length, done: rows.filter((r) => FINISHED.has(savedState(r).state)).length };
 }
 
-export const shortOf = (r: ArrivalRow, qty: number): number => (r.adm_out ? 0 : Math.max(0, r.ordered - r.received - qty));
+// Cột Còn thiếu đọc cùng số với ô Tình trạng bên cạnh (chip đã lưu "Thiếu n" hoặc "NCC còn nợ: n" khi gõ thiếu)
+export function shortOf(r: ArrivalRow, qty: number): number {
+  const cell = statusCell(r, qty);
+  if (cell.kind === 'owe') return cell.n;
+  return cell.status.state === 'short' ? cell.status.n : 0;
+}

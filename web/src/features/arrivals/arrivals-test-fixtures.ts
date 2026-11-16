@@ -69,19 +69,28 @@ export async function type(el: HTMLElement, text: string) {
   if (text) await userEvent.type(el, text);
 }
 // Nút trên thanh: "Nhận đủ hàng (n nhóm)" hoặc "Nhận hàng (n nhóm)" khi có nhóm không nhận đủ được
-export const pickedBtn = () => screen.getByRole('button', { name: /^Nhận (đủ )?hàng \(\d+ nhóm\)$/ });
+export const pickedBtn = () => screen.getByRole('button', { name: /^Nhận (đủ hàng|theo số đã nhập) \(\d+ nhóm\)$/ });
 export const pickBox = (group: string) => screen.getByRole('checkbox', { name: `Chọn nhóm ${group}` });
 // Nút đầu nhóm: chữ "Nhận đủ hàng"/"Nhận hàng", aria-label kèm tên nhóm
-export const GROUP_BTN = /^Nhận (đủ )?hàng: /;
+export const GROUP_BTN = /^Nhận (đủ hàng|theo số đã nhập): /;
 export const groupBtn = (group: string) => within(screen.getByRole('rowgroup', { name: group })).getByRole('button', { name: GROUP_BTN });
 // Tick mọi nhóm rồi bấm nút trên thanh: lưu mọi dòng còn nhận được
 export async function receiveAll(groups = ['Bút', 'Kẹp & dán']) {
   for (const g of groups) await userEvent.click(pickBox(g));
   await userEvent.click(pickedBtn());
+  await confirmReceive();
 }
 
 export async function open(path = '/admin/arrivals', width = 1280) {
   mockViewport(width);
   renderApp(makeMe('admin'), path);
   await screen.findByRole('heading', { level: 1, name: 'Nhận hàng kỳ tháng 10' });
+}
+
+// Nhận hàng và "NCC hết hàng" hỏi trước khi ghi kho
+export async function confirmReceive() {
+  await userEvent.click(within(await screen.findByRole('dialog', { name: /vào tủ\?$/ })).getByRole('button', { name: 'Ghi vào tủ' }));
+}
+export async function confirmAdmOut() {
+  await userEvent.click(within(await screen.findByRole('dialog', { name: /^NCC hết hàng: / })).getByRole('button', { name: 'Đánh dấu NCC hết hàng' }));
 }

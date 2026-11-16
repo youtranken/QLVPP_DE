@@ -6,7 +6,7 @@ import { mockViewport } from '@/test/viewport';
 import { expectFixedColumns } from '@/test/fixed-columns';
 import i18n from '@/lib/i18n';
 import { plan, planRow } from './arrivals-fixtures';
-import { FUTURE, PLAN, RECEIPT_URL, bodiesOf, box, groupBtn, open, pickBox, pickedBtn, stub, type } from './arrivals-test-fixtures';
+import { FUTURE, PLAN, RECEIPT_URL, bodiesOf, box, groupBtn, open, pickBox, pickedBtn, stub, type, confirmReceive } from './arrivals-test-fixtures';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -63,18 +63,18 @@ describe('Hàng về — bảng theo bản in', () => {
     expect(box('Bút bi')).toBeEnabled();
   });
 
-  it('cột "Còn thiếu" luôn có: gõ đủ → "—", gõ thiếu → số thiếu; bảng cột cố định (gõ số, đổi nút nhóm không làm cột nhảy)', async () => {
+  it('cột "Còn thiếu" luôn có, cùng số với Tình trạng: chưa lưu → 6 (Thiếu 6), gõ thiếu 4 → 2; bảng cột cố định (gõ số, đổi nút nhóm không làm cột nhảy)', async () => {
     stub();
     await open();
     await screen.findByDisplayValue('6');
     expectFixedColumns(screen.getByRole('table', { name: 'Hàng về theo món' }), { cssWidths: true });
     const shortCell = () => within(rowOf('Bút bi')).getAllByRole('cell')[4];
     expect(screen.getByRole('columnheader', { name: 'Còn thiếu' })).toBeInTheDocument();
-    expect(shortCell()).toHaveTextContent('—');
+    expect(shortCell()).toHaveTextContent('6');
     await type(box('Bút bi'), '4');
     expect(shortCell()).toHaveTextContent('2');
     await type(box('Bút bi'), '6');
-    expect(shortCell()).toHaveTextContent('—');
+    expect(shortCell()).toHaveTextContent('6');
     expect(screen.getByRole('columnheader', { name: 'Còn thiếu' })).toBeInTheDocument();
   });
 
@@ -166,6 +166,7 @@ describe('Hàng về — bảng theo bản in', () => {
     expect(await screen.findByText('Ngừng dùng — đã đặt trong bản in')).toBeInTheDocument();
     expect(box('Món ngừng')).toBeEnabled();
     await userEvent.click(groupBtn('Bút'));
+    await confirmReceive();
     await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1));
     expect(bodiesOf(f, RECEIPT_URL)[0].lines).toEqual([{ item_id: 'i-off', qty: 3, expected_stock_qty: 1 }]);
   });
@@ -253,6 +254,7 @@ describe('Hàng về — lọc ?q=&g=&short=1', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Kẹp & dán 1' }));
     await userEvent.click(pickBox('Kẹp & dán'));
     await userEvent.click(pickedBtn());
+    await confirmReceive();
     await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1));
     expect(bodiesOf(f, RECEIPT_URL)[0].lines).toEqual([
       { item_id: 'i-a', qty: 5, expected_stock_qty: 2 },
