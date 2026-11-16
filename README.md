@@ -167,6 +167,9 @@ PW_SA_PASSWORD='<mật-khẩu-dev>' npx playwright test
   bảng/cột trỏ tới phiếu, món, người hoặc kỳ phải cập nhật script cùng lúc. Test chỉ ghi lên dữ liệu tự gieo
   (`seedPwItem`, `seedActiveUser`; kiểm bằng `web/src/test/playwright-data-policy.test.ts`); dữ liệu PW lỡ ghi lên
   món/phiếu thật thì script không nhận ra, phải dọn tay một lần.
+- Dữ liệu mẫu giao diện (8 người `mau-*`, phiếu kỳ 11/12/2027-01, món ngoài DM, tồn tủ) cho rà soát và Playwright của plan giao diện A — chỉ DB dev:
+  `docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < web/playwright/fixtures/mau-cleanup.sql` rồi `… < web/playwright/fixtures/mau-seed.sql`
+  (seed dừng nếu đã có `mau-*`; cleanup gỡ cả giao hàng, điều chỉnh, chuông làm thêm qua API và trả lại tồn tủ).
 - Không mạng tải Chromium: đặt `PW_CHROMIUM_PATH=/đường/dẫn/chrome`.
 - Ảnh chụp màn `web/test-results/screens/`, báo cáo `web/playwright-report/` — không commit.
 - Fixture ảnh EXIF xoay 6: `python3 web/scripts/make-exif6-fixture.py web/src/test/fixtures/exif6.jpg` (Pillow).

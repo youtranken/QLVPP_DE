@@ -148,3 +148,14 @@ Mockup: Claude Design canvas "VPP — 3 hướng giao diện mới", trang "Tổ
 - G5 **chốt (mockup G5Kho, G5SoCai)**: Tủ / Kho hai tab "Tồn kho" / "Lịch sử nhập xuất" (sổ cái toàn kho theo tháng, lọc Nhập/Giao/Xuất lẻ/Trả lại, chỉ đọc, API mới); hai nhãn tách nghĩa: "Sắp hết" = trong tủ ≤ mức đặt lại (giữ FR-50), "Thiếu kỳ này n" = (còn phải giao kỳ đang giao + còn nợ) − trong tủ khi > 0; cột "Mức đặt lại", "Cần thêm".
 - G9 **chốt**: món trong danh mục chưa có ảnh → biểu tượng theo nhóm trên nền nhạt màu nhóm (nhóm chưa có biểu tượng → hộp chung); món ngoài danh mục chưa ảnh → ô "?" viền đứt.
 - G2 bổ sung **chốt**: dòng đã giao một phần chỉ "Giảm còn n" với n ≥ số đã giao; "Từ chối" = hủy phần còn chờ, giữ số đã giao.
+
+## H. Giao diện A (chủ dự án, 15/11/2026)
+
+Mockup: canvas https://claude.ai/artifact/Jow9EJotq5TXajAxVfqizq (bảng "Thang bo góc", "Bộ nút · ô nhập · dropdown · popup đề xuất (A)"). Plan `docs/superpowers/plans/2026-11-15-port-giao-dien-a.md`.
+- Thang bo góc A: `--r-xs 4 · --r-sm 6 · --r-md 8 · --r-lg 8 · --r-xl 12`. Nút, ô nhập, ô chọn, ô tìm, chip lọc = 6; thẻ, khung bảng, menu thả, popover = 8; hộp thoại, ngăn kéo, sheet = 12. `--r-pill` chỉ cho nhãn trạng thái, số đếm, avatar, công tắc, thanh tiến độ, chấm.
+- Một màu nút chính `--c-acc` cho cả trang nhân viên và Adm D&E.
+- Một họ điều khiển thanh công cụ (ô tìm, ô chọn, nhóm lọc) cao 40px, 44px trên màn cảm ứng; nhóm lọc dưới 480px thu thành ô chọn.
+- Khung popup chung: tiêu đề + dòng phụ, thân cuộn, chân đứng yên (nút chính bên phải); ≤ 640px thành sheet nền đặc.
+- Nút đóng biểu tượng "Đóng" / "Close"; hủy thao tác "Hủy" / "Cancel"; hộp xác nhận lưu phiếu "Quay lại sửa" + "Lưu phiếu". Không dùng "Quay lại" / "← Đóng" làm nút đóng popup.
+- Nút bị khóa luôn hiện lý do, nối bằng `aria-describedby`.
+- Tên app "QLVPP" ở mọi chỗ (Q2). H9: "Thay thế bản Excel gửi NCC lúc …" / "Thay thế bản in gửi NCC lúc …" (Q3).
