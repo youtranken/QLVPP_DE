@@ -110,7 +110,7 @@ const reports: Messages<typeof vi> = {
       whoFailed: "Couldn't load who signed up for each item.",
       who: '{{count}} people',
       whoLabel: 'See who signed up for {{name}} ({{count}} people)',
-      changedTag: 'Changed since print',
+      changedTag: 'Changed since print: {{was}} → {{now}}',
       status: {
         sent: 'Sent to supplier {{time}}',
         changed: '{{n}} items changed since this copy',

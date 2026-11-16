@@ -15,17 +15,19 @@ export const initialFromSent = (sent: SnapshotData | undefined): Record<string, 
 
 // Món đã đổi sau bản đã gửi: cần nay + phần đã xong sau bản (giao, hủy vì NCC hết hàng) ≠ cần lúc chốt, món mới có.
 // Món rời báo cáo sống (mọi dòng đã giao/hủy hết) chỉ tính đổi khi phần đã xong không bù đủ cần lúc chốt — nhận rồi giao hết hàng kỳ này không phải thay đổi đơn
-export function changedKeys(report: Pick<MonthReport, 'byItem' | 'custom'>, sent: SentSnapshot | null, settled: Record<string, number>): Set<string> {
-  const out = new Set<string>();
+export function changedKeys(report: Pick<MonthReport, 'byItem' | 'custom'>, sent: SentSnapshot | null, settled: Record<string, number>): Map<string, { was: number; now: number }> {
+  const out = new Map<string, { was: number; now: number }>();
   if (!sent) return out;
-  const was = new Map([...sent.data.byItem, ...sent.data.custom].map((r) => [r.key, r]));
+  const before = new Map([...sent.data.byItem, ...sent.data.custom].map((r) => [r.key, r]));
   const live = new Set<string>();
   for (const r of [...report.byItem, ...report.custom]) {
     live.add(r.key);
-    const old = was.get(r.key);
-    if (!old || activeNeed(r) + (settled[r.key] ?? 0) !== basisNeedOf(sent.data, old)) out.add(r.key);
+    const old = before.get(r.key);
+    const now = activeNeed(r) + (settled[r.key] ?? 0);
+    const was = old ? basisNeedOf(sent.data, old) : 0;
+    if (!old || now !== was) out.set(r.key, { was, now });
   }
-  for (const [key, old] of was) if (!live.has(key) && (sent.data.order_qty[key] ?? 0) > 0 && (settled[key] ?? 0) !== basisNeedOf(sent.data, old)) out.add(key);
+  for (const [key, old] of before) if (!live.has(key) && (sent.data.order_qty[key] ?? 0) > 0 && (settled[key] ?? 0) !== basisNeedOf(sent.data, old)) out.set(key, { was: basisNeedOf(sent.data, old), now: settled[key] ?? 0 });
   return out;
 }
 

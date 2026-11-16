@@ -93,8 +93,23 @@ describe('Báo cáo & gửi NCC: đầu trang và trạng thái', () => {
     await screen.findByRole('spinbutton', { name: 'Đề nghị: Bút bi' });
     expect(statuses()[0]).toHaveTextContent('có 1 món đổi sau bản này');
     const rows = screen.getAllByRole('row');
-    expect(within(rows.find((r) => r.textContent?.includes('Giấy A4'))!).getByText('Đổi sau bản in')).toBeInTheDocument();
-    expect(within(rows.find((r) => r.textContent?.includes('Bút bi'))!).queryByText('Đổi sau bản in')).toBeNull();
+    expect(within(rows.find((r) => r.textContent?.includes('Giấy A4'))!).getByText('Đổi sau bản in: 3 → 4')).toBeInTheDocument();
+    expect(within(rows.find((r) => r.textContent?.includes('Bút bi'))!).queryByText(/Đổi sau bản in/)).toBeNull();
+  });
+
+  it('"có 1 món đổi sau bản này" là nút: bấm → bảng chỉ còn dòng có nhãn "Đổi sau bản in"; bấm lại → đủ dòng', async () => {
+    const changed = sendReport([PEN, itemRow({ key: 'kB', name: 'Giấy A4', requested: 4, need: 4 })]);
+    setupSendAdm({ report: changed, state: sentState(sentData(REPORT, { kA: 5, kB: 3 })) });
+    open();
+    await screen.findByRole('spinbutton', { name: 'Đề nghị: Bút bi' });
+    const only = screen.getByRole('button', { name: 'có 1 món đổi sau bản này' });
+    expect(only).toHaveAttribute('aria-pressed', 'false');
+    await userEvent.click(only);
+    expect(only).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('spinbutton', { name: 'Đề nghị: Bút bi' })).toBeNull();
+    expect(screen.getByRole('spinbutton', { name: 'Đề nghị: Giấy A4' })).toBeInTheDocument();
+    await userEvent.click(only);
+    expect(screen.getByRole('spinbutton', { name: 'Đề nghị: Bút bi' })).toBeInTheDocument();
   });
 
   it('chưa gửi: "Chưa gửi NCC"; có món ngoài DM chờ duyệt → không ghi "n món … chờ duyệt", chỉ còn link "Xem" (nhãn đủ nghĩa)', async () => {

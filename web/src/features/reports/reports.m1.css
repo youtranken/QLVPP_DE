@@ -15,12 +15,15 @@
 [data-shell='admin'] .table .dt-group:has(.bc-group[data-tone='g6']) th { background: var(--g6); color: var(--g6-ink); }
 [data-shell='admin'] .table .dt-group:has(.bc-group[data-tone='g7']) th { background: var(--g7); color: var(--g7-ink); }
 [data-shell='admin'] .bc-table td.bc-order-col { padding-top: 8px; padding-bottom: 8px; }
+/* Dòng lỗi lấy chỗ của phần đệm ô (2 + 14 ≤ 16): báo lỗi không làm dòng cao lên, bảng không nhảy khi gõ */
+[data-shell='admin'] .bc-table td.bc-order-col:has(.bc-order__error) { padding-top: 0; padding-bottom: 0; }
+[data-shell='admin'] .bc-order:has(.bc-order__error) { row-gap: 2px; }
 [data-shell='admin'] .bc-table tr.has-error td { background: var(--c-danger-tint); }
 [data-shell='admin'] .bc-order { display: inline-grid; grid-template-columns: auto auto; justify-content: end; align-items: center; gap: 4px var(--s-2); }
 /* Ô Đề nghị là Stepper cỡ sm chung (viền đỏ khi sai do .stepper.is-invalid); số đã sửa tô nền vàng cả viên */
 [data-shell='admin'] .bc-order__box { grid-column: 2; width: 136px; }
 [data-shell='admin'] .bc-order.is-edited .bc-order__box { background: var(--c-warn-soft); }
-[data-shell='admin'] .bc-order__error { grid-column: 1 / -1; margin: 0; font: var(--t-sm); color: var(--c-danger); text-align: right; }
+[data-shell='admin'] .bc-order__error { grid-column: 1 / -1; margin: 0; font: var(--t-cap); line-height: 14px; color: var(--c-danger); text-align: right; }
 [data-shell='admin'] .bc-order__over { grid-column: 1 / -1; justify-self: end; margin: 0; padding: 0 var(--s-2); border-radius: var(--r-sm); background: var(--c-warn-soft); color: var(--c-warn); font: var(--t-cap); font-weight: 600; }
 [data-shell='admin'] .bc-snap-error { align-items: center; flex-wrap: wrap; }
 @media (max-width: 767px) {
@@ -34,7 +37,13 @@
 /* min-height: lúc đang tải (chỉ có h1) cao bằng lúc có hàng nút, tiêu đề không nhảy */
 [data-shell='admin'] .bc-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s-3) var(--s-4); min-height: var(--hit); }
 [data-shell='admin'] .bc-head h1 { margin: 0; font: var(--t-h1); letter-spacing: -0.02em; }
-[data-shell='admin'] .bc-head__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin-left: auto; }
+/* Hàng nút co trước (dòng trạng thái tự xuống dòng bên trong) để không rớt cả cụm xuống hàng mới làm bảng tụt */
+[data-shell='admin'] .bc-head__actions { display: flex; flex: 1 1 24rem; flex-wrap: nowrap; justify-content: flex-end; align-items: center; gap: var(--s-2); min-width: 0; margin-left: auto; }
+[data-shell='admin'] .bc-head__actions > .bc-status--inline { flex: 0 1 auto; min-width: 0; }
+/* Chuột (không chạm): link trong dòng trạng thái cao theo chữ để dòng co thành hai hàng vẫn ≤ 44px như nút bên cạnh */
+@media (pointer: fine) and (min-width: 768px) {
+  [data-shell='admin'] .bc-status--inline a, [data-shell='admin'] .bc-status--inline button { min-height: 0; }
+}
 [data-shell='admin'] .bc-status { margin: 0; padding: var(--s-3) var(--s-4); border-radius: var(--r-md); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); font: var(--t-body); }
 [data-shell='admin'] .bc-status[data-tone='ok'] { background: var(--c-ok-soft); }
 [data-shell='admin'] .bc-status[data-tone='warn'] { background: var(--c-warn-soft); }
@@ -55,7 +64,8 @@
   [data-shell='admin'] .bc-table td:last-child { padding-right: var(--s-4); }
 }
 @media (max-width: 767px) {
-  [data-shell='admin'] .bc-head__actions { margin-left: 0; width: 100%; }
+  [data-shell='admin'] .bc-head__actions { flex-wrap: wrap; margin-left: 0; width: 100%; }
+  [data-shell='admin'] .bc-status a { display: inline-flex; align-items: center; min-width: var(--hit); min-height: var(--hit); }
   /* Xuống dòng thì dấu "·" đứng lẻ đầu dòng: bỏ dấu, tách bằng khoảng cách */
   [data-shell='admin'] .bc-status__sep { display: none; }
   [data-shell='admin'] .bc-status--inline { gap: var(--s-1) var(--s-3); }

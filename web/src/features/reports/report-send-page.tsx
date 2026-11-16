@@ -92,6 +92,7 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
   const qty = useOrderQty(report, { baseOf: defaultOrder, initial: editable ? initialFromSent(sent?.data) : undefined });
   const changed = useChangedKeys(report, editable ? sent : null, send.settledSince);
   const [onlyNeed, setOnlyNeed] = useState(false);
+  const [onlyChanged, setOnlyChanged] = useState(false);
   const [whoKey, setWhoKey] = useState<string | null>(null);
   const settled = !items.isPending && !cats.isPending;
   const source = editable ? report : (sent?.data ?? report);
@@ -101,7 +102,7 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
     const byKey = new Map(orderRows.map((r) => [r.key, r]));
     return part1Rows(source, items.data, cats.data, { progress: report.progress, sent: editable ? null : (sent?.data ?? null) }).map((r) => {
       const o = byKey.get(r.id);
-      return { ...r, order: editable && o ? orderOf(qty, o) : r.n.order, changed: changed.has(r.id) };
+      return { ...r, order: editable && o ? orderOf(qty, o) : r.n.order, changed: changed.get(r.id) ?? null };
     });
   }, [settled, source, items.data, cats.data, report.progress, editable, sent, orderRows, qty, changed]);
   const invalidPeriod = () => {
@@ -141,7 +142,8 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
     dirty.mark();
     snap.takeNow('print');
   };
-  const visible = onlyNeed ? tableRows.filter((r) => r.n.want > 0) : tableRows;
+  const showChanged = onlyChanged && changed.size > 0;
+  const visible = tableRows.filter((r) => (!onlyNeed || r.n.want > 0) && (!showChanged || r.changed));
   const openSent = (xlsx: boolean) => (sent ? (xlsx ? void files.run(sent.id) : setPreview(sent.data)) : undefined);
   const actions = editable ? (
     <>
@@ -161,7 +163,7 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
       <Heading ym={report.ym} open={open} onMonth={onMonth}>
         <Switch checked={onlyNeed} text={t('reports.part1.onlyNeed')} onChange={setOnlyNeed} />
         <div className="bc-head__actions">
-          <ReportStatusLine send={send} rowsChanged={changed.size} pendingCustom={report.pending_custom_count} ym={report.ym} onReprint={sent ? () => void printer.print(sent.data) : undefined} reprinting={printer.pending} />
+          <ReportStatusLine send={send} rowsChanged={changed.size} pendingCustom={report.pending_custom_count} ym={report.ym} onReprint={sent ? () => void printer.print(sent.data) : undefined} reprinting={printer.pending} onlyChanged={showChanged} onToggleChanged={() => setOnlyChanged((v) => !v)} />
           {actions}
         </div>
       </Heading>

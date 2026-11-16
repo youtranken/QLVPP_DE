@@ -12,7 +12,7 @@ import type { OrderError } from './use-order-qty';
 export interface ItemTableRow extends Part1Row {
   // Số Đề nghị đang hiện: ô nhập (kỳ khóa gần nhất) hoặc số của bản đã gửi (kỳ cũ hơn)
   order: number;
-  changed: boolean;
+  changed: { was: number; now: number } | null;
 }
 
 interface Props {
@@ -82,7 +82,7 @@ export function ReportItemTable({ rows, cats, loading, empty, editable, value, e
           <span className="bc-item">
             <b className="bc-item__name">{part1Name(r, i18n.language)}</b>
             {r.packNote && <small className="bc-item__note">{r.packNote}</small>}
-            {r.changed && <span className="tag tag--warn">{t('reports.send.changedTag')}</span>}
+            {r.changed && <span className="tag tag--warn">{t('reports.send.changedTag', r.changed)}</span>}
           </span>
         ),
       },

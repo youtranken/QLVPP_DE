@@ -106,7 +106,7 @@ const reports = {
       whoFailed: 'Chưa tải được ai đăng ký từng món.',
       who: '{{count}} người',
       whoLabel: 'Xem ai đăng ký {{name}} ({{count}} người)',
-      changedTag: 'Đổi sau bản in',
+      changedTag: 'Đổi sau bản in: {{was}} → {{now}}',
       status: {
         sent: 'Đã gửi NCC {{time}}',
         changed: 'có {{n}} món đổi sau bản này',

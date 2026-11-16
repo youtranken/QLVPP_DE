@@ -34,7 +34,7 @@ export function ReportOrderInput({ name, value, error, overMax = false, onChange
       />
       {error && (
         <small id={noteId} className="bc-order__error">
-          {t(error === 'sent' ? 'sendAdm.orders.invalidSent' : 'sendAdm.orders.invalid')}
+          {t(`sendAdm.orders.error.${error}`)}
         </small>
       )}
       {!error && overMax && (

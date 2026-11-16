@@ -13,8 +13,7 @@ const sendAdm: Messages<typeof vi> = {
       need: 'Total requested',
       qty: 'Order',
       qtyLabel: 'Request: {{name}}',
-      invalid: 'Max 1,000',
-      invalidSent: 'The sent copy has this number; the max is now 1,000, please fix',
+      error: { max: 'Max 1,000', sent: 'The sent copy has this number; the max is now 1,000, please fix', decimal: 'Enter a whole number', negative: 'Enter a number from 0', invalid: 'Enter a number from 0 to 1,000' },
       overMax: 'Over 1,000, please check',
     },
     leave: {

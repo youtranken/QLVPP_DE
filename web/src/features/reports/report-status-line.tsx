@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { SendState } from '@/features/send-adm/use-send-state';
@@ -11,6 +12,8 @@ interface Props {
   ym: string;
   onReprint?: () => void;
   reprinting?: boolean;
+  onlyChanged?: boolean;
+  onToggleChanged?: () => void;
 }
 
 // Dấu chấm chỉ để nhìn; điện thoại ẩn đi (dùng khoảng cách) để không đứng lẻ đầu dòng khi xuống dòng
@@ -21,17 +24,29 @@ const Sep = () => (
 );
 
 // Nằm trên hàng tiêu đề, ngay trước Xuất Excel (vòng 4 mục 9), chấm tròn theo tone
-export function ReportStatusLine({ send, rowsChanged, pendingCustom, ym, onReprint, reprinting = false }: Props) {
+export function ReportStatusLine({ send, rowsChanged, pendingCustom, ym, onReprint, reprinting = false, onlyChanged = false, onToggleChanged }: Props) {
   const { t } = useTranslation();
-  const { tone, parts } = reportStatus(send, rowsChanged, t);
+  const { tone, parts, changed } = reportStatus(send, rowsChanged, t);
   return (
     <span className="bc-status bc-status--inline" role="status" data-tone={tone}>
       {parts.map((p, i) => (
-        <span key={i}>
+        <Fragment key={i}>
           {i > 0 && <Sep />}
-          {p}
-        </span>
+          <span>{p}</span>
+        </Fragment>
       ))}
+      {changed && (
+        <>
+          <Sep />
+          {onToggleChanged ? (
+            <button type="button" className="sa-link" aria-pressed={onlyChanged} onClick={onToggleChanged}>
+              {changed}
+            </button>
+          ) : (
+            changed
+          )}
+        </>
+      )}
       {pendingCustom > 0 && (
         <>
           <Sep />

@@ -185,7 +185,7 @@ describe('Bố cục theo route', () => {
   it('Báo cáo & gửi NCC: đầu trang một hàng wrap (h1, tháng, công tắc, nút), 390 nút chiếm cả hàng', () => {
     const css = readFileSync(join(SRC, 'features/reports/reports.m1.css'), 'utf8');
     expect(css).toMatch(/\.bc-head \{[^}]*display: flex; flex-wrap: wrap/);
-    expect(css).toMatch(/@media \(max-width: 767px\) \{[^}]*\.bc-head__actions \{ margin-left: 0; width: 100%; \}/);
+    expect(css).toMatch(/@media \(max-width: 767px\) \{[^}]*\.bc-head__actions \{ flex-wrap: wrap; margin-left: 0; width: 100%; \}/);
   });
 });
 

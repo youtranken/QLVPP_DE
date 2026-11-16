@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { useOrderQty } from './use-order-qty';
+import { orderTextError } from './use-order-qty';
 import { defaultOrder } from '@/lib/report-qty';
 import { reportFixture } from './reports-fixtures';
 
@@ -130,5 +131,17 @@ describe('useOrderQty — ô Đề nghị', () => {
     const { result } = setup();
     act(() => result.current.set(PEN, 'abc'));
     expect(result.current.errorOf(PEN)).toBe('invalid');
+  });
+});
+
+describe('orderTextError — lý do sai dạng của ô Đề nghị', () => {
+  it('"0" và "1000" hợp lệ (null); "2.5" → decimal; "2,5" → decimal; "-1" → negative; "" và "abc" → invalid', () => {
+    expect(orderTextError('0')).toBeNull();
+    expect(orderTextError('1000')).toBeNull();
+    expect(orderTextError('2.5')).toBe('decimal');
+    expect(orderTextError('2,5')).toBe('decimal');
+    expect(orderTextError('-1')).toBe('negative');
+    expect(orderTextError('')).toBe('invalid');
+    expect(orderTextError('abc')).toBe('invalid');
   });
 });

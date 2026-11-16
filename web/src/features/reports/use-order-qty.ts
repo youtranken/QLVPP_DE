@@ -10,10 +10,19 @@ export function parseOrderQty(text: string): number | null {
   return DIGITS.test(s) ? Number(s) : null;
 }
 
+// Lý do sai dạng để nói đúng cho người gõ (không gộp mọi lỗi thành "Tối đa 1.000")
+export function orderTextError(text: string): 'decimal' | 'negative' | 'invalid' | null {
+  const s = text.trim();
+  if (DIGITS.test(s)) return null;
+  if (/^-\d/.test(s)) return 'negative';
+  if (/^\d+[.,]\d+$/.test(s)) return 'decimal';
+  return 'invalid';
+}
+
 // Chỉ gửi ô đã sửa: ô để nguyên thì server lấy số mặc định tại lúc chốt; luật thật kiểm lại ở server
 export type OrderQty = ReturnType<typeof useOrderQty>;
 // invalid: sai dạng; max: người dùng gõ vượt trần; sent: số lấy từ bản đã gửi vượt trần và sẽ gửi đi
-export type OrderError = 'invalid' | 'max' | 'sent';
+export type OrderError = 'invalid' | 'decimal' | 'negative' | 'max' | 'sent';
 
 interface Options {
   // Số mốc của ô (ô khác mốc = đã sửa); hàm phải ổn định giữa các lần render
@@ -36,7 +45,7 @@ export function useOrderQty(report: MonthReport, { baseOf = defaultOrder, initia
   const draftError = (key: string): OrderError | null => {
     if (!(key in drafts)) return null;
     const n = parseOrderQty(drafts[key]);
-    if (n === null) return 'invalid';
+    if (n === null) return orderTextError(drafts[key]) ?? 'invalid';
     if (n > ORDER_QTY_MAX && n !== needs.get(key)) return touched.has(key) ? 'max' : 'sent';
     return null;
   };
