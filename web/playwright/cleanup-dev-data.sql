@@ -36,11 +36,17 @@ SELECT
   (SELECT count(*) FROM in_app_notifications WHERE user_sub LIKE 'pw-%' OR params->>'name' LIKE 'PW %') AS notifications,
   (SELECT count(*) FROM request_line_adjustments WHERE user_sub LIKE 'pw-%') AS adjustments,
   (SELECT count(*) FROM period_adm_out a JOIN items i ON a.line_key = i.id::text WHERE i.name LIKE 'PW %') AS adm_out,
-  (SELECT count(*) FROM periods p WHERE EXISTS (SELECT 1 FROM unnest(p.headcount_subs) s WHERE s LIKE 'pw-%')) AS headcount_periods;
+  (SELECT count(*) FROM periods p WHERE EXISTS (SELECT 1 FROM unnest(p.headcount_subs) s WHERE s LIKE 'pw-%')) AS headcount_periods,
+  (SELECT count(*) FROM config c, jsonb_array_elements(c.value) b WHERE c.key = 'signature_boxes' AND b->>'name' LIKE 'PW %') AS signer_names;
 
 SELECT 'before' AS at, * FROM pw_counts;
 
 DELETE FROM in_app_notifications WHERE user_sub LIKE 'pw-%' OR params->>'name' LIKE 'PW %';
+-- p3-seed đổi tạm tên người ký thành "PW …"; lượt bị dừng giữa chừng để lại thì xóa tên (giữ chức danh)
+UPDATE config SET value = (
+  SELECT jsonb_agg(CASE WHEN b->>'name' LIKE 'PW %' THEN b || '{"name": ""}'::jsonb ELSE b END ORDER BY ord)
+  FROM jsonb_array_elements(value) WITH ORDINALITY AS e(b, ord))
+WHERE key = 'signature_boxes' AND EXISTS (SELECT 1 FROM jsonb_array_elements(value) b WHERE b->>'name' LIKE 'PW %');
 DELETE FROM report_snapshots WHERE created_by_sub LIKE 'pw-%';
 
 -- Món PW chỉ còn bị phiếu của người thử dùng (không phải phiếu người thật)

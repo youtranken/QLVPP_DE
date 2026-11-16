@@ -232,16 +232,22 @@ async function memberSeesCancelled(member: Page, info: TestInfo, s: MonthSeed) {
 }
 
 test.describe('P3 vòng tháng', () => {
+  let seed: MonthSeed | undefined;
+  let since = '';
+  // Dọn ở afterEach (chạy cả khi test quá giờ — finally trong thân test thì không chắc): trả lại tên người ký, xóa dữ liệu gieo
+  test.afterEach(async () => {
+    await seed?.cleanup(since);
+    seed = undefined;
+  });
   test('P3 vòng tháng: giao (bấm đúp, giao tất cả) → Còn nợ → Báo cáo, Excel, in trình ký → nhập mua, giao bổ sung, chuông giao đủ → mở lại bản chốt số cũ → hủy nợ, chuông hủy', async ({
     browser,
     request,
   }, info) => {
     test.setTimeout(180_000);
     const releases = [await acquireLock('prev-period'), await acquireLock('admin-config')];
-    const since = new Date().toISOString();
+    since = new Date().toISOString();
     const file = `test-results/downloads/p3-${info.project.name}.xlsx`;
     mkdirSync('test-results/downloads', { recursive: true });
-    let seed: MonthSeed | undefined;
     const pages: Page[] = [];
     const open = async (who?: Person) => {
       const p = who ? await newPage(browser, info, who.headers) : await adminPage(browser, info);
@@ -264,7 +270,6 @@ test.describe('P3 vòng tháng', () => {
     } finally {
       for (const p of pages) await p.context().close();
       rmSync(file, { force: true });
-      await seed?.cleanup(since);
       releases.forEach((r) => r());
     }
   });

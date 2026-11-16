@@ -1,13 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { asRole, expectNoContrastViolations, isMobile, shot } from './helpers';
+import { asRole, devHeaders, expectNoContrastViolations, isMobile, shot } from './helpers';
 
 test.describe('E0-S9 khung nhân viên (dev-identity member)', () => {
   asRole('member');
 
   test('E0-S9 member: 390 px thanh dưới 3 mục (Tôi mở sheet tài khoản), Lịch sử/Tôi trong 1 chạm; 1280 px tab trên, tên ở góc phải mở hộp tài khoản', async ({ page }, info) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { level: 1, name: /^Đăng ký văn phòng phẩm tháng \d+$/ })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: /^Đăng ký văn phòng phẩm tháng \d+(\/\d{4})?$/ })).toBeVisible();
     const bottom = page.getByRole('navigation', { name: 'Điều hướng chính' });
     if (isMobile(info)) {
       await expect(bottom.getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử']);
@@ -186,4 +186,12 @@ test.describe('nén ảnh trong Chromium thật', () => {
     expect(out.jpeg).toMatchObject({ w: 32, h: 64, mime: 'image/jpeg' });
     expect(out.png).toMatchObject({ w: 1600, h: 1200 });
   });
+});
+
+// H8: sau mỗi lượt, Cấu hình trên dev không còn tên người ký thử "PW …" (p3-seed đổi tạm rồi trả lại)
+test('dev sạch: tên người ký trong Cấu hình không có tiền tố "PW "', async ({ playwright }, info) => {
+  const api = await playwright.request.newContext({ baseURL: info.project.use.baseURL, extraHTTPHeaders: devHeaders('admin') });
+  const config = (await (await api.get('/api/admin/config')).json()) as { signature_boxes: { name: string }[] };
+  await api.dispose();
+  expect(config.signature_boxes.map((b) => b.name).filter((n) => n.startsWith('PW '))).toEqual([]);
 });
