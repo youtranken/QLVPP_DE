@@ -14,6 +14,12 @@
 /* Nút một dòng ở mọi khổ: thẻ 2 cột ở 360 chỉ còn ~150px, chữ gãy "Thêm vào / phiếu" làm thẻ cao lệch nhau */
 [data-shell='member'] .rq-card-add { padding-inline: var(--s-2); white-space: nowrap; }
 [data-shell='member'] .rq-card { container-type: inline-size; }
+[data-shell='member'] .rq-card-add-short { display: none; }
+/* Thẻ ≤ 132px (màn 320–340): "Thêm vào phiếu" không vừa một dòng — nút ghi "Thêm", tên đủ vẫn ở aria-label */
+@container (max-width: 132px) {
+  [data-shell='member'] .rq-card-add-full { display: none; }
+  [data-shell='member'] .rq-card-add-short { display: inline; }
+}
 @container (max-width: 160px) {
   [data-shell='member'] .rq-card-add { padding-inline: var(--s-1); font-size: 13px; }
   [data-shell='member'] .rq-card-unit { font-size: 13px; }
@@ -42,4 +48,9 @@
 @media (max-width: 900px) {
   [data-shell='member'] .rq-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3); }
   [data-shell='member'] .rq-card-more { min-height: 160px; }
+}
+/* Sau luật gốc của stepper: thẻ ≤ 132px thu −/+ về 38 × 44 để ô số còn ≥ 2 chữ số ("10") */
+@container (max-width: 132px) {
+  [data-shell='member'] .rq-card .rq-card-stepper { grid-template-columns: 38px minmax(0, 1fr) 38px; }
+  [data-shell='member'] .rq-card .rq-card-stepper input { padding: 0; }
 }

@@ -11,15 +11,15 @@ const GROUPS = [
   { id: 'g2', label: 'Giấy', n: 2 },
 ];
 
-function Harness({ shown = 6, copy }: { shown?: number; copy?: ReactNode }) {
-  const [f, setF] = useState<FilterState>(DEFAULT_FILTER);
+function Harness({ shown = 6, copy, start = DEFAULT_FILTER, picked = 3 }: { shown?: number; copy?: ReactNode; start?: FilterState; picked?: number }) {
+  const [f, setF] = useState<FilterState>(start);
   return (
     <FilterBar
       filter={f}
       groups={GROUPS}
       total={6}
       shown={shown}
-      pickedCount={3}
+      pickedCount={picked}
       copy={copy}
       onChange={(p) => setF({ ...f, ...p })}
       onClear={() => setF(DEFAULT_FILTER)}
@@ -55,6 +55,12 @@ describe('FilterBar', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
     expect(screen.getByRole('button', { name: 'Tất cả 6' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Đã chọn 3' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('lọc "Đã chọn" mà chưa chọn món nào → "Bạn chưa chọn món nào", không "Thử từ khóa khác"', () => {
+    render(<Harness shown={0} picked={0} start={{ ...DEFAULT_FILTER, onlyPicked: true }} />);
+    expect(screen.getByText('Bạn chưa chọn món nào')).toBeInTheDocument();
+    expect(screen.queryByText(/Thử từ khóa khác/)).toBeNull();
   });
 
   it('có ô tìm và ô sắp xếp có tên', () => {

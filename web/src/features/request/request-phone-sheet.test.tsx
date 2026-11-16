@@ -64,7 +64,7 @@ describe('RequestPage — điện thoại ≤ 900: thanh phiếu nổi + sheet p
     const sheet = await screen.findByRole('dialog', { name: 'Phiếu tháng 11' });
     await startEditingOrder();
     await userEvent.click(within(sheet).getByRole('button', { name: 'Thêm Bút bi xanh' }));
-    await userEvent.click(within(sheet).getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(within(sheet).getByRole('button', { name: '1 thay đổi chưa lưu · Lưu phiếu' }));
     const confirm = await screen.findByRole('dialog', { name: 'Lưu phiếu tháng 11?' });
     await userEvent.click(within(confirm).getByRole('button', { name: 'Lưu phiếu' }));
     await waitFor(() => expect(api.putBody()).toBeTruthy());
@@ -143,7 +143,7 @@ describe('RequestPage — điện thoại ≤ 900: thanh phiếu nổi + sheet p
     const sheet = await screen.findByRole('dialog', { name: 'Phiếu tháng 11' });
     await startEditingOrder();
     await userEvent.click(within(sheet).getByRole('button', { name: 'Thêm Bút bi xanh' }));
-    await userEvent.click(within(sheet).getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(within(sheet).getByRole('button', { name: '1 thay đổi chưa lưu · Lưu phiếu' }));
     await userEvent.click(within(await screen.findByRole('dialog', { name: 'Lưu phiếu tháng 11?' })).getByRole('button', { name: 'Lưu phiếu' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     await waitFor(() => expect(screen.getByRole('button', { name: 'Xem phiếu (1 món)' })).toHaveFocus());
@@ -172,7 +172,7 @@ describe('RequestPage — điện thoại ≤ 900: thanh phiếu nổi + sheet p
     const sheet = await screen.findByRole('dialog', { name: 'Phiếu tháng 11' });
     await startEditingOrder();
     await userEvent.click(within(sheet).getByRole('button', { name: 'Bỏ Bút bi xanh' }));
-    await userEvent.click(within(sheet).getByRole('button', { name: /thay đổi chưa lưu · Lưu$/ }));
+    await userEvent.click(within(sheet).getByRole('button', { name: /thay đổi chưa lưu · Lưu phiếu$/ }));
     await userEvent.click(within(await screen.findByRole('dialog', { name: 'Lưu phiếu tháng 11?' })).getByRole('button', { name: 'Lưu phiếu' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus());

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
@@ -47,7 +47,7 @@ describe('RequestPage: kỳ khóa giữa chừng (PERIOD_LOCKED)', () => {
     await openPhoneCart(12);
     expect(within(cartLine('Bút bi xanh', false, 12)).getByRole('spinbutton')).toHaveValue(2);
     expect(within(cartLine('Giấy note vàng', false, 12)).getByRole('spinbutton')).toHaveValue(1);
-    await userEvent.click(screen.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(screen.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu phiếu' }));
     await userEvent.click(within(await screen.findByRole('dialog', { name: 'Lưu phiếu tháng 12?' })).getByRole('button', { name: 'Lưu phiếu' }));
     await waitFor(() => expect(calls).toBe(2));
     expect(api.putBody(1)).toEqual({
@@ -89,6 +89,8 @@ describe('RequestPage: kỳ khóa giữa chừng (PERIOD_LOCKED)', () => {
   });
 
   it('PERIOD_LOCKED thiếu next_ym ở tháng 12 → "phiếu tháng 1" (sang năm mới, không có "tháng 13")', async () => {
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-12-10T10:00:00Z') });
+    onTestFinished(() => void vi.useRealTimers());
     mockViewport(1280);
     const dec = { ...PERIOD, ym: '2026-12', deadline: '2026-12-10T17:00:00.000Z' };
     const api = stubRequestApi({
@@ -101,12 +103,12 @@ describe('RequestPage: kỳ khóa giữa chừng (PERIOD_LOCKED)', () => {
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Bút bi xanh');
     await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm vào phiếu: Bút bi xanh' }));
-    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu phiếu' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Phiếu tháng 12 đã khóa lúc 00:00. Món bạn chọn đã được chuyển sang phiếu tháng 1 — bấm Lưu phiếu để giữ.',
     );
-    expect(await screen.findByRole('heading', { level: 1, name: 'Đăng ký văn phòng phẩm tháng 1' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Đăng ký văn phòng phẩm tháng 1/2027' })).toBeInTheDocument();
     expect(within(cartLine('Bút bi xanh', false, 1)).getByRole('spinbutton')).toHaveValue(1);
   });
 });

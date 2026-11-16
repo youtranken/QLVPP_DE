@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderWithI18n, screen } from '@/test/test-utils';
 import { PERIOD } from '@/test/request-api-stub';
 import { PeriodHero } from './period-hero';
@@ -29,5 +29,28 @@ describe('PeriodHero — số ngày còn lại', () => {
     renderWithI18n(<PeriodHero period={{ ...PERIOD, is_open: false, days_left: 0 }} saved={null} dirty={false} />);
     expect(screen.getByText('Kỳ tháng 11 đã khóa sổ — phiếu chỉ xem.')).toBeInTheDocument();
     expect(screen.queryByText(/còn 0 ngày/)).toBeNull();
+  });
+});
+
+describe('PeriodHero — năm và trạng thái lưu', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('kỳ 2027-01 khi hôm nay 11/2026 → "tháng 1/2027"; kỳ 2026-12 cùng năm → "tháng 12" (không ghi năm)', () => {
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-11-16T03:00:00Z') });
+    const { unmount } = renderWithI18n(<PeriodHero period={{ ...PERIOD, ym: '2027-01' }} saved={null} dirty={false} />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Đăng ký văn phòng phẩm tháng 1/2027' })).toBeInTheDocument();
+    unmount();
+    renderWithI18n(<PeriodHero period={{ ...PERIOD, ym: '2026-12' }} saved={null} dirty={false} />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Đăng ký văn phòng phẩm tháng 12' })).toBeInTheDocument();
+  });
+
+  it('đã lưu nhưng đang sửa → hiện "Có thay đổi chưa lưu", không còn "Đã lưu …"; không sửa → "Đã lưu …"', () => {
+    const saved = { updated_at: '2026-11-05T11:32:00Z' } as never;
+    const { unmount } = renderWithI18n(<PeriodHero period={PERIOD} saved={saved} dirty />);
+    expect(screen.getByText('Có thay đổi chưa lưu')).toBeVisible();
+    expect(screen.queryByText(/Đã lưu/)).toBeNull();
+    unmount();
+    renderWithI18n(<PeriodHero period={PERIOD} saved={saved} dirty={false} />);
+    expect(screen.getByText(/^Đã lưu 18:32/)).toBeInTheDocument();
   });
 });

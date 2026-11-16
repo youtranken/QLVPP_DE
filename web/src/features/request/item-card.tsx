@@ -87,7 +87,8 @@ export function ItemCard({
           disabled={max < 1}
           onClick={() => onQty(1)}
         >
-          {t('request.grid.addToCart')}
+          <span className="rq-card-add-full">{t('request.grid.addToCart')}</span>
+          <span className="rq-card-add-short" aria-hidden="true">{t('request.grid.addShort')}</span>
         </button>
       ) : (
         <Stepper className="rq-card-stepper" value={qty} max={max} label={name} onChange={change} />

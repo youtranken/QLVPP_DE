@@ -98,8 +98,14 @@ export function FilterBar({ filter, groups, total, shown, pickedCount, canFav = 
       </p>
       {shown === 0 && (
         <div className="rq-f-empty">
-          <b>{t('request.grid.emptyTitle')}</b>
-          <span>{t('request.grid.emptyHint')}</span>
+          {filter.onlyPicked && pickedCount === 0 ? (
+            <b>{t('request.grid.emptyPicked')}</b>
+          ) : (
+            <>
+              <b>{t('request.grid.emptyTitle')}</b>
+              <span>{t('request.grid.emptyHint')}</span>
+            </>
+          )}
           <button type="button" className="rq-f-clear" onClick={onClear}>
             {t('request.grid.clear')}
           </button>

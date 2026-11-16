@@ -38,7 +38,7 @@ describe('Giỏ — tối đa/tháng bị hạ sau khi lưu', () => {
     expect(within(line).getByRole('button', { name: 'Thêm Bút bi xanh' })).toBeDisabled();
 
     await userEvent.click(within(cart()).getByRole('button', { name: 'Thêm Giấy note vàng' }));
-    await userEvent.click(within(cart()).getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(within(cart()).getByRole('button', { name: '1 thay đổi chưa lưu · Lưu phiếu' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
     await waitFor(() =>
       expect(api.putBody().lines).toEqual([

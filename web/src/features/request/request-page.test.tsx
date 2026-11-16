@@ -94,7 +94,7 @@ describe('RequestPage', () => {
     expect(screen.getByRole('button', { name: 'Xem phiếu (3 món)' })).toBeInTheDocument();
     await openPhoneCart();
     expect(within(cart()).getByText('3 loại món · 4 đơn vị')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: '3 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(screen.getByRole('button', { name: '3 thay đổi chưa lưu · Lưu phiếu' }));
     const dialog = await screen.findByRole('dialog', { name: 'Lưu phiếu tháng 11?' });
     expect(within(dialog).getByText('2 cây')).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Lưu phiếu' }));
@@ -120,7 +120,7 @@ describe('RequestPage', () => {
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Bút bi xanh');
     await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm Bút bi xanh' }));
-    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu phiếu' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
 
     const stale = await screen.findByRole('dialog', { name: 'Phiếu vừa được cập nhật ở nơi khác' });
@@ -146,7 +146,7 @@ describe('RequestPage', () => {
     await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Giấy note vàng');
     await showAll();
     await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm Giấy note vàng' }));
-    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu phiếu' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
 
     expect(await within(cartLine('Giấy note vàng')).findByText('Món này đã ngừng — bỏ khỏi phiếu rồi lưu lại.')).toBeInTheDocument();
@@ -188,7 +188,7 @@ describe('RequestPage', () => {
     await within(cart()).findByText('Giấy note vàng');
     await startEditingOrder();
     await userEvent.click(within(cart()).getByRole('button', { name: 'Thêm Giấy note vàng' }));
-    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu phiếu' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
 
     const msg = 'Món này đã ngừng — bỏ khỏi phiếu rồi lưu lại.';
@@ -226,7 +226,7 @@ describe('RequestPage', () => {
     await within(cart()).findByText('Bút bi xanh');
     await startEditingOrder();
     await userEvent.click(within(cart()).getByRole('button', { name: 'Thêm Bút bi xanh' }));
-    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu phiếu' }));
     await userEvent.click(within(await screen.findByRole('dialog', { name: 'Lưu phiếu tháng 11?' })).getByRole('button', { name: 'Lưu phiếu' }));
     const stale = await screen.findByRole('dialog', { name: 'Phiếu vừa được cập nhật ở nơi khác' });
     await userEvent.click(within(stale).getByRole('button', { name: 'Đóng, xem giỏ của tôi' }));
@@ -304,7 +304,7 @@ describe('RequestPage', () => {
     await within(panel).findByText('Bút bi xanh');
     await userEvent.click(within(panel).getByRole('button', { name: 'Sửa phiếu' }));
     await userEvent.click(within(cartLine('Bút bi xanh')).getByRole('button', { name: 'Thêm Bút bi xanh' }));
-    expect(within(cart()).getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' })).toBeEnabled();
+    expect(within(cart()).getByRole('button', { name: '1 thay đổi chưa lưu · Lưu phiếu' })).toBeEnabled();
     await userEvent.click(within(cart()).getByRole('button', { name: 'Hủy' }));
     expect(within(cart()).queryByRole('spinbutton')).toBeNull();
     expect(within(cartLine('Bút bi xanh')).getByText('2 cây')).toBeInTheDocument();

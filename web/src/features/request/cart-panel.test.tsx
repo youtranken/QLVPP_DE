@@ -155,7 +155,7 @@ describe('CartPanel', () => {
       expect(screen.queryByRole('button', { name: /^Bỏ / })).toBeNull();
       expect(screen.queryByRole('button', { name: /Thêm món khác/ })).toBeNull();
       expect(within(aside()).getByText('Đã lưu 09:41')).toBeInTheDocument();
-      expect(within(aside()).getByText('Phiếu đã lưu. Bấm Sửa phiếu để thêm, bớt. Sửa được tới hết 10/11.')).toBeInTheDocument();
+      expect(within(aside()).getByText('Phiếu đã lưu. Thêm, bớt ngay trên thẻ món hoặc bấm Sửa phiếu. Sửa được tới hết 10/11.')).toBeInTheDocument();
       expect(within(aside()).queryByRole('button', { name: 'Lưu phiếu' })).toBeNull();
       await userEvent.click(screen.getByRole('button', { name: 'Sửa phiếu' }));
       expect(onEditStart).toHaveBeenCalledOnce();
