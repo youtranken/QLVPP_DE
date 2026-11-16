@@ -32,6 +32,8 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
   const refresh = useRefreshAfterLineChange([['admin-request']]);
   const flight = useSingleFlight();
   const titleRef = useRef<HTMLHeadingElement>(null);
+  // Giao xong là xong: cú bấm thứ hai của bấm đúp tới sau khi lượt đầu đã trả về (khóa bay đã mở) không được gửi lại
+  const delivered = useRef(false);
   const [results, setResults] = useState<PersonResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const count = plan.summary.length;
@@ -41,6 +43,7 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
   // → chỉ còn nút Đóng, người dùng chọn lại
   const submit = () =>
     flight.run(async () => {
+      if (delivered.current) return;
       setError(null);
       const { sent, error: e } = await sendBulk(plan, csrfToken);
       if (e && isSessionExpired(e) && sent.every((s) => s.result.ok === false && s.result.code === NOT_SENT)) {
@@ -51,6 +54,7 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
       if (e) setError(t(isSessionExpired(e) ? 'delivery.confirm.sessionExpired' : 'delivery.bulk.interrupted'));
       const rows = byPerson(sent, plan.owners);
       if (!e && rows.every((r) => r.ok)) {
+        delivered.current = true;
         toast.show({ text: t('delivery.bulk.done', { count }) });
         onDone();
       } else setResults(rows);
