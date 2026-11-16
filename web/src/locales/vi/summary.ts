@@ -28,7 +28,7 @@ const summary = {
       dialogNote: 'Chỉ xem. Nhân viên còn sửa được tới {{lockPhrase}}; sau khi khóa kỳ mới điều chỉnh được.',
       prev: 'Người trước',
       next: 'Người sau',
-      customLine: 'Sản phẩm ngoài danh mục, chờ phê duyệt',
+      customStatus: { pending: 'Ngoài danh mục · chờ duyệt', accepted: 'Ngoài danh mục · đã chấp nhận' },
       lines: 'Các dòng trong phiếu',
     },
     table: {

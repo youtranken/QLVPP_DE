@@ -31,7 +31,7 @@ const summary: Messages<typeof vi> = {
       dialogNote: 'View only. Staff can still edit until {{lockPhrase}}; adjusting opens after the period locks.',
       prev: 'Previous person',
       next: 'Next person',
-      customLine: 'Off-catalog item, awaiting approval',
+      customStatus: { pending: 'Off-catalog · awaiting review', accepted: 'Off-catalog · accepted' },
       lines: 'Lines in the order',
     },
     table: {

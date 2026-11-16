@@ -33,7 +33,7 @@ function Line({ line }: { line: LineView }) {
       <span className="rg-line__main">
         <b className={paused ? 'rg-line__name is-paused' : 'rg-line__name'}>{name}</b>
         {paused && <small className="rg-line__paused">{t('common.paused')}</small>}
-        {!line.item && <small className="rg-line__custom">{t('summary.open.customLine')}</small>}
+        {!line.item && <small className="rg-line__custom">{t(line.review_status === 'accepted' ? 'summary.open.customStatus.accepted' : 'summary.open.customStatus.pending')}</small>}
       </span>
       <b className="num">{`${line.qty} ${unit}`}</b>
     </li>

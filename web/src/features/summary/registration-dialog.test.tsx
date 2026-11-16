@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { screen, userEvent, within } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
-import { registrationRoute } from './registration-fixtures';
+import { registrationRoute, registrationView } from './registration-fixtures';
 import { calledUrls, stubSummaryApi } from './summary-fixtures';
 
 const openDialog = async (name = 'Nhân viên A') => {
@@ -39,11 +39,27 @@ describe('RegistrationDialog — phiếu một người, chỉ xem', () => {
     expect(within(paused).getByText('Tạm ngưng')).toBeInTheDocument();
     expect(paused).toHaveTextContent('19');
     const custom = within(dialog).getByText('Test mon khac').closest('li')!;
-    expect(custom).toHaveTextContent('Sản phẩm ngoài danh mục, chờ phê duyệt');
+    expect(custom).toHaveTextContent('Ngoài danh mục · chờ duyệt');
     expect(within(dialog).queryByText('Món bị từ chối')).toBeNull();
     expect(within(dialog).queryByRole('spinbutton')).toBeNull();
     expect(within(dialog).queryByRole('textbox')).toBeNull();
     expect(within(dialog).queryByRole('button', { name: /Bớt|Thêm|Gỡ|Bỏ/ })).toBeNull();
+  });
+
+  it('món ngoài danh mục theo review_status: pending → "Ngoài danh mục · chờ duyệt", accepted → "Ngoài danh mục · đã chấp nhận"; món đã thêm vào danh mục (có item) → không nhãn', async () => {
+    const list = registrationRoute();
+    stubSummaryApi((url) => {
+      const m = /registrations\/([\w-]+)$/.exec(url);
+      if (!m) return list(url);
+      const v = registrationView(m[1]);
+      const custom = v.lines.find((l) => l.review_status === 'pending')!;
+      return jsonResponse(200, { ...v, lines: [...v.lines, { ...custom, id: 'acc', custom_name: 'Kẹp đen to', review_status: 'accepted' }] });
+    });
+    const { dialog } = await openDialog();
+    const pending = (await within(dialog).findByText('Test mon khac')).closest('li')!;
+    expect(pending).toHaveTextContent('Ngoài danh mục · chờ duyệt');
+    expect(within(dialog).getByText('Kẹp đen to').closest('li')).toHaveTextContent('Ngoài danh mục · đã chấp nhận');
+    expect(within(dialog).getByText('Bút bi xanh').closest('li')).not.toHaveTextContent('Ngoài danh mục');
   });
 
   it('"Người sau" sang người kế (gọi registrations/<id kế>); ở người đầu "Người trước" vô hiệu, ở người cuối "Người sau" vô hiệu', async () => {
