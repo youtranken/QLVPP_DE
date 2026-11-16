@@ -278,7 +278,7 @@ test.describe('V2D-13 toàn màn hình và panel phủ', () => {
       expect(await page.evaluate(() => history.length)).toBe(length + 1);
       expect(await pageBox()).toEqual(before);
       if (isMobile(info)) {
-        await expect(panel.getByRole('button', { name: '← Đóng' })).toBeVisible();
+        await expect(panel.getByRole('button', { name: 'Đóng' })).toBeVisible();
         expect(Math.round((await panel.boundingBox())!.width)).toBe(390);
         await expectNoContrastViolations(page);
       } else {
@@ -289,10 +289,10 @@ test.describe('V2D-13 toàn màn hình và panel phủ', () => {
         expect(onScrim, 'điểm (10,10) thuộc nền mờ, không phải sidebar').toBe(true);
         expect(Math.round((await panel.boundingBox())!.width)).toBe(440);
         await page.setViewportSize({ width: 767, height: 900 });
-        await expect(panel.getByRole('button', { name: '← Đóng' })).toBeVisible();
+        await expect(panel.getByRole('button', { name: 'Đóng' })).toBeVisible();
         expect(Math.round((await panel.boundingBox())!.width)).toBe(767);
         await page.setViewportSize({ width: 768, height: 900 });
-        await expect(panel.getByRole('button', { name: '← Đóng' })).toHaveCount(0);
+        await expect(panel.getByRole('button', { name: 'Đóng' })).toBeVisible();
         expect(Math.round((await panel.boundingBox())!.width)).toBe(440);
         await page.setViewportSize({ width: 1280, height: 900 });
       }

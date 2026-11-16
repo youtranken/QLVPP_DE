@@ -1,9 +1,8 @@
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { discardOptions, useOptionalConfirm } from '@/ui/confirm-context';
-import { Dialog, DialogClose, DialogCloseButton, DialogTitle } from '@/ui/dialog';
+import { Dialog, DialogCloseButton, DialogTitle } from '@/ui/dialog';
 import { Icon } from '@/ui/icon';
-import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { useDirtyBackGuard } from '@/lib/use-panel-param';
 
 export interface PanelNav {
@@ -24,6 +23,9 @@ interface Props {
   saving?: boolean;
   nav?: PanelNav;
   footer?: ReactNode;
+  // Dòng phụ nhỏ trên tiêu đề (kỳ · tổ…)
+  eyebrow?: string;
+  onCloseFocus?: () => boolean;
   children: ReactNode;
 }
 
@@ -54,10 +56,9 @@ function NavButtons({ nav, can, onStep, showPos = true }: { nav: PanelNav; can: 
   );
 }
 
-export function OverlayPanel({ open, onClose, title, head, dirty = false, saving = false, nav, footer, children }: Props) {
+export function OverlayPanel({ open, onClose, title, head, dirty = false, saving = false, nav, footer, eyebrow, onCloseFocus, children }: Props) {
   const { t } = useTranslation();
   const askConfirm = useOptionalConfirm();
-  const phone = useMediaQuery(ADMIN_PHONE_QUERY);
   const ask = () => (askConfirm ? askConfirm(discardOptions(t)) : Promise.resolve(true));
   const guarded = (go: () => void) => {
     if (!dirty) return go();
@@ -81,27 +82,17 @@ export function OverlayPanel({ open, onClose, title, head, dirty = false, saving
       overlayClassName="ovp-backdrop"
       viewportClassName="ovp-viewport"
       onKeyDown={onKeyDown}
+      onCloseFocus={onCloseFocus}
     >
-      {phone && !head && (
-        <div className="ovp-bar">
-          <DialogClose asChild>
-            <button type="button" className="btn btn--ghost ovp-back" disabled={saving}>
-              {t('common.panel.close')}
-            </button>
-          </DialogClose>
-        </div>
-      )}
       <div className={head ? 'ovp-head ovp-head--rich' : 'ovp-head'}>
-        {phone && head && (
-          <DialogClose asChild>
-            <button type="button" className="btn btn--ghost btn--sm ovp-icon ovp-back-icon" aria-label={t('common.panel.close')} disabled={saving}>
-              <span aria-hidden="true">←</span>
-            </button>
-          </DialogClose>
+        {head ?? (
+          <div className="ovp-titles">
+            {eyebrow && <small className="ovp-eyebrow">{eyebrow}</small>}
+            <DialogTitle className="ovp-title">{title}</DialogTitle>
+          </div>
         )}
-        {head ?? <DialogTitle className="ovp-title">{title}</DialogTitle>}
         {nav && <NavButtons nav={nav} can={can} onStep={onStep} showPos={!head} />}
-        {!phone && <DialogCloseButton disabled={saving} />}
+        <DialogCloseButton disabled={saving} />
       </div>
       <div className="ovp-body">{children}</div>
       {footer && <div className="ovp-foot">{footer}</div>}

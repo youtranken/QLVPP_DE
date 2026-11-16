@@ -199,7 +199,7 @@ describe('Ngừng / Dùng lại ở thẻ', () => {
     await userEvent.click(back);
     let ask = await screen.findByRole('dialog', { name: 'Dùng lại Bút bi xanh?' });
     expect(within(ask).getByText('Nhân viên đặt được món này trở lại từ kỳ đang mở.')).toBeInTheDocument();
-    await userEvent.click(within(ask).getByRole('button', { name: 'Quay lại' }));
+    await userEvent.click(within(ask).getByRole('button', { name: 'Hủy' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(patches(f)).toHaveLength(0);
     await userEvent.click(back);
@@ -232,7 +232,7 @@ describe('Ngừng / Dùng lại ở thẻ', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Tạm ngưng Bút bi xanh' }));
     const ask = await screen.findByRole('dialog', { name: 'Tạm ngưng Bút bi xanh?' });
     expect(within(ask).getByRole('note')).toHaveTextContent(/đang chờ NCC giao 3 cây/);
-    await userEvent.click(within(ask).getByRole('button', { name: 'Quay lại' }));
+    await userEvent.click(within(ask).getByRole('button', { name: 'Hủy' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Tạm ngưng Bút bi xanh?' })).toBeNull());
     expect(patches(f)).toHaveLength(0);
   });

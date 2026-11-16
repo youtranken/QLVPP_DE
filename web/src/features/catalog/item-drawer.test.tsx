@@ -291,7 +291,7 @@ describe('Panel Sửa sản phẩm — đầu, hai khối, chân (Nhóm 1 · m�
     expect(pause).toHaveClass('btn--quiet-danger');
     expect(pause.nextElementSibling).toBe(screen.getByRole('button', { name: 'Xóa' }));
     expect(screen.getByRole('button', { name: 'Xóa' })).toHaveClass('ct-delete');
-    expect(screen.getByRole('button', { name: 'Quay lại' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Hủy' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Lưu' })).toHaveClass('btn--primary');
     await userEvent.click(pause);
     const ask = await screen.findByRole('dialog', { name: 'Tạm ngưng Bút bi xanh?' });

@@ -97,4 +97,38 @@ test.describe('Hệ điều khiển', () => {
       expect.soft(hidden, path).toEqual([]);
     }
   });
+
+  test('320×568: Xem phiếu (Kỳ tháng) và Giao (Giao hàng) — chân popup trong khung nhìn, nút chính bấm được', async ({ page }, info) => {
+    test.skip(!isMobile(info), 'chỉ đo ở điện thoại');
+    await page.setViewportSize({ width: 320, height: 568 });
+    await open(page, 'admin', '/admin/month?ym=2026-12');
+    await page.getByRole('button', { name: /^Xem phiếu của / }).first().click();
+    const sheet = page.getByRole('dialog');
+    await expect(sheet).toBeVisible();
+    const close = sheet.locator('.ovp-foot').getByRole('button', { name: 'Đóng' });
+    await expect(close).toBeInViewport({ ratio: 1 });
+    await open(page, 'admin', '/admin/delivery');
+    await page.getByRole('button', { name: /^Giao…, / }).first().click();
+    const give = page.getByRole('dialog').getByRole('button', { name: /^(Xác nhận giao|Giao)/ }).last();
+    await expect(give).toBeInViewport({ ratio: 1 });
+  });
+
+  test('390: mọi nút trong popup Xem phiếu và Giao ≥ 44×44', async ({ page }, info) => {
+    test.skip(!isMobile(info), 'chỉ đo ở 390');
+    const small = async () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('[role=dialog] button')]
+          .map((b) => ({ b, r: b.getBoundingClientRect() }))
+          .filter(({ r }) => r.width > 0 && (r.width < 43.5 || r.height < 43.5))
+          .map(({ b, r }) => `${b.getAttribute('aria-label') ?? b.textContent?.trim()} ${Math.round(r.width)}×${Math.round(r.height)}`),
+      );
+    await open(page, 'admin', '/admin/month?ym=2026-12');
+    await page.getByRole('button', { name: /^Xem phiếu của / }).first().click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    expect.soft(await small(), 'Xem phiếu').toEqual([]);
+    await open(page, 'admin', '/admin/delivery');
+    await page.getByRole('button', { name: /^Giao…, / }).first().click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    expect.soft(await small(), 'Giao').toEqual([]);
+  });
 });

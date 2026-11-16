@@ -36,6 +36,8 @@
 [data-shell='admin'] .ovp-back { min-height: var(--hit); }
 [data-shell='admin'] .ovp-head { display: flex; flex-shrink: 0; align-items: center; gap: var(--s-1); min-height: 64px; padding: 0 var(--s-3) 0 var(--s-6); border-bottom: 1px solid var(--c-line); }
 [data-shell='admin'] .ovp-title { flex: 1; min-width: 0; margin: 0; color: var(--c-ink); font: var(--t-h3); overflow-wrap: anywhere; }
+[data-shell='admin'] .ovp-titles { display: grid; flex: 1; gap: 2px; min-width: 0; }
+[data-shell='admin'] .ovp-eyebrow { color: var(--c-ink-2); font: var(--t-cap); }
 [data-shell='admin'] .ovp-pos { flex: none; padding: 0 var(--s-1); color: var(--c-muted); font: var(--t-cap); }
 [data-shell='admin'] .ovp-icon { width: 36px; padding: 0; }
 [data-shell='admin'] .ovp-body { flex: 1; min-height: 0; overflow: auto; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--s-3); padding: var(--s-4) var(--s-6); }
@@ -61,6 +63,12 @@
    trong Xem phiếu, VI/EN trong menu quản lý) giữ cỡ nhìn, vùng chạm nới đủ 44px quanh tâm bằng ::after.
    min(0px, …): chiều nào đã ≥ 44px thì không nới (nút VI/EN rộng sẵn, chỉ nới dọc, không lấn nút bên cạnh). */
 @media (max-width: 767px) {
-  [data-shell='admin'] .cal__nav, [data-shell='admin'] .rg-step, [data-shell='admin'] .side-sheet .seg button { position: relative; }
-  [data-shell='admin'] .cal__nav::after, [data-shell='admin'] .rg-step::after, [data-shell='admin'] .side-sheet .seg button::after { content: ''; position: absolute; inset: min(0px, calc(50% - var(--hit) / 2)); }
+  [data-shell='admin'] .cal__nav, [data-shell='admin'] .side-sheet .seg button { position: relative; }
+  [data-shell='admin'] .cal__nav::after, [data-shell='admin'] .side-sheet .seg button::after { content: ''; position: absolute; inset: min(0px, calc(50% - var(--hit) / 2)); }
+}
+@media (max-width: 640px) {
+  [data-shell='admin'] .ovp { background: var(--c-surface); backdrop-filter: none; }
+}
+@media (pointer: coarse), (max-width: 767px) {
+  [data-shell='admin'] .ovp-head .sheet-close { width: var(--hit); height: var(--hit); }
 }

@@ -24,7 +24,7 @@ const sendAdm = {
       action: 'Tháng này không cần đề nghị NCC',
       title: 'Tháng này không cần đề nghị NCC?',
       body: 'Tủ đã đủ cho mọi người đăng ký. Bước Gửi NCC và Nhận hàng sẽ tính là xong; cần thì vẫn lập phiếu lại được.',
-      back: 'Quay lại',
+      back: 'Hủy',
       ok: 'Xác nhận',
       failed: 'Chưa lưu được, thử lại sau.',
     },
@@ -34,7 +34,7 @@ const sendAdm = {
       changes: 'Đổi so với bản {{time}}:',
       change: '{{name}} {{x}} → {{y}}',
       more: 'và {{n}} món khác',
-      back: 'Quay lại',
+      back: 'Hủy',
     },
   },
 };

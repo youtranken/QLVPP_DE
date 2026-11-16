@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen, userEvent, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
@@ -90,11 +88,11 @@ describe('RegistrationDialog — phiếu một người, chỉ xem', () => {
     expect(screen.getByRole('button', { name: 'Xem phiếu của Nhân viên B' })).toHaveFocus();
   });
 
-  // Luật 44px cũ ở summary.m1.css đứng trước luật 36px cùng độ ưu tiên nên chưa bao giờ thắng (đo 36×36 ở 390, rà soát 13/11 Gu #10).
-  // Nay cỡ nhìn giữ 36px, vùng chạm nới đủ var(--hit) bằng ::after ở overlay.css (kiểm thêm ở css/hit-targets.test.ts)
-  it('nút ‹ › có vùng chạm bằng cỡ chạm ở 390 (rg-step::after nới tới var(--hit))', () => {
-    const css = readFileSync(resolve(__dirname, '../../css/m1/overlay.css'), 'utf8');
-    const phone = css.slice(css.lastIndexOf('@media (max-width: 767px)'));
-    expect(phone).toMatch(/\.rg-step::after[^{]*\{[^}]*inset:\s*min\(0px, calc\(50% - var\(--hit\) \/ 2\)\)/);
+  it('Xem phiếu là panel phủ từ phải như ngăn Giao (lớp ovp), dòng phụ kỳ · tổ nằm trong đầu panel; ˄ ˅ là nút ovp-icon (44 ở điện thoại)', async () => {
+    stubSummaryApi(registrationRoute());
+    const { dialog } = await openDialog();
+    expect(dialog).toHaveClass('ovp');
+    expect(within(dialog).getByText(/^Kỳ tháng 11/).closest('.ovp-head')).not.toBeNull();
+    expect(within(dialog).getByRole('button', { name: 'Người sau' })).toHaveClass('ovp-icon');
   });
 });

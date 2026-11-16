@@ -119,7 +119,7 @@ describe('ReviewActions — 3 nút mở hộp riêng, áp dụng ngay', () => {
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Mua lần này' }));
     expect(await within(screen.getByRole('dialog')).findByRole('alert')).toHaveTextContent('Dòng này vừa được xử lý ở nơi khác.');
     expect(onStale).not.toHaveBeenCalled();
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Quay lại' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Hủy' }));
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(onStale).toHaveBeenCalledTimes(1);
     expect(onDone).not.toHaveBeenCalled();

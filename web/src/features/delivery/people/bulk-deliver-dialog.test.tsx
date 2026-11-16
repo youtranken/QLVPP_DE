@@ -50,7 +50,7 @@ describe('BulkDeliverDialog', () => {
     expect(within(dlg).getByText('Nguyễn Văn An')).toBeInTheDocument();
     expect(within(dlg).getByText('Phần thiếu 6 chờ hàng về')).toBeInTheDocument();
     expect(posts(f)).toHaveLength(0);
-    await userEvent.click(within(dlg).getByRole('button', { name: 'Quay lại' }));
+    await userEvent.click(within(dlg).getByRole('button', { name: 'Hủy' }));
     expect(props.onClose).toHaveBeenCalled();
   });
 

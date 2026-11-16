@@ -171,7 +171,7 @@ describe('Danh mục — hàng loạt', () => {
     await userEvent.click(bulkBar().getByRole('button', { name: /^Tạm ngưng \(\d+\)$/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Tạm ngưng 2 sản phẩm?' });
     expect(within(dialog).getByRole('note')).toHaveTextContent(/Bút bi xanh: Món này đang chờ NCC giao 3/);
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Quay lại' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Hủy' }));
     expect(patchCalls(f)).toEqual([]);
     await userEvent.click(bulkBar().getByRole('button', { name: /^Tạm ngưng \(\d+\)$/ }));
     await userEvent.click(within(await screen.findByRole('dialog', { name: 'Tạm ngưng 2 sản phẩm?' })).getByRole('button', { name: 'Tạm ngưng' }));

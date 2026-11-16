@@ -42,7 +42,7 @@ describe('Danh mục — panel phủ món', () => {
     expect(location()).toBe('?item=new&itemCat=c-pen');
     const drawer = await screen.findByRole('dialog', { name: 'Thêm sản phẩm' });
     expect(within(drawer).getByRole('combobox', { name: 'Nhóm' })).toHaveTextContent('Bút & viết');
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Quay lại' }));
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Hủy' }));
     expect(location()).toBe('');
   });
 });

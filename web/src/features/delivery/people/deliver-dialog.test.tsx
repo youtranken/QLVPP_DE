@@ -324,7 +324,7 @@ describe('DeliverDialog — gửi', () => {
   it('Quay lại → onClose, không gửi', async () => {
     const f = stub();
     const props = open(person({ lines: [cur] }));
-    await userEvent.click(within(dialog()).getByRole('button', { name: 'Quay lại' }));
+    await userEvent.click(within(dialog()).getByRole('button', { name: 'Hủy' }));
     expect(props.onClose).toHaveBeenCalled();
     expect(posts(f)).toEqual([]);
   });

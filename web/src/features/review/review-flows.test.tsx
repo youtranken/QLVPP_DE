@@ -96,7 +96,7 @@ describe('ReviewPage — xử lý dòng', () => {
     const dialog = screen.getByRole('dialog');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Mua lần này' }));
     expect(await within(dialog).findByText('Dòng này vừa được xử lý ở nơi khác.')).toBeInTheDocument();
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Quay lại' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Hủy' }));
     await waitFor(() => expect(screen.queryByRole('article', { name: 'Băng keo 2 mặt' })).toBeNull());
     expect(screen.getByText('Dòng này vừa được xử lý — danh sách đã được làm mới.')).toBeInTheDocument();
     expect(fetchMock.mock.calls.filter((c) => c[0] === '/api/admin/review?status=pending').length).toBeGreaterThanOrEqual(2);
@@ -111,7 +111,7 @@ describe('ReviewPage — xử lý dòng', () => {
     expect(within(dialog).getByLabelText(/^Lý do từ chối/)).toHaveAttribute('aria-required', 'true');
     expect(dialog).toHaveTextContent('Lý do từ chối *');
     expect(within(dialog).getByText('Ít nhất 3 ký tự. Viết cho người đăng ký đọc.')).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: 'Quay lại' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Hủy' })).toBeInTheDocument();
     expect(within(dialog).getByRole('button', { name: 'Không mua' })).toHaveClass('btn--danger', 'btn--solid');
   });
 
@@ -120,7 +120,7 @@ describe('ReviewPage — xử lý dòng', () => {
     stub(() => jsonResponse(500, {}));
     renderApp(makeMe('admin'), '/admin/review');
     await open('Băng keo 2 mặt', /^Mua lần này —/);
-    expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'Quay lại' })).toBeInTheDocument();
+    expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'Hủy' })).toBeInTheDocument();
   });
 
   it('xử lý xong thẻ Chờ xem: đếm tab giảm 1, đếm tab Đã chấp nhận tăng, huy hiệu sidebar tải lại', async () => {

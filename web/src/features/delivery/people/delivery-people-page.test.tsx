@@ -350,7 +350,7 @@ describe('DeliveryPeoplePage — panel và Người tiếp theo', () => {
     expect(screen.queryByRole('region', { name: 'Nguyễn Văn An', hidden: true })).toBeNull();
     await userEvent.click(within(dlg).getByRole('button', { name: 'Người sau' }));
     expect(await screen.findByRole('dialog', { name: 'Lê Thị Bình' })).toBeInTheDocument();
-    const close = width === 390 ? '← Đóng' : 'Đóng';
+    const close = 'Đóng';
     await userEvent.click(within(screen.getByRole('dialog', { name: 'Lê Thị Bình' })).getByRole('button', { name: close }));
     await waitFor(() => expect(search()).not.toContain('person='));
   });

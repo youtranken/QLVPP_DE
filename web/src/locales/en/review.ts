@@ -88,7 +88,7 @@ const review: Messages<typeof vi> = {
       imageFromStaff: 'The photo staff sent is used as the item photo; change it later in Catalog.',
       submit: 'Buy and add to catalog',
     },
-    back: 'Back',
+    back: 'Cancel',
     saving: 'Saving…',
     errors: {
       LINE_ALREADY_REVIEWED: 'This line was just handled elsewhere.',

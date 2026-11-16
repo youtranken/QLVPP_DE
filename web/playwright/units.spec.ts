@@ -85,7 +85,7 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
       await expect(dialog.getByText('Đã có đơn vị tính tên này.')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'units-add-dup', false);
-      await dialog.getByRole('button', { name: 'Quay lại' }).click();
+      await dialog.getByRole('button', { name: 'Hủy' }).click();
       await page.getByRole('dialog', { name: 'Bỏ thay đổi?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
       await expect(dialog).toBeHidden();
 

@@ -43,15 +43,13 @@ describe('vùng bấm', () => {
   });
 
   // Rà soát 13/11 Gu #10: lớp nổi ở 390 — VI/EN trong menu quản lý, ‹ › năm (chọn năm-tháng), ‹ › người (Xem phiếu) chỉ 36px.
-  // Luật @media cũ cho .rg-step (44px) đứng trước luật 36px cùng độ ưu tiên nên không bao giờ thắng.
   it('lớp nổi ở điện thoại: nút 36px nới vùng chạm đủ 44px bằng ::after, cỡ nhìn giữ nguyên', () => {
     const css = read('css/m1/overlay.css');
     const phone = css.slice(css.lastIndexOf('@media (max-width: 767px)'));
-    for (const el of ['.cal__nav', '.rg-step', '.side-sheet .seg button']) {
+    for (const el of ['.cal__nav', '.side-sheet .seg button']) {
       const e = el.replace(/\./g, '\\.');
       expect(phone).toMatch(new RegExp(`\\[data-shell='admin'\\] ${e}[,\\s][^{]*\\{\\s*position:\\s*relative`));
       expect(phone).toMatch(new RegExp(`\\[data-shell='admin'\\] ${e}::after[^{]*\\{[^}]*position:\\s*absolute;[^}]*inset:\\s*min\\(0px, calc\\(50% - var\\(--hit\\) / 2\\)\\)`));
     }
-    expect(read('features/summary/summary.m1.css')).not.toMatch(/\.rg-step\s*\{\s*width:\s*var\(--hit\)/);
   });
 });

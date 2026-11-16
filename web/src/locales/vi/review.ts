@@ -85,7 +85,7 @@ const review = {
       imageFromStaff: 'Dùng ảnh nhân viên đã gửi làm ảnh món; đổi được ở Danh mục.',
       submit: 'Mua và thêm vào danh mục',
     },
-    back: 'Quay lại',
+    back: 'Hủy',
     saving: 'Đang lưu…',
     errors: {
       LINE_ALREADY_REVIEWED: 'Dòng này vừa được xử lý ở nơi khác.',

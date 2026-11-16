@@ -208,7 +208,7 @@ describe('Trang Nhóm món', () => {
     await userEvent.click(within(rowOf('Giấy & sổ')).getByRole('button', { name: 'Tạm ngưng nhóm Giấy & sổ' }));
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText(/^1 món sẽ ẩn với nhân viên/)).toBeInTheDocument();
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Quay lại' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Hủy' }));
     expect(mutations(f)).toHaveLength(0);
   });
 

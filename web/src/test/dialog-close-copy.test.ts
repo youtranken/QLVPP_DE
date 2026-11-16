@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import en from '@/locales/en';
 import vi from '@/locales/vi';
 
-// Nút đóng hộp thoại (không làm gì) luôn là "Quay lại"/"Back"; "Hủy …" chỉ cho hành động thật
+// Giao diện A (review-spec H): nút hủy thao tác là "Hủy"/"Cancel"; hộp có hành động bắt đầu bằng "Hủy …" thì nút đóng là "Đóng"/"Close"; hộp lưu phiếu "Quay lại sửa"
 type Tree = { [k: string]: string | Tree };
 const get = (tree: Tree, path: string): unknown => path.split('.').reduce<unknown>((o, k) => (o as Tree | undefined)?.[k], tree);
 
@@ -32,36 +32,43 @@ const sites: Site[] = walk(SRC).flatMap((file) => {
 
 // Lựa chọn thật (không phải nút đóng): ở lại trang, giữ giỏ hiện có
 const CHOICES = new Set(['Ở lại', 'Giữ giỏ', 'Đóng, xem giỏ của tôi']);
-const BANNED = /^(Hủy|Cancel|Tiếp tục sửa|Keep editing|Quay lại sửa)$/;
+const BANNED = /^(Quay lại|Back|← Đóng|Tiếp tục sửa|Keep editing)$/;
+const OK_VI: Record<string, string> = { Hủy: 'Cancel', Đóng: 'Close', 'Quay lại sửa': 'Back to edit' };
 
-describe('Nút đóng hộp thoại là "Quay lại"', () => {
+describe('Nút đóng hộp thoại: "Hủy" / "Đóng" / "Quay lại sửa"', () => {
   it('tìm được các chỗ đặt nhãn đóng trong mã (hộp xác nhận + DialogClose)', () => {
     expect(sites.filter((s) => s.kind === 'cancelLabel').length).toBeGreaterThanOrEqual(7);
     expect(sites.filter((s) => s.kind === 'DialogClose').length).toBeGreaterThanOrEqual(10);
     expect(sites.map((s) => s.key)).toContain('common.cancel');
   });
 
-  it('mọi cancelLabel là "Quay lại"/"Back" (trừ lựa chọn ở lại/giữ giỏ)', () => {
+  it('mọi nút đóng là "Hủy"/"Cancel", "Đóng"/"Close" hoặc "Quay lại sửa"/"Back to edit" (trừ lựa chọn ở lại/giữ giỏ)', () => {
     const bad = sites
-      .filter((s) => s.kind === 'cancelLabel')
       .filter((s) => {
-        const v = get(vi as unknown as Tree, s.key);
-        return !CHOICES.has(String(v)) && (v !== 'Quay lại' || get(en as unknown as Tree, s.key) !== 'Back');
+        const v = String(get(vi as unknown as Tree, s.key));
+        return !CHOICES.has(v) && OK_VI[v] !== get(en as unknown as Tree, s.key);
       })
       .map((s) => `${s.file}: ${s.key} = ${String(get(vi as unknown as Tree, s.key))}`);
     expect(bad).toEqual([]);
   });
 
-  it('không nút đóng nào là "Hủy"/"Cancel"/"Tiếp tục sửa"/"Keep editing"', () => {
+  it('không nút đóng nào là "Quay lại"/"Back"/"← Đóng"/"Tiếp tục sửa"/"Keep editing"', () => {
     const bad = sites
       .filter((s) => BANNED.test(String(get(vi as unknown as Tree, s.key))) || BANNED.test(String(get(en as unknown as Tree, s.key))))
       .map((s) => `${s.file}: ${s.key}`);
     expect(bad).toEqual([]);
   });
 
-  it('nút đóng mặc định của hộp xác nhận: vi "Quay lại", en "Back"', () => {
-    expect(get(vi as unknown as Tree, 'common.cancel')).toBe('Quay lại');
-    expect(get(en as unknown as Tree, 'common.cancel')).toBe('Back');
+  it('nút đóng mặc định của hộp xác nhận: vi "Hủy", en "Cancel"; hộp lưu phiếu "Quay lại sửa" / "Back to edit"', () => {
+    expect(get(vi as unknown as Tree, 'common.cancel')).toBe('Hủy');
+    expect(get(en as unknown as Tree, 'common.cancel')).toBe('Cancel');
+    expect(get(vi as unknown as Tree, 'request.confirm.back')).toBe('Quay lại sửa');
+    expect(get(en as unknown as Tree, 'request.confirm.back')).toBe('Back to edit');
+  });
+
+  it('không giá trị locale nào là "← Đóng"', () => {
+    const all = (tree: Tree): string[] => Object.values(tree).flatMap((v) => (typeof v === 'string' ? [v] : all(v)));
+    expect([...all(vi as unknown as Tree), ...all(en as unknown as Tree)].filter((v) => v.includes('← Đóng'))).toEqual([]);
   });
 
   it('hộp rời trang/bỏ thay đổi giữ lựa chọn "Ở lại" / "Bỏ thay đổi"', () => {
@@ -73,8 +80,8 @@ describe('Nút đóng hộp thoại là "Quay lại"', () => {
     expect(get(en as unknown as Tree, 'sendAdm.leave.discard')).toBe('Discard changes');
   });
 
-  it('Hủy nợ: nút hành động thật vẫn là "Hủy nợ", nút đóng là "Quay lại"', () => {
+  it('Hủy nợ: nút hành động thật là "Hủy nợ", nút đóng là "Đóng" (không đặt "Hủy" cạnh "Hủy nợ")', () => {
     expect(get(vi as unknown as Tree, 'delivery.backlog.cancelDialog.submit')).toBe('Hủy nợ');
-    expect(get(vi as unknown as Tree, 'delivery.backlog.cancelDialog.back')).toBe('Quay lại');
+    expect(get(vi as unknown as Tree, 'delivery.backlog.cancelDialog.back')).toBe('Đóng');
   });
 });

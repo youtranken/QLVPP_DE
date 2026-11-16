@@ -104,7 +104,7 @@ describe('Báo cáo & gửi NCC: món ngoài danh mục chờ khi chốt bản',
     const dialog = await screen.findByRole('dialog', { name: 'Chốt phiếu gửi NCC?' });
     expect(within(dialog).getByText('Còn 2 món ngoài danh mục chưa duyệt. Chốt bản này sẽ ghi Không mua cho:')).toBeInTheDocument();
     expect(within(dialog).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Dây rút', 'Sổ tay']);
-    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Quay lại' })).toHaveFocus());
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Hủy' })).toHaveFocus());
     await userEvent.click(within(dialog).getByRole('button', { name: 'Xuất Excel mẫu phòng' }));
     await waitFor(() => expect(snapshotPosts(f)).toHaveLength(1));
     expect(snapshotPosts(f)[0]!.body).toMatchObject({ kind: 'xlsx', reject_pending_custom: true, expected_pending: 2 });

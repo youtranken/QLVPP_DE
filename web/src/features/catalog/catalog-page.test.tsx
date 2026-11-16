@@ -156,13 +156,13 @@ describe('Danh mục — bảng nhóm', () => {
     await userEvent.click(within(screen.getByRole('main')).getAllByRole('button', { name: 'Thêm sản phẩm' })[0]);
     expect(location()).toBe('?item=new');
     expect(await screen.findByRole('dialog', { name: 'Thêm sản phẩm' })).toBeInTheDocument();
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Quay lại' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Hủy' }));
 
     await userEvent.click(screen.getByRole('button', { name: 'Thêm món vào nhóm Bút & viết' }));
     expect(location()).toBe('?item=new&itemCat=c-pen');
     const dialog = await screen.findByRole('dialog', { name: 'Thêm sản phẩm' });
     expect(within(dialog).getByRole('combobox', { name: 'Nhóm' })).toHaveTextContent('Bút & viết');
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Quay lại' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Hủy' }));
 
     await userEvent.click(screen.getByText('hộp 20 cây'));
     expect(location()).toBe('?item=i-pen');

@@ -108,7 +108,7 @@ const request = {
       missingUnit: 'đơn vị tính',
       submitAdd: 'Thêm vào phiếu',
       submitEdit: 'Lưu thay đổi',
-      cancel: 'Quay lại',
+      cancel: 'Hủy',
     },
     newPeriod: {
       eyebrow: 'Kỳ tháng {{prev}} đã chốt',
@@ -227,7 +227,7 @@ const request = {
       title: 'Lưu phiếu tháng {{month}}?',
       hint: 'Bạn vẫn sửa được đến hết ngày {{date}}.',
       emptyHint: 'Phiếu không còn món nào — lưu sẽ bỏ phiếu tháng này.',
-      back: 'Quay lại',
+      back: 'Quay lại sửa',
       submit: 'Lưu phiếu',
       saving: 'Đang lưu…',
     },

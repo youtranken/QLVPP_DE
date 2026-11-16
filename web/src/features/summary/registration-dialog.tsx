@@ -2,8 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { vnSavedStamp } from '@/lib/format-time';
 import { langOf, lockPhrase } from '@/lib/period-text';
-import { Dialog, DialogCloseButton, DialogTitle } from '@/ui/dialog';
-import { Icon } from '@/ui/icon';
+import { OverlayPanel } from '@/ui/overlay-panel';
 import { ItemThumb } from '@/ui/item-thumb';
 import { Loading, LoadError } from '@/ui/load-state';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
@@ -48,14 +47,14 @@ export function RegistrationDialog({ ym, deadline, rows, index, onIndex, onClose
   const name = row.full_name ?? row.email ?? row.user_sub;
   const lines = view.data?.lines.filter((l) => l.review_status !== 'rejected') ?? [];
   const units = lines.reduce((sum, l) => sum + l.qty, 0);
-  const prevRef = useRef<HTMLButtonElement>(null);
-  const nextRef = useRef<HTMLButtonElement>(null);
   const stepped = useRef(false);
   useEffect(() => {
     if (!stepped.current) return;
     const a = document.activeElement;
-    if (a === document.body || (a instanceof HTMLButtonElement && a.disabled)) (index === 0 ? nextRef : prevRef).current?.focus();
-  }, [index]);
+    if (a !== document.body && !(a instanceof HTMLButtonElement && a.disabled)) return;
+    const label = t(index === 0 ? 'summary.open.next' : 'summary.open.prev');
+    document.querySelector<HTMLElement>(`.ovp [aria-label="${label}"]`)?.focus();
+  }, [index, t]);
   const step = (next: number) => {
     stepped.current = true;
     onIndex(next);
@@ -66,45 +65,40 @@ export function RegistrationDialog({ ym, deadline, rows, index, onIndex, onClose
     return !!opener;
   };
   const lock = deadline ? lockPhrase(deadline, langOf(i18n.language)) : '';
+  const eyebrow = t(deadline ? 'summary.open.dialogMeta' : 'summary.open.dialogMetaLocked', { month: monthOf(ym), team: view.data?.team ?? t('common.empty') });
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()} maxWidth={560} onCloseFocus={returnToRow}>
-      <div className="sheet-header rg-head">
-        <div className="rg-head__text">
-          <small>{t(deadline ? 'summary.open.dialogMeta' : 'summary.open.dialogMetaLocked', { month: monthOf(ym), team: view.data?.team ?? t('common.empty') })}</small>
-          <DialogTitle className="sheet-title">{t('summary.open.dialogTitle', { name })}</DialogTitle>
-          <small aria-live="polite">{view.data ? t('summary.open.dialogSaved', { time: vnSavedStamp(row.saved_at ?? view.data.saved_at), kinds: lines.length, units }) : null}</small>
-        </div>
-        <button type="button" ref={prevRef} className="rg-step" aria-label={t('summary.open.prev')} disabled={index === 0} onClick={() => step(index - 1)}>
-          <Icon name="chevl" size={18} />
-        </button>
-        <button type="button" ref={nextRef} className="rg-step" aria-label={t('summary.open.next')} disabled={index >= rows.length - 1} onClick={() => step(index + 1)}>
-          <Icon name="chevr" size={18} />
-        </button>
-        <DialogCloseButton />
-      </div>
-      <div className="sheet-body">
-        {deadline && (
-          <p className="alert" role="status">
-            {t('summary.open.dialogNote', { lockPhrase: lock })}
-          </p>
-        )}
-        {view.isError ? (
-          <LoadError onRetry={() => void view.refetch()} />
-        ) : view.isPending ? (
-          <Loading />
-        ) : (
-          <ul className="rg-lines" aria-label={t('summary.open.lines')}>
-            {lines.map((l) => (
-              <Line key={l.id} line={l} />
-            ))}
-          </ul>
-        )}
-      </div>
-      <div className="sheet-footer">
+    <OverlayPanel
+      open
+      onClose={onClose}
+      onCloseFocus={returnToRow}
+      eyebrow={eyebrow}
+      title={t('summary.open.dialogTitle', { name })}
+      nav={{ index, total: rows.length, onStep: (dir) => step(index + dir), prevLabel: t('summary.open.prev'), nextLabel: t('summary.open.next') }}
+      footer={
         <button type="button" className="btn" onClick={onClose}>
           {t('common.close')}
         </button>
-      </div>
-    </Dialog>
+      }
+    >
+      <small className="rg-saved" aria-live="polite">
+        {view.data ? t('summary.open.dialogSaved', { time: vnSavedStamp(row.saved_at ?? view.data.saved_at), kinds: lines.length, units }) : null}
+      </small>
+      {deadline && (
+        <p className="alert" role="status">
+          {t('summary.open.dialogNote', { lockPhrase: lock })}
+        </p>
+      )}
+      {view.isError ? (
+        <LoadError onRetry={() => void view.refetch()} />
+      ) : view.isPending ? (
+        <Loading />
+      ) : (
+        <ul className="rg-lines" aria-label={t('summary.open.lines')}>
+          {lines.map((l) => (
+            <Line key={l.id} line={l} />
+          ))}
+        </ul>
+      )}
+    </OverlayPanel>
   );
 }

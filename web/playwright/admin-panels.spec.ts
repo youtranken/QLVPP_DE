@@ -134,7 +134,7 @@ async function expectOverlay(page: Page, info: TestInfo, behind: Locator, open: 
   expect(new URL(page.url()).searchParams.has(param), `?${param}= trên URL`).toBe(true);
   expect(await pageBox(), 'lưới không bị đẩy/co').toEqual(before);
   if (isMobile(info)) {
-    await expect(panel.getByRole('button', { name: '← Đóng' })).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Đóng' })).toBeVisible();
     expect(Math.round((await panel.boundingBox())!.width)).toBe(390);
     const scroll = await page.evaluate(() => document.scrollingElement!.scrollWidth - document.documentElement.clientWidth);
     expect(scroll, 'không cuộn ngang').toBeLessThanOrEqual(0);

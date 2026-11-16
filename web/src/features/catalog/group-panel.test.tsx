@@ -115,7 +115,7 @@ describe('Panel nhóm (?group=)', () => {
     await userEvent.click(itemSwitch('Kẹp B'));
     const ask = await screen.findByRole('dialog', { name: 'Tạm ngưng Kẹp B?' });
     expect(within(ask).getByRole('note')).toHaveTextContent(/Món này đang chờ NCC giao 3 cái \(bản in .+\) — ngừng thì vẫn nhập được hàng đã đặt\./);
-    await userEvent.click(within(ask).getByRole('button', { name: 'Quay lại' }));
+    await userEvent.click(within(ask).getByRole('button', { name: 'Hủy' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Tạm ngưng Kẹp B?' })).toBeNull());
     expect(mutations(f)).toEqual([]);
     expect(itemSwitch('Kẹp B')).toHaveAttribute('aria-checked', 'true');

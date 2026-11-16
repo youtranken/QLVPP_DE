@@ -111,7 +111,7 @@ const request: Messages<typeof vi> = {
       missingUnit: 'unit',
       submitAdd: 'Add to order',
       submitEdit: 'Save changes',
-      cancel: 'Back',
+      cancel: 'Cancel',
     },
     newPeriod: {
       eyebrow: '{{prev, MonthName}} is closed',
@@ -230,7 +230,7 @@ const request: Messages<typeof vi> = {
       title: 'Save {{month, monthName}} order?',
       hint: 'You can still edit until the end of {{date}}.',
       emptyHint: 'The order has no items left — saving removes this month’s order.',
-      back: 'Back',
+      back: 'Back to edit',
       submit: 'Save order',
       saving: 'Saving…',
     },

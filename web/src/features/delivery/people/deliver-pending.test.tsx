@@ -59,9 +59,9 @@ describe('DeliverDialog — món ngoài danh mục chưa duyệt', () => {
     const box = await screen.findByRole('dialog', { description: /^Món ngoài danh mục chưa duyệt:/ });
     expect(box).toHaveAccessibleName('Giao cho Nguyễn Văn An?');
     expect(box).toHaveAccessibleDescription('Món ngoài danh mục chưa duyệt: Dây rút nhựa 20cm, Pin sạc AA. Giao sẽ ghi Không mua cho các món này.');
-    await waitFor(() => expect(within(box).getByRole('button', { name: 'Quay lại' })).toHaveFocus());
+    await waitFor(() => expect(within(box).getByRole('button', { name: 'Hủy' })).toHaveFocus());
     expect(posts(f)).toEqual([]);
-    await userEvent.click(within(box).getByRole('button', { name: 'Quay lại' }));
+    await userEvent.click(within(box).getByRole('button', { name: 'Hủy' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { description: /^Món ngoài danh mục chưa duyệt:/ })).toBeNull());
     expect(main()).toBeInTheDocument();
     expect(posts(f)).toEqual([]);

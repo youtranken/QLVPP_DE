@@ -188,7 +188,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       }
       const cancel = page.getByRole('dialog', { name: `Hủy nợ 2 cái ${debt.items[0].name} của ${debt.name}?` });
       await expect(cancel.getByRole('radio', { name: 'Người đã nghỉ' })).toBeChecked();
-      await expect(cancel.getByRole('button', { name: 'Quay lại' })).toBeVisible();
+      await expect(cancel.getByRole('button', { name: 'Đóng' }).last()).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await cancel.getByRole('button', { name: 'Hủy nợ', exact: true }).click();
       await expect(cancel).toHaveCount(0);

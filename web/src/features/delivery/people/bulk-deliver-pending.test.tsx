@@ -60,8 +60,8 @@ describe('BulkDeliverDialog — món ngoài danh mục chưa duyệt', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Xác nhận giao' }));
     const box = await screen.findByRole('dialog', { description: ASK });
     expect(box).toHaveAccessibleDescription('Món ngoài danh mục chưa duyệt: Món chờ 1, Món chờ 2, Món chờ 3, Món chờ 4, Món chờ 5 (và 2 món nữa). Giao sẽ ghi Không mua cho các món này.');
-    await waitFor(() => expect(within(box).getByRole('button', { name: 'Quay lại' })).toHaveFocus());
-    await userEvent.click(within(box).getByRole('button', { name: 'Quay lại' }));
+    await waitFor(() => expect(within(box).getByRole('button', { name: 'Hủy' })).toHaveFocus());
+    await userEvent.click(within(box).getByRole('button', { name: 'Hủy' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { description: ASK })).toBeNull());
     expect(bodies(f)).toEqual([]);
   });

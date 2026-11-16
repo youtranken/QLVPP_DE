@@ -55,13 +55,38 @@ describe('OverlayPanel — lớp phủ từ phải', () => {
     expect(screen.getByText('3/48')).toBeInTheDocument();
   });
 
-  it('767 px: thanh đầu "← Đóng" (không có ×), bấm thì đóng', async () => {
+  it('767 px: cùng nút × "Đóng" ở đầu panel như màn rộng (không còn thanh "← Đóng"), cao bằng cỡ chạm; bấm thì đóng', async () => {
     mockViewport(767);
     const onClose = vi.fn();
     renderWithI18n(<Harness onClose={onClose} />);
-    expect(screen.queryByRole('button', { name: 'Đóng' })).toBeNull();
-    await userEvent.click(screen.getByRole('button', { name: '← Đóng' }));
+    expect(screen.queryByRole('button', { name: '← Đóng' })).toBeNull();
+    expect(document.querySelector('.ovp-bar')).toBeNull();
+    const close = screen.getByRole('button', { name: 'Đóng' });
+    expect(close.closest('.ovp-head')).not.toBeNull();
+    await userEvent.click(close);
     expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('eyebrow: dòng phụ hiện trên tiêu đề, trong đầu panel', () => {
+    mockViewport(1280);
+    renderWithI18n(
+      <ConfirmProvider>
+        <OverlayPanel open onClose={vi.fn()} title="Phiếu của Lan" eyebrow="Kỳ tháng 12 · Tổ Giám sát">
+          <p>thân</p>
+        </OverlayPanel>
+      </ConfirmProvider>,
+    );
+    const eyebrow = screen.getByText('Kỳ tháng 12 · Tổ Giám sát');
+    expect(eyebrow.closest('.ovp-head')).not.toBeNull();
+    expect(eyebrow.compareDocumentPosition(screen.getByText('Phiếu của Lan')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('chân popup render một lần, nằm sau thân', () => {
+    mockViewport(390);
+    renderWithI18n(<Harness />);
+    const foots = document.querySelectorAll('.ovp-foot');
+    expect(foots).toHaveLength(1);
+    expect(document.querySelector('.ovp-body')!.compareDocumentPosition(foots[0]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('mục đầu: ↑ vô hiệu, ↓ bật; mục thứ hai: ↑ bật', () => {
@@ -261,7 +286,7 @@ describe('OverlayPanel — nút Back của trình duyệt', () => {
     expect(clean.defaultPrevented).toBe(false);
   });
 
-  it('có head: không vẽ tiêu đề mặc định; DialogTitle trong head đặt tên hộp; 390 không có hàng "← Đóng" riêng nhưng vẫn có nút đóng cùng hàng đầu', () => {
+  it('có head: không vẽ tiêu đề mặc định; DialogTitle trong head đặt tên hộp; 390 không có hàng đóng riêng, nút × "Đóng" cùng hàng đầu', () => {
     mockViewport(390);
     renderWithI18n(
       <ConfirmProvider>
@@ -273,6 +298,6 @@ describe('OverlayPanel — nút Back của trình duyệt', () => {
     expect(screen.getByRole('dialog', { name: 'Tiêu đề trong head' })).toBeInTheDocument();
     expect(screen.queryByText('Tiêu đề mặc định')).toBeNull();
     expect(document.querySelector('.ovp-bar')).toBeNull();
-    expect(screen.getByRole('button', { name: '← Đóng' }).closest('.ovp-head')).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Đóng' }).closest('.ovp-head')).not.toBeNull();
   });
 });

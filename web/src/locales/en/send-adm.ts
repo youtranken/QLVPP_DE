@@ -27,7 +27,7 @@ const sendAdm: Messages<typeof vi> = {
       action: 'No supplier order needed this month',
       title: 'No supplier order needed this month?',
       body: 'Stock already covers everyone who requested. The Send to supplier and Receiving steps will count as done; you can still make an order later.',
-      back: 'Back',
+      back: 'Cancel',
       ok: 'Confirm',
       failed: 'Could not save, try again later.',
     },
@@ -37,7 +37,7 @@ const sendAdm: Messages<typeof vi> = {
       changes: 'Changed from the copy of {{time}}:',
       change: '{{name}} {{x}} → {{y}}',
       more: 'and {{n}} more items',
-      back: 'Back',
+      back: 'Cancel',
     },
   },
 };

@@ -238,11 +238,11 @@ describe('AdjustDrawer — ↑/↓ chuyển người', () => {
     stubAdjust();
     const onNext = vi.fn();
     const { drawer } = await renderDrawer({ onNext });
-    within(drawer).getByRole('button', { name: 'Quay lại' }).focus();
+    within(drawer).getByRole('button', { name: 'Hủy' }).focus();
     await userEvent.keyboard('{ArrowDown}');
     expect(onNext).toHaveBeenCalledTimes(1);
     await userEvent.click(less(drawer, NOTE));
-    within(drawer).getByRole('button', { name: 'Quay lại' }).focus();
+    within(drawer).getByRole('button', { name: 'Hủy' }).focus();
     await userEvent.keyboard('{ArrowDown}');
     expect(await screen.findByText('Bỏ thay đổi?')).toBeInTheDocument();
     expect(onNext).toHaveBeenCalledTimes(1);
