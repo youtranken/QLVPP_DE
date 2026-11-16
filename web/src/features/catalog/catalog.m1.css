@@ -9,7 +9,8 @@
 [data-shell='admin'] .ct-chips--wrap .ct-chip { max-width: 100%; height: auto; min-height: 36px; padding: 8px 16px; white-space: normal; overflow-wrap: anywhere; text-align: left; }
 /* Mã món đọc đủ: xuống dòng ở dấu "-" (BUT-KIM-/JELLITTO-04) thay vì cắt "BUT-…"; đoạn dài nhất giữa hai dấu "-" vừa cột */
 [data-shell='admin'] .ct-code { color: var(--c-muted); font: var(--t-sm); }
-[data-shell='admin'] .ct-code__text { display: block; overflow-wrap: break-word; }
+/* Mã một dòng, dài thì "…" (đủ mã ở title): bẻ giữa mã "BUT-KIM-/JELLITTO" khó đọc */
+[data-shell='admin'] .ct-code__text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 [data-shell='admin'] .ct-item-cell { min-width: 220px; }
 [data-shell='admin'] .ct-name-en { min-width: 140px; max-width: 220px; color: var(--c-ink-2); font: var(--t-sm); overflow-wrap: anywhere; }
 [data-shell='admin'] .ct-page .inline-number__hint { white-space: nowrap; }
@@ -131,3 +132,4 @@
 @media (min-width: 768px) {
   [data-shell='admin'] .ct-switch-row .switch { white-space: nowrap; }
 }
+[data-shell='admin'] .table th.ct-max { white-space: nowrap; }

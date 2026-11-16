@@ -21,6 +21,17 @@ describe('CategoryTable chế độ Sắp xếp', () => {
   });
 });
 
+
+describe('CategoryTable: Sắp xếp khóa Sửa / Tạm ngưng', () => {
+  it('đang sắp xếp → Sửa, Tạm ngưng khóa kèm lý do "Đang sắp xếp — Lưu thứ tự hoặc Hủy trước khi sửa"', () => {
+    renderTable(false);
+    for (const name of [/^Sửa nhóm Giấy|^Sửa Giấy/, /^Tạm ngưng nhóm Giấy|^Tạm ngưng Giấy|^Ngừng/]) {
+      const btn = screen.getAllByRole('button', { name })[0];
+      expect(btn).toBeDisabled();
+      expect(btn).toHaveAccessibleDescription('Đang sắp xếp — Lưu thứ tự hoặc Hủy trước khi sửa');
+    }
+  });
+});
 describe('CategoryTable: nhóm thiếu tên tiếng Anh', () => {
   it('name_en trống → nhắc "Thiếu tên EN"; có tên thì hiện tên, không nhắc', () => {
     renderWithI18n(

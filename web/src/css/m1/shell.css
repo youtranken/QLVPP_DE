@@ -17,7 +17,7 @@
 [data-shell='admin'] .side__link:hover { background: var(--c-on-dark-hover); color: var(--c-on-dark); }
 [data-shell='admin'] .side__link:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
 [data-shell='admin'] .side__link[aria-current='page'] { background: var(--c-surface); color: var(--c-ink); font-weight: 800; }
-[data-shell='admin'] .side__cnt { display: inline-grid; flex: none; place-items: center; min-width: 20px; height: 20px; margin-left: auto; padding: 0 8px; border-radius: var(--r-pill); background: rgb(255 255 255 / .14); color: var(--c-on-dark); font: var(--t-micro); }
+[data-shell='admin'] .side__cnt { display: inline-grid; flex: none; place-items: center; min-width: 20px; height: 20px; margin-left: auto; padding: 0 var(--s-1); border-radius: var(--r-pill); background: rgb(255 255 255 / .14); color: var(--c-on-dark); font: var(--t-micro); }
 [data-shell='admin'] .side__link[aria-current='page'] .side__cnt:not([data-badge='stock']):not([data-badge='review']) { background: var(--c-acc-soft); color: var(--c-acc); }
 [data-shell='admin'] .side__cnt[data-badge='stock'],
 [data-shell='admin'] .side__cnt[data-badge='review'] { background: var(--c-warn-fill); color: var(--c-ink); }

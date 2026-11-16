@@ -44,13 +44,15 @@ function useColumns(canOpen: (e: AuditEntry) => boolean) {
         meta: { width: '20%' },
         cell: ({ row: { original: e } }) => {
           // Tiến trình máy ghi actor "system(…)": hiện chữ thường, không lộ mã
-          const name = e.actorName ?? (e.actor.startsWith('system') ? t('audit.filters.system') : e.actor);
+          const system = !e.actorName && e.actor.startsWith('system');
+          const name = e.actorName ?? (system ? t('audit.filters.system') : e.actor);
+          // Hệ thống dùng biểu tượng, không chữ cái: "H" của Hệ thống trùng avatar người tên Hoàng
           return (
             <span className="au-person">
-              <span className="au-avatar" aria-hidden="true">
-                {name.trim().charAt(0).toUpperCase()}
+              <span className={system ? 'au-avatar au-avatar--system' : 'au-avatar'} aria-hidden="true">
+                {system ? <Icon name="sliders" size={14} /> : name.trim().charAt(0).toUpperCase()}
               </span>
-              <span className="au-person__name">{name}</span>
+              <span className="au-person__name" title={name}>{name}</span>
             </span>
           );
         },

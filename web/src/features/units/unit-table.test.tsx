@@ -19,6 +19,20 @@ describe('UnitTable chế độ Sắp xếp', () => {
   });
 });
 
+describe('UnitTable: Sắp xếp khóa Sửa / Tạm ngưng / Xóa', () => {
+  it('đang sắp xếp → Sửa, Tạm ngưng, Xóa khóa kèm lý do "Đang sắp xếp — Lưu thứ tự hoặc Hủy trước khi sửa"; thôi sắp xếp → bật', () => {
+    const { unmount } = renderTable(false);
+    for (const name of [/^Sửa cái/, /^Tạm ngưng cái/, /^Xóa cái/]) {
+      const btn = screen.getByRole('button', { name });
+      expect(btn).toBeDisabled();
+      expect(btn).toHaveAccessibleDescription('Đang sắp xếp — Lưu thứ tự hoặc Hủy trước khi sửa');
+    }
+    unmount();
+    renderWithI18n(<UnitTable ordered={[U('cai', 'cái')]} busy={false} sorting={false} onMove={noop} onMoveTo={noop} onEdit={noop} onToggleActive={noop} onDelete={noop} />);
+    expect(screen.getByRole('button', { name: /^Sửa cái/ })).toBeEnabled();
+  });
+});
+
 describe('UnitTable: ĐVT thiếu tên tiếng Anh', () => {
   it('name_en trống → nhắc "Thiếu tên EN"; có tên thì hiện tên, không nhắc', () => {
     renderWithI18n(<UnitTable ordered={[U('xap', 'xấp'), { ...U('cai', 'cái'), name_en: 'piece' }]} busy={false} sorting={false} onMove={noop} onMoveTo={noop} onEdit={noop} onToggleActive={noop} onDelete={noop} />);

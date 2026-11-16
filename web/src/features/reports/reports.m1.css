@@ -96,3 +96,7 @@
   [data-shell='admin'] .bc-people .bc-people__total td { margin-left: auto; }
 }
 [data-shell='admin'] .bc-head > .page-head__text { flex: 0 1 auto; }
+[data-shell='admin'] .bc-how-phone { display: none; }
+@media (max-width: 767px) {
+  [data-shell='admin'] .bc-how-phone { display: inline-flex; }
+}

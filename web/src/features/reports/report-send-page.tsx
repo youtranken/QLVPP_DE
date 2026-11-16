@@ -1,3 +1,4 @@
+import { InfoTip } from '@/ui/info-tip';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -162,6 +163,12 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
     <div className="bc-page">
       <Heading ym={report.ym} open={open} onMonth={onMonth}>
         <Switch checked={onlyNeed} text={t('reports.part1.onlyNeed')} onChange={setOnlyNeed} />
+        {/* Điện thoại: bảng thành thẻ, đầu bảng (nơi có ⓘ) ẩn — đưa ⓘ lên hàng công cụ */}
+        <span className="bc-how-phone">
+          <InfoTip label={t('reports.page.how.title')}>
+            <p>{t('reports.page.how.formula')}</p>
+          </InfoTip>
+        </span>
         <div className="bc-head__actions">
           <ReportStatusLine send={send} rowsChanged={changed.size} pendingCustom={report.pending_custom_count} ym={report.ym} onReprint={sent ? () => void printer.print(sent.data) : undefined} reprinting={printer.pending} onlyChanged={showChanged} onToggleChanged={() => setOnlyChanged((v) => !v)} />
           {actions}

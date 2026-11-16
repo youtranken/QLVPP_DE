@@ -1,3 +1,4 @@
+import { useDisabledReason } from '@/ui/disabled-reason';
 import { useTranslation } from 'react-i18next';
 import { toneAtRank } from '@/lib/group-tone';
 import { ReorderCell, ReorderHead } from '@/ui/reorder';
@@ -25,6 +26,7 @@ const nameClass = (c: Category) => (c.active ? 'cg-name__text' : 'cg-name__text 
 
 export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onMove, onMoveTo, onEdit, onToggleActive, onOpen, visible }: Props) {
   const { t } = useTranslation();
+  const lock = useDisabledReason(sorting ? t('common.disabledReason.sorting') : null);
   const drag = useRowDrag(onMoveTo);
   return (
     <div className="table-wrap">
@@ -89,15 +91,15 @@ export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onM
                 </td>
                 <td className="acts">
                   <div className="acts__in">
-                    <button type="button" className="btn btn--sm" aria-label={t('catalog.categories.editFor', { name: c.name })} onClick={() => onEdit(c)}>
+                    <button type="button" className="btn btn--sm" aria-label={t('catalog.categories.editFor', { name: c.name })} disabled={sorting} aria-describedby={lock.describedBy} onClick={() => onEdit(c)}>
                       {t('catalog.categories.edit')}
                     </button>
                     {c.active ? (
-                      <button type="button" className="btn btn--sm btn--quiet-danger" aria-label={t('catalog.categories.pauseFor', { name: c.name })} disabled={busy || !countsReady} onClick={() => onToggleActive(c)}>
+                      <button type="button" className="btn btn--sm btn--quiet-danger" aria-label={t('catalog.categories.pauseFor', { name: c.name })} disabled={busy || !countsReady || sorting} aria-describedby={lock.describedBy} onClick={() => onToggleActive(c)}>
                         {t('catalog.categories.pause')}
                       </button>
                     ) : (
-                      <button type="button" className="btn btn--sm btn--primary" aria-label={t('catalog.categories.reactivateFor', { name: c.name })} disabled={busy} onClick={() => onToggleActive(c)}>
+                      <button type="button" className="btn btn--sm btn--primary" aria-label={t('catalog.categories.reactivateFor', { name: c.name })} disabled={busy || sorting} aria-describedby={lock.describedBy} onClick={() => onToggleActive(c)}>
                         {t('catalog.categories.reactivate')}
                       </button>
                     )}
@@ -108,6 +110,7 @@ export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onM
           })}
         </tbody>
       </table>
+      {lock.node}
     </div>
   );
 }

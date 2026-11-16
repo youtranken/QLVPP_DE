@@ -1,3 +1,4 @@
+import { useDisabledReason } from '@/ui/disabled-reason';
 import { useTranslation } from 'react-i18next';
 import { MissingEnCell } from '@/ui/missing-en-cell';
 import { ReorderCell, ReorderHead } from '@/ui/reorder';
@@ -19,6 +20,7 @@ interface Props {
 
 export function UnitTable({ ordered, busy, sorting, onMove, onMoveTo, onEdit, onToggleActive, onDelete, visible }: Props) {
   const { t } = useTranslation();
+  const lock = useDisabledReason(sorting ? t('common.disabledReason.sorting') : null);
   const drag = useRowDrag(onMoveTo);
   return (
     <div className="table-wrap">
@@ -67,20 +69,20 @@ export function UnitTable({ ordered, busy, sorting, onMove, onMoveTo, onEdit, on
                 <td className="acts">
                   {/* Cùng mẫu nút chữ với tab Nhóm (Sửa · Tạm ngưng/Dùng lại), thêm Xóa khi chưa món nào dùng */}
                   <div className="acts__in">
-                    <button type="button" className="btn btn--sm" aria-label={t('units.page.editFor', { name: u.name })} onClick={() => onEdit(u)}>
+                    <button type="button" className="btn btn--sm" aria-label={t('units.page.editFor', { name: u.name })} disabled={sorting} aria-describedby={lock.describedBy} onClick={() => onEdit(u)}>
                       {t('units.page.edit')}
                     </button>
                     {u.active ? (
-                      <button type="button" className="btn btn--sm btn--quiet-danger" aria-label={t('units.page.deactivateFor', { name: u.name })} disabled={busy} onClick={() => onToggleActive(u)}>
+                      <button type="button" className="btn btn--sm btn--quiet-danger" aria-label={t('units.page.deactivateFor', { name: u.name })} disabled={busy || sorting} aria-describedby={lock.describedBy} onClick={() => onToggleActive(u)}>
                         {t('units.page.deactivate')}
                       </button>
                     ) : (
-                      <button type="button" className="btn btn--sm btn--primary" aria-label={t('units.page.reactivateFor', { name: u.name })} disabled={busy} onClick={() => onToggleActive(u)}>
+                      <button type="button" className="btn btn--sm btn--primary" aria-label={t('units.page.reactivateFor', { name: u.name })} disabled={busy || sorting} aria-describedby={lock.describedBy} onClick={() => onToggleActive(u)}>
                         {t('units.page.reactivate')}
                       </button>
                     )}
                     {!u.in_use && (
-                      <button type="button" className="btn btn--sm btn--quiet-danger" aria-label={t('units.page.deleteFor', { name: u.name })} disabled={busy} onClick={() => onDelete(u)}>
+                      <button type="button" className="btn btn--sm btn--quiet-danger" aria-label={t('units.page.deleteFor', { name: u.name })} disabled={busy || sorting} aria-describedby={lock.describedBy} onClick={() => onDelete(u)}>
                         {t('units.page.delete')}
                       </button>
                     )}
@@ -91,6 +93,7 @@ export function UnitTable({ ordered, busy, sorting, onMove, onMoveTo, onEdit, on
           })}
         </tbody>
       </table>
+      {lock.node}
     </div>
   );
 }

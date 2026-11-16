@@ -7,6 +7,8 @@
   [data-shell='admin'] .un-col-en { width: 30%; }
   [data-shell='admin'] .un-col-items { width: 9rem; }
   [data-shell='admin'] .un-col-acts { width: 17.5rem; }
+  /* Nút Sửa đứng một chỗ ở mọi dòng: dòng có "Xóa" không đẩy Sửa sang trái */
+  [data-shell='admin'] .un-table td.acts .acts__in { justify-content: flex-start; }
   /* Tổng tối thiểu các cột (tên 10rem, tên EN 6rem): hẹp hơn thì cuộn ngang, không đè nút */
   [data-shell='admin'] .un-table.table--fixed { min-width: 42.5rem; }
   [data-shell='admin'] .un-table.table--fixed:has(.un-col-reorder) { min-width: 48rem; }
