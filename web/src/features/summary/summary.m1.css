@@ -1,7 +1,7 @@
 [data-shell='admin'] .sm-muted { color: var(--c-muted); font: var(--t-sm); }
-[data-shell='admin'] .sm-person { display: inline-flex; align-items: center; gap: 12px; min-width: 0; }
+[data-shell='admin'] .sm-person { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) 12px; min-width: 0; max-width: 100%; }
 [data-shell='admin'] .sm-avatar { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: var(--r-pill); background: var(--c-acc-soft); color: var(--c-acc); font: var(--t-cap); font-weight: 800; }
-[data-shell='admin'] .sm-person__name { font: var(--t-label); color: var(--c-ink); }
+[data-shell='admin'] .sm-person__name { min-width: 0; overflow-wrap: anywhere; font: var(--t-label); color: var(--c-ink); }
 [data-shell='admin'] .sm-acts { white-space: nowrap; }
 [data-shell='admin'] .sm-acts .btn + .btn { margin-left: var(--s-1); }
 [data-shell='admin'] .table.is-stale tbody { opacity: .55; }

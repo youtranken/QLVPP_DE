@@ -64,16 +64,16 @@ function useColumns(busy: boolean, onView: Props['onView'], onAdjust: Props['onA
           </span>
         ),
       },
-      { id: 'team', header: t('month.table.team'), cell: ({ row }) => row.original.team ?? t('common.empty') },
-      { accessorKey: 'line_count', header: t('summary.table.lines'), meta: { className: 'num r' } },
-      { accessorKey: 'total_qty', header: t('summary.table.total'), meta: { className: 'num r' } },
-      { id: 'delivery', header: t('summary.table.delivery'), cell: ({ row }) => <DeliveryCell row={row.original} /> },
-      { id: 'note', header: t('summary.table.note'), cell: ({ row }) => <Notes row={row.original} /> },
-      { id: 'saved', header: t('summary.table.savedAt'), cell: ({ row }) => <SavedAt iso={row.original.saved_at} /> },
+      { id: 'team', header: t('month.table.team'), meta: { width: '9rem' }, cell: ({ row }) => row.original.team ?? t('common.empty') },
+      { accessorKey: 'line_count', header: t('summary.table.lines'), meta: { className: 'num r', width: '4.5rem' } },
+      { accessorKey: 'total_qty', header: t('summary.table.total'), meta: { className: 'num r', width: '4.5rem' } },
+      { id: 'delivery', header: t('summary.table.delivery'), meta: { width: '9.5rem' }, cell: ({ row }) => <DeliveryCell row={row.original} /> },
+      { id: 'note', header: t('summary.table.note'), meta: { width: '11rem' }, cell: ({ row }) => <Notes row={row.original} /> },
+      { id: 'saved', header: t('summary.table.savedAt'), meta: { width: '7.5rem' }, cell: ({ row }) => <SavedAt iso={row.original.saved_at} /> },
       {
         id: 'actions',
         header: () => <span className="sr-only">{t('summary.table.actions')}</span>,
-        meta: { className: 'r sm-acts' },
+        meta: { className: 'r sm-acts', width: '12rem' },
         cell: ({ row: { original: r } }) => (
           <>
             <button type="button" className="btn btn--ghost btn--sm" data-view-id={r.request_id} aria-label={t('summary.open.viewFor', { name: nameOf(r) })} disabled={busy} onClick={(e) => { e.stopPropagation(); onView(r); }}>

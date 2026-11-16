@@ -106,7 +106,7 @@ export function ReportItemTable({ rows, cats, loading, empty, editable, value, e
       {
         id: 'order',
         header: col('qty'),
-        meta: { className: 'num r bc-order-col', label: col('qty'), width: '8.5rem' },
+        meta: { className: 'num r bc-order-col', label: col('qty'), width: '10.5rem' },
         cell: ({ row }) => <OrderCell row={row.original} />,
       },
       {

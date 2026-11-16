@@ -107,7 +107,8 @@
 /* Ô chọn vẽ và nới vùng bấm 44px ở css/m1/table.css; cột rộng đúng vùng bấm */
 [data-shell='admin'] .pt-table td.pt-pick, [data-shell='admin'] .pt-table th.pt-pick { width: var(--hit); padding-inline: 0; text-align: center; }
 [data-shell='admin'] .pt-table tr.is-picked td { background: var(--c-surface-2); }
-[data-shell='admin'] .pt-person { display: flex; align-items: center; gap: var(--s-2); }
+[data-shell='admin'] .pt-person { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
+[data-shell='admin'] .pt-person b { min-width: 0; overflow-wrap: anywhere; }
 [data-shell='admin'] .pt-person .pp-avatar { width: 28px; height: 28px; font: var(--t-micro); font-weight: 800; }
 [data-shell='admin'] .pt-status { display: grid; gap: var(--s-1); justify-items: start; }
 [data-shell='admin'] .pt-chips { display: flex; flex-wrap: wrap; gap: var(--s-1); }

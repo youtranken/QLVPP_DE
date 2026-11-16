@@ -125,3 +125,8 @@
   /* Dạng thẻ đủ chỗ cho một dòng: vẫn cắt nhưng không bắt buộc khối */
   [data-shell='admin'] .table-stack .cell-clip { display: inline-block; }
 }
+/* Màn vừa: bảng rộng hơn khung thì cuộn ngang trong khung, cột cuối (thao tác) dính mép phải để luôn thấy */
+@media (min-width: 768px) {
+  [data-shell='admin'] .table-wrap > .table:not(.table-stack--cards) > * > tr > :last-child { position: sticky; right: 0; z-index: 1; background: var(--c-surface); }
+  [data-shell='admin'] .table-wrap > .table > thead > tr > :last-child { z-index: 3; }
+}
