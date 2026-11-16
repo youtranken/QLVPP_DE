@@ -201,11 +201,11 @@ describe('Panel phủ — hoạt ảnh và thứ tự lớp', () => {
     expect(reduced).toMatch(/\.ovp, \[data-shell='admin'\] \.ovp-backdrop \{ animation: none; transition: none; \}/);
   });
 
-  it('nền mờ rgb(14 42 51 / .32) + blur(2px) phủ cả khung nhìn (inset 0, kể cả sidebar); panel kính 440 px, bo 20 px hai góc trái; < 768 rộng 100 %', () => {
+  it('nền mờ rgb(14 42 51 / .32) + blur(2px) phủ cả khung nhìn (inset 0, kể cả sidebar); panel kính 440 px, bo --r-xl (12 px, giao diện A) hai góc trái; < 768 rộng 100 %', () => {
     expect(rule('.ovp-backdrop')).toMatch(/position: fixed; inset: 0;/);
     expect(rule('.ovp-backdrop')).toMatch(/background: rgb\(14 42 51 \/ \.32\); backdrop-filter: blur\(2px\)/);
     expect(rule('.ovp')).toMatch(/width: 440px;/);
-    expect(rule('.ovp')).toMatch(/border-radius: 20px 0 0 20px;/);
+    expect(rule('.ovp')).toMatch(/border-radius: var\(--r-xl\) 0 0 var\(--r-xl\);/);
     expect(rule('.ovp')).toMatch(/background: rgb\(255 255 255 \/ \.86\); backdrop-filter:/);
     expect(overlay).toMatch(/@media \(max-width: 767px\) \{[\s\S]*\.ovp \{ width: 100%;/);
   });

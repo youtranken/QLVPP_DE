@@ -16,7 +16,7 @@
 /* width/height trong thẻ img giữ tỉ lệ 383×274 → chỗ của logo có sẵn trước khi ảnh tải */
 .auth-pmh-logo { display: block; height: 84px; width: auto; margin: 0 auto 4px; }
 .auth-panel-name { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 0; font-size: 16px; font-weight: 700; line-height: 1.35; color: var(--c-acc-hover); text-wrap: balance; }
-.auth-panel-name img { flex: none; width: 24px; height: 24px; border-radius: 6px; }
+.auth-panel-name img { flex: none; width: 24px; height: 24px; border-radius: var(--r-sm); }
 .auth-panel-body { width: 100%; max-width: 400px; margin: 24px auto 0; padding-bottom: 20px; }
 .auth-panel-foot { margin-top: auto; display: flex; justify-content: space-between; gap: 4px 12px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--auth-rule); color: var(--auth-foot); font-size: 12px; line-height: 1.5; }
 /* Ô email: nhãn "Email" trên ô, trong ô để trống */
@@ -29,7 +29,7 @@
 .auth-card__head + .auth-card__sub { margin-top: -12px; }
 /* Nút VI/EN đủ 44px để chạm ở mọi khổ (viên gọn: nền viên bỏ đệm, nút tự cao 44) */
 .auth-card__head .seg { padding: 2px; gap: 2px; border-radius: var(--r-sm); }
-.auth-card__head .seg button { height: 44px; min-width: 44px; padding: 0 12px; border-radius: 6px; }
+.auth-card__head .seg button { height: 44px; min-width: 44px; padding: 0 12px; border-radius: var(--r-sm); }
 /* Ô đang chọn tô màu nhấn chữ trắng như QLHS/QLTS (chủ dự án 15/11) */
 .auth-card__head .seg button[aria-checked='true'] { background: var(--c-acc); color: var(--c-on-acc); }
 .auth-card__sub { margin: 0; font-size: 13px; color: var(--ink-2); }

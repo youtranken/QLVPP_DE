@@ -4,7 +4,7 @@
 .notif-btn svg { width: 22px; height: 22px; }
 /* Cỡ chữ tối thiểu 12px cho số trên chấm chuông (dưới 12 khó đọc) */
 .notif-badge { position: absolute; top: 1px; right: 0; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 12px; font-weight: 800; line-height: 18px; text-align: center; }
-.notif-panel { position: absolute; top: calc(100% + 8px); right: 0; z-index: 30; width: 360px; max-height: min(70vh, 520px); overflow-y: auto; background: var(--card); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: 0 12px 32px rgba(15, 42, 33, .18); }
+.notif-panel { position: absolute; top: calc(100% + 8px); right: 0; z-index: 30; width: 360px; max-height: min(70vh, 520px); overflow-y: auto; background: var(--card); border: 1px solid var(--line-2); border-radius: var(--r-md); box-shadow: 0 12px 32px rgba(15, 42, 33, .18); }
 .notif-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--card); }
 .notif-all, .notif-more { border: 0; background: transparent; color: var(--brand-ink); font-weight: 700; font-size: 13px; text-decoration: underline; padding: 4px; }
 .notif-more { display: block; width: 100%; padding: 12px; }

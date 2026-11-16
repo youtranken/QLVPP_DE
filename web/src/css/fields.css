@@ -43,7 +43,7 @@
 [data-shell] .lb-trigger:focus-visible, [data-shell] .lb-trigger[aria-expanded='true'] { outline: none; border-color: var(--c-acc); box-shadow: var(--focus-field-bordered); }
 [data-shell] .lb-trigger[aria-invalid='true'] { border-color: var(--c-danger); }
 [data-shell] .lb-trigger:disabled { background: var(--c-surface-2); color: var(--c-muted); cursor: not-allowed; }
-[data-shell] .lb--pill .lb-trigger { min-width: 160px; min-height: 0; height: var(--ctl-h, 40px); border: 0; border-radius: var(--r-pill); background: var(--c-surface-2); box-shadow: inset 0 0 0 1px var(--c-line); }
+[data-shell] .lb--pill .lb-trigger { min-width: 160px; min-height: 0; height: var(--ctl-h, 40px); border: 0; border-radius: var(--r-sm); background: var(--c-surface-2); box-shadow: inset 0 0 0 1px var(--c-line); }
 [data-shell] .lb--pill .lb-trigger:hover:not(:disabled) { box-shadow: inset 0 0 0 1px var(--c-line-strong); }
 [data-shell] .lb--pill .lb-trigger:focus-visible, [data-shell] .lb--pill .lb-trigger[aria-expanded='true'] { background: var(--c-surface); box-shadow: var(--focus-field); }
 [data-shell] .lb-list { z-index: 60; box-sizing: border-box; display: grid; align-content: start; gap: 2px; max-width: min(360px, calc(100vw - var(--s-4))); margin: 0; padding: var(--s-1); list-style: none; overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--c-line); border-radius: var(--r-md); background: var(--c-surface); box-shadow: var(--e-2); outline: none; }
@@ -123,7 +123,7 @@ html, [data-shell] * { scrollbar-width: thin; }
 [data-shell] .cal { display: grid; gap: var(--s-2); width: 296px; max-width: calc(100vw - var(--s-7)); }
 [data-shell] .cal__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
 [data-shell] .cal__title { font: var(--t-label); color: var(--c-ink); text-transform: capitalize; }
-[data-shell] .cal__nav { display: inline-grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-ink-2); cursor: pointer; }
+[data-shell] .cal__nav { display: inline-grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--c-ink-2); cursor: pointer; }
 [data-shell] .cal__nav:hover:not(:disabled) { background: var(--c-surface-2); }
 [data-shell] .cal__nav:disabled { color: var(--c-faint); cursor: default; }
 [data-shell] .cal__nav:focus-visible { outline: none; box-shadow: var(--focus); }

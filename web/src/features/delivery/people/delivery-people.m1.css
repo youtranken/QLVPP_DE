@@ -1,6 +1,6 @@
 
 
-[data-shell='admin'] .pp-chip { justify-self: start; padding: var(--s-1) var(--s-3); border-radius: var(--r-pill); font: var(--t-micro); }
+[data-shell='admin'] .pp-chip { justify-self: start; padding: var(--s-1) var(--s-3); border-radius: var(--r-sm); font: var(--t-micro); }
 [data-shell='admin'] .pp-chip--pending { background: var(--c-info-soft); color: var(--c-info); }
 [data-shell='admin'] .pp-chip--debt { background: var(--c-warn-soft); color: var(--c-warn); }
 [data-shell='admin'] .pp-chip--short { background: var(--c-warn-soft); color: var(--c-warn); }

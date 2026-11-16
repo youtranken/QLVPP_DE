@@ -41,11 +41,11 @@
 
 /* Stepper chung (ui/stepper): viên nền, nút tròn nổi bên trong, ô số cao bằng cả hàng. --stp-h là chiều cao hàng:
    sm 32px (bảng, hộp dày), md 44px (form); điện thoại mọi cỡ 44px (khối @media dưới) */
-[data-shell='admin'] .stepper { --stp-h: var(--hit); display: inline-grid; grid-template-columns: var(--stp-h) minmax(40px, 1fr) var(--stp-h); align-items: center; height: var(--stp-h); border-radius: var(--r-pill); background: var(--c-surface-2); }
+[data-shell='admin'] .stepper { --stp-h: var(--hit); display: inline-grid; grid-template-columns: var(--stp-h) minmax(40px, 1fr) var(--stp-h); align-items: center; height: var(--stp-h); border-radius: var(--r-sm); background: var(--c-surface-2); }
 [data-shell='admin'] .stepper[data-size='sm'] { --stp-h: 32px; }
 [data-shell='admin'] .stepper[data-dec-only] { grid-template-columns: var(--stp-h) minmax(40px, 1fr); }
 [data-shell='admin'] .stepper.is-invalid { box-shadow: inset 0 0 0 2px var(--c-danger); }
-[data-shell='admin'] .stepper button { position: relative; display: grid; place-items: center; width: calc(var(--stp-h) - 4px); height: calc(var(--stp-h) - 4px); margin: 2px; padding: 0; line-height: 1; border: 0; border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); font: var(--t-label); font-size: 16px; box-shadow: var(--e-1); cursor: pointer; }
+[data-shell='admin'] .stepper button { position: relative; display: grid; place-items: center; width: calc(var(--stp-h) - 4px); height: calc(var(--stp-h) - 4px); margin: 2px; padding: 0; line-height: 1; border: 0; border-radius: var(--r-sm); background: var(--c-surface); color: var(--c-ink); font: var(--t-label); font-size: 16px; box-shadow: var(--e-1); cursor: pointer; }
 /* Cỡ sm: nút 28px, vùng chạm nới ra 44px bằng lớp phủ */
 [data-shell='admin'] .stepper[data-size='sm'] button::after { content: ''; position: absolute; inset: -8px; }
 /* Nút +/− tắt đổi màu (muted, viền mảnh) thay vì gần như biến mất */

@@ -49,7 +49,7 @@
 [data-shell='admin'] .side__tools--low .seg button { min-width: var(--hit); height: var(--hit); padding: 0 var(--s-2); }
 [data-shell='admin'] .side__tools--low .side__icon-btn { width: var(--hit); height: var(--hit); }
 [data-shell='admin'] .side__tools .side__icon-btn, [data-shell='admin'] .side__tools .notif .notif-btn { width: 32px; height: 32px; }
-[data-shell='admin'] .side__icon-btn { display: grid; place-items: center; flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-on-dark-2); cursor: pointer; }
+[data-shell='admin'] .side__icon-btn { display: grid; place-items: center; flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--c-on-dark-2); cursor: pointer; }
 [data-shell='admin'] .side__icon-btn:hover:not(:disabled) { background: var(--c-on-dark-hover); color: var(--c-on-dark); }
 [data-shell='admin'] .side__icon-btn[aria-expanded='true'] { background: rgb(255 255 255 / .14); color: var(--c-on-dark); }
 [data-shell='admin'] .side__icon-btn:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
@@ -66,7 +66,7 @@
 [data-shell='admin'] .side__acct { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 
 [data-shell='admin'] .side .notif-btn,
-[data-shell='admin'] .topbar .notif-btn { width: var(--hit); height: var(--hit); border-radius: var(--r-pill); color: var(--c-on-dark-2); }
+[data-shell='admin'] .topbar .notif-btn { width: var(--hit); height: var(--hit); border-radius: var(--r-sm); color: var(--c-on-dark-2); }
 [data-shell='admin'] .side .notif-btn:hover,
 [data-shell='admin'] .topbar .notif-btn:hover { background: var(--c-on-dark-hover); color: var(--c-on-dark); }
 [data-shell='admin'] .side .notif-btn:focus-visible,
@@ -83,7 +83,7 @@
 [data-shell='admin'] .notif-text { overflow-wrap: anywhere; }
 
 [data-shell='admin'] .topbar { display: flex; align-items: center; gap: 4px; height: calc(56px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 8px 0 4px; border-bottom: 1px solid var(--c-glass-line); background: var(--c-shell-a); color: var(--c-on-dark); }
-[data-shell='admin'] .topbar__menu { display: grid; place-items: center; flex: none; width: var(--hit); height: var(--hit); border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-on-dark); }
+[data-shell='admin'] .topbar__menu { display: grid; place-items: center; flex: none; width: var(--hit); height: var(--hit); border: 0; border-radius: var(--r-sm); background: transparent; color: var(--c-on-dark); }
 [data-shell='admin'] .topbar__menu:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
 [data-shell='admin'] .topbar__text { flex: 1; min-width: 0; display: grid; }
 [data-shell='admin'] .topbar__title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--t-label); font-size: 16px; font-weight: 800; color: var(--c-on-dark); }
@@ -98,7 +98,7 @@
 [data-shell='admin'] .side-sheet__title { flex: 1; min-width: 0; }
 [data-shell='admin'] .side-sheet__title h2 { margin: 0; font: var(--t-label); font-size: 16px; font-weight: 800; color: var(--c-on-dark); }
 [data-shell='admin'] .side-sheet__title small { display: block; font: var(--t-cap); color: var(--c-on-dark-2); }
-[data-shell='admin'] .side-sheet__close { display: grid; place-items: center; flex: none; width: var(--hit); height: var(--hit); border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-on-dark-2); }
+[data-shell='admin'] .side-sheet__close { display: grid; place-items: center; flex: none; width: var(--hit); height: var(--hit); border: 0; border-radius: var(--r-sm); background: transparent; color: var(--c-on-dark-2); }
 [data-shell='admin'] .side-sheet__close:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
 [data-shell='admin'] .side-sheet .side { position: static; z-index: auto; flex: 1; height: auto; min-height: 0; padding-bottom: calc(12px + env(safe-area-inset-bottom)); border-right: 0; background: transparent; }
 [data-shell='admin'] .side-sheet .side__link { height: var(--hit); }

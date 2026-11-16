@@ -72,11 +72,11 @@
 [data-shell='admin'] .toolbar .btn,
 [data-shell='admin'] .toolbar .month-switch { height: var(--ctl-h); }
 [data-shell='admin'] .toolbar .seg-m1,
-[data-shell='admin'] .toolbar .seg { padding: 2px; border-radius: var(--r-pill); }
+[data-shell='admin'] .toolbar .seg { padding: 2px; border-radius: var(--r-sm); }
 [data-shell='admin'] .toolbar .seg-m1 button,
-[data-shell='admin'] .toolbar .seg button { height: calc(var(--ctl-h) - 4px); border-radius: var(--r-pill); }
+[data-shell='admin'] .toolbar .seg button { height: calc(var(--ctl-h) - 4px); border-radius: var(--r-sm); }
 [data-shell='admin'] .toolbar__end { display: flex; align-items: center; gap: var(--s-2); margin-left: auto; }
-[data-shell='admin'] .toolbar__search { flex: 1; max-width: 420px; min-width: 200px; display: flex; align-items: center; gap: 12px; height: var(--ctl-h, var(--hit)); padding: 0 8px 0 16px; border-radius: var(--r-pill); background: var(--c-surface-2); box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-muted); }
+[data-shell='admin'] .toolbar__search { flex: 1; max-width: 420px; min-width: 200px; display: flex; align-items: center; gap: 12px; height: var(--ctl-h, var(--hit)); padding: 0 8px 0 16px; border-radius: var(--r-sm); background: var(--c-surface-2); box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-muted); }
 [data-shell='admin'] .toolbar__search:focus-within { background: var(--c-surface); box-shadow: var(--focus-field); }
 /* Khung đã có vòng :focus-within — ô bên trong không vẽ thêm ô vuông */
 [data-shell='admin'] .toolbar__search input:focus { box-shadow: none; }
@@ -114,7 +114,7 @@
 [data-shell='admin'] .select--stacked { display: grid; gap: var(--s-1); width: 100%; }
 [data-shell='admin'] .select--stacked .lb { width: 100%; }
 
-[data-shell='admin'] .btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2); height: var(--hit); padding: 0 16px; border: 0; border-radius: var(--r-pill); background: var(--btn-bg, var(--c-surface)); box-shadow: var(--btn-sh, inset 0 0 0 1px var(--c-line)); color: var(--btn-fg, var(--c-ink)); font: var(--t-label); white-space: nowrap; text-decoration: none; cursor: pointer; transition: background var(--d-1) var(--ease-out), box-shadow var(--d-1) var(--ease-out), transform var(--d-1) var(--ease-out); }
+[data-shell='admin'] .btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2); height: var(--hit); padding: 0 16px; border: 0; border-radius: var(--r-sm); background: var(--btn-bg, var(--c-surface)); box-shadow: var(--btn-sh, inset 0 0 0 1px var(--c-line)); color: var(--btn-fg, var(--c-ink)); font: var(--t-label); white-space: nowrap; text-decoration: none; cursor: pointer; transition: background var(--d-1) var(--ease-out), box-shadow var(--d-1) var(--ease-out), transform var(--d-1) var(--ease-out); }
 /* Luật gốc chỉ ĐỌC biến: biến thể chỉ khai --btn-bg/-hover/-active/--btn-fg (+ --btn-sh*), không viết lại :hover/:active */
 [data-shell='admin'] .btn:hover:not(:disabled) { background: var(--btn-bg-hover, var(--c-surface-hover)); box-shadow: var(--btn-sh-hover, inset 0 0 0 1px var(--c-line-strong)); }
 [data-shell='admin'] .btn:active:not(:disabled) { transform: scale(0.97); background: var(--btn-bg-active, var(--c-surface-2)); color: var(--btn-fg-active, var(--btn-fg, var(--c-ink))); box-shadow: var(--btn-sh-active, var(--btn-sh-hover, inset 0 0 0 1px var(--c-line-strong))); }

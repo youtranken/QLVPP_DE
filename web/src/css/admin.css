@@ -1,10 +1,10 @@
 /* Trang quản lý: thanh công cụ + khung bảng + form gọn (bo 6/8) */
-.a-input, .ff input:where(:not([type='checkbox']):not([type='radio'])), .ff select { height: 32px; padding: 0 12px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--card); min-width: 0; }
+.a-input, .ff input:where(:not([type='checkbox']):not([type='radio'])), .ff select { height: 32px; padding: 0 12px; border: 1px solid var(--line-2); border-radius: var(--r-sm); background: var(--card); min-width: 0; }
 .ff input:where(:not([type='checkbox']):not([type='radio'])):focus, .ff select:focus, .a-input:focus { border-color: var(--c-acc); }
 .a-check-inline { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); }
 .table th.r, .table td.r { text-align: right; }
 .table tr.is-inactive td { color: var(--ink-3); }
-.icon-btn { width: 28px; height: 28px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--card); color: var(--ink-2); }
+.icon-btn { width: 28px; height: 28px; border: 1px solid var(--line-2); border-radius: var(--r-sm); background: var(--card); color: var(--ink-2); }
 .icon-btn:disabled { opacity: .6; cursor: not-allowed; }
 
 .ff { display: grid; gap: 4px; align-content: start; }
@@ -24,7 +24,7 @@
 }
 
 /* Chọn tháng ‹ Tháng 11/2026 › (ui/month-switcher) */
-.month-switch { display: inline-flex; align-items: stretch; height: 32px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--card); overflow: hidden; }
+.month-switch { display: inline-flex; align-items: stretch; height: 32px; border: 1px solid var(--line-2); border-radius: var(--r-sm); background: var(--card); overflow: hidden; }
 .month-switch button { width: 32px; border: 0; background: transparent; color: var(--ink-2); font-size: 16px; }
 .month-switch button:hover:not(:disabled) { background: var(--card-2); }
 .month-switch button:disabled { color: var(--line-2); cursor: not-allowed; }

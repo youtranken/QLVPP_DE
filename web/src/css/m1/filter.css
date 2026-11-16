@@ -1,10 +1,10 @@
 /* Thanh lọc dùng chung trang Hành chính: ô tìm, chip nhóm có số */
 [data-shell='admin'] .flt-search { position: relative; display: block; flex: 1 1 260px; max-width: 420px; min-width: 0; }
 [data-shell='admin'] .flt-search > svg { position: absolute; left: var(--s-4); top: 13px; width: 18px; height: 18px; color: var(--c-ink-2); }
-[data-shell='admin'] .flt-search input { width: 100%; box-sizing: border-box; min-height: var(--hit); padding: 0 var(--s-4) 0 calc(var(--s-4) + var(--s-6) + var(--s-1)); border: 1px solid var(--c-line-input); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); font: var(--t-body); }
+[data-shell='admin'] .flt-search input { width: 100%; box-sizing: border-box; min-height: var(--hit); padding: 0 var(--s-4) 0 calc(var(--s-4) + var(--s-6) + var(--s-1)); border: 1px solid var(--c-line-input); border-radius: var(--r-sm); background: var(--c-surface); color: var(--c-ink); font: var(--t-body); }
 [data-shell='admin'] .flt-search:has(.search-clear) input { padding-right: calc(var(--s-7) + var(--s-3)); }
 [data-shell='admin'] .flt-chips { display: flex; flex-wrap: wrap; gap: var(--s-2); min-width: 0; }
-[data-shell='admin'] .flt-chip { display: inline-flex; flex: none; align-items: center; gap: var(--s-2); min-height: var(--hit); padding: 0 var(--s-4); border: 1px solid var(--c-line-input); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); font: var(--t-label); white-space: nowrap; cursor: pointer; }
+[data-shell='admin'] .flt-chip { display: inline-flex; flex: none; align-items: center; gap: var(--s-2); min-height: var(--hit); padding: 0 var(--s-4); border: 1px solid var(--c-line-input); border-radius: var(--r-sm); background: var(--c-surface); color: var(--c-ink); font: var(--t-label); white-space: nowrap; cursor: pointer; }
 [data-shell='admin'] .flt-chip:hover:not([aria-pressed='true']) { background: var(--c-surface-hover); border-color: var(--c-dark); }
 [data-shell='admin'] .flt-chip:focus-visible { outline: none; box-shadow: var(--focus); }
 [data-shell='admin'] .flt-chip[aria-pressed='true'] { background: var(--c-sel); border-color: var(--c-sel); color: var(--c-on-sel); }

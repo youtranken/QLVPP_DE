@@ -22,7 +22,7 @@
 [data-shell='admin'] .ar-foot .btn:disabled { cursor: default; }
 
 [data-shell='admin'] .ar-qty input:disabled { background: var(--c-surface-2); color: var(--c-muted); }
-[data-shell='admin'] .ar-adm { min-height: var(--hit); padding: 0 var(--s-3); border: 1px solid var(--c-line-input); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink-2); font: var(--t-cap); font-weight: 700; white-space: nowrap; cursor: pointer; }
+[data-shell='admin'] .ar-adm { min-height: var(--hit); padding: 0 var(--s-3); border: 1px solid var(--c-line-input); border-radius: var(--r-sm); background: var(--c-surface); color: var(--c-ink-2); font: var(--t-cap); font-weight: 700; white-space: nowrap; cursor: pointer; }
 [data-shell='admin'] .ar-adm[aria-pressed='true'] { background: var(--c-dark); border-color: var(--c-dark); color: var(--c-on-dark); }
 [data-shell='admin'] .ar-adm:disabled { cursor: default; opacity: .7; }
 [data-shell='admin'] .ar-adm:not(:disabled):not([aria-pressed='true']):hover { background: var(--c-surface-hover); }

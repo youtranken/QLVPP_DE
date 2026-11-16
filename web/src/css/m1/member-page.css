@@ -2,7 +2,7 @@
 [data-shell='member'] .m-head { padding: var(--s-2) var(--s-1) var(--s-4); color: var(--c-on-dark); }
 [data-shell='member'] .m-head h1 { margin: 0; font: var(--t-h1); letter-spacing: var(--ls-h1); color: var(--c-on-dark); }
 [data-shell='member'] .m-head p { margin: var(--s-2) 0 0; font: var(--t-body-l); color: var(--c-on-dark-2); }
-[data-shell='member'] .m-head .m-back { display: inline-flex; align-items: center; gap: var(--s-2); min-height: 44px; margin-bottom: var(--s-1); padding: 0 var(--s-2); border-radius: var(--r-pill); color: var(--c-on-dark); font: var(--t-label); text-decoration: none; }
+[data-shell='member'] .m-head .m-back { display: inline-flex; align-items: center; gap: var(--s-2); min-height: 44px; margin-bottom: var(--s-1); padding: 0 var(--s-2); border-radius: var(--r-sm); color: var(--c-on-dark); font: var(--t-label); text-decoration: none; }
 [data-shell='member'] .m-head .m-back:hover { background: var(--c-on-dark-hover); }
 [data-shell='member'] .m-head .m-back:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
 [data-shell='member'] .m-panel--stack { display: flex; flex-direction: column; gap: var(--s-3); }
@@ -18,4 +18,4 @@
 [data-shell='member'] .m-panel .state-page h1 { margin: 0; font: var(--t-h2); color: var(--c-ink); }
 [data-shell='member'] .m-panel .state-page p { margin: 0; font: var(--t-body); color: var(--c-ink-2); }
 /* Nút chính trong panel (404, Lịch sử trống, …): viên thuốc tối v2, không dùng xanh cũ */
-[data-shell='member'] .m-panel .btn--primary { min-height: 44px; padding: 0 var(--s-5); border-color: var(--c-dark); border-radius: var(--r-pill); background: var(--c-dark); color: var(--c-on-dark); font: var(--t-label); }
+[data-shell='member'] .m-panel .btn--primary { min-height: 44px; padding: 0 var(--s-5); border-color: var(--c-dark); border-radius: var(--r-sm); background: var(--c-dark); color: var(--c-on-dark); font: var(--t-label); }

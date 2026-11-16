@@ -1,12 +1,12 @@
 /* Lịch sử, chi tiết phiếu, Nhận lẻ — thẻ trắng bo 22 trong panel sáng (NhanVienPC.dc.html) */
 [data-shell='member'] .hs-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
-[data-shell='member'] .hs-card { background: var(--c-surface); border-radius: 22px; padding: var(--s-5); display: flex; flex-direction: column; gap: var(--s-3); min-width: 0; }
+[data-shell='member'] .hs-card { background: var(--c-surface); border-radius: var(--r-md); padding: var(--s-5); display: flex; flex-direction: column; gap: var(--s-3); min-width: 0; }
 [data-shell='member'] .hs-more:focus-visible { outline: 2px solid var(--c-acc); outline-offset: 3px; box-shadow: none; }
 [data-shell='member'] .hs-month { font: var(--t-h2); letter-spacing: var(--ls-h2); }
 [data-shell='member'] .hs-sum { flex: 1 1 auto; font: var(--t-body); color: var(--c-muted); }
 [data-shell='member'] .hs-custom { flex: 1 1 100%; font: var(--t-body); color: var(--c-muted); }
 
-[data-shell='member'] .hs-chip { display: inline-flex; align-items: center; min-height: 28px; padding: 2px var(--s-3); border-radius: var(--r-pill); font: var(--t-micro); background: var(--c-surface-2); color: var(--c-muted); }
+[data-shell='member'] .hs-chip { display: inline-flex; align-items: center; min-height: 28px; padding: 2px var(--s-3); border-radius: var(--r-sm); font: var(--t-micro); background: var(--c-surface-2); color: var(--c-muted); }
 [data-shell='member'] .hs-chip--ok { background: var(--c-ok-soft); color: var(--c-ok); }
 [data-shell='member'] .hs-chip--warn { background: var(--c-warn-soft); color: var(--c-warn); }
 [data-shell='member'] .hs-chip--danger { background: var(--c-danger-soft); color: var(--c-danger); }
@@ -14,7 +14,7 @@
 [data-shell='member'] .hs-item-name { font: var(--t-label); font-weight: 600; overflow-wrap: anywhere; }
 [data-shell='member'] .hs-item-qty { font: var(--t-body); color: var(--c-muted); }
 
-[data-shell='member'] .hs-more { align-self: center; min-height: 44px; padding: 0 var(--s-5); border-radius: var(--r-pill); border: 1px solid var(--c-line-strong); background: var(--c-surface); color: var(--c-ink); font: var(--t-label); cursor: pointer; }
+[data-shell='member'] .hs-more { align-self: center; min-height: 44px; padding: 0 var(--s-5); border-radius: var(--r-sm); border: 1px solid var(--c-line-strong); background: var(--c-surface); color: var(--c-ink); font: var(--t-label); cursor: pointer; }
 [data-shell='member'] .hs-more:disabled { opacity: .6; cursor: default; }
 
 [data-shell='member'] .hs-issues { margin-top: var(--s-4); display: grid; gap: var(--s-3); }

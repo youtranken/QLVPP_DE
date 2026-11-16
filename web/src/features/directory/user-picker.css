@@ -3,7 +3,7 @@
 .user-picker.ff--error .a-input { border-color: var(--danger); }
 /* Ô tìm cao bằng các ô form chung trong cùng hộp (Món, Số lượng, Lý do = .ff input min-height var(--hit)); điện thoại vẫn 48px */
 [data-shell='admin'] .user-picker .a-input { min-height: var(--hit); }
-.user-picker-list { list-style: none; margin: 0; padding: 0; max-height: 200px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
+.user-picker-list { list-style: none; margin: 0; padding: 0; max-height: 200px; overflow: auto; border: 1px solid var(--line); border-radius: var(--r-sm); }
 .user-picker-list li + li { border-top: 1px solid var(--line); }
 .user-picker-list button { width: 100%; min-height: 40px; padding: 6px 10px; border: 0; background: var(--card); text-align: left; display: grid; gap: 1px; color: var(--ink); }
 .user-picker-list button:hover:not(:disabled) { background: var(--brand-soft); }
@@ -11,7 +11,7 @@
 .user-picker-list b { font-weight: 500; }
 .user-picker-list small { color: var(--ink-3); font-size: 12.5px; }
 .user-picker-empty { padding: 10px; color: var(--ink-3); }
-.user-picker-chosen { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 6px 6px 10px; border: 1px solid var(--brand); border-radius: 6px; background: var(--brand-soft); font-weight: 500; }
+.user-picker-chosen { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 6px 6px 10px; border: 1px solid var(--brand); border-radius: var(--r-sm); background: var(--brand-soft); font-weight: 500; }
 .user-picker-field { position: relative; display: grid; gap: 6px; }
 /* Máy tính: kết quả nổi dưới ô tìm, không đẩy các ô sau xuống; điện thoại: nằm trong luồng vì danh sách nổi bị cắt trong hộp */
 @media (min-width: 768px) {
