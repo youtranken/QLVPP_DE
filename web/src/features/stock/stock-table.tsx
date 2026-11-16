@@ -7,6 +7,7 @@ import { RowMenu, type RowMenuItem } from '@/ui/row-menu';
 import { useUnitNames } from '@/features/units/units.api';
 import type { ReactNode } from 'react';
 import { stockViewOf, type StockRow, type StockStatus } from './stock-rows';
+import { useDisabledReason } from '@/ui/disabled-reason';
 
 export type StockAction = 'purchase' | 'issue' | 'ledger';
 
@@ -50,10 +51,14 @@ export function StockBadge({ row }: { row: Pick<StockRow, 'usable' | 'stock_stat
 export function IssueButton({ item, onClick, className }: { item: Pick<StockRow, 'stock_qty'>; onClick: () => void; className: string }) {
   const { t } = useTranslation();
   const empty = item.stock_qty <= 0;
+  const reason = useDisabledReason(empty ? t('common.disabledReason.noStock') : null);
   return (
-    <button type="button" className={className} disabled={empty} title={empty ? t('stock.page.issueDisabled') : undefined} onClick={onClick}>
-      {t('stock.page.issue')}
-    </button>
+    <>
+      <button type="button" className={className} disabled={empty} aria-describedby={reason.describedBy} onClick={onClick}>
+        {t('stock.page.issue')}
+      </button>
+      {reason.node}
+    </>
   );
 }
 

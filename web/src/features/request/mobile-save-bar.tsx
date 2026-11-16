@@ -34,7 +34,7 @@ export function MobileSaveBar({
         <span id={subId} className="rq-bar-sub num">{t('request.cart.barSub', { units: t('request.unitCount', { count: units }), status })}</span>
       </button>
       {/* aria-disabled (không disabled): lưu xong nút vẫn nhận lại focus, không rơi về body */}
-      <button type="button" className="rq-bar-save" ref={saveRef} aria-disabled={!canSave} onClick={() => canSave && onSave()}>
+      <button type="button" className="rq-bar-save" ref={saveRef} aria-disabled={!canSave} aria-describedby={canSave ? undefined : subId} onClick={() => canSave && onSave()}>
         {dirtyCount > 0 && (
           <>
             <span className="rq-bar-dirty">{t('request.cart.barDirty', { count: dirtyCount })}</span>{' '}

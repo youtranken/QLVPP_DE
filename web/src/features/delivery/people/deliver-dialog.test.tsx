@@ -116,6 +116,7 @@ describe('DeliverDialog — trần stepper', () => {
     open(person({ lines: [pLine({ stock_qty: 0 })] }));
     expect(await within(dialog()).findByText('Tủ chưa có hàng cho món nào — ghi Nhận hàng trước.')).toBeInTheDocument();
     expect(confirmBtn()).toBeDisabled();
+    expect(confirmBtn()).toHaveAccessibleDescription(/Chưa chọn số lượng giao/);
   });
 
   it('tủ 0 mọi món + 1 dòng chờ duyệt → vẫn liệt kê dòng chờ duyệt ở "Không giao lần này"', async () => {

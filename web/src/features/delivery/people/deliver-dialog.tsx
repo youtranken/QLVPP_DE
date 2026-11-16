@@ -15,6 +15,7 @@ import { waitingIndex } from './people-filter';
 import { useAskThenSubmit } from './use-ask-reject';
 import { REJECT_SKIPPED } from './with-rejects';
 import { useRefreshAfterLineChange } from './use-refresh-after-flow';
+import { useDisabledReason } from '@/ui/disabled-reason';
 
 export interface DeliverDialogProps {
   person: DeliveryPerson;
@@ -91,6 +92,7 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
   const name = person.full_name ?? person.user_sub;
   const sending = flight.pending;
   const canSend = totals.give > 0 || totals.cancel > 0;
+  const noQty = useDisabledReason(canSend ? null : t('common.disabledReason.noQty'));
   const lineOf = (id: string) => person.lines.find((l) => l.line_id === id);
 
   const submit = () =>
@@ -179,12 +181,13 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
               className="btn btn--primary"
               disabled={!canSend || sending}
               aria-busy={sending}
-              aria-describedby={sumId}
+              aria-describedby={[sumId, noQty.describedBy].filter(Boolean).join(' ')}
               onKeyDown={blockRepeat}
               onClick={ask}
             >
               {sending ? t('delivery.confirm.sending') : t('delivery.confirm.ok')}
             </button>
+            {noQty.node}
           </>
         )}
       </div>

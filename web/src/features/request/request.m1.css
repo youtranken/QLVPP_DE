@@ -77,7 +77,7 @@
 [data-shell='member'] .rq-line-error { grid-column: 1 / -1; margin: 0; color: var(--c-danger); font: var(--t-label); }
 [data-shell='member'] .rq-ghost { width: 100%; min-height: 44px; border: 1px dashed var(--c-cart-dash); border-radius: var(--r-sm); background: transparent; color: var(--c-cart-ink); font: var(--t-label); cursor: pointer; }
 [data-shell='member'] .rq-ghost:hover { background: var(--c-surface); }
-[data-shell='member'] .rq-cart-save { min-height: 52px; background: var(--c-dark); color: var(--c-on-dark); border-color: var(--c-dark); font: var(--t-body-l); font-weight: 800; }
+[data-shell='member'] .rq-cart-save { min-height: 52px; background: var(--c-acc); color: var(--c-on-acc); border-color: var(--c-acc); font: var(--t-body-l); font-weight: 800; }
 [data-shell='member'] .rq-cart-save:disabled { opacity: .6; }
 [data-shell='member'] .rq-cart-note { margin: 0; text-align: center; color: var(--c-cart-ink); font: var(--t-body); }
 
@@ -125,10 +125,10 @@
 [data-shell='member'] .rq-dialog .sheet-title { font: var(--t-h2); color: var(--c-ink); }
 [data-shell='member'] .rq-dialog .sheet-footer { gap: var(--s-3); }
 [data-shell='member'] .rq-dialog .sheet-footer .btn { flex: 1; min-height: 48px; border: 1px solid var(--c-line); border-radius: var(--r-sm); background: var(--c-surface); color: var(--c-ink); font: var(--t-label); }
-[data-shell='member'] .rq-dialog .sheet-footer .btn--primary { background: var(--c-dark); border-color: var(--c-dark); color: var(--c-on-dark); }
+[data-shell='member'] .rq-dialog .sheet-footer .btn--primary { background: var(--c-acc); border-color: var(--c-acc); color: var(--c-on-acc); }
 [data-shell='member'] .rq-dialog .sheet-footer .btn:disabled { opacity: .6; }
 [data-shell='member'] .rq-dialog .sheet-footer .btn:hover:not(:disabled) { background: var(--c-surface-hover); border-color: var(--c-ink-2); }
-[data-shell='member'] .rq-dialog .sheet-footer .btn--primary:hover:not(:disabled) { background: var(--c-ink-2); border-color: var(--c-ink-2); }
+[data-shell='member'] .rq-dialog .sheet-footer .btn--primary:hover:not(:disabled) { background: var(--c-acc-hover); border-color: var(--c-acc-hover); }
 [data-shell='member'] .rq-dialog .sheet-footer .btn:focus-visible { outline: 2px solid var(--c-dark); outline-offset: 2px; box-shadow: none; }
 /* Điện thoại: hai nút chữ dài (en "View history of all months" + "Close") không đủ một hàng → xuống hàng cả nút, không gãy chữ trong nút */
 @media (max-width: 767px) {
@@ -183,7 +183,7 @@
 @media (max-width: 900px) {
   [data-shell='member'] .rq-notice, [data-shell='member'] .rq-toast-slot { bottom: calc(142px + env(safe-area-inset-bottom)); }
 }
-[data-shell='member'] .rq-cart-save.is-cancel { background: var(--c-surface); color: var(--c-dark); border-color: var(--c-dark); }
+[data-shell='member'] .rq-cart-save.is-cancel { background: var(--c-surface); color: var(--c-acc); border-color: var(--c-acc); }
 [data-shell='member'] .rq-cart-cancel { min-height: 44px; font: var(--t-body); font-weight: 700; }
 [data-shell='member'] .rq-np-eyebrow { margin: 0 0 var(--s-1); color: var(--c-ink-2); font: var(--t-body); }
 /* Tháng mới và hạn chót là thứ người dùng phải nhớ: nổi bằng chữ đậm màu thương hiệu; đỏ để dành cho lỗi */

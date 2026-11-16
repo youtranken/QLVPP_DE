@@ -111,5 +111,7 @@ describe('MovementsDrawer — Lịch sử nhập xuất', () => {
     unmount();
     show(0);
     expect(screen.getByRole('button', { name: 'Xuất lẻ' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Xuất lẻ' })).toHaveAccessibleDescription('Tủ hết món này');
+    expect(screen.getByText('Tủ hết món này')).toBeVisible();
   });
 });

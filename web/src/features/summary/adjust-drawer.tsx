@@ -8,6 +8,7 @@ import { monthOf } from '@/features/request/request-format';
 import { AdjustLines } from './adjust-lines';
 import { useAdjust, type Adjust } from './use-adjust';
 import type { AdjustReason, AdminRequestView } from './summary.api';
+import { useDisabledReason } from '@/ui/disabled-reason';
 
 function Context({ view, a }: { view: AdminRequestView; a: Adjust }) {
   const { t } = useTranslation();
@@ -62,6 +63,7 @@ function Footer({ a, formId }: { a: Adjust; formId: string }) {
   const { t } = useTranslation();
   const at = useFormatTime();
   const note = a.changes > 0 ? t('summary.adjust.changes', { n: a.changes }) : a.view && t('summary.adjust.savedAt', { at: at(a.view.updated_at) });
+  const reason = useDisabledReason(!a.canSave && a.changes === 0 && !a.saving ? t('common.disabledReason.noChanges') : null);
   return (
     <>
       <small className="drawer-note">{note}</small>
@@ -70,9 +72,10 @@ function Footer({ a, formId }: { a: Adjust; formId: string }) {
           {t('common.cancel')}
         </button>
       </DialogClose>
-      <button type="submit" form={formId} className="btn btn--primary" disabled={!a.canSave}>
+      <button type="submit" form={formId} className="btn btn--primary" disabled={!a.canSave} aria-describedby={reason.describedBy}>
         {a.saving ? t('summary.adjust.saving') : t('summary.adjust.save')}
       </button>
+      {reason.node}
     </>
   );
 }

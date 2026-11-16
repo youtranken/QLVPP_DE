@@ -158,6 +158,8 @@ describe('Báo cáo & gửi NCC: bảng và ô Đề nghị', () => {
     }
     expect(await screen.findByRole('button', { name: 'Tháng này không cần đề nghị NCC' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toHaveAccessibleDescription('Chưa có món nào cần đặt');
+    expect(screen.getByRole('button', { name: 'Xuất Excel' })).toHaveAccessibleDescription('Chưa có món nào cần đặt');
   });
 
   it('Xem tổng kết → gọi preview với ô đã sửa, hộp có "Phiếu đề xuất văn phòng phẩm" và các hàng; chưa POST bản chốt', async () => {

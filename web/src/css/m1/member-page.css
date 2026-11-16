@@ -18,4 +18,4 @@
 [data-shell='member'] .m-panel .state-page h1 { margin: 0; font: var(--t-h2); color: var(--c-ink); }
 [data-shell='member'] .m-panel .state-page p { margin: 0; font: var(--t-body); color: var(--c-ink-2); }
 /* Nút chính trong panel (404, Lịch sử trống, …): viên thuốc tối v2, không dùng xanh cũ */
-[data-shell='member'] .m-panel .btn--primary { min-height: 44px; padding: 0 var(--s-5); border-color: var(--c-dark); border-radius: var(--r-sm); background: var(--c-dark); color: var(--c-on-dark); font: var(--t-label); }
+[data-shell='member'] .m-panel .btn--primary { min-height: 44px; padding: 0 var(--s-5); border-color: var(--c-acc); border-radius: var(--r-sm); background: var(--c-acc); color: var(--c-on-acc); font: var(--t-label); }

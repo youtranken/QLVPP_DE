@@ -173,3 +173,4 @@ html, [data-shell] * { scrollbar-width: thin; }
   [data-shell] .date-range__trigger::after, [data-shell] .cal__chev { background: CanvasText; }
   [data-shell] .cal__day[data-edge] { outline: 2px solid Highlight; }
 }
+[data-shell] .disabled-reason { display: block; margin-top: var(--s-1); font: var(--t-cap); color: var(--c-ink-2); }

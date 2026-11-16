@@ -33,6 +33,7 @@ import { useReportsParams } from './use-reports-params';
 import { useSnapshotDownload, useTakeSnapshot } from './use-snapshot';
 import '@/features/send-adm/send-adm.m1.css';
 import './reports.m1.css';
+import { useDisabledReason } from '@/ui/disabled-reason';
 
 // Nhãn cạnh nút › (tắt): nói rõ kỳ đang mở còn đăng ký, chưa báo cáo được tới khi khóa
 function Heading({ ym, open, onMonth, children }: { ym: string; open: CurrentPeriod; onMonth: (ym: string) => void; children?: React.ReactNode }) {
@@ -54,13 +55,13 @@ function Heading({ ym, open, onMonth, children }: { ym: string; open: CurrentPer
   );
 }
 
-function ActionButton({ xlsx, disabled, taking, previewing = false, onTake }: { xlsx: boolean; disabled: boolean; taking: SnapshotKind | null; previewing?: boolean; onTake: (xlsx: boolean) => void }) {
+function ActionButton({ xlsx, disabled, taking, previewing = false, describedBy, onTake }: { xlsx: boolean; disabled: boolean; taking: SnapshotKind | null; previewing?: boolean; describedBy?: string; onTake: (xlsx: boolean) => void }) {
   const { t } = useTranslation();
   // Nút in giờ là "Xem tổng kết": bận khi đang dựng bản xem hoặc đang chốt bản in sau "Đồng ý và in"
   const busy = xlsx ? taking === 'xlsx' : previewing || taking === 'print';
   const label = xlsx ? (busy ? 'reports.page.taking' : 'reports.send.excel') : previewing ? 'reports.preview.loading' : busy ? 'reports.page.preparingPrint' : 'reports.send.preview';
   return (
-    <button type="button" className={xlsx ? 'btn' : 'btn btn--primary'} disabled={disabled} aria-busy={busy || undefined} onClick={() => onTake(xlsx)}>
+    <button type="button" className={xlsx ? 'btn' : 'btn btn--primary'} disabled={disabled} aria-busy={busy || undefined} aria-describedby={describedBy} onClick={() => onTake(xlsx)}>
       {busy && !xlsx ? <span className="spinner sa-spinner" aria-hidden="true" /> : <Icon name={xlsx ? 'sheet' : 'printer'} size={18} />}
       {t(label)}
     </button>
@@ -117,6 +118,7 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
   const empty = orderRows.length > 0 && orderRows.every((r) => orderOf(qty, r) === 0);
   // Ô lỗi không làm tắt nút: bấm thì đưa con trỏ về ô lỗi đầu tiên (chặn chốt, không chặn tìm lỗi)
   const blocked = snap.taking !== null || snap.previewing || empty || !settled;
+  const nothing = useDisabledReason(empty ? t('common.disabledReason.nothingToOrder') : null);
   // Hộp "Xem tổng kết": bản dựng ở server (kỳ đang lập) hoặc bản đã gửi (tháng cũ); Hủy không lưu gì
   const [preview, setPreview] = useState<SnapshotData | null>(null);
   const orderError = useFocusOrderError(onlyNeed, setOnlyNeed, qty.errorCount);
@@ -139,8 +141,9 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
   const openSent = (xlsx: boolean) => (sent ? (xlsx ? void files.run(sent.id) : setPreview(sent.data)) : undefined);
   const actions = editable ? (
     <>
-      <ActionButton xlsx disabled={blocked} taking={snap.taking} onTake={(x) => void take(x)} />
-      <ActionButton xlsx={false} disabled={blocked} taking={snap.taking} previewing={snap.previewing} onTake={(x) => void take(x)} />
+      <ActionButton xlsx disabled={blocked} taking={snap.taking} describedBy={nothing.describedBy} onTake={(x) => void take(x)} />
+      <ActionButton xlsx={false} disabled={blocked} taking={snap.taking} previewing={snap.previewing} describedBy={nothing.describedBy} onTake={(x) => void take(x)} />
+      {nothing.node}
     </>
   ) : (
     <>

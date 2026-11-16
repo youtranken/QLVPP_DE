@@ -39,6 +39,16 @@ describe('AdjustDrawer — đầu ngăn', () => {
   });
 });
 
+describe('AdjustDrawer — nút Lưu khóa có lý do', () => {
+  it('chưa đổi dòng nào → "Lưu điều chỉnh" khóa, mô tả thấy được "Chưa có thay đổi"', async () => {
+    stubAdjust({ views: [adminRequest({ lines: adminRequest().lines.slice(0, 2) })] });
+    const { drawer } = await renderDrawer();
+    expect(saveButton(drawer)).toBeDisabled();
+    expect(saveButton(drawer)).toHaveAccessibleDescription('Chưa có thay đổi');
+    expect(within(drawer).getByText('Chưa có thay đổi')).toBeVisible();
+  });
+});
+
 describe('AdjustDrawer — chỉ giảm sau khóa sổ (R-D6.3)', () => {
   it('không phần tử nào là "+"/"Tăng"/"Thêm <món>", không còn "Thêm món vào phiếu" (chỉ còn review "Thêm vào danh mục" của món ngoài DM)', async () => {
     stubAdjust();
