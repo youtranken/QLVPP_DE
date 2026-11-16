@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Segmented } from '@/ui/segmented';
 import { renderWithI18n, screen, userEvent } from '@/test/test-utils';
+import { mockViewport } from '@/test/viewport';
 
 const opts = [
   { value: 'a', label: 'Một', count: 6 },
@@ -65,5 +66,32 @@ describe('Segmented', () => {
     expect(screen.getByRole('radio', { name: 'Ba' })).toHaveAttribute('tabindex', '-1');
     await userEvent.click(screen.getByRole('radio', { name: 'Ba' }));
     expect(onChange).toHaveBeenCalledWith('c');
+  });
+
+  it('dưới 480 (mặc định compactBelow): hiện combobox cùng lựa chọn kèm số, chọn → onChange cùng giá trị', async () => {
+    mockViewport(479);
+    const onChange = vi.fn();
+    renderWithI18n(<Segmented label="Chế độ" value="b" options={opts} onChange={onChange} />);
+    expect(screen.queryByRole('radiogroup')).toBeNull();
+    const box = screen.getByRole('combobox', { name: 'Chế độ' });
+    expect(box).toHaveTextContent('Hai');
+    await userEvent.click(box);
+    await userEvent.click(screen.getByRole('option', { name: /Một/ }));
+    expect(onChange).toHaveBeenCalledWith('a');
+    vi.unstubAllGlobals();
+  });
+
+  it('dưới 480 nhưng chỉ hai lựa chọn → vẫn là radiogroup (công tắc)', () => {
+    mockViewport(390);
+    renderWithI18n(<Segmented label="Xem" value="a" options={opts.slice(0, 2)} onChange={() => {}} />);
+    expect(screen.getByRole('radiogroup', { name: 'Xem' })).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
+  it('đúng 480: vẫn là radiogroup (biên dưới của compactBelow)', () => {
+    mockViewport(480);
+    renderWithI18n(<Segmented label="Chế độ" value="b" options={opts} onChange={() => {}} />);
+    expect(screen.getByRole('radiogroup', { name: 'Chế độ' })).toBeInTheDocument();
+    vi.unstubAllGlobals();
   });
 });

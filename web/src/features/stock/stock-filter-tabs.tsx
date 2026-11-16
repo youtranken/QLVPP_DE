@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { StockFilter, stockStats } from './stock-rows';
-import { ScrollFade } from '@/ui/filter/scroll-fade';
+import { Segmented } from '@/ui/segmented';
 
 interface Props {
   stats: ReturnType<typeof stockStats>;
@@ -10,22 +10,19 @@ interface Props {
 }
 
 const FILTERS: StockFilter[] = ['incoming', 'low', 'none'];
+const ALL = 'all';
 
-// Một hàng chip lọc có số: Tất cả · Chờ hàng về · Sắp hết · Không có
 export function StockFilterTabs({ stats, filter, onFilter, onClear }: Props) {
   const { t } = useTranslation();
   return (
-    <ScrollFade className="flt-chips" role="group" aria-label={t('stock.stats.label')}>
-      <button type="button" className="flt-chip" aria-pressed={filter === null} onClick={onClear}>
-        {t('stock.stats.all')}
-        <span className="flt-cnt num">{stats.all}</span>
-      </button>
-      {FILTERS.map((f) => (
-        <button key={f} type="button" className="flt-chip" aria-pressed={filter === f} onClick={() => onFilter(f)}>
-          {t(`stock.stats.${f}`)}
-          <span className="flt-cnt num">{stats[f]}</span>
-        </button>
-      ))}
-    </ScrollFade>
+    <Segmented
+      label={t('stock.stats.label')}
+      value={filter ?? ALL}
+      options={[
+        { value: ALL, label: t('stock.stats.all'), count: stats.all },
+        ...FILTERS.map((f) => ({ value: f, label: t(`stock.stats.${f}`), count: stats[f] })),
+      ]}
+      onChange={(v) => (v === ALL ? onClear() : onFilter(v))}
+    />
   );
 }

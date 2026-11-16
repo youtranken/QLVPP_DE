@@ -55,31 +55,31 @@ describe('StockPage', () => {
 
   it('một hàng chip lọc có số: Tất cả 6 (ẩn món ngừng tủ 0), Chờ hàng về 2 (gộp thiếu cho người chờ), Sắp hết 1, Không có 1', async () => {
     await open();
-    expect(screen.getByRole('button', { name: /Tất cả/ })).toHaveTextContent('6');
+    expect(screen.getByRole('radio', { name: /Tất cả/ })).toHaveTextContent('6');
     expect(screen.queryByRole('button', { name: /Thiếu cho người chờ/ })).toBeNull();
-    expect(screen.getByRole('button', { name: /Chờ hàng về/ })).toHaveTextContent('2');
-    expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveTextContent('1');
-    expect(screen.getByRole('button', { name: /Không có/ })).toHaveTextContent('1');
+    expect(screen.getByRole('radio', { name: /Chờ hàng về/ })).toHaveTextContent('2');
+    expect(screen.getByRole('radio', { name: /Sắp hết/ })).toHaveTextContent('1');
+    expect(screen.getByRole('radio', { name: /Không có/ })).toHaveTextContent('1');
     expect(screen.queryByText('Bút xóa cũ')).toBeNull();
-    expect(within(screen.getByRole('group', { name: 'Lọc theo tình trạng tồn' })).getAllByRole('button')).toHaveLength(4);
+    expect(within(screen.getByRole('radiogroup', { name: 'Lọc theo tình trạng tồn' })).getAllByRole('radio')).toHaveLength(4);
   });
 
-  it('bấm "Sắp hết" → ?filter=low, chip aria-pressed; bấm lại → bỏ lọc', async () => {
+  it('bấm "Sắp hết" → ?filter=low, lựa chọn aria-checked; bấm "Tất cả" → bỏ lọc', async () => {
     await open();
-    await userEvent.click(screen.getByRole('button', { name: /Sắp hết/ }));
+    await userEvent.click(screen.getByRole('radio', { name: /Sắp hết/ }));
     expect(screen.getByTestId('location-search')).toHaveTextContent('?filter=low');
-    expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('radio', { name: /Sắp hết/ })).toHaveAttribute('aria-checked', 'true');
     expectFixedColumns(screen.getByRole('table'));
-    await userEvent.click(screen.getByRole('button', { name: /Sắp hết/ }));
+    await userEvent.click(screen.getByRole('radio', { name: /Tất cả/ }));
     expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
-    expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('radio', { name: /Sắp hết/ })).toHaveAttribute('aria-checked', 'false');
   });
 
   it('?filter=incoming chỉ còn món có người chờ mà tủ chưa đủ, thẻ bật; "Xóa lọc" trả đủ món', async () => {
     await open('/admin/stock?filter=incoming', 'Bìa còng');
     expect(screen.queryByText('Giấy A4')).toBeNull();
     expect(screen.getByText('Bút chì')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Chờ hàng về/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('radio', { name: /Chờ hàng về/ })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByText(/Đang lọc: Chờ hàng về · 2/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
     expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
@@ -89,16 +89,16 @@ describe('StockPage', () => {
   it('?filter=out (URL cũ "Hết hàng") → Tất cả, tham số bị gỡ (replace)', async () => {
     await open('/admin/stock?filter=out');
     expect(screen.getByText('Bìa còng')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Tất cả/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('radio', { name: /Tất cả/ })).toHaveAttribute('aria-checked', 'true');
     await waitFor(() => expect(screen.getByTestId('location-search')).toBeEmptyDOMElement());
   });
 
   it('bấm thẻ Không có đặt URL ?filter=none; bấm "Tất cả" bỏ lọc', async () => {
     await open();
-    await userEvent.click(screen.getByRole('button', { name: /Không có/ }));
+    await userEvent.click(screen.getByRole('radio', { name: /Không có/ }));
     expect(screen.getByTestId('location-search')).toHaveTextContent('?filter=none');
     expect(screen.queryByText('Giấy A4')).toBeNull();
-    await userEvent.click(screen.getByRole('button', { name: /Tất cả/ }));
+    await userEvent.click(screen.getByRole('radio', { name: /Tất cả/ }));
     expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
   });
 
@@ -106,7 +106,7 @@ describe('StockPage', () => {
     await open();
     await userEvent.click(screen.getByRole('button', { name: /^Thông báo/ }));
     await userEvent.click(await screen.findByRole('button', { name: /Giấy A4 sắp hết kho/ }));
-    expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('radio', { name: /Sắp hết/ })).toHaveAttribute('aria-checked', 'true');
     expect(screen.queryByText('Bút bi xanh')).toBeNull();
   });
 

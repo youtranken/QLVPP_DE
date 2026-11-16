@@ -39,7 +39,7 @@ describe('MonthPage: nạp đủ mọi trang người', () => {
     const t = await table();
     await t.findByText('Nguyễn Văn An');
     expect(calledUrls(f).some((u) => u.includes('cursor=c2'))).toBe(true);
-    expect(screen.getByRole('button', { name: /^Tất cả/ })).toHaveTextContent(String(PEOPLE.length));
+    expect(screen.getByRole('radio', { name: /^Tất cả/ })).toHaveTextContent(String(PEOPLE.length));
     expect(screen.queryByRole('button', { name: 'Xem thêm' })).toBeNull();
   });
 });

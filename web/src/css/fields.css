@@ -43,9 +43,9 @@
 [data-shell] .lb-trigger:focus-visible, [data-shell] .lb-trigger[aria-expanded='true'] { outline: none; border-color: var(--c-acc); box-shadow: var(--focus-field-bordered); }
 [data-shell] .lb-trigger[aria-invalid='true'] { border-color: var(--c-danger); }
 [data-shell] .lb-trigger:disabled { background: var(--c-surface-2); color: var(--c-muted); cursor: not-allowed; }
-[data-shell] .lb--pill .lb-trigger { min-width: 160px; min-height: 0; height: var(--ctl-h, 40px); border: 0; border-radius: var(--r-sm); background: var(--c-surface-2); box-shadow: inset 0 0 0 1px var(--c-line); }
-[data-shell] .lb--pill .lb-trigger:hover:not(:disabled) { box-shadow: inset 0 0 0 1px var(--c-line-strong); }
-[data-shell] .lb--pill .lb-trigger:focus-visible, [data-shell] .lb--pill .lb-trigger[aria-expanded='true'] { background: var(--c-surface); box-shadow: var(--focus-field); }
+[data-shell] .lb--pill .lb-trigger { min-width: 160px; min-height: 0; height: var(--ctl-h, 40px); box-sizing: border-box; border: 1px solid var(--c-line-input); border-radius: var(--r-sm); background: var(--c-surface); box-shadow: none; }
+[data-shell] .lb--pill .lb-trigger:hover:not(:disabled) { border-color: var(--c-line-strong); }
+[data-shell] .lb--pill .lb-trigger:focus-visible, [data-shell] .lb--pill .lb-trigger[aria-expanded='true'] { border-color: var(--c-acc); box-shadow: var(--focus-field-bordered); }
 [data-shell] .lb-list { z-index: 60; box-sizing: border-box; display: grid; align-content: start; gap: 2px; max-width: min(360px, calc(100vw - var(--s-4))); margin: 0; padding: var(--s-1); list-style: none; overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--c-line); border-radius: var(--r-md); background: var(--c-surface); box-shadow: var(--e-2); outline: none; }
 [data-shell] .lb-option { display: flex; align-items: center; gap: var(--s-2); min-height: 40px; padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); color: var(--c-ink); font: var(--t-body); overflow-wrap: anywhere; cursor: pointer; }
 [data-shell] .lb-option[data-active] { background: var(--c-surface-2); }
@@ -174,3 +174,4 @@ html, [data-shell] * { scrollbar-width: thin; }
   [data-shell] .cal__day[data-edge] { outline: 2px solid Highlight; }
 }
 [data-shell] .disabled-reason { display: block; margin-top: var(--s-1); font: var(--t-cap); color: var(--c-ink-2); }
+@media (pointer: coarse) { [data-shell] .lb--pill .lb-trigger { height: var(--hit); } }

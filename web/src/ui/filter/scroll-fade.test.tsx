@@ -33,19 +33,16 @@ describe('các hàng chip dùng chung mờ mép', () => {
   });
   afterEach(() => vi.restoreAllMocks());
 
-  it('Tủ/Kho: chip lọc có data-fade="end" khi còn chip khuất bên phải', () => {
+  it('Tủ/Kho và Kỳ tháng: nhóm lọc chung (radiogroup), không còn hàng chip cuộn mờ mép', () => {
     render(<StockFilterTabs stats={{ all: 5, incoming: 1, low: 2, none: 0 } as never} filter={null} onFilter={() => {}} onClear={() => {}} />);
-    expect(screen.getByRole('group')).toHaveAttribute('data-fade', 'end');
+    render(<MonthChips rows={[]} chip="all" q="" onChip={() => {}} onQ={() => {}} />);
+    expect(screen.getAllByRole('radiogroup')).toHaveLength(2);
+    expect(document.querySelector('.flt-chips')).toBeNull();
   });
 
   it('Nhật ký: chip nhanh', () => {
     render(<AuditQuick now={new Date('2026-11-13T03:00:00Z')} applied={{ actor: '', action: '', from: '', to: '' }} onPatch={() => {}} />);
     expect(screen.getByRole('group')).toHaveAttribute('data-fade', 'end');
-  });
-
-  it('Kỳ tháng: chip trạng thái', () => {
-    render(<MonthChips rows={[]} chip="all" q="" onChip={() => {}} onQ={() => {}} />);
-    expect(screen.getAllByRole('group').find((g) => g.className.includes('flt-chips'))).toHaveAttribute('data-fade', 'end');
   });
 
   it('Nhận hàng: GroupChips fade (tự là khung cuộn); không bật thì không đụng', () => {
