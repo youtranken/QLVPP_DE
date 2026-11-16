@@ -9,7 +9,7 @@ const common: Messages<typeof vi> = {
     logoLetter: 'V',
   },
   common: {
-    requestStatus: { notDelivered: 'Not delivered', partial: 'Delivered {{delivered}}/{{total}}', done: 'Received in full', owed: 'Owed {{n}}' },
+    requestStatus: { notDelivered: 'Not delivered', partial: 'Delivered {{delivered}}/{{total}}', done: 'Received in full', owed: 'Owed {{n}}', cancelled: 'Not delivered (cancelled)' },
     disabledReason: { noChanges: 'No changes yet', noQty: 'No quantity chosen to deliver', noStock: 'None left in the cabinet', nothingToOrder: 'Nothing to order yet' },
     paused: 'Paused',
     // Khoảng trắng không ngắt: cụm giờ khóa sổ không bị gãy làm hai dòng (khối Kỳ tháng ở sidebar)

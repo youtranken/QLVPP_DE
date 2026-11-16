@@ -19,7 +19,8 @@
 [data-shell='admin'] .mk-step__value { font: var(--t-h3); color: var(--c-ink); overflow-wrap: anywhere; }
 [data-shell='admin'] .mk-left { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); }
 [data-shell='admin'] .mk-left span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-[data-shell='admin'] .mk-notes { display: inline-flex; flex-wrap: wrap; gap: var(--s-1); }
+[data-shell='admin'] .mk-notes { display: inline-flex; flex-wrap: wrap; gap: var(--s-1); min-width: 0; max-width: 100%; }
+[data-shell='admin'] .mk-notes .tag { max-width: 100%; height: auto; min-height: 22px; white-space: normal; }
 @media (max-width: 767px) {
   [data-shell='admin'] .mk-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   /* Điện thoại: viên ‹ tháng › một hàng riêng; chip và link xuống hàng dưới */

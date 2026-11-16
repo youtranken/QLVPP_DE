@@ -32,8 +32,6 @@
 [data-shell='admin'] .ovp-backdrop { position: fixed; inset: 0; z-index: 40; background: rgb(14 42 51 / .32); backdrop-filter: blur(2px); animation: ovp-fade 150ms ease-out; }
 [data-shell='admin'] .ovp-viewport { position: fixed; inset: 0; z-index: 40; display: flex; justify-content: flex-end; pointer-events: none; }
 [data-shell='admin'] .ovp { display: flex; flex-direction: column; width: 440px; height: 100%; border-radius: var(--r-xl) 0 0 var(--r-xl); background: rgb(255 255 255 / .86); backdrop-filter: blur(16px) saturate(1.2); box-shadow: var(--e-5); color: var(--c-ink); outline: none; pointer-events: auto; animation: ovp-in 200ms ease-out; }
-[data-shell='admin'] .ovp-bar { display: flex; flex-shrink: 0; align-items: center; height: 56px; padding: 0 var(--s-2); border-bottom: 1px solid var(--c-line); }
-[data-shell='admin'] .ovp-back { min-height: var(--hit); }
 [data-shell='admin'] .ovp-head { display: flex; flex-shrink: 0; align-items: center; gap: var(--s-1); min-height: 64px; padding: 0 var(--s-3) 0 var(--s-6); border-bottom: 1px solid var(--c-line); }
 [data-shell='admin'] .ovp-title { flex: 1; min-width: 0; margin: 0; color: var(--c-ink); font: var(--t-h3); overflow-wrap: anywhere; }
 [data-shell='admin'] .ovp-titles { display: grid; flex: 1; gap: 2px; min-width: 0; }
@@ -44,7 +42,6 @@
 [data-shell='admin'] .ovp-foot { position: sticky; bottom: 0; display: flex; flex-shrink: 0; align-items: center; gap: var(--s-2); padding: var(--s-4) var(--s-6); border-top: 1px solid var(--c-line); }
 [data-shell='admin'] .ovp:has(.ct-panel-form) { background: var(--c-surface); backdrop-filter: none; }
 [data-shell='admin'] .ovp-head--rich { align-items: center; padding-top: var(--s-3); padding-bottom: var(--s-3); }
-[data-shell='admin'] .ovp-back-icon { font-size: 18px; }
 @keyframes ovp-in { from { transform: translateX(100%); } }
 @keyframes ovp-fade { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {

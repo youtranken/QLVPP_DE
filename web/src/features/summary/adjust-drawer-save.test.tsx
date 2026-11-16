@@ -21,6 +21,16 @@ async function reduceNote(drawer: HTMLElement, reason = 'Không có hàng', note
   if (note !== undefined) await userEvent.type(noteBox(drawer, NOTE), note);
 }
 
+describe('AdjustDrawer — lý do khóa, phía mở', () => {
+  it('một thay đổi hợp lệ (3 → 2 có lý do) → nút Lưu bật, không còn mô tả "Chưa có thay đổi"', async () => {
+    stubAdjust({ views: [adminRequest({ lines: adminRequest().lines.slice(0, 2) })] });
+    const { drawer } = await renderDrawer();
+    await reduceNote(drawer);
+    expect(saveButton(drawer)).toBeEnabled();
+    expect(saveButton(drawer)).not.toHaveAccessibleDescription('Chưa có thay đổi');
+  });
+});
+
 describe('AdjustDrawer — lưu với lý do từng dòng', () => {
   it('giảm 3 → 2 "Khác" + ghi chú " abc " → dòng đó gửi reason_code/ghi chú đã trim; dòng khác không lý do; toast + đóng', async () => {
     const f = stubAdjust();

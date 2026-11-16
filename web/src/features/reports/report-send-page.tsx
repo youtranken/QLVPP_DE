@@ -229,9 +229,9 @@ function Frame({ children }: { children: React.ReactNode }) {
       {/* Cùng khung đầu trang với lúc tải xong: tiêu đề không nhảy */}
       <div className="bc-head">
         <div className="page-head__text">
-        <PageCrumbs crumbs={[t('nav.groups.monthly'), t('nav.reports')]} />
-        <h1>{t('reports.send.title')}</h1>
-      </div>
+          <PageCrumbs crumbs={[t('nav.groups.monthly'), t('nav.reports')]} />
+          <h1>{t('reports.send.title')}</h1>
+        </div>
       </div>
       {children}
     </div>

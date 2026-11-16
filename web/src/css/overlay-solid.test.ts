@@ -10,4 +10,11 @@ describe('panel phủ trên điện thoại', () => {
     expect(block).toMatch(/\.ovp\s*\{[^}]*background:\s*var\(--c-surface\)/);
     expect(block).toMatch(/\.ovp\s*\{[^}]*backdrop-filter:\s*none/);
   });
+
+  it('641 px trở lên: luật gốc .ovp vẫn kính mờ (nền trong suốt + blur), nền đặc chỉ nằm trong khối ≤ 640', () => {
+    const base = /\[data-shell='admin'\] \.ovp \{([^}]*)\}/.exec(css)?.[1] ?? '';
+    expect(base).toMatch(/background:\s*rgb\(255 255 255 \/ \.86\)/);
+    expect(base).toMatch(/backdrop-filter:\s*blur/);
+    expect(css.match(/\.ovp \{[^}]*background:\s*var\(--c-surface\)/g)).toHaveLength(1);
+  });
 });

@@ -119,6 +119,14 @@ describe('DeliverDialog — trần stepper', () => {
     expect(confirmBtn()).toHaveAccessibleDescription(/Chưa chọn số lượng giao/);
   });
 
+  it('chọn giao 1 (phía kia mốc 0) → Xác nhận bật, không mô tả "Chưa chọn số lượng giao"', async () => {
+    stub();
+    open(person({ lines: [pLine({ stock_qty: 5 })] }));
+    await within(dialog()).findByRole('spinbutton');
+    expect(confirmBtn()).toBeEnabled();
+    expect(confirmBtn()).not.toHaveAccessibleDescription(/Chưa chọn số lượng giao/);
+  });
+
   it('tủ 0 mọi món + 1 dòng chờ duyệt → vẫn liệt kê dòng chờ duyệt ở "Không giao lần này"', async () => {
     stub();
     open(person({ lines: [pLine({ stock_qty: 0 }), pLine({ line_id: 'rv', item_id: null, name: 'Kéo cắt', review_status: 'pending', stock_qty: null })] }));
@@ -324,7 +332,7 @@ describe('DeliverDialog — gửi', () => {
   it('Quay lại → onClose, không gửi', async () => {
     const f = stub();
     const props = open(person({ lines: [cur] }));
-    await userEvent.click(within(dialog()).getByRole('button', { name: 'Hủy' }));
+    await userEvent.click(within(dialog()).getAllByRole('button', { name: 'Đóng' }).at(-1)!);
     expect(props.onClose).toHaveBeenCalled();
     expect(posts(f)).toEqual([]);
   });

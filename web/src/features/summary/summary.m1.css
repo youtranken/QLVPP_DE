@@ -5,7 +5,7 @@
 [data-shell='admin'] .sm-acts { white-space: nowrap; }
 [data-shell='admin'] .sm-acts .btn + .btn { margin-left: var(--s-1); }
 [data-shell='admin'] .table.is-stale tbody { opacity: .55; }
-[data-shell='admin'] .table .progress { min-width: 140px; }
+[data-shell='admin'] .table .progress { min-width: 0; }
 [data-shell='admin'] .aj-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-3); }
 [data-shell='admin'] .aj-head { display: flex; align-items: flex-start; gap: var(--s-3); }
 [data-shell='admin'] .aj-head__text { flex: 1; min-width: 0; display: grid; gap: var(--s-1); }

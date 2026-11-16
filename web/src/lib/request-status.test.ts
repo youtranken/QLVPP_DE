@@ -24,4 +24,10 @@ describe('requestStatus — một nhãn trạng thái phiếu, đếm theo đơn
   it('owedPrevMonths 0 → không owed', () => {
     expect(requestStatus({ qty: 9, delivered: 9, cancelled: 0, owedPrevMonths: 0 }).key).toBe('done');
   });
+  it('hủy hết, chưa giao gì (qty 9, hủy 9) → cancelled "Không giao", không phải "Đã nhận đủ"', () => {
+    expect(requestStatus({ qty: 9, delivered: 0, cancelled: 9 })).toEqual({ key: 'cancelled', delivered: 0, total: 0 });
+  });
+  it('giao 1, hủy 8 (phía kia của mốc) → done', () => {
+    expect(requestStatus({ qty: 9, delivered: 1, cancelled: 8 }).key).toBe('done');
+  });
 });

@@ -40,7 +40,6 @@ const summary = {
       savedAt: 'Lưu lúc',
       actions: 'Thao tác',
       groupPeople: '{{n}} người',
-      delivered: 'đã giao {{done}}/{{total}} đơn vị',
       leftCompany: 'Người đã nghỉ',
       adjust: 'Điều chỉnh',
       adjustLabel: 'Điều chỉnh phiếu của {{name}}',

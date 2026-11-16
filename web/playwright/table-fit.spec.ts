@@ -24,11 +24,20 @@ function fit(page: Page) {
     const out: string[] = [];
     for (const table of document.querySelectorAll<HTMLTableElement>('main table')) {
       if (table.closest('.table-stack') && getComputedStyle(table.querySelector('tbody tr') ?? table).display !== 'table-row') continue;
-      const frame = (table.closest('.table-wrap, .dt-wrap') ?? table.parentElement)!.getBoundingClientRect();
+      // Khung gần nhất không để tràn tự do: clip/hidden thì bảng phải vừa khung; auto thì ô thao tác (.col-actions) phải dính trong khung
+      let wrap = table.parentElement!;
+      while (wrap.parentElement && getComputedStyle(wrap).overflowX === 'visible') wrap = wrap.parentElement;
+      const frame = wrap.getBoundingClientRect();
       const t = table.getBoundingClientRect();
-      const acts = table.querySelector('tbody tr td:last-child');
-      const actsOk = acts ? acts.getBoundingClientRect().right <= window.innerWidth + 1 : true;
-      if (t.width > frame.width + 1 && !actsOk) out.push(`bảng ${Math.round(t.width)} > khung ${Math.round(frame.width)}, cột cuối ngoài màn`);
+      const ox = getComputedStyle(wrap).overflowX;
+      if (t.width > frame.width + 1 && (ox === 'clip' || ox === 'hidden')) out.push(`bảng ${Math.round(t.width)} > khung ${Math.round(frame.width)} mà khung không cuộn (${ox})`);
+      for (const acts of table.querySelectorAll('tbody td.col-actions')) {
+        const r = acts.getBoundingClientRect();
+        if (r.width > 0 && r.right > Math.min(frame.right, window.innerWidth) + 1) {
+          out.push(`cột thao tác ra ngoài khung ${Math.round(r.right - frame.right)}px`);
+          break;
+        }
+      }
       for (const td of table.querySelectorAll<HTMLElement>('tbody td')) {
         const r = td.getBoundingClientRect();
         if (r.width === 0) continue;
@@ -65,11 +74,37 @@ test.describe('Bảng vừa khung', () => {
     const cols = () => page.evaluate(() => [...document.querySelectorAll('main thead th')].map((th) => { const r = th.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.width)]; }));
     await go(page, '/admin/month?ym=2026-12');
     const base = await cols();
-    for (const path of ['/admin/month?ym=2026-12&q=Ho%C3%A0ng', '/admin/month?ym=2026-12&chip=note', '/admin/month?ym=2026-11']) {
+    for (const path of ['/admin/month?ym=2026-12&q=Ho%C3%A0ng', '/admin/month?ym=2026-12&chip=noted', '/admin/month?ym=2026-12&chip=undelivered', '/admin/month?ym=2026-11']) {
       await go(page, path);
       const now = await cols();
+      if (now.every((c) => c[1] === 0)) continue;
       const moved = now.map((c, i) => (base[i] ? Math.max(Math.abs(c[0]! - base[i]![0]!), Math.abs(c[1]! - base[i]![1]!)) : 0));
       expect.soft(Math.max(0, ...moved), path).toBeLessThanOrEqual(2);
     }
   });
+
+  for (const width of [767, 768, 1024]) {
+    test(`${width}: ô thao tác dính phải không đè nền dòng đang chọn; đầu nhóm giữ nền nhóm`, async ({ page }, info) => {
+      test.skip(isMobile(info), 'đo ở desktop');
+      await page.setViewportSize({ width, height: 900 });
+      await as(page);
+      await go(page, '/admin/delivery');
+      const pick = page.getByRole('checkbox', { name: /^Chọn / }).first();
+      expect(await pick.count(), 'có dòng chọn được').toBeGreaterThan(0);
+      await pick.check();
+      const bg = await page.evaluate(() => {
+        const tr = document.querySelector('main tr.is-picked')!;
+        const first = getComputedStyle(tr.querySelector('td:nth-child(2)')!).backgroundColor;
+        const last = getComputedStyle(tr.querySelector('td:last-child')!).backgroundColor;
+        return { first, last };
+      });
+      expect(bg.last, 'ô cuối cùng nền với dòng').toBe(bg.first);
+      await go(page, '/admin/month?ym=2026-12');
+      const group = await page.evaluate(() => {
+        const th = document.querySelector('main .dt-group th, main tr.dt-group > :last-child');
+        return th ? getComputedStyle(th).backgroundColor : null;
+      });
+      expect(group, 'đầu nhóm có nền nhóm (không trắng)').not.toBe('rgb(255, 255, 255)');
+    });
+  }
 });

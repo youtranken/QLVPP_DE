@@ -1,3 +1,4 @@
+import { cellClass } from './cell-class';
 import { useEffect, useRef, type HTMLAttributes } from 'react';
 import { useTranslation } from 'react-i18next';
 import { flexRender, type Cell, type CellContext, type Row } from '@tanstack/react-table';
@@ -112,7 +113,7 @@ export function BodyRow<T>({
         </td>
       )}
       {row.getVisibleCells().map((cell) => (
-        <td key={cell.id} className={cell.column.columnDef.meta?.className} data-label={columnLabel(cell)} data-empty={isBlank(cell) || undefined}>
+        <td key={cell.id} className={cellClass(cell.column.id, cell.column.columnDef.meta?.className)} data-label={columnLabel(cell)} data-empty={isBlank(cell) || undefined}>
           {flexRender(cell.column.columnDef.cell, cell.getContext())}
         </td>
       ))}

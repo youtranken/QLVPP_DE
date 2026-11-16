@@ -125,8 +125,9 @@
   /* Dạng thẻ đủ chỗ cho một dòng: vẫn cắt nhưng không bắt buộc khối */
   [data-shell='admin'] .table-stack .cell-clip { display: inline-block; }
 }
-/* Màn vừa: bảng rộng hơn khung thì cuộn ngang trong khung, cột cuối (thao tác) dính mép phải để luôn thấy */
+/* Màn vừa: bảng rộng hơn khung thì cuộn ngang trong khung, cột thao tác dính mép phải để luôn thấy.
+   :where giữ độ ưu tiên thấp: nền theo dòng (hover, đang chọn, lỗi) vẫn thắng nền mặc định của ô dính */
 @media (min-width: 768px) {
-  [data-shell='admin'] .table-wrap > .table:not(.table-stack--cards) > * > tr > :last-child { position: sticky; right: 0; z-index: 1; background: var(--c-surface); }
-  [data-shell='admin'] .table-wrap > .table > thead > tr > :last-child { z-index: 3; }
+  [data-shell='admin'] :where(.table-wrap) .col-actions { position: sticky; right: 0; z-index: 1; background: var(--c-surface); box-shadow: inset 1px 0 0 var(--c-line); }
+  [data-shell='admin'] :where(.table-wrap) th.col-actions { z-index: 3; }
 }

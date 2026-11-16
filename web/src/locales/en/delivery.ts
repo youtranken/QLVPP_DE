@@ -156,7 +156,7 @@ const delivery: Messages<typeof vi> = {
       noUndo: "Confirming can't be undone. If it's wrong, fix the count in Stock with a reason.",
       ok: 'Confirm delivery',
       sending: 'Delivering…',
-      cancel: 'Cancel',
+      cancel: 'Close',
       close: 'Close',
       openPerson: 'Open person',
       max: 'Max {{n}}',
@@ -214,7 +214,6 @@ const delivery: Messages<typeof vi> = {
         waitingReview: 'Awaiting review',
         noStock: 'No stock yet',
         debt: 'Outstanding from month {{months}}: {{n}} items',
-        progress: 'Delivered {{done}}/{{total}}',
         noDepartment: 'No department',
       },
       panel: {

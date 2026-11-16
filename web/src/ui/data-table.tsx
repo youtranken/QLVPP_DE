@@ -17,6 +17,7 @@ import {
 import { Loading } from '@/ui/load-state';
 import { EmptyFrame, type EmptyFrameProps } from '@/ui/empty-frame';
 import { GroupHeaderRow, type GroupBy, type RowGroup } from '@/ui/data-table-group';
+import { cellClass } from '@/ui/cell-class';
 import { BodyRow, EmptyAwareCell, SelectBox, type RowProps, type Selection } from '@/ui/data-table-row';
 import { SearchClear } from '@/ui/search-clear';
 
@@ -197,7 +198,7 @@ export function DataTable<T>({
                   return (
                     <th
                       key={h.id}
-                      className={hm?.className}
+                      className={cellClass(h.column.id, hm?.className)}
                       title={hm?.tip}
                       aria-sort={
                         sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : undefined

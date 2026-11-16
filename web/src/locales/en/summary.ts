@@ -43,7 +43,6 @@ const summary: Messages<typeof vi> = {
       savedAt: 'Saved',
       actions: 'Actions',
       groupPeople: '{{n}} people',
-      delivered: '{{done}}/{{total}} units delivered',
       leftCompany: 'No longer with the company',
       adjust: 'Adjust',
       adjustLabel: 'Adjust the request of {{name}}',

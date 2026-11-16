@@ -114,4 +114,11 @@ describe('MovementsDrawer — Lịch sử nhập xuất', () => {
     expect(screen.getByRole('button', { name: 'Xuất lẻ' })).toHaveAccessibleDescription('Tủ hết món này');
     expect(screen.getByText('Tủ hết món này')).toBeVisible();
   });
+
+  it('tồn 1 (phía kia mốc 0) → "Xuất lẻ" bật, không có lý do khóa', async () => {
+    stubApi({ first: [] });
+    show(1);
+    expect(screen.getByRole('button', { name: 'Xuất lẻ' })).toBeEnabled();
+    expect(screen.queryByText('Tủ hết món này')).toBeNull();
+  });
 });

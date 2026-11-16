@@ -154,7 +154,7 @@ const delivery = {
       noUndo: 'Bấm Xác nhận là không sửa được. Nếu lỡ nhầm, vào Tủ / Kho để chỉnh số, ghi lý do.',
       ok: 'Xác nhận giao',
       sending: 'Đang giao…',
-      cancel: 'Hủy',
+      cancel: 'Đóng',
       close: 'Đóng',
       openPerson: 'Mở chi tiết người',
       max: 'Tối đa {{n}}',
@@ -212,7 +212,6 @@ const delivery = {
         waitingReview: 'Chờ duyệt',
         noStock: 'Tủ chưa có hàng',
         debt: 'Nợ tháng {{months}}: {{n}} món',
-        progress: 'Đã giao {{done}}/{{total}}',
         noDepartment: 'Chưa có phòng ban',
       },
       panel: {

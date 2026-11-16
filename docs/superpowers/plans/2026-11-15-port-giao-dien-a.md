@@ -243,6 +243,7 @@
 ### Task 20: Mức đặt lại và các lệch riêng màn còn lại (mục 3, mục 7)
 
 **Files:** `features/catalog` + `features/stock` (hiện "dưới mức đặt lại" khi `stock_qty ≤ restock_level`: `.tag` "Sắp hết · mức 6"), `features/delivery` chuông admin có số, sidebar nhãn đang chọn không cắt (`text-overflow` + `title`), Đơn vị tính nút "Sửa" cố định cột, Sản phẩm mã không bẻ giữa (`white-space: nowrap; text-overflow: ellipsis` + `title`), tiêu đề "Tối đa/tháng" một dòng, chế độ Sắp xếp khóa Sửa/Tạm ngưng kèm lý do, nút ⓘ "Cách tính Tổng cần" hiện ở 390, bản xem tổng kết 390 có nút "Mở cỡ thật".
+- Thêm (chuyển từ Task 7 sau review Phase 1): Danh bạ cột Mã NV ≥ 13ch (`users-table.tsx`, mã 20 ký tự không cắt ở 1024); Nhật ký ô Người `nowrap` + icon riêng cho "Hệ thống" (`audit-table.tsx`); Báo cáo bảng "bản đã in/xuất" thành thẻ ở 390, nút In lại trong khung — Playwright đo cả ba (1024 / 390).
 - [ ] **Step 1: test RED** mỗi mục một test Testing Library hoặc Playwright (tên test = mô tả mục, ví dụ `Sản phẩm: tồn 4 mức 6 → nhãn "Sắp hết"`, `tồn 6 mức 6 → "Sắp hết"`, `tồn 7 mức 6 → không nhãn` — biên hai phía).
 - [ ] **Step 2–5:** RED → sửa → GREEN → commit `fix(web): hiện mức đặt lại, các lệch riêng màn còn lại`.
 
