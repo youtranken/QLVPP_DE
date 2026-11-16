@@ -17,11 +17,11 @@ const openDialog = async (name = 'Nhân viên A') => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('RegistrationDialog — phiếu một người, chỉ xem', () => {
-  it('đầu hộp: kỳ · đang mở · team, "Lưu lúc 07/11 11:06 · 3 món · 22 đơn vị", dải "Chỉ xem" kèm giờ khóa', async () => {
+  it('đầu hộp: kỳ · đang mở · team, "Lưu lúc 07/11 · 11:06 · 3 món · 22 đơn vị", dải "Chỉ xem" kèm giờ khóa', async () => {
     stubSummaryApi(registrationRoute());
     const { dialog } = await openDialog();
     expect(await within(dialog).findByText('Kỳ tháng 11 · đang mở · Team Test')).toBeInTheDocument();
-    expect(within(dialog).getByText('Lưu lúc 07/11 11:06 · 3 món · 22 đơn vị')).toBeInTheDocument();
+    expect(within(dialog).getByText('Lưu lúc 07/11 · 11:06 · 3 món · 22 đơn vị')).toBeInTheDocument();
     expect(within(dialog).getByText(/^Chỉ xem\. Nhân viên còn sửa được tới 00:00 ngày 11\/11;/)).toBeInTheDocument();
   });
 

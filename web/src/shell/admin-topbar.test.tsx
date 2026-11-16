@@ -19,11 +19,11 @@ function open(path: string) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('AdminTopbar 390 px', () => {
-  it('thanh trên: nút "Mở menu quản lý", tên app "VPP Công trình" (không lặp tiêu đề trang "Sản phẩm"), dòng phụ kỳ "Kỳ hiện tại: tháng 11 · đang mở", chuông, avatar', async () => {
+  it('thanh trên: nút "Mở menu quản lý", tên app "QLVPP" (không lặp tiêu đề trang "Sản phẩm"), dòng phụ kỳ "Kỳ hiện tại: tháng 11 · đang mở", chuông, avatar', async () => {
     open('/admin/catalog');
     const bar = topbar();
     expect(within(bar).getByRole('button', { name: 'Mở menu quản lý' })).toBeInTheDocument();
-    expect(within(bar).getByText('VPP Công trình', { exact: true })).toBeInTheDocument();
+    expect(within(bar).getByText('QLVPP', { exact: true })).toBeInTheDocument();
     expect(within(bar).queryByText('Sản phẩm', { exact: true })).toBeNull();
     expect(await within(bar).findByText('Kỳ hiện tại: tháng 11 · đang mở')).toBeInTheDocument();
     expect(within(bar).getByRole('button', { name: 'Nguyễn Văn An, Adm D&E' })).toBeInTheDocument();
@@ -61,12 +61,12 @@ describe('AdminTopbar 390 px', () => {
 });
 
 describe('Menu sheet 390 px', () => {
-  it('tiêu đề "Menu quản lý", "VPP Công trình · Adm D&E", nút "Đóng menu", 12 mục, thẻ kỳ, ngôn ngữ, Đăng xuất', async () => {
+  it('tiêu đề "Menu quản lý", "QLVPP · Adm D&E", nút "Đóng menu", 12 mục, thẻ kỳ, ngôn ngữ, Đăng xuất', async () => {
     open('/admin/catalog');
     await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
     const sheet = screen.getByRole('dialog', { name: 'Menu quản lý' });
     expect(within(sheet).getByRole('heading', { name: 'Menu quản lý' })).toBeInTheDocument();
-    expect(within(sheet).getByText('VPP Công trình · Adm D&E')).toBeInTheDocument();
+    expect(within(sheet).getByText('QLVPP · Adm D&E')).toBeInTheDocument();
     const nav = within(sheet).getByRole('navigation', { name: 'Menu quản lý' });
     expect(within(nav).getAllByRole('link').map((a) => a.querySelector('.side__label')?.textContent)).toEqual(NAV_ORDER);
     expect(within(nav).getAllByRole('link').every((a) => !a.hasAttribute('title'))).toBe(true);

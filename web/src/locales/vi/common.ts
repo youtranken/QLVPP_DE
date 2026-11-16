@@ -1,6 +1,6 @@
 const common = {
   app: {
-    title: 'VPP Công trình',
+    title: 'QLVPP',
     shortName: 'QLVPP',
     adminTitle: 'Quản lý VPP',
     logoLetter: 'V',

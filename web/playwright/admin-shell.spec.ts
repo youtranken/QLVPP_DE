@@ -146,7 +146,7 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
   test('v2: không còn đầu sidebar thương hiệu; máy tính bảng vẫn bấm được chuông, panel nằm trọn màn hình', async ({ page }, info) => {
     test.skip(isMobile(info), 'chỉ đo ở máy tính');
     await page.goto('/admin/month');
-    await expect(page.getByText('VPP Công trình', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('QLVPP', { exact: true })).toHaveCount(0);
     await page.setViewportSize({ width: 1024, height: 720 });
     await bellOf(page, false).click();
     const panel = page.getByRole('dialog', { name: 'Thông báo' });

@@ -10,7 +10,7 @@ const nav = {
     mobile: {
       openMenu: 'Mở menu quản lý',
       menuTitle: 'Menu quản lý',
-      menuBrand: 'VPP Công trình · Adm D&E',
+      menuBrand: 'QLVPP · Adm D&E',
       closeMenu: 'Đóng menu',
       avatar: '{{name}}, {{role}}',
       lockedMonth: 'Tháng {{month}}/{{year}} · đã khóa',

@@ -62,7 +62,7 @@ test.describe('E6-S4 song ngữ các màn Adm D&E của Plan 3', () => {
 
       for (const lang of ['vi', 'en'] as const) {
         await switchLanguage(page, info, lang);
-        const t = lang === 'vi' ? { delivery: 'Xác nhận giao', backlog: 'Còn nợ', reports: 'Báo cáo & gửi NCC', bell: 'Thông báo' } : { delivery: 'Confirm delivery', backlog: 'Outstanding', reports: 'Reports & send to supplier', bell: 'Notifications' };
+        const t = lang === 'vi' ? { delivery: 'Xác nhận giao', backlog: 'Còn nợ', reports: 'Báo cáo & gửi NCC', bell: 'Thông báo' } : { delivery: 'Confirm delivery', backlog: 'Outstanding', reports: 'Reports & ordering', bell: 'Notifications' };
 
         await page.goto('/admin/delivery');
         await page.getByRole('searchbox').fill(seed.name);

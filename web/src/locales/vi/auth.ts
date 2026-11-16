@@ -22,7 +22,7 @@ const auth = {
     saInvalid: 'Sai tên tài khoản hoặc mật khẩu.',
     saLocked: 'Tạm khóa do nhập sai nhiều lần — thử lại sau 15 phút.',
     saError: 'Không đăng nhập được — thử lại sau ít phút.',
-    loginFailed: 'Đăng nhập chưa thành công — bấm đăng nhập để thử lại.',
+    loginFailed: 'Đăng nhập chưa thành công — bấm Tiếp tục để thử lại.',
     ssoUnavailable: 'Tạm thời không kết nối được Tài khoản D&E. Quản trị kỹ thuật có thể đăng nhập bằng tài khoản nội bộ.',
     sessionExpired: 'Phiên đăng nhập đã hết hạn. Đăng nhập lại để tiếp tục.',
     ssoRedirecting: 'Đang chuyển sang Tài khoản D&E…',

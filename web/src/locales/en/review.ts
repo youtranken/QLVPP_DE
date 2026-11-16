@@ -28,7 +28,7 @@ const review: Messages<typeof vi> = {
       converted: 'No item added to the catalog yet',
       rejected: 'No item rejected yet',
     },
-    sentLink: 'Open Reports & send to supplier',
+    sentLink: 'Open Reports & ordering',
     staleNotice: 'This line was just handled — the list has been refreshed.',
     card: {
       imageAlt: 'Photo of {{name}} sent by staff',

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EmptyValue } from '@/ui/empty-cell';
 import type { ColumnDef } from '@tanstack/react-table';
-import { vnSavedAt } from '@/lib/format-time';
+import { vnSavedStamp } from '@/lib/format-time';
 import { DataTable } from '@/ui/data-table';
 import { Progress } from '@/ui/progress';
 import type { PersonRow } from '@/features/summary/summary.api';
@@ -45,9 +45,7 @@ function Notes({ row }: { row: PersonRow }) {
 }
 
 function SavedAt({ iso }: { iso: string }) {
-  const { t } = useTranslation();
-  const at = vnSavedAt(iso);
-  return <span className="sm-muted num">{at.today ? t('summary.table.savedToday', at) : t('summary.table.savedOn', at)}</span>;
+  return <span className="sm-muted num">{vnSavedStamp(iso)}</span>;
 }
 
 function useColumns(busy: boolean, onView: Props['onView'], onAdjust: Props['onAdjust']) {

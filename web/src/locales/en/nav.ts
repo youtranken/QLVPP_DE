@@ -13,7 +13,7 @@ const nav: Messages<typeof vi> = {
     mobile: {
       openMenu: 'Open admin menu',
       menuTitle: 'Admin menu',
-      menuBrand: 'VPP Công trình · D&E Admin',
+      menuBrand: 'QLVPP · D&E Admin',
       closeMenu: 'Close menu',
       avatar: '{{name}}, {{role}}',
       lockedMonth: '{{month, MonthName}} {{year}} · locked',
@@ -32,7 +32,7 @@ const nav: Messages<typeof vi> = {
     arrivals: 'Receiving',
     delivery: 'Delivery',
     backlog: 'Outstanding',
-    reports: 'Reports & send to supplier',
+    reports: 'Reports & ordering',
     categoriesUnits: 'Categories',
     badge: {
       review: '{{n}} items to review',

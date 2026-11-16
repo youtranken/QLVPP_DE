@@ -25,7 +25,7 @@ const auth: Messages<typeof vi> = {
     saInvalid: 'Wrong username or password.',
     saLocked: 'Temporarily locked after too many failed attempts — try again in 15 minutes.',
     saError: 'Could not sign in — try again in a few minutes.',
-    loginFailed: 'Sign-in did not complete — press sign in to try again.',
+    loginFailed: 'Sign-in did not complete — press Continue to try again.',
     ssoUnavailable: 'Cannot reach D&E Account at the moment. Technical administrators can sign in with the internal account.',
     sessionExpired: 'Your session has expired. Sign in again to continue.',
     ssoRedirecting: 'Redirecting to D&E Account…',

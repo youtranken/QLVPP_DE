@@ -1,6 +1,6 @@
 import { useId, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useFormatTime } from '@/lib/format-time';
+import { vnSavedStamp } from '@/lib/format-time';
 import { DialogClose } from '@/ui/dialog';
 import { OverlayPanel, type PanelNav } from '@/ui/overlay-panel';
 import { Loading, LoadError } from '@/ui/load-state';
@@ -61,8 +61,7 @@ function Blocks({ a }: { a: Adjust }) {
 
 function Footer({ a, formId }: { a: Adjust; formId: string }) {
   const { t } = useTranslation();
-  const at = useFormatTime();
-  const note = a.changes > 0 ? t('summary.adjust.changes', { n: a.changes }) : a.view && t('summary.adjust.savedAt', { at: at(a.view.updated_at) });
+  const note = a.changes > 0 ? t('summary.adjust.changes', { n: a.changes }) : a.view && t('summary.adjust.savedAt', { at: vnSavedStamp(a.view.updated_at) });
   const reason = useDisabledReason(!a.canSave && a.changes === 0 && !a.saving ? t('common.disabledReason.noChanges') : null);
   return (
     <>

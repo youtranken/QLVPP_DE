@@ -51,8 +51,8 @@ describe('Lịch sử — điều chỉnh của Adm D&E', () => {
     renderApp(makeMe('member'), '/history/2026-10');
     const box = (await screen.findByRole('heading', { name: 'Điều chỉnh của Adm D&E' })).closest('section')!;
     expect(within(box).getAllByRole('listitem').map((n) => n.textContent)).toEqual([
-      `13/12 08:00 · ${PEN.name} 5 thành 4 · Lý do: Vượt định mức`,
-      `13/12 09:10 · ${PEN.name} 4 thành 3 · Lý do: Vượt định mức`,
+      `13/12 · 08:00 · ${PEN.name} 5 thành 4 · Lý do: Vượt định mức`,
+      `13/12 · 09:10 · ${PEN.name} 4 thành 3 · Lý do: Vượt định mức`,
     ]);
     // Đăng ký lấy số gốc của lần giảm đầu
     expect(within(screen.getByRole('rowheader', { name: PEN.name }).closest('tr')!).getByText('5')).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe('Lịch sử — điều chỉnh của Adm D&E', () => {
     const row = (await screen.findByRole('rowheader', { name: 'Kéo cắt' })).closest('tr')!;
     expect(within(row).getByText('Không giao')).toBeInTheDocument();
     expect(within(row).getByText(`Adm D&E bỏ món · ${SCRIPT} dòng 2`)).toBeInTheDocument();
-    expect(screen.getByText(`13/12 09:10 · Kéo cắt 3 thành 0 · Lý do: ${SCRIPT} dòng 2`)).toBeInTheDocument();
+    expect(screen.getByText(`13/12 · 09:10 · Kéo cắt 3 thành 0 · Lý do: ${SCRIPT} dòng 2`)).toBeInTheDocument();
     expect(document.querySelector('script:not([src])')).toBeNull();
   });
 

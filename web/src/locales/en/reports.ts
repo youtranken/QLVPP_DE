@@ -101,14 +101,15 @@ const reports: Messages<typeof vi> = {
       },
     },
     send: {
-      title: 'Reports & send to supplier',
+      title: 'Reports & ordering',
       excel: 'Export Excel',
       preview: 'Review summary',
       colWho: 'Who signed up',
       whoLoading: 'Loading sign-ups',
       whoUnknown: 'Sign-ups not loaded',
       whoFailed: "Couldn't load who signed up for each item.",
-      who: '{{count}} people',
+      who_one: '{{count}} person',
+      who_other: '{{count}} people',
       whoLabel: 'See who signed up for {{name}} ({{count}} people)',
       changedTag: 'Changed since print: {{was}} → {{now}}',
       status: {

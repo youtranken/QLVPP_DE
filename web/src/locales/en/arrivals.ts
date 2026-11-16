@@ -43,9 +43,9 @@ const arrivals: Messages<typeof vi> = {
     batchPicked: 'Selected {{g}} groups · {{n}} items',
     status: { done: 'Received in full', short: '{{n}} short', over: '{{n}} over', none: 'None entered', adm_out: 'Out at supplier', oweIn: 'Entered: {{qty}}', oweLeft: 'Supplier still owes: {{n}}' },
     gate: {
-      notSent: 'The {{month, monthName}} report has not been sent to the supplier yet. Go to Reports & send to supplier to finalise it before receiving goods.',
+      notSent: 'The {{month, monthName}} report has not been sent to the supplier yet. Go to Reports & ordering to finalise it before receiving goods.',
       noOrder: 'No supplier order for {{month, monthName}} ({{time}}) — there are no goods to receive for this month.',
-      toReports: 'Reports & send to supplier',
+      toReports: 'Reports & ordering',
     },
     admOut: { button: 'Out at supplier', buttonFor: 'Out at supplier: {{name}}', final: 'Out at supplier · settled', finalFor: 'Out at supplier · settled: {{name}}' },
     admOutStock: 'Out at supplier – {{s}} in stock',

@@ -21,7 +21,7 @@ const warnings: Messages<typeof vi> = {
     W8deliver: 'Off-catalog items not approved yet: {{names}}. Delivering will mark them as Do not buy.',
     W9: 'Nothing to order yet',
     W10a: 'The supplier order of {{time}} already has this item ({{n}} {{unit}}) — it will arrive with no one to receive it.',
-    W10b: 'The supplier order of {{time}} does not have this item. After accepting, go to Reports & send to supplier to make a new order and reprint, or buy it separately.',
+    W10b: 'The supplier order of {{time}} does not have this item. After accepting, go to Reports & ordering to make a new order and reprint, or buy it separately.',
     W11: 'The supplier order of {{time}} counted the old number — reducing now leaves {{n}} {{unit}} extra in stock when it arrives.',
     W12a: 'Above the current maximum ({{max}})',
     W12b: 'The maximum is limited to {{max}}/month. The monthly close will count up to this limit',

@@ -41,7 +41,7 @@ const notifications: Messages<typeof vi> = {
       },
       user_left_with_work: {
         locked: '{{name}} was locked but still has {{work}}.',
-        deleted: '{{name}} was deleted but still has {{work}}.',
+        deleted: '{{name}} (left the company) still has {{work}}.',
         no_access: '{{name}} lost access to VPP but still has {{work}}.',
         owed_one: '{{count}} undelivered item ({{months}})',
         owed_other: '{{count}} undelivered items ({{months}})',

@@ -104,7 +104,8 @@ const reports = {
       whoLoading: 'Đang tải số người',
       whoUnknown: 'Chưa tải được số người',
       whoFailed: 'Chưa tải được ai đăng ký từng món.',
-      who: '{{count}} người',
+      who_one: '{{count}} người',
+      who_other: '{{count}} người',
       whoLabel: 'Xem ai đăng ký {{name}} ({{count}} người)',
       changedTag: 'Đổi sau bản in: {{was}} → {{now}}',
       status: {
