@@ -54,7 +54,7 @@ Tầng test theo loại code:
 ## Bản đồ mã nguồn (`docs/map.md`)
 
 - `docs/map.md` là bản đồ sống của repo: mỗi module/feature một dòng — trách nhiệm, file chính, endpoint/bảng nó sở hữu, phụ thuộc vào module nào. Tối đa 200 dòng; không chép code vào.
-- **Cuối mỗi task**, implementer cập nhật `docs/map.md` cho những module mình chạm (thêm/đổi/bỏ) trong cùng commit cuối của task; reviewer kiểm map khớp diff. Map lệch code = finding Important.
+- **Cuối mỗi task**, implementer cập nhật `docs/map.md` cho những module mình chạm (thêm/đổi/bỏ) trong cùng commit cuối của task; reviewer giai đoạn kiểm map khớp diff. Map lệch code = finding Important.
 - Trước khi sửa một module, đọc dòng của nó trong map thay vì lần cả repo; nếu map không đủ để biết bắt đầu từ đâu thì map đang thiếu — bổ sung.
 - Cuối mỗi plan: vẽ lại sơ đồ kiến trúc + luồng chính bằng skill `archify` từ bằng chứng trong code → `docs/diagrams/` (HTML + PNG), đối chiếu với `architecture.md`; lệch thì sửa tài liệu hoặc code, ghi vào `review-spec.md`.
 
@@ -78,6 +78,6 @@ Tầng test theo loại code:
 
 ## Review
 
-Mỗi task qua reviewer độc lập: (1) đúng spec — không thiếu, không thừa; (2) chất lượng — test thật, tách trách nhiệm, không trùng lặp. Reviewer kiểm thêm: mỗi giới hạn task chạm tới có test biên hai phía ở đúng tầng; thiếu = finding Important. Finding Critical/Important phải sửa trước khi sang task kế; Minor ghi ledger.
+Review theo **giai đoạn** của plan, không theo từng task (chủ dự án chốt 16/11/2026: review từng task lâu và tốn). Implementer làm liền các task trong một giai đoạn, vẫn TDD đủ (RED/GREEN, biên hai phía, commit từng task). Hết mỗi giai đoạn (`## Phase …` trong plan), một reviewer độc lập đọc diff cả giai đoạn: (1) đúng spec — không thiếu, không thừa; (2) chất lượng — test thật, tách trách nhiệm, không trùng lặp; (3) mỗi giới hạn đã chạm có test biên hai phía ở đúng tầng (thiếu = finding Important); (4) `docs/map.md` khớp diff. Finding Critical/Important phải sửa xong trước khi sang giai đoạn kế; Minor ghi ledger. Giai đoạn đặt nền dùng chung (token, `ui/*`, khung shell) phải review trước khi làm giai đoạn dựa trên nó.
 
-Cuối mỗi plan, theo thứ tự: chạy đủ `npm run test:e2e`/`test:db`/unit → Playwright cả bộ một vòng (1280 + 390) → review toàn nhánh + code review mức high → một đợt sửa + re-review → báo chủ dự án; chỉ gộp `main` khi chủ dự án đồng ý, không push nếu chưa được bảo.
+Cuối mỗi plan, theo thứ tự: chạy đủ `npm run test:e2e`/`test:db`/unit → Playwright cả bộ một vòng (1280 + 390) → review toàn nhánh + code review mức high → một đợt sửa + re-review → plan có đổi giao diện thì đo lại trên dev bằng skill `ra-soat-ui` + tiêu chí áp được của `design-taste-frontend` → báo chủ dự án; chỉ gộp `main` khi chủ dự án đồng ý, không push nếu chưa được bảo.
