@@ -201,7 +201,7 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
         peopleFailed={registrants.failed}
         onPeople={setWhoKey}
       />
-      <ReportSnapshots ym={report.ym} files={files} />
+      {settled && <ReportSnapshots ym={report.ym} files={files} />}
       {whoKey && <ItemPeopleDialog ym={report.ym} itemKey={whoKey} order={tableRows.find((r) => r.id === whoKey)?.order ?? 0} onClose={() => setWhoKey(null)} />}
       {preview && (
         <SummaryPreviewDialog
