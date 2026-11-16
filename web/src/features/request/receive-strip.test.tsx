@@ -42,7 +42,7 @@ describe('ReceiveStrip — dải phiếu đang giao', () => {
     await open();
     await userEvent.click(await screen.findByRole('button', { name: 'Xem' }));
     const dlg = await screen.findByRole('dialog', { name: 'Phiếu tháng 10' });
-    expect(within(dlg).getByText('Đang giao · đã nhận 2/5 món · lưu lúc 07/10 21:38')).toBeInTheDocument();
+    expect(within(dlg).getByText('Đã giao 2/5 · lưu lúc 07/10 21:38')).toBeInTheDocument();
     for (const h of ['Món', 'ĐVT', 'Đăng ký', 'Được giao', 'Đã nhận', 'Tình trạng']) expect(within(dlg).getByRole('columnheader', { name: h })).toBeInTheDocument();
     expect(within(dlg).getAllByText('Đã nhận 1/1')).toHaveLength(2);
     expect(within(dlg).getAllByText('Chờ 1')).toHaveLength(3);

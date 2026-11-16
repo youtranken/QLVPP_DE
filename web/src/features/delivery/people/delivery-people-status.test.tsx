@@ -52,3 +52,18 @@ describe('PeopleTable — số trên dòng', () => {
     expect(within(card('Đỗ Mai Linh')).getAllByRole('cell').map((c) => c.textContent)).toEqual(expect.arrayContaining(['0 món', '0']));
   });
 });
+
+describe('DeliveryPeoplePage — một nhãn trạng thái phiếu (đếm đơn vị)', () => {
+  it('giao 4/9 → "Đã giao 4/9"; chưa giao → "Chưa giao"; còn nợ tháng trước 2 → "Còn nợ 2"; xong → "Đã nhận đủ"', async () => {
+    open([
+      person({ user_sub: 'p1', full_name: 'Người Một', lines: [pLine({ line_id: 'a', qty: 9, delivered_qty: 4, remaining_qty: 5 })] }),
+      person({ user_sub: 'p2', full_name: 'Người Hai', lines: [pLine({ line_id: 'b', qty: 3, delivered_qty: 0, remaining_qty: 3 })] }),
+      person({ user_sub: 'p3', full_name: 'Người Ba', status: 'debt', lines: [pLine({ line_id: 'c', qty: 2, delivered_qty: 0, remaining_qty: 2, is_debt: true, period_ym: '2026-09' })] }),
+      person({ user_sub: 'p4', full_name: 'Người Bốn', status: 'done', lines: [pLine({ line_id: 'd', qty: 3, delivered_qty: 2, cancelled_qty: 1, remaining_qty: 0 })] }),
+    ]);
+    expect(await within(await screen.findByText('Người Một', { selector: '.pt-person b' }).then((b) => b.closest('tr')!)).findByText('Đã giao 4/9')).toBeInTheDocument();
+    expect(within(card('Người Hai')).getByText('Chưa giao')).toBeInTheDocument();
+    expect(within(card('Người Ba')).getByText('Còn nợ 2')).toBeInTheDocument();
+    expect(within(card('Người Bốn')).getByText('Đã nhận đủ')).toBeInTheDocument();
+  });
+});

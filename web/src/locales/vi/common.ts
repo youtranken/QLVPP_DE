@@ -6,6 +6,7 @@ const common = {
     logoLetter: 'V',
   },
   common: {
+    requestStatus: { notDelivered: 'Chưa giao', partial: 'Đã giao {{delivered}}/{{total}}', done: 'Đã nhận đủ', owed: 'Còn nợ {{n}}' },
     disabledReason: { noChanges: 'Chưa có thay đổi', noQty: 'Chưa chọn số lượng giao', noStock: 'Tủ hết món này', nothingToOrder: 'Chưa có món nào cần đặt' },
     paused: 'Tạm ngưng',
     // Khoảng trắng không ngắt: cụm giờ khóa sổ không bị gãy làm hai dòng (khối Kỳ tháng ở sidebar)

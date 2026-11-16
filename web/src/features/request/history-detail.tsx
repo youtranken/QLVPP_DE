@@ -10,6 +10,8 @@ import { isSuspendedLine, receiveRows, receiveSummary, type ReceiveRow } from '.
 import { CUSTOM_STATUSES } from './history.api';
 import { useRequestFormat } from './request-format';
 import { Link } from 'react-router-dom';
+import { requestStatusText } from '@/lib/request-status';
+import { linesStatus } from './line-status';
 
 function cancelNote(l: LineView, t: ReturnType<typeof useTranslation>['t']): string | null {
   if (l.cancelled_qty <= 0) return null;
@@ -127,6 +129,7 @@ function Header({ ym, view, level }: { ym: string; view: RequestView; level: 1 |
   const catalog = view.lines.filter((l) => l.review_status === 'n/a' && !isSuspendedLine(l));
   const catalogIds = new Set(catalog.map((l) => l.id));
   const sum = receiveSummary(receiveRows(view, t, i18n.language).filter((r) => catalogIds.has(r.id)));
+  const status = linesStatus(catalog);
   const custom = CUSTOM_STATUSES.map((k) => ({ k, n: view.lines.filter((l) => l.review_status === k).length })).filter((c) => c.n > 0);
   const parts = [
     t('request.history.summary', { count: catalog.length, units: t('request.unitCount', { count: catalog.reduce((n, l) => n + l.qty, 0) }) }),
@@ -140,11 +143,7 @@ function Header({ ym, view, level }: { ym: string; view: RequestView; level: 1 |
         <Heading className="hs-d-title">{t('request.history.detailTitle', { month: Number(ym.slice(5)), year: ym.slice(0, 4) })}</Heading>
         <p className="hs-d-sub">{parts.join(' · ')}</p>
       </div>
-      {sum.total > 0 && (
-        <Chip tone={sum.waiting > 0 ? 'warn' : 'ok'}>
-          {sum.waiting > 0 ? t('request.history.chipDelivering', { done: sum.done, total: sum.total, count: sum.total }) : t('request.history.delivery.done')}
-        </Chip>
-      )}
+      {sum.total > 0 && <Chip tone={status.key === 'done' ? 'ok' : 'warn'}>{requestStatusText(t, status)}</Chip>}
     </div>
   );
 }

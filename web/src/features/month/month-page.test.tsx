@@ -12,6 +12,7 @@ const open = (path = '/admin/month?ym=2026-10') => {
   renderApp(makeMe('admin'), path);
 };
 const table = async () => within(await screen.findByRole('table'));
+const rowOf = (name: string) => screen.getByText(name, { selector: 'tr *' }).closest('tr') as HTMLElement;
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -45,6 +46,15 @@ describe('MonthPage: kỳ khóa', () => {
     expect(t.getByText('Adm D&E đã điều chỉnh')).toBeInTheDocument();
     expect(t.getByText('Không có gì để giao')).toBeInTheDocument();
     expect(t.getByText('Món ngoài danh mục')).toBeInTheDocument();
+  });
+
+  it('cột Giao dùng nhãn trạng thái chung: B "Đã giao 2/6", E "Đã nhận đủ", A "Chưa giao"', async () => {
+    stubMonthApi();
+    renderApp(makeMe('admin'), '/admin/month?ym=2026-10');
+    await table();
+    expect(within(rowOf('Nhân viên B')).getByText('Đã giao 2/6')).toBeInTheDocument();
+    expect(within(rowOf('Nhân viên E')).getByText('Đã nhận đủ')).toBeInTheDocument();
+    expect(within(rowOf('Nhân viên A')).getByText('Chưa giao')).toBeInTheDocument();
   });
 
   it('Ghi chú trống → "—" (ô có nhãn ở dạng thẻ không để trống)', async () => {

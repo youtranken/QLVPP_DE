@@ -8,6 +8,7 @@ import { monthOf } from '@/features/request/request-format';
 import type { DeliveryPerson } from './delivery-people.api';
 import type { Shortage } from './deliver-plan';
 import { cardSummary, isOpenLine } from './people-filter';
+import { requestStatus, requestStatusText } from '@/lib/request-status';
 
 export function PersonAvatar({ name, large = false }: { name: string; large?: boolean }) {
   return (
@@ -61,21 +62,21 @@ function StatusCell({ person }: { person: DeliveryPerson }) {
   const { t } = useTranslation();
   const { shortages } = useCtx();
   const shortItems = new Set(person.lines.filter((l) => isOpenLine(l) && l.item_id && shortages.has(l.item_id)).map((l) => l.item_id)).size;
-  const open = person.lines.filter(isOpenLine);
-  const lines = open.length > 0 ? open : person.lines;
   const debt = person.lines.filter((l) => l.is_debt && l.remaining_qty > 0);
   const months = [...new Set(debt.map((l) => monthOf(l.period_ym)))].join(', ');
-  const progress = {
-    done: lines.reduce((n, l) => n + l.delivered_qty, 0),
-    total: lines.reduce((n, l) => n + l.qty - l.cancelled_qty, 0),
-  };
+  const current = person.lines.filter((l) => !l.is_debt);
+  const status = requestStatus({
+    qty: current.reduce((n, l) => n + l.qty, 0),
+    delivered: current.reduce((n, l) => n + l.delivered_qty, 0),
+    cancelled: current.reduce((n, l) => n + l.cancelled_qty, 0),
+    owedPrevMonths: debt.reduce((n, l) => n + l.remaining_qty, 0),
+  });
   return (
     <span className="pt-status">
       <span className="pt-chips">
-        <span className={`pp-chip pp-chip--${person.status}`}>{t(`delivery.people.status.${person.status}`)}</span>
+        <span className={`pp-chip pp-chip--${person.status}`}>{requestStatusText(t, status)}</span>
         {shortItems > 0 && <span className="pp-chip pp-chip--short">{t('delivery.people.shortChip', { n: shortItems })}</span>}
       </span>
-      {progress.done > 0 && person.status !== 'done' && <small className="pp-card__progress num">{t('delivery.people.card.progress', progress)}</small>}
       {debt.length > 0 && <small className="pt-debt">{t('delivery.people.card.debt', { months, n: debt.length })}</small>}
     </span>
   );

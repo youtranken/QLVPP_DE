@@ -50,7 +50,6 @@ describe('EN: một từ "items", số nhiều theo i18next', () => {
   it('done/total: chia theo tổng — "received 0/1 item", "received 2/8 items"', () => {
     expect(EN('request.receive.strip', { done: 0, total: 1, count: 1 })).toBe('received 0/1 item');
     expect(EN('request.receive.strip', { done: 2, total: 8, count: 8 })).toBe('received 2/8 items');
-    expect(EN('request.history.chipDelivering', { done: 2, total: 8, count: 8 })).toBe('Being delivered · received 2/8 items');
   });
 
   it('VI giữ nguyên câu cũ', () => {

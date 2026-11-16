@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { vnSavedStamp } from '@/lib/format-time';
 import { Dialog, DialogCloseButton, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { Loading, LoadError } from '@/ui/load-state';
-import { receiveRows, receiveSummary, type ReceiveRow } from './receive-rows';
+import { receiveRows, type ReceiveRow } from './receive-rows';
 import { useMyRequest } from './request.api';
 import { monthOf, useRequestFormat } from './request-format';
+import { requestStatusText } from '@/lib/request-status';
+import { linesStatus } from './line-status';
 
 export function ReceiveStatus({ row }: { row: ReceiveRow }) {
   const { t } = useTranslation();
@@ -55,7 +57,6 @@ export function ReceiveDialog({ ym, onClose }: { ym: string; onClose: () => void
   const request = useMyRequest(ym);
   const view = request.data;
   const rows = view ? receiveRows(view, t, i18n.language) : [];
-  const sum = receiveSummary(rows);
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()} className="sheet rq-dialog rq-recv" maxWidth={760}>
       <div className="sheet-header">
@@ -63,7 +64,7 @@ export function ReceiveDialog({ ym, onClose }: { ym: string; onClose: () => void
           <DialogTitle className="sheet-title">{t('request.receive.title', { month: monthOf(ym) })}</DialogTitle>
           {view && (
             <DialogDescription className="rq-recv-sub">
-              {t('request.receive.subtitle', { done: sum.done, total: sum.total, count: sum.total, time: vnSavedStamp(view.saved_at) })}
+              {t('request.receive.subtitle', { status: requestStatusText(t, linesStatus(view.lines.filter((l) => l.review_status === 'n/a'))), time: vnSavedStamp(view.saved_at) })}
             </DialogDescription>
           )}
         </div>

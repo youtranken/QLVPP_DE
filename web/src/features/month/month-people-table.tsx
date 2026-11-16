@@ -6,6 +6,7 @@ import { vnSavedAt } from '@/lib/format-time';
 import { DataTable } from '@/ui/data-table';
 import { Progress } from '@/ui/progress';
 import type { PersonRow } from '@/features/summary/summary.api';
+import { requestStatus, requestStatusText } from '@/lib/request-status';
 
 interface Props {
   rows: PersonRow[];
@@ -25,8 +26,8 @@ const NO_DEPT = '\u0000';
 function DeliveryCell({ row }: { row: PersonRow }) {
   const { t } = useTranslation();
   if (row.total_qty === 0) return <span className="sm-muted">{t('common.empty')}</span>;
-  const done = row.delivered_qty + row.cancelled_qty;
-  return <Progress done={done} total={row.total_qty} label={t('summary.table.delivered', { done, total: row.total_qty })} />;
+  const status = requestStatus({ qty: row.total_qty, delivered: row.delivered_qty, cancelled: row.cancelled_qty });
+  return <Progress done={status.delivered} total={status.total} label={requestStatusText(t, status)} />;
 }
 
 function Notes({ row }: { row: PersonRow }) {
