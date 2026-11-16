@@ -50,12 +50,15 @@ export function useConfigBlock<D>(spec: BlockSpec<D>, config: AdminConfig, confi
   const draft = rebase(edits, fresh);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<BlockStatus>('idle');
+  // Ô người dùng đã gõ: chỉ những ô này hiện lỗi khi đang gõ (ô vừa thêm còn trống chưa bị báo đỏ); nút Lưu khóa theo cả khối
+  const [touched, setTouched] = useState<ReadonlySet<string>>(() => new Set());
   const busy = useRef(false);
   const patch = spec.patchOf(draft, config);
   const dirty = Object.keys(patch).length > 0;
 
   const update = (next: (d: D) => D, clear?: string | readonly string[] | 'all') => {
     setEdits((prev) => ({ base: fresh, draft: next(rebase(prev, fresh)) }));
+    if (clear && clear !== 'all') setTouched((prev) => new Set([...prev, ...(typeof clear === 'string' ? [clear] : clear)]));
     setStatus((s) => (s === 'saved' ? 'idle' : s));
     setErrors(({ form: _form, ...rest }) => {
       if (clear === 'all') return {};
@@ -78,6 +81,7 @@ export function useConfigBlock<D>(spec: BlockSpec<D>, config: AdminConfig, confi
       void qc.invalidateQueries({ queryKey: ['public-config'] });
       void qc.invalidateQueries({ queryKey: ['audit'] });
       setEdits(null);
+      setTouched(new Set());
       setStatus('saved');
       toast.show({ text: t('config.page.saved', { block: t(`config.${spec.block}.title`) }), tone: 'ok' });
     } catch (e) {
@@ -91,9 +95,11 @@ export function useConfigBlock<D>(spec: BlockSpec<D>, config: AdminConfig, confi
   const cancel = () => {
     setEdits(null);
     setErrors({});
+    setTouched(new Set());
     setStatus('idle');
   };
 
   const live = dirty ? spec.validate(draft) : {};
-  return { draft, errors: { ...live, ...errors }, status, dirty, invalid: Object.keys(live).length > 0, update, save, cancel };
+  const shown = Object.fromEntries(Object.entries(live).filter(([k]) => touched.has(k)));
+  return { draft, errors: { ...shown, ...errors }, status, dirty, invalid: Object.keys(live).length > 0, update, save, cancel };
 }

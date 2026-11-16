@@ -30,3 +30,19 @@ for (const width of [320, 335, 340]) {
     expect(fits.s, `ô số ${fits.c}px`).toBeLessThanOrEqual(fits.c);
   });
 }
+
+for (const width of [360, 390]) {
+  test(`${width} (thẻ > 132px): nút hiện đủ chữ "Thêm vào phiếu"; −/+ rộng 44`, async ({ page }, info) => {
+    test.skip(!isMobile(info), 'đo ở điện thoại');
+    await page.setViewportSize({ width, height: 740 });
+    await asMember(page);
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    const add = page.locator('.rq-card-add').first();
+    await expect(add.locator('.rq-card-add-full')).toBeVisible();
+    await expect(add.locator('.rq-card-add-short')).toBeHidden();
+    await add.click();
+    const widths = await page.locator('.rq-card-stepper').first().evaluate((st) => [...st.querySelectorAll('button')].map((b) => Math.round(b.getBoundingClientRect().width)));
+    expect(widths).toEqual([44, 44]);
+  });
+}

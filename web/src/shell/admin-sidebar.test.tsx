@@ -186,14 +186,6 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
 });
 
 describe('AdminSidebar: đầu và cuối', () => {
-  it('không còn hàng thương hiệu ở đầu sidebar', async () => {
-    mockViewport(1280);
-    stubShellApi();
-    const { container } = renderApp(makeMe('admin'), '/admin/catalog');
-    await screen.findByRole('navigation', { name: 'Menu quản lý' });
-    expect(container.querySelector('.side__brand')).toBeNull();
-  });
-
   it('chuông nằm cùng khối người dùng ở cuối, sau thanh điều hướng', async () => {
     mockViewport(1280);
     stubShellApi();
@@ -281,5 +273,16 @@ describe('AdminSidebar: tên đầy đủ khi nhãn bị cắt', () => {
     // AdminSidebar + khối người dùng cuối cột
     expect(subs.add).toBe(2);
     expect(subs.remove).toBe(0);
+  });
+});
+
+describe('AdminSidebar: tên app (Q2)', () => {
+  it('đầu sidebar có logo + "QLVPP" (liên kết về trang đầu Adm D&E), nằm ngoài menu 12 mục', async () => {
+    mockViewport(1280);
+    stubShellApi({});
+    renderApp(makeMe('admin'), '/admin/catalog');
+    const brand = await screen.findByRole('link', { name: 'QLVPP' });
+    expect(brand).toHaveAttribute('href', '/admin');
+    expect(sideNav()).not.toContainElement(brand);
   });
 });

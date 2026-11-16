@@ -39,6 +39,17 @@ test.describe('Lệch riêng từng màn (Task 20)', () => {
     expect(out).toEqual({ codes: [], header: 1 });
   });
 
+  test('Sản phẩm 1280: mở sửa nhanh Tối đa/tháng → cụm −/+ nằm trong ô, không đè cột Tồn', async ({ page }) => {
+    await go(page, '/admin/catalog?view=table', 1280);
+    await page.getByRole('button', { name: /^Sửa tối đa\/tháng của / }).first().click();
+    const over = await page.evaluate(() => {
+      const edit = document.querySelector('main .inline-number-edit')!;
+      const td = edit.closest('td')!;
+      return Math.round(edit.getBoundingClientRect().right - td.getBoundingClientRect().right);
+    });
+    expect(over, 'px tràn sang cột bên').toBeLessThanOrEqual(0);
+  });
+
   test('Danh bạ 1024: mã NV không bị cắt', async ({ page }) => {
     await go(page, '/admin/users', 1024);
     const clipped = await page.evaluate(() => [...document.querySelectorAll('main tbody tr')].map((tr) => tr.children[1] as HTMLElement).filter((td) => td && td.scrollWidth > td.clientWidth + 1).map((td) => td.textContent));
@@ -67,4 +78,21 @@ test('Báo cáo 390: vẫn có nút ⓘ "Cách tính Tổng cần" (đầu bản
   await page.goto('/admin/reports');
   await page.waitForLoadState('networkidle');
   await expect(page.getByRole('button', { name: /Cách tính Tổng cần/ }).filter({ visible: true })).toHaveCount(1);
+});
+
+test('Báo cáo 390: "bản đã in/xuất" là thẻ — không cuộn ngang, nút trong khung, mỗi ô có nhãn', async ({ page }, info) => {
+  test.skip(!isMobile(info), 'đo ở điện thoại');
+  await as(page);
+  await page.goto('/admin/reports');
+  await page.waitForLoadState('networkidle');
+  await page.locator('.bc-snaps-box > summary').click();
+  const rows = page.locator('.bc-snaps-box tbody tr');
+  expect(await rows.count(), 'có bản đã in để đo').toBeGreaterThan(0);
+  const out = await page.evaluate(() => {
+    const table = document.querySelector('.bc-snaps-box table')!;
+    const tr = table.querySelector('tbody tr')!;
+    const btns = [...table.querySelectorAll('button')].filter((b) => b.getBoundingClientRect().right > window.innerWidth);
+    return { display: getComputedStyle(tr).display, wide: table.scrollWidth > (table.parentElement as HTMLElement).clientWidth + 1, offscreen: btns.length, labels: [...tr.querySelectorAll('td')].filter((td) => !td.dataset.label && td.textContent!.trim() && !td.querySelector('a, button')).length };
+  });
+  expect(out).toEqual({ display: expect.not.stringMatching(/^table-row$/), wide: false, offscreen: 0, labels: 0 });
 });

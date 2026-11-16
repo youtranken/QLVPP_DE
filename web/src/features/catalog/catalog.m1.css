@@ -14,6 +14,9 @@
 [data-shell='admin'] .ct-item-cell { min-width: 220px; }
 [data-shell='admin'] .ct-name-en { min-width: 140px; max-width: 220px; color: var(--c-ink-2); font: var(--t-sm); overflow-wrap: anywhere; }
 [data-shell='admin'] .ct-page .inline-number__hint { white-space: nowrap; }
+/* Ô sửa nhanh Tối đa/tháng co theo ô (cột 9rem): cụm −/+ không tràn sang cột Tồn */
+[data-shell='admin'] .ct-page .inline-number-edit { max-width: 100%; }
+[data-shell='admin'] .ct-page .inline-number-edit .stepper { width: min(128px, 100%); }
 [data-shell='admin'] .ct-item { display: inline-flex; align-items: center; gap: 12px; min-width: 0; }
 [data-shell='admin'] .ct-item__text { display: grid; gap: 2px; min-width: 0; }
 [data-shell='admin'] .ct-item__line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-2); }

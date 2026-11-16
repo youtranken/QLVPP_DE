@@ -1,5 +1,5 @@
 import type { MouseEvent } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/ui/icon';
@@ -58,6 +58,13 @@ export function AdminSidebar({ variant = 'side', onNavigate }: { variant?: 'side
   const collapsed = useMediaQuery(ADMIN_TABLET_QUERY) && variant === 'side';
   return (
     <div className="side" data-variant={variant}>
+      {/* Q2: tên app ở đầu cột trái; menu điện thoại có đầu riêng (AdminMenuSheet) */}
+      {variant === 'side' && (
+        <Link to="/admin" className="side__brand" aria-label={t('app.title')} title={collapsed ? t('app.title') : undefined}>
+          <i aria-hidden="true">{t('app.logoLetter')}</i>
+          {!collapsed && <span aria-hidden="true">{t('app.title')}</span>}
+        </Link>
+      )}
       <nav className="side__nav" aria-label={t('nav.adminMenu')}>
         {ADMIN_NAV.map((g) => {
           const links = g.pages.map((p) => (

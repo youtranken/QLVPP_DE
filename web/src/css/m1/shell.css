@@ -154,3 +154,7 @@
 @media (pointer: coarse), (max-width: 767px) {
   [data-shell='admin'] .side__tools .side__icon-btn, [data-shell='admin'] .side__tools .notif .notif-btn { width: var(--hit); height: var(--hit); }
 }
+[data-shell='admin'] .side__brand { display: flex; flex: none; align-items: center; gap: var(--s-3); min-height: var(--hit); margin: 0 0 var(--s-2); color: var(--c-on-dark); font: var(--t-label); font-size: 16px; font-weight: 800; text-decoration: none; }
+[data-shell='admin'] .side__brand i { display: grid; flex: none; place-items: center; width: 32px; height: 32px; border-radius: var(--r-md); background: var(--c-logo-bg); color: var(--c-ink); font-size: 13px; font-style: normal; font-weight: 800; }
+[data-shell='admin'] .side__brand:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
+

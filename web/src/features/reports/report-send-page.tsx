@@ -125,6 +125,7 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
   // Ô lỗi không làm tắt nút: bấm thì đưa con trỏ về ô lỗi đầu tiên (chặn chốt, không chặn tìm lỗi)
   const blocked = snap.taking !== null || snap.previewing || empty || !settled;
   const nothing = useDisabledReason(empty ? t('common.disabledReason.nothingToOrder') : null);
+  const unsentOld = useDisabledReason(!editable && !sent ? t('common.disabledReason.notSent') : null);
   // Hộp "Xem tổng kết": bản dựng ở server (kỳ đang lập) hoặc bản đã gửi (tháng cũ); Hủy không lưu gì
   const [preview, setPreview] = useState<SnapshotData | null>(null);
   const orderError = useFocusOrderError(onlyNeed, setOnlyNeed, qty.errorCount);
@@ -154,8 +155,9 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
     </>
   ) : (
     <>
-      <ActionButton xlsx disabled={!sent || files.pending} taking={null} onTake={openSent} />
-      <ActionButton xlsx={false} disabled={!sent || printer.pending} taking={null} onTake={openSent} />
+      <ActionButton xlsx disabled={!sent || files.pending} taking={null} describedBy={unsentOld.describedBy} onTake={openSent} />
+      <ActionButton xlsx={false} disabled={!sent || printer.pending} taking={null} describedBy={unsentOld.describedBy} onTake={openSent} />
+      {unsentOld.node}
     </>
   );
   const retry = () => [items, cats].forEach((q) => q.isError && void q.refetch());

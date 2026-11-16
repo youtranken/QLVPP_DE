@@ -50,7 +50,7 @@ function useColumns(rowErrors: Record<string, string>, actions: CatalogTableActi
       {
         id: 'max',
         header: t('catalog.page.colMax'),
-        meta: { className: 'num r ct-max', width: '7rem' },
+        meta: { className: 'num r ct-max', width: '9rem' },
         cell: ({ row: { original: r } }) => (
           <Stop>
             <InlineNumber

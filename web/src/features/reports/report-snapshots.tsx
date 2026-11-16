@@ -20,23 +20,23 @@ function SnapshotRowView({
   const at = formatVnStamp(s.created_at);
   return (
     <tr>
-      <td className="num">{formatVnStamp(s.created_at, true)}</td>
-      <td>
+      <td className="num" data-label={t("reports.snapshots.colAt")}>{formatVnStamp(s.created_at, true)}</td>
+      <td data-label={t("reports.snapshots.colKind")}>
         {t(`reports.snapshots.kind.${s.kind}`)}
         {s.has_items === false && (
           <span className="tag"> {t("reports.snapshots.empty")}</span>
         )}
       </td>
-      <td className="num r">{s.items_count ?? "—"}</td>
-      <td className="num r">{s.units_total ?? "—"}</td>
-      <td>
+      <td className="num r" data-label={t("reports.snapshots.colItems")}>{s.items_count ?? "—"}</td>
+      <td className="num r" data-label={t("reports.snapshots.colUnits")}>{s.units_total ?? "—"}</td>
+      <td data-label={latest ? t("reports.snapshots.colSent") : ""}>
         {latest && (
           <span className="tag tag--ok">
             {t("reports.snapshots.sentLabel")}
           </span>
         )}
       </td>
-      <td className="r">
+      <td className="r" data-label="">
         {s.kind === "xlsx" ? (
           <button
             type="button"
@@ -116,7 +116,7 @@ export function ReportSnapshots({
       {items.length > 0 && (
         <div className="bc-scroll">
           {/* Cột cố định: đổi tháng (số món, đơn vị khác độ dài) thì cột không dời */}
-          <table className="table grid-table bc-table table--fixed" aria-describedby={id}>
+          <table className="table table-stack grid-table bc-table table--fixed" aria-describedby={id}>
             <colgroup>
               <col />
               <col style={{ width: "9rem" }} />

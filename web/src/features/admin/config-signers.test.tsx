@@ -37,6 +37,19 @@ describe('Cấu hình · khối Ô ký trên phiếu đề xuất', () => {
     expect(within(signers()).getByRole('button', { name: 'Thêm ô ký' })).toBeDisabled();
   });
 
+  it('Thêm ô ký → ô Chức danh mới trống chưa báo lỗi (chưa chạm), nút Lưu khóa kèm lý do; gõ rồi xóa hết → báo lỗi', async () => {
+    stubConfigApi();
+    await openConfig();
+    await userEvent.click(within(row(2)).getByRole('button', { name: 'Xóa ô ký 2 · Người yêu cầu' }));
+    await userEvent.click(within(signers()).getByRole('button', { name: 'Thêm ô ký' }));
+    const title = within(row(2)).getByLabelText(/^Chức danh/, { selector: 'input[aria-required]' });
+    expect(title).not.toHaveAttribute('aria-invalid');
+    expect(within(signers()).getByRole('button', { name: 'Lưu ô ký' })).toBeDisabled();
+    await userEvent.type(title, 'x');
+    await userEvent.clear(title);
+    expect(title).toHaveAttribute('aria-invalid', 'true');
+  });
+
   it('nút Xóa có nhãn kèm tên ô (ô chưa có chức danh thì chỉ số ô)', async () => {
     stubConfigApi();
     await openConfig();

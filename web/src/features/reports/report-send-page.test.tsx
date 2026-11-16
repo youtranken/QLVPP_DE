@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
-import { callsTo, sendReport, sentData, sentState, setupSendAdm, YM } from '@/features/send-adm/send-adm-fixtures';
+import { callsTo, sendReport, sentData, sentState, setupSendAdm, YM, UNSENT } from '@/features/send-adm/send-adm-fixtures';
 import { registrationView } from '@/features/summary/registration-fixtures';
 import { snapshotRow } from './reports-fixtures';
 import { expectFixedColumns } from '@/test/fixed-columns';
@@ -122,6 +122,27 @@ describe('Báo cáo & gửi NCC: kỳ cũ hơn, ai đăng ký, các bản đã i
     expect(screen.queryByRole('spinbutton')).toBeNull();
     const pen = t.getAllByRole('row').find((r) => r.textContent?.includes('Bút bi'))!;
     expect(within(pen).getAllByRole('cell').some((c) => c.textContent === '9')).toBe(true);
+  });
+
+  it('kỳ cũ hơn chưa gửi NCC: Xuất Excel / Xem tổng kết khóa kèm lý do "Kỳ này chưa gửi NCC"', async () => {
+    const older = sendReport([PEN, PAPER], { ym: '2026-09' });
+    setupSendAdm({
+      report: REPORT,
+      extra: (url) => {
+        if (url === '/api/admin/reports/2026-09') return jsonResponse(200, older);
+        if (url === '/api/admin/periods/2026-09/send-state') return jsonResponse(200, UNSENT);
+        if (url === '/api/admin/periods/2026-09/summary') return jsonResponse(200, { ym: '2026-09', deadline: '2026-09-10T17:00:00Z', is_open: false, registered: 3, headcount: 3, unregistered: 0, custom_pending: 0, lines_pending_delivery: 0 });
+        if (url.startsWith('/api/admin/periods/2026-09/requests?by=item')) return jsonResponse(200, { items: [] });
+        if (url.startsWith('/api/admin/reports/2026-09/snapshots')) return jsonResponse(200, { items: [] });
+        return undefined;
+      },
+    });
+    open('/admin/reports?ym=2026-09');
+    for (const name of ['Xuất Excel', 'Xem tổng kết']) {
+      const btn = await screen.findByRole('button', { name });
+      expect(btn).toBeDisabled();
+      await waitFor(() => expect(btn).toHaveAccessibleDescription('Kỳ này chưa gửi NCC'));
+    }
   });
 
   const olderSetup = (byItem: () => Response) => {
