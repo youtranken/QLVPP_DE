@@ -20,6 +20,8 @@ export function popoverFit({ gap = POP_GAP, edge = POP_EDGE, apply }: { gap?: nu
       apply(state) {
         const viewport = document.documentElement.clientHeight || window.innerHeight;
         state.elements.floating.style.maxHeight = `${Math.max(0, viewport - edge * 2)}px`;
+        // Màn 320: hộp chọn năm-tháng 300px + lề trong vẫn phải nằm trọn trong màn
+        state.elements.floating.style.maxWidth = `${Math.max(0, (document.documentElement.clientWidth || window.innerWidth) - edge * 2)}px`;
         apply?.(state);
       },
     }),

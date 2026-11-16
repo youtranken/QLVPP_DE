@@ -151,3 +151,6 @@
 /* Nút trên nền tối đều có hover */
 [data-shell='admin'] .topbar__menu:hover, [data-shell='admin'] .topbar__avatar:hover, [data-shell='admin'] .side-sheet__close:hover { background: var(--c-on-dark-hover); }
 [data-shell='admin'] button.side__avatar:hover { box-shadow: 0 0 0 2px var(--c-on-dark-hover); }
+@media (pointer: coarse), (max-width: 767px) {
+  [data-shell='admin'] .side__tools .side__icon-btn, [data-shell='admin'] .side__tools .notif .notif-btn { width: var(--hit); height: var(--hit); }
+}

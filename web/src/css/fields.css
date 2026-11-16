@@ -151,7 +151,7 @@ html, [data-shell] * { scrollbar-width: thin; }
 [data-shell] .cal__step { color: var(--c-ink-2); font: var(--t-sm); font-variant-numeric: tabular-nums; }
 @media (max-width: 767px) { [data-shell] .cal__day { height: var(--hit); } }
 /* Bảng chọn năm-tháng (ui/month-picker): đầu năm ‹ › như lịch, lưới 3×4; ô cao cố định để có/không nhãn trạng thái lưới không nhảy */
-[data-shell] .mp { display: grid; gap: var(--s-2); width: 300px; max-width: calc(100vw - var(--s-7)); }
+[data-shell] .mp { display: grid; gap: var(--s-2); width: 300px; max-width: 100%; }
 [data-shell] .mp__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
 [data-shell] .mp__year { font: var(--t-label); color: var(--c-ink); font-variant-numeric: tabular-nums; }
 [data-shell] .mp__grid { display: grid; gap: var(--s-1); }

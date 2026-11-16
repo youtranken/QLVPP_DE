@@ -45,3 +45,4 @@
 [data-shell='admin'] .dr-page .toolbar > .list-meta { flex: 1 1 100%; min-height: var(--ctl-h); }
 /* Điện thoại: dòng đếm + hàng "Đang lọc" xuống dòng — chừa sẵn chỗ để bảng không tụt khi đổi trạng thái */
 @media (max-width: 767px) { [data-shell='admin'] .dr-page .toolbar > .list-meta { align-content: flex-start; min-height: calc(var(--hit) + 23px); } }
+@media (max-width: 767px) { [data-shell='admin'] .table td:has(> .dr-person) { min-height: var(--hit); } }

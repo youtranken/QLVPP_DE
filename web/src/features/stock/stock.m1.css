@@ -47,3 +47,4 @@
   [data-shell='admin'] .table-stack td.sk-actions { position: absolute; top: var(--s-2); right: var(--s-2); margin: 0; }
   [data-shell='admin'] .table-stack tr:has(> td.sk-actions) > td:first-child { padding-right: var(--hit); }
 }
+@media (max-width: 767px) { [data-shell='admin'] .table td:has(> .sk-item) { min-height: var(--hit); } }

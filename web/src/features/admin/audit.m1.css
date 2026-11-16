@@ -92,3 +92,4 @@
   [data-shell='admin'] .au-pairs > div { grid-template-columns: 1fr; gap: 0; }
 }
 [data-shell='admin'] .au-batch { display: grid; gap: var(--s-1); margin: 0; padding-left: var(--s-5); }
+@media (pointer: coarse), (max-width: 767px) { [data-shell='admin'] .au-chip { height: var(--hit); } }
