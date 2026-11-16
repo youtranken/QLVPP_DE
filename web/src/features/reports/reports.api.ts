@@ -93,6 +93,8 @@ export interface OrderBasis {
 export interface SnapshotRef {
   id: string;
   created_at: string;
+  // Bản cũ không ghi kind: là bản in
+  kind?: 'print' | 'xlsx';
 }
 
 export interface SnapshotData extends MonthReport {

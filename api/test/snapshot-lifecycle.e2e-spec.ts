@@ -170,6 +170,7 @@ describe('V2D-4 lifecycle — vòng đời phiếu gửi ADM (bảng chuyển R-
     expect(second.body.data.replaces).toEqual({
       id: first.id,
       created_at: '2026-11-12T03:00:00.000Z',
+      kind: 'print',
     });
     expect((await sendState(YM)).sent).toMatchObject({
       id: second.body.id,

@@ -87,6 +87,7 @@ describe('POST admin/reports/:ym/snapshots/preview — xem trước bản in', (
     expect(changed.body.data.replaces).toEqual({
       id: sent.id,
       created_at: sent.created_at,
+      kind: 'print',
     });
     expect(await list(YM)).toHaveLength(1);
   });

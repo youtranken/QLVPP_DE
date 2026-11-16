@@ -91,7 +91,7 @@ const reports: Messages<typeof vi> = {
         },
         empty: 'Không có món cần đặt mua.',
         // Tờ phiếu luôn theo mẫu tiếng Việt cho ADM
-        replaces: 'Thay thế bản in lúc {{time}}',
+        replaces: { print: 'Thay thế bản in gửi NCC lúc {{time}}', xlsx: 'Thay thế bản Excel gửi NCC lúc {{time}}' },
         noCode: '—',
         signGroup: 'Signatures',
         oldSigner: {

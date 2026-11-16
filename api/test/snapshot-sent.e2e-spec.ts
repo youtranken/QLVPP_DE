@@ -94,6 +94,7 @@ describe('V2D-4 bản chốt có hàng: GET …/sent, danh sách, bản cũ, dù
     expect(fresh.body.data.replaces).toEqual({
       id: old,
       created_at: '2026-11-11T15:12:00.000Z',
+      kind: 'print',
     });
   });
 

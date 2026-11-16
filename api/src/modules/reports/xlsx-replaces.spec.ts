@@ -11,13 +11,13 @@ const form = async (data = snapshotData()) =>
   (await openWorkbook('vi', data)).worksheets[0];
 
 describe('buildWorkbook · bản thay thế', () => {
-  it('bản có replaces 09:02 12/12 (giờ VN) → A1 đậm "Thay thế bản in lúc 09:02 12/12", tiêu đề phiếu xuống A2', async () => {
+  it('bản có replaces 09:02 12/12 (giờ VN) → A1 đậm "Thay thế bản in gửi NCC lúc 09:02 12/12" (bản cũ không ghi kind = bản in), tiêu đề phiếu xuống A2', async () => {
     const ws = await form(
       snapshotData({
         replaces: { id: 'old', created_at: '2026-12-12T02:02:00.000Z' },
       }),
     );
-    expect(ws.getCell('A1').value).toBe('Thay thế bản in lúc 09:02 12/12');
+    expect(ws.getCell('A1').value).toBe('Thay thế bản in gửi NCC lúc 09:02 12/12');
     expect(ws.getCell('A1').font.bold).toBe(true);
     expect(ws.getCell('F1').master.address).toBe('A1');
     expect(ws.getCell('A2').value).toBe('Phiếu đề xuất văn phòng phẩm');
@@ -39,11 +39,20 @@ describe('buildWorkbook · bản thay thế', () => {
         await form(snapshotData({ replaces: { id: 'old', created_at: iso } }))
       ).getCell('A1').value;
     expect(await at('2026-12-11T16:59:59.999Z')).toBe(
-      'Thay thế bản in lúc 23:59 11/12',
+      'Thay thế bản in gửi NCC lúc 23:59 11/12',
     );
     expect(await at('2026-12-11T17:00:00.000Z')).toBe(
-      'Thay thế bản in lúc 00:00 12/12',
+      'Thay thế bản in gửi NCC lúc 00:00 12/12',
     );
+  });
+
+  it('bản bị thay là Excel (kind xlsx) → A1 "Thay thế bản Excel gửi NCC lúc 18:30 15/11"', async () => {
+    const ws = await form(
+      snapshotData({
+        replaces: { id: 'old', created_at: '2026-11-15T11:30:00.000Z', kind: 'xlsx' },
+      }),
+    );
+    expect(ws.getCell('A1').value).toBe('Thay thế bản Excel gửi NCC lúc 18:30 15/11');
   });
 
   it('bản không có replaces → A1 vẫn là tiêu đề phiếu, không dòng thay thế', async () => {

@@ -165,7 +165,7 @@ export class SnapshotsService {
     return {
       ...content,
       ...(prev && !sameOrder(prev.data.order_qty, content.order_qty)
-        ? { replaces: { id: prev.id, created_at: prev.created_at } }
+        ? { replaces: { id: prev.id, created_at: prev.created_at, kind: prev.kind as 'print' | 'xlsx' } }
         : {}),
       created_by,
       created_at: now.toISOString(),

@@ -66,7 +66,7 @@ export function PrintRequestForm({ snap }: { snap: SnapshotData }) {
       <header className="pp-form__head">
         {snap.replaces && (
           <p className="pp-form__replaces">
-            <strong>{t('reports.print.form.replaces', { time: formatVnStamp(snap.replaces.created_at) })}</strong>
+            <strong>{t(`reports.print.form.replaces.${snap.replaces.kind ?? 'print'}`, { time: formatVnStamp(snap.replaces.created_at) })}</strong>
           </p>
         )}
         <h1 id={titleId} className="pp-form__title">

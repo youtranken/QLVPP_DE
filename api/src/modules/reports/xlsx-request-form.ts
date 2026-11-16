@@ -20,7 +20,7 @@ const FORM = {
     'SL\nQty',
   ],
   empty: 'Không có món cần đặt mua.',
-  replaces: 'Thay thế bản in lúc',
+  replaces: { print: 'Thay thế bản in gửi NCC lúc', xlsx: 'Thay thế bản Excel gửi NCC lúc' },
   noCode: '—',
   blankName: '……………………',
 } as const;
@@ -136,7 +136,7 @@ export function fillRequestForm(
 function fillHeading(ws: ExcelJS.Worksheet, data: SnapshotData): void {
   if (data.replaces) {
     const row = ws.addRow([
-      `${FORM.replaces} ${vnStamp(data.replaces.created_at)}`,
+      `${FORM.replaces[data.replaces.kind ?? 'print']} ${vnStamp(data.replaces.created_at)}`,
     ]);
     ws.mergeCells(row.number, 1, row.number, WIDTHS.length);
     row.getCell(1).font = { bold: true };

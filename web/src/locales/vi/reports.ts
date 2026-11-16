@@ -87,7 +87,7 @@ const reports = {
           qtyEn: 'Qty',
         },
         empty: 'Không có món cần đặt mua.',
-        replaces: 'Thay thế bản in lúc {{time}}',
+        replaces: { print: 'Thay thế bản in gửi NCC lúc {{time}}', xlsx: 'Thay thế bản Excel gửi NCC lúc {{time}}' },
         noCode: '—',
         signGroup: 'Chữ ký',
         oldSigner: {

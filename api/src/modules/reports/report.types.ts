@@ -98,6 +98,8 @@ export interface OrderBasis {
 export interface SnapshotRef {
   id: string;
   created_at: string;
+  // Bản cũ (trước khi có trường này) không ghi kind: hiểu là bản in
+  kind?: 'print' | 'xlsx';
 }
 
 // Bản chốt trước 0112 chỉ có signers; bản mới chỉ có signature_boxes

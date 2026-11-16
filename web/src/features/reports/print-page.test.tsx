@@ -61,18 +61,24 @@ describe('Trang in · trang 1 Phiếu đề xuất (mẫu D&E)', () => {
     ]);
   });
 
-  it('bản có replaces → dòng đầu đậm "Thay thế bản in lúc 09:02 12/12" trên tiêu đề; bản không replaces → không có dòng này', async () => {
+  it('bản có replaces (không ghi kind = bản in) → dòng đầu đậm "Thay thế bản in gửi NCC lúc 09:02 12/12" trên tiêu đề', async () => {
     openPrint(snapshotDataFixture({ replaces: { id: 'old', created_at: '2026-12-12T02:02:00Z' } }));
     const form = await screen.findByRole('region', { name: 'Phiếu đề xuất văn phòng phẩm' });
-    const line = within(form).getByText('Thay thế bản in lúc 09:02 12/12');
+    const line = within(form).getByText('Thay thế bản in gửi NCC lúc 09:02 12/12');
     expect(line.tagName).toBe('STRONG');
     expect(line.compareDocumentPosition(within(form).getByRole('heading', { level: 1 })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('bản bị thay là Excel (kind xlsx) → "Thay thế bản Excel gửi NCC lúc 18:30 15/11"', async () => {
+    openPrint(snapshotDataFixture({ replaces: { id: 'old', created_at: '2026-11-15T11:30:00Z', kind: 'xlsx' } }));
+    const form = await screen.findByRole('region', { name: 'Phiếu đề xuất văn phòng phẩm' });
+    expect(within(form).getByText('Thay thế bản Excel gửi NCC lúc 18:30 15/11')).toBeInTheDocument();
   });
 
   it('bản không có replaces → không có dòng "Thay thế bản in"', async () => {
     openPrint(snapshotDataFixture());
     await formTable();
-    expect(screen.queryByText(/^Thay thế bản in lúc/)).toBeNull();
+    expect(screen.queryByText(/^Thay thế bản/)).toBeNull();
   });
 
   it('bản rỗng (mọi Đề nghị 0) → "Bản này không có món nào — không cần trình ký.", nút In vô hiệu, không có tờ phiếu', async () => {
