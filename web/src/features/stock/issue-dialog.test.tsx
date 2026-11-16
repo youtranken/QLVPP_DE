@@ -23,18 +23,17 @@ describe('IssueDialog', () => {
     expect(await screen.findByText('Đã xuất lẻ 3 ram Giấy A4 cho Dùng chung')).toBeInTheDocument();
   });
 
-  it('tồn 3 gõ 4 (vượt tủ) → chặn ngay "Chỉ còn 3 ram." tại ô số, không gọi API; gõ 3 thì bỏ chặn', async () => {
+  it('tồn 3 gõ 4 (vượt tủ) → báo ngay "Tủ chỉ còn 3 — nhập từ 1 đến 3" tại ô số, nút Xuất khóa, không gọi API; gõ 3 thì bỏ chặn', async () => {
     const f = stubMutation(jsonResponse(201, { stock_qty: 0 }));
-    const onClose = vi.fn();
-    wrap(<IssueDialog item={makeRow(3)} onClose={onClose} />);
+    wrap(<IssueDialog item={makeRow(3)} onClose={vi.fn()} />);
     await userEvent.type(screen.getByLabelText(/^Số lượng/), '4');
     expect(screen.queryByText(/Tồn sau khi lưu/)).toBeNull();
-    await userEvent.click(screen.getByLabelText('Dùng chung'));
-    await userEvent.type(screen.getByLabelText(/^Lý do/), 'In hồ sơ thầu');
-    await userEvent.click(screen.getByRole('button', { name: 'Xuất' }));
-    expect(screen.getByLabelText(/^Số lượng/)).toHaveAccessibleDescription('Chỉ còn 3 ram.');
+    expect(screen.getByLabelText(/^Số lượng/)).toHaveAccessibleDescription('Tủ chỉ còn 3 — nhập từ 1 đến 3');
+    expect(screen.getByRole('button', { name: 'Xuất' })).toBeDisabled();
+    await userEvent.clear(screen.getByLabelText(/^Số lượng/));
+    await userEvent.type(screen.getByLabelText(/^Số lượng/), '3');
+    expect(screen.getByRole('button', { name: 'Xuất' })).toBeEnabled();
     expect(mutationCount(f, URL)).toBe(0);
-    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('server vẫn chặn STOCK_INSUFFICIENT {available: 2} (tồn đổi nơi khác) → "Chỉ còn 2 ram." tại ô số', async () => {
@@ -79,10 +78,8 @@ describe('IssueDialog', () => {
       expect(screen.getByRole('note')).toHaveTextContent('Xuất 2 sẽ lấy 1 ram đang giữ.');
       await userEvent.clear(screen.getByLabelText(/^Số lượng/));
       await userEvent.type(screen.getByLabelText(/^Số lượng/), '6');
-      await userEvent.click(screen.getByLabelText('Dùng chung'));
-      await userEvent.type(screen.getByLabelText(/^Lý do/), 'x');
-      await userEvent.click(screen.getByRole('button', { name: /Xuất/ }));
-      expect(screen.getByLabelText(/^Số lượng/)).toHaveAccessibleDescription('Chỉ còn 5 ram.');
+      expect(screen.getByLabelText(/^Số lượng/)).toHaveAccessibleDescription('Tủ chỉ còn 5 — nhập từ 1 đến 5');
+      expect(screen.getByRole('button', { name: /Xuất/ })).toBeDisabled();
       expect(mutationCount(f, URL)).toBe(0);
     });
   });

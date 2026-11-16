@@ -41,11 +41,11 @@ describe('PurchaseDialog', () => {
     expect(mutationCall(f, URL).body).toEqual({ delta: 1, reason: 'purchase', note: null });
   });
 
-  it('server VALIDATION {fields:[delta]} (nhập 0) → lỗi gắn ô "Số lượng nhập", hộp không đóng', async () => {
+  it('server VALIDATION {fields:[delta]} dù ô hợp lệ → lỗi gắn ô "Số lượng nhập", hộp không đóng', async () => {
     stubMutation(jsonResponse(400, { code: 'VALIDATION', message: 'x', fields: ['delta'] }));
     const onClose = vi.fn();
     wrap(<PurchaseDialog item={makeRow(5)} onClose={onClose} />);
-    await userEvent.type(screen.getByLabelText(/^Số lượng nhập/), '0');
+    await userEvent.type(screen.getByLabelText(/^Số lượng nhập/), '5');
     await userEvent.click(screen.getByRole('button', { name: 'Lưu nhập mua' }));
     await vi.waitFor(() => expect(screen.getByLabelText(/^Số lượng nhập/)).toHaveAccessibleDescription('Kiểm tra lại giá trị này.'));
     expect(onClose).not.toHaveBeenCalled();

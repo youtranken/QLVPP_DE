@@ -1,3 +1,4 @@
+import { useDisabledReason } from '@/ui/disabled-reason';
 import type { FormEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
@@ -18,7 +19,7 @@ export function StockTitle({ title, name }: { title: string; name: string }) {
   );
 }
 
-export function StockDialogShell({ title, itemName, itemUnit, stockQty, after, dirty, saving, submitLabel, submitDisabled, formError, onSubmit, onClose, children }: {
+export function StockDialogShell({ title, itemName, itemUnit, stockQty, after, dirty, saving, submitLabel, submitDisabled, submitReason = null, formError, onSubmit, onClose, children }: {
   title: string;
   itemName: string;
   itemUnit: string;
@@ -28,6 +29,7 @@ export function StockDialogShell({ title, itemName, itemUnit, stockQty, after, d
   saving: boolean;
   submitLabel: string;
   submitDisabled?: boolean;
+  submitReason?: string | null;
   formError?: string;
   onSubmit: () => void;
   onClose: () => void;
@@ -35,6 +37,7 @@ export function StockDialogShell({ title, itemName, itemUnit, stockQty, after, d
 }) {
   const { t } = useTranslation();
   const unit = useUnitName(itemUnit);
+  const reason = useDisabledReason(submitReason);
   const submit = (e: FormEvent) => {
     e.preventDefault();
     onSubmit();
@@ -72,9 +75,10 @@ export function StockDialogShell({ title, itemName, itemUnit, stockQty, after, d
               {t('common.cancel')}
             </button>
           </DialogClose>
-          <button type="submit" className="btn btn--primary" disabled={saving || submitDisabled} aria-busy={saving}>
+          <button type="submit" className="btn btn--primary" disabled={saving || submitDisabled || submitReason !== null} aria-busy={saving} aria-describedby={reason.describedBy}>
             {saving ? t('stock.dialog.saving') : submitLabel}
           </button>
+          {reason.node}
         </div>
       </form>
     </Dialog>

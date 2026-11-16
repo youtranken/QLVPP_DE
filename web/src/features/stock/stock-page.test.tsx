@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, userEvent, waitFor, within, pickOption, optionLabels } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
-import { callsTo, facts, item, stubStockApi } from './stock-fixtures';
+import { STOCK, callsTo, facts, item, stubStockApi } from './stock-fixtures';
 import { expectFixedColumns } from '@/test/fixed-columns';
 
 const LOW_BELL = {
@@ -274,10 +274,23 @@ describe('StockPage', () => {
       await openIssues('/admin/stock?tab=issues');
       await userEvent.click(screen.getByRole('button', { name: 'Xuất lẻ một món' }));
       const dialog = await screen.findByRole('dialog', { name: /^Xuất lẻ/ });
-      const pick = within(dialog).getByRole('combobox', { name: /^Món/ });
-      expect(await optionLabels(pick)).not.toContain('Kẹp giấy');
-      await pickOption(pick, 'Giấy A4');
+      const list = within(dialog).getByRole('list', { name: 'Món còn trong tủ' });
+      expect(within(list).queryByText('Kẹp giấy')).toBeNull();
+      await userEvent.click(within(list).getByRole('button', { name: /^Giấy A4/ }));
       expect(within(dialog).getByText('Tồn hiện tại 6 ram')).toBeInTheDocument();
+    });
+
+    it('tủ trống mọi món → "Xuất lẻ một món" khóa, lý do "Tủ đang trống"; còn 1 món có hàng → nút bật', async () => {
+      mockViewport(1280);
+      const empty = STOCK.map((r) => ({ ...r, stock_qty: 0, free: 0, held: 0 }));
+      stubStockApi((url) => (url.split('?')[0] === '/api/admin/stock' ? jsonResponse(200, empty) : issuesApi(url)));
+      const { unmount } = renderApp(makeMe('admin'), '/admin/stock?tab=issues');
+      await screen.findByText(/lần xuất/);
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Xuất lẻ một món' })).toHaveAccessibleDescription('Tủ đang trống'));
+      expect(screen.getByRole('button', { name: 'Xuất lẻ một món' })).toBeDisabled();
+      unmount();
+      await openIssues('/admin/stock?tab=issues');
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Xuất lẻ một món' })).toBeEnabled());
     });
 
     it('tab lạ rơi về Tồn kho', async () => {

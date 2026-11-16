@@ -5,15 +5,17 @@ import { useUnitName } from '@/features/units/units.api';
 import { userLabel, type DirectoryUser } from '@/features/directory/directory.api';
 import { UserPicker } from '@/features/directory/user-picker';
 import { issueStock } from './stock.api';
-import { IssueHeldNote, ItemPicker } from './held-note';
+import { IssueHeldNote } from './held-note';
+import { ItemPicker } from './item-picker';
 import { QtyField, StockDialogShell, TextField } from './stock-dialog-parts';
-import { toInt } from './stock-input';
+import { issueQtyError, toInt } from './stock-input';
+import { qtyErrorText } from './qty-error-text';
 import { useStockSubmit } from './use-stock-submit';
 import { tookHeldOf, type StockRow } from './stock-rows';
 
 // item có sẵn khi mở từ một dòng; "Xuất lẻ một món" mở không có món và cho chọn trong choices
 export function IssueDialog({ item, choices = [], onClose }: { item?: StockRow; choices?: StockRow[]; onClose: () => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { csrfToken } = useMe();
   const [pickedId, setPickedId] = useState('');
   const current = item ?? choices.find((r) => r.id === pickedId);
@@ -25,6 +27,7 @@ export function IssueDialog({ item, choices = [], onClose }: { item?: StockRow; 
   const [reason, setReason] = useState('');
   const n = toInt(qty);
   const took = current ? tookHeldOf(current, n) : 0;
+  const qtyProblem = current ? qtyErrorText(t, i18n.language, issueQtyError(qty, current.stock_qty), true) : null;
   // Người nhận bị server từ chối: mở lại ô tìm để lỗi gắn đúng ô và chọn người khác
   useEffect(() => {
     if (errors.recipient) setRecipient(null);
@@ -50,12 +53,13 @@ export function IssueDialog({ item, choices = [], onClose }: { item?: StockRow; 
       saving={saving}
       submitLabel={took > 0 ? t('warn.W21ok') : t('stock.dialog.submitIssue')}
       submitDisabled={!current}
+      submitReason={qtyProblem}
       formError={errors.form}
       onSubmit={submit}
       onClose={onClose}
     >
       {!item && <ItemPicker choices={choices} value={pickedId} onChange={setPickedId} />}
-      <QtyField label={t('stock.dialog.issueQty')} value={qty} error={errors.qty} autoFocus={!!item} onChange={(v) => { setQty(v); clear('qty'); }} />
+      <QtyField label={t('stock.dialog.issueQty')} value={qty} error={errors.qty ?? qtyProblem ?? undefined} autoFocus={!!item} onChange={(v) => { setQty(v); clear('qty'); }} />
       {current && n !== null && took > 0 && <IssueHeldNote waiting={current.waiting} qty={n} took={took} unit={unit} />}
       <div className="a-check">
         <label>

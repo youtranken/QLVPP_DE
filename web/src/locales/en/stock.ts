@@ -59,6 +59,7 @@ const stock: Messages<typeof vi> = {
     },
     issue: {
       primary: 'Issue one item',
+      emptyStock: 'Nothing in stock',
     },
     stats: {
       label: 'Filter by stock status',
@@ -70,6 +71,12 @@ const stock: Messages<typeof vi> = {
     dialog: {
       purchaseTitle: 'Off-cycle purchase',
       pickItem: 'Item',
+      pickSearch: 'Search items',
+      pickList: 'Items in stock',
+      pickStock: 'In stock: {{n}}',
+      pickEmpty: 'No matching items',
+      pickChange: 'Change item',
+      qtyError: { overStock: 'Only {{max}} in stock — enter 1 to {{max}}', minRange: 'Enter 1 to {{max}}', min: 'Enter at least 1', decimal: 'Enter a whole number', max: 'Max {{max}}' },
       pickPlaceholder: 'Choose an item in stock',
       issueTitle: 'Issue',
       current: 'Current stock {{qty}} {{unit}}',

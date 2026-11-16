@@ -4,18 +4,20 @@ import { useMe } from '@/lib/me';
 import { useUnitName } from '@/features/units/units.api';
 import { changeStock } from './stock.api';
 import { QtyField, StockDialogShell, TextField } from './stock-dialog-parts';
-import { toInt } from './stock-input';
+import { purchaseQtyError, toInt } from './stock-input';
+import { qtyErrorText } from './qty-error-text';
 import { useStockSubmit } from './use-stock-submit';
 import type { StockRow } from './stock-rows';
 
 export function PurchaseDialog({ item, onClose }: { item: StockRow; onClose: () => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { csrfToken } = useMe();
   const unit = useUnitName(item.unit);
   const { errors, saving, run, fail, clear } = useStockSubmit(unit, onClose);
   const [qty, setQty] = useState('');
   const [note, setNote] = useState('');
   const delta = toInt(qty);
+  const qtyProblem = qtyErrorText(t, i18n.language, purchaseQtyError(qty), false);
   const submit = () => {
     if (delta === null) return fail('qty', t('stock.errors.FIELD_INVALID'));
     void run(() => changeStock(item.id, { delta, reason: 'purchase', note: note.trim() || null }, csrfToken), t('stock.dialog.purchased', { qty: delta, unit, name: item.name }));
@@ -30,11 +32,12 @@ export function PurchaseDialog({ item, onClose }: { item: StockRow; onClose: () 
       dirty={qty !== '' || note !== ''}
       saving={saving}
       submitLabel={t('stock.dialog.submitPurchase')}
+      submitReason={qtyProblem}
       formError={errors.form}
       onSubmit={submit}
       onClose={onClose}
     >
-      <QtyField label={t('stock.dialog.purchaseQty')} value={qty} error={errors.qty} autoFocus onChange={(v) => { setQty(v); clear('qty'); }} />
+      <QtyField label={t('stock.dialog.purchaseQty')} value={qty} error={errors.qty ?? qtyProblem ?? undefined} autoFocus onChange={(v) => { setQty(v); clear('qty'); }} />
       <TextField label={t('stock.dialog.note')} hint={t('stock.dialog.noteHint')} value={note} error={errors.reason} onChange={(v) => { setNote(v); clear('reason'); }} />
     </StockDialogShell>
   );

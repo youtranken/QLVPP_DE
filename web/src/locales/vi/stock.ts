@@ -56,6 +56,7 @@ const stock = {
     },
     issue: {
       primary: 'Xuất lẻ một món',
+      emptyStock: 'Tủ đang trống',
     },
     stats: {
       label: 'Lọc theo tình trạng tồn',
@@ -67,6 +68,12 @@ const stock = {
     dialog: {
       purchaseTitle: 'Nhập ngoài kỳ (tự mua lẻ)',
       pickItem: 'Món',
+      pickSearch: 'Tìm món',
+      pickList: 'Món còn trong tủ',
+      pickStock: 'Tủ: {{n}}',
+      pickEmpty: 'Không có món khớp',
+      pickChange: 'Đổi món',
+      qtyError: { overStock: 'Tủ chỉ còn {{max}} — nhập từ 1 đến {{max}}', minRange: 'Nhập từ 1 đến {{max}}', min: 'Nhập từ 1', decimal: 'Nhập số nguyên', max: 'Tối đa {{max}}' },
       pickPlaceholder: 'Chọn món còn trong tủ',
       issueTitle: 'Xuất lẻ',
       current: 'Tồn hiện tại {{qty}} {{unit}}',
