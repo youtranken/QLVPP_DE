@@ -7,7 +7,7 @@ const common = {
   },
   common: {
     requestStatus: { notDelivered: 'Chưa giao', partial: 'Đã giao {{delivered}}/{{total}}', done: 'Đã nhận đủ', owed: 'Còn nợ {{n}}', cancelled: 'Không giao' },
-    disabledReason: { noChanges: 'Chưa có thay đổi', noQty: 'Chưa chọn số lượng giao', noStock: 'Tủ hết món này', nothingToOrder: 'Chưa có món nào cần đặt' },
+    disabledReason: { noChanges: 'Chưa có thay đổi', noQty: 'Chưa chọn số lượng giao', noStock: 'Tủ hết món này', nothingToOrder: 'Chưa có món nào cần đặt', fixErrors: 'Sửa ô đang báo lỗi trước khi lưu' },
     paused: 'Tạm ngưng',
     // Khoảng trắng không ngắt: cụm giờ khóa sổ không bị gãy làm hai dòng (khối Kỳ tháng ở sidebar)
     lockPhrase: '00:00\u00a0ngày\u00a0{{day}}',
@@ -51,6 +51,7 @@ const common = {
       bar: 'Sắp xếp thứ tự',
     },
     inline: {
+      range: 'Nhập số nguyên từ {{min}} đến {{max}}',
       saveFailed: 'Không lưu được — thử lại.',
       invalid: 'Nhập một số hợp lệ.',
       hint: 'Enter lưu · Esc bỏ',

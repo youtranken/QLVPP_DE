@@ -171,15 +171,15 @@ describe('Cấu hình · kỳ đăng ký', () => {
       expect(screen.queryByRole('dialog')).toBeNull();
     });
 
-    it('ô hạn ngoài 3–28 (2, 29) → không hỏi "Đổi hạn đăng ký?" (không có hạn mới để xác nhận), gửi thẳng để server từ chối', async () => {
+    it('ô hạn ngoài 3–28 (2, 29) → nút Lưu khóa: không hỏi "Đổi hạn đăng ký?", không gửi', async () => {
       const fetchMock = openJan(() => jsonResponse(400, { code: 'VALIDATION', message: 'x', fields: ['registration_last_day'] }));
       await openConfig();
       for (const typed of ['2', '29']) {
         await retype(lastDay(), typed);
-        await userEvent.click(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' }));
-        await vi.waitFor(() => expect(putBodies(fetchMock).at(-1)).toEqual({ registration_last_day: Number(typed) }));
+        expect(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' })).toBeDisabled();
         expect(screen.queryByRole('dialog', { name: 'Đổi hạn đăng ký?' })).toBeNull();
       }
+      expect(putBodies(fetchMock)).toHaveLength(0);
     });
 
     it('hạn 3 không lớn hơn ngày nhắc 3 → không hỏi "Đổi hạn đăng ký?", gửi thẳng để server báo lỗi ở ô; hạn 4 (> 3) → có hỏi', async () => {

@@ -53,6 +53,9 @@ export function InlineNumber({
     if (draft === null || committing.current) return;
     const n = Number(draft);
     if (draft.trim() === '' || !Number.isFinite(n)) return setError(t('common.inline.invalid'));
+    // Cùng biên với server (vd Tối đa/tháng 1..999): báo tại ô thay vì gửi rồi nhận lỗi
+    if (!Number.isInteger(n) || (min !== undefined && n < min) || (max !== undefined && n > max))
+      return setError(min !== undefined && max !== undefined ? t('common.inline.range', { min, max }) : t('common.inline.invalid'));
     if (n === value) return close();
     committing.current = true;
     setBusy(true);

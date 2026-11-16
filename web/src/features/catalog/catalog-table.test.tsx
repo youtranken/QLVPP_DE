@@ -28,13 +28,13 @@ describe('Danh mục — sửa tối đa/tháng tại chỗ (biên 1/999 vs 0/10
     expect(await screen.findByRole('button', { name: `Sửa tối đa/tháng của Bút bi xanh, đang là ${n}` })).toBeInTheDocument();
   });
 
-  it.each([0, 1000])('Enter với %i → server VALIDATION max_qty → "Tối đa từ 1 đến 999." gắn vào ô trong hàng', async (n) => {
+  it.each([0, 1000])('Enter với %i → "Nhập số nguyên từ 1 đến 999" gắn vào ô ngay, không PATCH', async (n) => {
     const f = await openCatalog({ items: ITEMS, patch: rejectOutOfRange });
     const input = await editMax(String(n));
-    const error = await inRow('Bút bi xanh').findByText('Tối đa từ 1 đến 999.');
+    const error = await inRow('Bút bi xanh').findByText('Nhập số nguyên từ 1 đến 999');
     expect(input).toHaveAttribute('aria-invalid', 'true');
     expect(input.getAttribute('aria-describedby')).toBe(error.closest('[id]')!.id);
-    expect(patchCalls(f)).toEqual([{ id: 'i-pen', body: { max_qty: n } }]);
+    expect(patchCalls(f)).toEqual([]);
     expect(screen.queryByText(/^Đã lưu tối đa/)).toBeNull();
   });
 

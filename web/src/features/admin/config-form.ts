@@ -30,7 +30,7 @@ export const periodClears = (k: keyof PeriodDraft): readonly string[] => ((PERIO
 export const deadlineHitsReminder = (d: PeriodDraft, savedReminder: number) =>
   Number(d.registration_last_day) <= (isWhole(d.reminder_days_left) ? Number(d.reminder_days_left) : savedReminder);
 
-// Ngày hạn và ngày nhắc gõ tay số nào cũng gửi để server quyết; chỉ chặn ô không phải số
+// Ngày hạn chặn ngoài 3..28 ngay tại ô (cùng luật server); ngày nhắc gõ tay số nào cũng gửi để server so với ngày hạn
 export const periodSpec: BlockSpec<PeriodDraft> = {
   block: 'period',
   fromConfig: (c) => ({
@@ -44,7 +44,7 @@ export const periodSpec: BlockSpec<PeriodDraft> = {
     ),
   validate: (d) => {
     const errors: FieldErrors = {};
-    if (!isWhole(d.registration_last_day)) errors.registration_last_day = 'config.errors.registration_last_day';
+    if (!wholeIn(d.registration_last_day, 3, 28)) errors.registration_last_day = 'config.errors.registration_last_day';
     if (!isWhole(d.reminder_days_left)) errors.reminder_days_left = 'config.errors.reminder_days_left';
     if (!wholeIn(d.default_max_qty, 1, 999)) errors.default_max_qty = 'config.errors.default_max_qty';
     return errors;

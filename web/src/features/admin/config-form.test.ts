@@ -53,8 +53,12 @@ describe('periodSpec', () => {
     expect(periodSpec.patchOf(period({ reminder_days_left: '4' }), CONFIG)).toEqual({ reminder_days_left: 4 });
   });
 
-  it.each(['2', '29', '3', '28'])('ngày hạn %s là số nguyên → không chặn ở client (server quyết)', (v) => {
+  it.each(['3', '28'])('ngày hạn %s (mốc 3..28) → không lỗi', (v) => {
     expect(periodSpec.validate(period({ registration_last_day: v }))).toEqual({});
+  });
+
+  it.each(['2', '29'])('ngày hạn %s (ngoài 3..28, cùng luật server) → lỗi ô', (v) => {
+    expect(periodSpec.validate(period({ registration_last_day: v }))).toEqual({ registration_last_day: 'config.errors.registration_last_day' });
   });
 
   it.each(['', '1.5', 'abc'])('ngày hạn "%s" không phải số → lỗi ô', (v) => {

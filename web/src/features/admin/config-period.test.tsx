@@ -65,17 +65,16 @@ describe('Cấu hình · khối Kỳ đăng ký', () => {
     expect(down).toBeDisabled();
   });
 
-  it.each([
-    ['2', 2],
-    ['29', 29],
-  ])('gõ tay %s vẫn gửi lên server; CONFIG_INVALID {field: registration_last_day} → "Nhập số từ 3 đến 28." tại ô', async (typed, sent) => {
-    const fetchMock = stubConfigApi(() => configInvalid('registration_last_day'));
+  it.each(['2', '29', '109'])('gõ %s → "Nhập số từ 3 đến 28." tại ô ngay khi gõ, nút Lưu khóa kèm lý do, không gửi', async (typed) => {
+    const fetchMock = stubConfigApi();
     await openConfig();
     await typeInto(lastDay(), typed);
-    await savePeriod();
-    await vi.waitFor(() => expect(lastDay()).toHaveAttribute('aria-invalid', 'true'));
+    expect(lastDay()).toHaveAttribute('aria-invalid', 'true');
     expect(lastDay()).toHaveAccessibleDescription('Nhập số từ 3 đến 28.');
-    expect(putBodies(fetchMock)).toEqual([{ registration_last_day: sent }]);
+    const save = screen.getByRole('button', { name: 'Lưu kỳ đăng ký' });
+    expect(save).toBeDisabled();
+    expect(save).toHaveAccessibleDescription('Sửa ô đang báo lỗi trước khi lưu');
+    expect(putBodies(fetchMock)).toHaveLength(0);
   });
 
   it.each([3, 28])('ngày hạn %i gửi đúng một khóa và báo "Đã lưu." ở chân khối', async (day) => {
@@ -87,12 +86,12 @@ describe('Cấu hình · khối Kỳ đăng ký', () => {
     expect(putBodies(fetchMock)).toEqual([{ registration_last_day: day }]);
   });
 
-  it('ô ngày hạn để trống → lỗi tại ô, không gửi', async () => {
+  it('ô ngày hạn để trống → lỗi tại ô ngay, nút Lưu khóa, không gửi', async () => {
     const fetchMock = stubConfigApi();
     await openConfig();
     await typeInto(lastDay(), '');
-    await savePeriod();
     expect(lastDay()).toHaveAccessibleDescription('Nhập số từ 3 đến 28.');
+    expect(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' })).toBeDisabled();
     expect(putBodies(fetchMock)).toHaveLength(0);
   });
 

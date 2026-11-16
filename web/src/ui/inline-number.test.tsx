@@ -150,3 +150,31 @@ describe('InlineNumber', () => {
     expect(onCommit).not.toHaveBeenCalled();
   });
 });
+
+describe('InlineNumber — biên min/max kiểm tại ô (Tối đa/tháng 1..999)', () => {
+  const setup = () => {
+    const onCommit = vi.fn(() => Promise.resolve());
+    renderWithI18n(<InlineNumber value={5} label="Tối đa" min={1} max={999} onCommit={onCommit} />);
+    return onCommit;
+  };
+  const edit = async (text: string) => {
+    await userEvent.click(screen.getByRole('button', { name: 'Tối đa' }));
+    const box = screen.getByRole('spinbutton', { name: 'Tối đa' });
+    await userEvent.clear(box);
+    await userEvent.type(box, `${text}{Enter}`);
+    return box;
+  };
+
+  it.each(['0', '1000', '2.5'])('gõ %s → "Nhập số nguyên từ 1 đến 999" tại ô, không gọi onCommit', async (text) => {
+    const onCommit = setup();
+    const box = await edit(text);
+    expect(box).toHaveAccessibleDescription('Nhập số nguyên từ 1 đến 999');
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  it.each([['1', 1], ['999', 999]])('gõ %s → gọi onCommit(%i)', async (text, n) => {
+    const onCommit = setup();
+    await edit(text);
+    expect(onCommit).toHaveBeenCalledWith(n);
+  });
+});

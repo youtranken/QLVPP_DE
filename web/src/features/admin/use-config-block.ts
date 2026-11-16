@@ -14,6 +14,8 @@ export interface ConfigBlockState<D> {
   errors: FieldErrors;
   status: BlockStatus;
   dirty: boolean;
+  // Ô đang sửa sai luật (kiểm ngay khi gõ): nút Lưu khóa
+  invalid: boolean;
   update: (next: (d: D) => D, clear?: string | readonly string[] | 'all') => void;
   save: () => Promise<void>;
   cancel: () => void;
@@ -92,5 +94,6 @@ export function useConfigBlock<D>(spec: BlockSpec<D>, config: AdminConfig, confi
     setStatus('idle');
   };
 
-  return { draft, errors, status, dirty, update, save, cancel };
+  const live = dirty ? spec.validate(draft) : {};
+  return { draft, errors: { ...live, ...errors }, status, dirty, invalid: Object.keys(live).length > 0, update, save, cancel };
 }

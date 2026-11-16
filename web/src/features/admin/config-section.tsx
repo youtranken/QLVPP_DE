@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDisabledReason } from '@/ui/disabled-reason';
 import type { ConfigBlockState } from './use-config-block';
 
 export function ConfigSection({
@@ -13,12 +14,13 @@ export function ConfigSection({
   title: string;
   description?: string;
   saveLabel: string;
-  state: Pick<ConfigBlockState<unknown>, 'errors' | 'status' | 'dirty' | 'save' | 'cancel'>;
+  state: Pick<ConfigBlockState<unknown>, 'errors' | 'status' | 'dirty' | 'invalid' | 'save' | 'cancel'>;
   children: ReactNode;
 }) {
   const { t } = useTranslation();
   const titleId = useId();
   const saving = state.status === 'saving';
+  const fix = useDisabledReason(state.invalid ? t('common.disabledReason.fixErrors') : null);
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
@@ -45,9 +47,10 @@ export function ConfigSection({
             {t('config.cancel')}
           </button>
         )}
-        <button type="submit" className={state.dirty ? 'btn btn--primary' : 'btn'} disabled={saving || !state.dirty}>
+        <button type="submit" className={state.dirty ? 'btn btn--primary' : 'btn'} disabled={saving || !state.dirty || state.invalid} aria-describedby={fix.describedBy}>
           {saving ? t('config.saving') : state.dirty ? saveLabel : t('config.page.noChanges')}
         </button>
+        {fix.node}
         <p className="cf-block__note">{t('config.page.saveNote')}</p>
       </footer>
     </form>
