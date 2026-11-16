@@ -4,6 +4,7 @@ import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { lineView } from '@/test/fixtures-request';
 import { PERIOD, PEN, NOTE, facts, stubRequestApi, view } from '@/test/request-api-stub';
+import { mockViewport } from '@/test/viewport';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -127,6 +128,17 @@ describe('HistoryDetailPage', () => {
     past([]);
     renderApp(makeMe('member'), '/history/2026-11');
     await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/));
+  });
+
+  it.each([1280, 390])('%i: kỳ không có phiếu, chưa có lịch sử → đúng một trạng thái rỗng, h1 "Phiếu tháng 9/2026", có lối về Đăng ký', async (width) => {
+    mockViewport(width);
+    stubRequestApi();
+    renderApp(makeMe('member'), '/history/2026-09');
+    expect(await screen.findByText('Không có phiếu tháng này')).toBeInTheDocument();
+    expect(document.querySelectorAll('.empty, .empty-state')).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 1, name: 'Phiếu tháng 9/2026' })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('link', { name: 'Về trang Đăng ký' })).toHaveAttribute('href', '/');
   });
 
   it('không có phiếu kỳ đó: báo "Không có phiếu tháng này"', async () => {

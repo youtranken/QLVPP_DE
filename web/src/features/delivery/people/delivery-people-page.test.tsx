@@ -107,10 +107,15 @@ describe('DeliveryPeoplePage — đầu trang và tab', () => {
     expect(acts?.firstElementChild).toHaveAccessibleName(/^Xem/);
   });
 
-  it('không ai khớp → câu rỗng, không vỡ', async () => {
+  it('tìm "zzzz" không ai khớp → "Không có ai khớp" + nút "Xóa lọc" (bỏ ?q=, hiện lại danh sách); số trên tab giữ theo tab', async () => {
     stub();
-    open('/admin/delivery?q=zzz');
-    expect(await screen.findByText('Không có ai trong mục này.')).toBeInTheDocument();
+    open('/admin/delivery?q=zzzz');
+    expect(await screen.findByText('Không có ai khớp')).toBeInTheDocument();
+    expect(screen.queryByText('Không có ai trong mục này.')).toBeNull();
+    expect(screen.getByRole('radio', { name: /^Chưa nhận, \d+$/ })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
+    expect(search()).not.toContain('q=');
+    expect(await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' })).toBeInTheDocument();
   });
 });
 

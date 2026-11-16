@@ -11,6 +11,7 @@ import { PeriodSwitch } from './period-switch';
 import { isAskedYm, pickDefaultYm, useMonthParams } from './use-month-params';
 import '@/features/summary/summary.m1.css';
 import './month.m1.css';
+import { PageCrumbs } from '@/ui/page-header';
 
 export function MonthPage() {
   const { t } = useTranslation();
@@ -29,7 +30,10 @@ export function MonthPage() {
   return (
     <div className="ct-page sm-page mk-page">
       <div className="mk-head">
-        <h1>{headYm ? t('month.title', { month: monthOf(headYm) }) : t('nav.month')}</h1>
+        <div className="page-head__text">
+          <PageCrumbs crumbs={[t('nav.groups.monthly'), t('nav.month')]} />
+          <h1>{headYm ? t('month.title', { month: monthOf(headYm) }) : t('nav.month')}</h1>
+        </div>
         {p.ym && openYm && <PeriodSwitch ym={p.ym} openYm={openYm} earliestYm={summary.data?.earliest_ym} onChange={p.setYm} />}
       </div>
       {current.isError ? (

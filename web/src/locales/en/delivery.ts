@@ -205,6 +205,7 @@ const delivery: Messages<typeof vi> = {
       status: { pending: 'Not yet received', debt: 'Outstanding', done: 'Received' },
       empty: 'Nobody in this group.',
       emptyAll: 'Nobody has goods to collect for {{month, monthName}}.',
+      noMatch: 'No one matches',
       card: {
         action: 'Deliver…',
         view: 'View',

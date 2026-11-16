@@ -11,6 +11,7 @@ import { ADMIN_HOME } from '@/shell/admin-nav';
 import { adminChunk, memberChunk, printChunk } from '@/shell/route-chunks';
 import { PrintPending } from '@/features/reports/print-toolbar';
 import { RouteChunk } from '@/ui/chunk-error-boundary';
+import { PageHeader } from '@/ui/page-header';
 
 // Màn nạp lười theo nhóm (Hành chính / Nhân viên / In): mỗi nhóm một chunk, Suspense + ChunkErrorBoundary nằm trong khung
 const RequestPage = memberChunk.page('RequestPage');
@@ -37,6 +38,16 @@ const PrintPage = printChunk.page('PrintPage');
 function RedirectKeepSearch({ to }: { to: string }) {
   const { search } = useLocation();
   return <Navigate to={{ pathname: to, search }} replace />;
+}
+
+function AdminNotFound() {
+  const { t } = useTranslation();
+  return (
+    <div className="ct-page">
+      <PageHeader crumbs={[t('nav.adminMenu')]} title={t('common.notFoundTitle')} />
+      <NotFound inPage />
+    </div>
+  );
 }
 
 // 404 nhân viên dùng khung trang chuẩn (tiêu đề trên nền, cách thanh trên như mọi trang), không đặt panel sát thanh trên
@@ -109,7 +120,7 @@ export function AppRoutes() {
         <Route path="users" element={<UsersPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="config" element={<ConfigPage />} />
-        <Route path="*" element={<NotFound />} />
+        <Route path="*" element={<AdminNotFound />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

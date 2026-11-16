@@ -34,6 +34,7 @@ import { useSnapshotDownload, useTakeSnapshot } from './use-snapshot';
 import '@/features/send-adm/send-adm.m1.css';
 import './reports.m1.css';
 import { useDisabledReason } from '@/ui/disabled-reason';
+import { PageCrumbs } from '@/ui/page-header';
 
 // Nhãn cạnh nút › (tắt): nói rõ kỳ đang mở còn đăng ký, chưa báo cáo được tới khi khóa
 function Heading({ ym, open, onMonth, children }: { ym: string; open: CurrentPeriod; onMonth: (ym: string) => void; children?: React.ReactNode }) {
@@ -41,7 +42,10 @@ function Heading({ ym, open, onMonth, children }: { ym: string; open: CurrentPer
   const openYm = open.ym;
   return (
     <div className="bc-head">
-      <h1>{t('reports.send.title')}</h1>
+      <div className="page-head__text">
+        <PageCrumbs crumbs={[t('nav.groups.monthly'), t('nav.reports')]} />
+        <h1>{t('reports.send.title')}</h1>
+      </div>
       <MonthSwitcher
         value={ym}
         max={lockedYm(openYm)}
@@ -224,7 +228,10 @@ function Frame({ children }: { children: React.ReactNode }) {
     <div className="ct-page bc-page">
       {/* Cùng khung đầu trang với lúc tải xong: tiêu đề không nhảy */}
       <div className="bc-head">
+        <div className="page-head__text">
+        <PageCrumbs crumbs={[t('nav.groups.monthly'), t('nav.reports')]} />
         <h1>{t('reports.send.title')}</h1>
+      </div>
       </div>
       {children}
     </div>

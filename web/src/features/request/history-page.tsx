@@ -41,6 +41,14 @@ export function HistoryLayout({ ym }: { ym?: string }) {
     );
   }
   const loaded = !history.isPending && !history.isError && items.length > 0;
+  // Chưa có lịch sử mà mở thẳng một tháng: chỉ một trạng thái rỗng (không đặt danh sách rỗng cạnh chi tiết rỗng)
+  if (ym && !history.isPending && !history.isError && items.length === 0) {
+    return (
+      <MemberPage wide>
+        <HistoryDetail ym={ym} level={1} />
+      </MemberPage>
+    );
+  }
   const master = history.isPending ? (
     <Loading />
   ) : history.isError ? (

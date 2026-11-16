@@ -26,6 +26,7 @@ import { PeopleTable, PersonAvatar } from './people-table';
 import { PersonPanel } from './person-panel';
 import { useQuickDeliver } from './use-quick-deliver';
 import './delivery-people.m1.css';
+import { EmptyFrame } from '@/ui/empty-frame';
 
 const NO_PEOPLE: DeliveryPerson[] = [];
 const TABS: PeopleTab[] = ['pending', 'debt', 'done', 'all'];
@@ -172,7 +173,9 @@ function PeopleBoard({ ym }: { ym: string }) {
           </div>
         )}
       </div>
-      {listed.length === 0 ? (
+      {listed.length === 0 && q ? (
+        <EmptyFrame variant="no-match" title={t('delivery.people.noMatch')} onClear={() => update({ q: null }, true)} />
+      ) : listed.length === 0 ? (
         <EmptyState title={t('delivery.people.empty')} />
       ) : (
         <PeopleTable

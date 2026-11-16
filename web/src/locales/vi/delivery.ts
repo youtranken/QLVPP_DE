@@ -203,6 +203,7 @@ const delivery = {
       status: { pending: 'Chưa nhận', debt: 'Còn nợ', done: 'Đã nhận' },
       empty: 'Không có ai trong mục này.',
       emptyAll: 'Tháng {{month}} chưa có ai cần nhận hàng.',
+      noMatch: 'Không có ai khớp',
       card: {
         action: 'Giao…',
         view: 'Xem',

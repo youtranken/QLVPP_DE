@@ -12,6 +12,19 @@ interface Props {
   note?: ReactNode;
 }
 
+export function PageCrumbs({ crumbs }: { crumbs: string[] }) {
+  const { t } = useTranslation();
+  return (
+    <nav aria-label={t('common.table.breadcrumb')}>
+      <ol className="page-head__crumbs">
+        {crumbs.map((c, i) => (
+          <li key={`${i}-${c}`} aria-current={i === crumbs.length - 1 ? 'page' : undefined}>{c}</li>
+        ))}
+      </ol>
+    </nav>
+  );
+}
+
 export function PageHeader({ crumbs, title, description, sub, primary, secondary, note }: Props) {
   const { t } = useTranslation();
   const actions = (primary || secondary) && (
@@ -23,15 +36,7 @@ export function PageHeader({ crumbs, title, description, sub, primary, secondary
   return (
     <header className="page-head">
       <div className="page-head__text">
-        {crumbs.length > 0 && (
-          <nav aria-label={t('common.table.breadcrumb')}>
-            <ol className="page-head__crumbs">
-              {crumbs.map((c, i) => (
-                <li key={`${i}-${c}`} aria-current={i === crumbs.length - 1 ? 'page' : undefined}>{c}</li>
-              ))}
-            </ol>
-          </nav>
-        )}
+        {crumbs.length > 0 && <PageCrumbs crumbs={crumbs} />}
         <h1>{title}</h1>
         {description && <p className="page-head__desc">{description}</p>}
         {sub && <p className="page-head__sub">{sub}</p>}

@@ -1,5 +1,5 @@
 [data-shell='admin'] .mk-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); align-content: start; }
-[data-shell='admin'] .mk-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); }
+[data-shell='admin'] .mk-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--s-3); }
 [data-shell='admin'] .mk-head h1 { margin: 0; font: var(--t-h1); letter-spacing: -0.02em; }
 [data-shell='admin'] .mk-switch { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); }
 /* Viền mảnh cùng màu chữ: nền tag nhạt gần trùng nền trang, thiếu viền thì chip như chữ trơn */
@@ -28,3 +28,4 @@
   [data-shell='admin'] .mk-switch__jump { min-height: var(--hit); white-space: normal; text-align: left; }
   [data-shell='admin'] .mk-left .btn { min-height: var(--hit); }
 }
+[data-shell='admin'] .mk-head > .page-head__text { flex: 0 1 auto; }

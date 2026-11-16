@@ -71,14 +71,16 @@ describe('Báo cáo & gửi NCC: đầu trang và trạng thái', () => {
     seps.forEach((s) => expect(s).toHaveAttribute('aria-hidden', 'true'));
   });
 
-  it('lúc đang tải: đầu trang cùng khung h1 với lúc tải xong (không breadcrumb) để tiêu đề không nhảy', async () => {
+  it('lúc đang tải: đầu trang cùng khung h1 + đường dẫn "Hằng tháng › Báo cáo & gửi NCC" với lúc tải xong để tiêu đề không nhảy', async () => {
     setupSendAdm({ report: REPORT });
     open();
     const h1 = screen.getByRole('heading', { level: 1, name: 'Báo cáo & gửi NCC' });
-    expect(h1.parentElement).toHaveClass('bc-head');
-    expect(screen.queryByRole('navigation', { name: /breadcrumb|Đường dẫn/i })).toBeNull();
+    expect(h1.closest('.bc-head')).not.toBeNull();
+    expect(h1.previousElementSibling).toHaveTextContent('Hằng thángBáo cáo & gửi NCC');
     await qtyBox('Bút bi');
-    expect(screen.getByRole('heading', { level: 1, name: 'Báo cáo & gửi NCC' }).parentElement).toHaveClass('bc-head');
+    const loaded = screen.getByRole('heading', { level: 1, name: 'Báo cáo & gửi NCC' });
+    expect(loaded.closest('.bc-head')).not.toBeNull();
+    expect(loaded.previousElementSibling).toHaveTextContent('Hằng thángBáo cáo & gửi NCC');
   });
 
   it('đã gửi: đúng một dòng trạng thái "Đã gửi NCC 09:02 12/12" kèm "In lại"; không có "21 món, 143 đơn vị"', async () => {
@@ -97,7 +99,7 @@ describe('Báo cáo & gửi NCC: đầu trang và trạng thái', () => {
     open();
     await qtyBox('Bút bi');
     const status = statuses()[0]!;
-    const head = screen.getByRole('heading', { level: 1, name: 'Báo cáo & gửi NCC' }).parentElement!;
+    const head = screen.getByRole('heading', { level: 1, name: 'Báo cáo & gửi NCC' }).closest('.bc-head')!;
     expect(head).toContainElement(status);
     const excel = screen.getByRole('button', { name: 'Xuất Excel' });
     expect(status.compareDocumentPosition(excel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

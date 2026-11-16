@@ -9,6 +9,7 @@ import { ReceiveStatus } from './receive-dialog';
 import { isSuspendedLine, receiveRows, receiveSummary, type ReceiveRow } from './receive-rows';
 import { CUSTOM_STATUSES } from './history.api';
 import { useRequestFormat } from './request-format';
+import { Link } from 'react-router-dom';
 
 function cancelNote(l: LineView, t: ReturnType<typeof useTranslation>['t']): string | null {
   if (l.cancelled_qty <= 0) return null;
@@ -148,18 +149,37 @@ function Header({ ym, view, level }: { ym: string; view: RequestView; level: 1 |
   );
 }
 
+function NoRequest({ ym, level }: { ym: string; level: 1 | 2 }) {
+  const { t } = useTranslation();
+  const Heading = level === 1 ? 'h1' : 'h2';
+  return (
+    <article className="hs-detail">
+      <div className="hs-d-head">
+        <Heading className="hs-d-title">{t('request.history.detailTitle', { month: Number(ym.slice(5)), year: ym.slice(0, 4) })}</Heading>
+      </div>
+      <EmptyState
+        title={t('request.history.notFound')}
+        action={
+          <Link className="btn" to="/">
+            {t('request.history.toRegister')}
+          </Link>
+        }
+      />
+    </article>
+  );
+}
+
 // Chi tiết một phiếu đã khóa (cột phải ≥ 901 px, cả trang ở điện thoại)
 export function HistoryDetail({ ym, level = 2 }: { ym: string; level?: 1 | 2 }) {
-  const { t } = useTranslation();
   const period = useCurrentPeriod();
   const request = useMyRequest(ym);
   // Kỳ sau kỳ đang mở chưa thể có phiếu
   const future = !!period.data && ym > period.data.ym;
-  if (future) return <EmptyState title={t('request.history.notFound')} />;
+  if (future) return <NoRequest ym={ym} level={level} />;
   if (request.isPending || period.isPending) return <Loading />;
   if (request.isError) return <LoadError onRetry={() => void request.refetch()} />;
   const view = request.data;
-  if (!view) return <EmptyState title={t('request.history.notFound')} />;
+  if (!view) return <NoRequest ym={ym} level={level} />;
   return (
     <article className="hs-detail">
       <Header ym={ym} view={view} level={level} />

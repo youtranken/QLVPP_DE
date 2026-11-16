@@ -117,7 +117,7 @@
 [data-shell='admin'] .pt-acts__in { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s-2); }
 [data-shell='admin'] .pt-acts__in > :last-child { margin-left: auto; }
 [data-shell='admin'] .pt-table td.pt-acts .btn:disabled { cursor: default; }
-[data-shell='admin'] .pt-bulk { display: flex; align-items: center; gap: var(--s-3); margin-left: auto; }
+[data-shell='admin'] .pt-bulk { position: fixed; z-index: 5; bottom: var(--s-5); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: var(--s-3); padding: var(--s-2); border-radius: var(--r-md); background: var(--c-surface); box-shadow: var(--e-5); }
 [data-shell='admin'] .bd-list { display: grid; gap: var(--s-2); margin: 0; padding: 0; list-style: none; }
 [data-shell='admin'] .bd-list li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-1) var(--s-3); padding-bottom: var(--s-2); border-bottom: 1px solid var(--c-line); font: var(--t-sm); }
 [data-shell='admin'] .bd-list b { font: var(--t-label); }
@@ -142,6 +142,6 @@
   [data-shell='admin'] .pt-pickall input[type='checkbox']:checked::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
   [data-shell='admin'] .pt-pickall input[type='checkbox']:indeterminate::before { background-image: linear-gradient(white, white); background-size: 10px 2px; }
   [data-shell='admin'] .pt-pickall input[type='checkbox']:focus-visible { box-shadow: var(--focus); border-radius: var(--r-sm); }
-  [data-shell='admin'] .pt-bulk { position: sticky; bottom: 0; z-index: 2; width: 100%; justify-content: space-between; padding: var(--s-3) 0; background: var(--c-page); }
+  [data-shell='admin'] .pt-bulk { left: var(--s-4); right: var(--s-4); bottom: calc(env(safe-area-inset-bottom) + var(--s-3)); transform: none; justify-content: space-between; }
   [data-shell='admin'] .pt-bulk .btn--primary { flex: 1; }
 }
