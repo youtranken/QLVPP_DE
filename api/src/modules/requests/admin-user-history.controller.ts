@@ -1,7 +1,9 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { Type } from 'class-transformer';
 import { IsInt, Max, Min } from 'class-validator';
+import { ClockService } from '../../common/clock.service';
 import { Roles } from '../auth/roles.decorator';
+import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
 import { HistoryService } from './history.service';
 import { userNotFound } from './request-errors';
@@ -21,6 +23,8 @@ export class AdminUserHistoryController {
   constructor(
     private readonly history: HistoryService,
     private readonly users: UsersService,
+    private readonly periods: PeriodsService,
+    private readonly clock: ClockService,
   ) {}
 
   @Get('users/:sub/requests')
@@ -32,6 +36,10 @@ export class AdminUserHistoryController {
       full_name: user.fullName,
       year: query.year,
       items: await this.history.forYear(sub, query.year),
+      summary: await this.history.recentSummary(
+        sub,
+        (await this.periods.openPeriod(undefined, this.clock.now())).ym,
+      ),
     };
   }
 }

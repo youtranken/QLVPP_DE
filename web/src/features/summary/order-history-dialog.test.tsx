@@ -24,11 +24,14 @@ const item = (ym: string, qty: number, delivered: number, cancelled = 0) => ({
   catalog: { line_count: 2, qty, delivered_qty: delivered, remaining_qty: qty - delivered - cancelled, owed_line_count: 0 },
 });
 
+// Tóm tắt 6 kỳ đã khóa gần nhất do server tính, không theo năm đang xem
+let SUMMARY: { months: number; avg_units: number; top_item: { name: string; name_en: string | null } | null } = { months: 6, avg_units: 2.5, top_item: { name: 'Băng keo si 3,5cm', name_en: null } };
+
 function stub() {
   const f = vi.fn(async (url: string) => {
     if (url === '/api/periods/current') return jsonResponse(200, PERIOD);
     const y = /^\/api\/admin\/users\/u-a\/requests\?year=(\d{4})$/.exec(url);
-    if (y) return jsonResponse(200, { sub: 'u-a', full_name: 'Nhân viên A', year: Number(y[1]), items: y[1] === '2026' ? [item('2026-10', 6, 6), item('2026-08', 4, 1)] : [item('2025-12', 3, 0)] });
+    if (y) return jsonResponse(200, { sub: 'u-a', full_name: 'Nhân viên A', year: Number(y[1]), items: y[1] === '2026' ? [item('2026-10', 6, 6), item('2026-08', 4, 1)] : [item('2025-12', 3, 0)], summary: SUMMARY });
     const r = /^\/api\/admin\/periods\/(\d{4}-\d{2})\/registrations\/(rq-[\d-]+)$/.exec(url);
     if (r) {
       const v = registrationView('q-a');
@@ -91,4 +94,24 @@ describe('OrderHistoryDialog — lịch sử đặt hàng một nhân viên (G3)
     await userEvent.click(within(dialog).getByRole('button', { name: 'Năm sau' }));
     expect(await within(dialog).findByRole('tablist', { name: 'Tháng trong năm 2026' })).toBeInTheDocument();
   });
+
+  it('dòng tóm tắt: "Trung bình 6 tháng: 2,5 đơn vị/tháng" và "Hay đặt nhất: Băng keo si 3,5cm"', async () => {
+    stub();
+    show();
+    const dialog = await screen.findByRole('dialog', { name: 'Lịch sử đặt hàng · Nhân viên A' });
+    expect(await within(dialog).findByText('Trung bình 6 tháng:')).toBeInTheDocument();
+    expect(within(dialog).getByText('2,5 đơn vị/tháng')).toBeInTheDocument();
+    expect(within(dialog).getByText('Băng keo si 3,5cm')).toBeInTheDocument();
+  });
+
+  it('6 tháng gần nhất không đặt gì → "Chưa đặt trong 6 tháng gần nhất", không có Hay đặt nhất', async () => {
+    SUMMARY = { months: 6, avg_units: 0, top_item: null };
+    stub();
+    show();
+    const dialog = await screen.findByRole('dialog', { name: 'Lịch sử đặt hàng · Nhân viên A' });
+    expect(await within(dialog).findByText('Chưa đặt trong 6 tháng gần nhất')).toBeInTheDocument();
+    expect(within(dialog).queryByText('Hay đặt nhất:')).toBeNull();
+    SUMMARY = { months: 6, avg_units: 2.5, top_item: { name: 'Băng keo si 3,5cm', name_en: null } };
+  });
 });
+

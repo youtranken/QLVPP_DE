@@ -16,6 +16,10 @@ const summary: Messages<typeof vi> = {
       lines: 'Items in the request',
       reduced: 'D&E Admin reduced {{before}} → {{after}} · {{reason}}',
       removed: 'D&E Admin removed from request · {{reason}}',
+      avgLabel: 'Average over {{months}} months:',
+      avgValue: '{{avg}} units/month',
+      topLabel: 'Ordered most often:',
+      summaryNone: 'No orders in the last {{months}} months',
     },
     page: {
       noMatch: 'No requests match',

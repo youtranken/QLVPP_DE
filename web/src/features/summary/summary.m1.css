@@ -102,6 +102,7 @@
 [data-shell='admin'] .oh-dot[data-tone='info'] { background: var(--info); border-color: var(--info); }
 [data-shell='admin'] .oh-dot[data-tone='warn'] { background: var(--warn); border-color: var(--warn); }
 [data-shell='admin'] .oh-dot[data-tone='muted'] { background: var(--c-muted); border-color: var(--c-muted); }
+[data-shell='admin'] .oh-summary { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-5); margin: 0; padding: var(--s-3); border-radius: var(--r-sm); background: var(--c-surface-2); font: var(--t-sm); }
 [data-shell='admin'] .oh-lines { list-style: none; margin: 0; padding: 0; display: grid; }
 [data-shell='admin'] .oh-line { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px var(--s-3); padding: var(--s-2) 0; border-bottom: 1px solid var(--c-line); }
 [data-shell='admin'] .oh-adjust { grid-column: 1 / -1; color: var(--c-muted); font: var(--t-sm); }

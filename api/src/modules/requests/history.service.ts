@@ -8,6 +8,7 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import {
   CATALOG_LINE,
+  CUSTOM_ITEM_KEY,
   EFFECTIVE_LINE,
   REMAINING_QTY,
   UNDELIVERED_LINE,
@@ -133,6 +134,48 @@ export class HistoryService {
     `);
     return rows.map((row) => ({ ...toItem(row), request_id: row.request_id }));
   }
+
+  // Dòng tóm tắt popup Lịch sử đặt hàng: 6 kỳ đã khóa ngay trước kỳ đang mở, không phụ thuộc năm đang xem.
+  // Chỉ dòng hiệu lực (bỏ chờ duyệt/từ chối); tháng không đặt tính 0. Hay đặt nhất = có mặt nhiều tháng nhất, hòa thì nhiều đơn vị hơn
+  async recentSummary(userSub: string, openYm: string): Promise<RecentSummary> {
+    const { rows } = await this.db.execute<
+      {
+        key: string;
+        name: string;
+        name_en: string | null;
+        months: number;
+        qty: number;
+      } & Record<string, unknown>
+    >(sql`
+      SELECT coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) AS key,
+             min(coalesce(i.name, l.custom_name)) AS name, min(i.name_en) AS name_en,
+             count(DISTINCT r.period_ym)::int AS months, sum(l.qty)::int AS qty
+      FROM requests r
+      JOIN request_lines l ON l.request_id = r.id
+      LEFT JOIN items i ON i.id = l.item_id
+      WHERE r.user_sub = ${userSub}
+        AND r.period_ym >= ${ymToDate(openYm)}::date - make_interval(months => ${SUMMARY_MONTHS}::int)
+        AND r.period_ym < ${ymToDate(openYm)}::date
+        AND l.review_status IN ('n/a', 'accepted', 'converted')
+      GROUP BY 1
+      ORDER BY months DESC, qty DESC, name
+    `);
+    const total = rows.reduce((sum, r) => sum + r.qty, 0);
+    const top = rows[0];
+    return {
+      months: SUMMARY_MONTHS,
+      avg_units: Math.round((total / SUMMARY_MONTHS) * 10) / 10,
+      top_item: top ? { name: top.name, name_en: top.name_en } : null,
+    };
+  }
+}
+
+export const SUMMARY_MONTHS = 6;
+
+export interface RecentSummary {
+  months: number;
+  avg_units: number;
+  top_item: { name: string; name_en: string | null } | null;
 }
 
 export function toItem({

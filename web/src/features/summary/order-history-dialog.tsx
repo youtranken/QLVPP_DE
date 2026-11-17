@@ -6,6 +6,7 @@ import { Icon } from '@/ui/icon';
 import { LoadError } from '@/ui/load-state';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { OrderHistoryMonth } from './order-history-month';
+import { OrderHistorySummary } from './order-history-summary';
 import { useUserHistory, type UserHistoryItem } from './summary.api';
 
 const TONE: Record<RequestStatusKey, string> = { done: 'ok', partial: 'info', notDelivered: 'warn', owed: 'warn', cancelled: 'muted' };
@@ -77,6 +78,7 @@ function YearBody({ sub, year, months, canNext, month, onMonth, onYear }: BodyPr
           <Icon name="chevr" size={18} />
         </button>
       </div>
+      {history.data?.summary && <OrderHistorySummary summary={history.data.summary} />}
       {history.isError ? (
         <LoadError onRetry={() => void history.refetch()} />
       ) : (

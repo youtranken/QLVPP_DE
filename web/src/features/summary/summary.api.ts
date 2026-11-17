@@ -210,10 +210,16 @@ export interface UserHistoryItem {
   cancelled_qty: number;
 }
 
-// Phiếu từng tháng của một người trong một năm (Adm D&E, chỉ đọc)
+export interface UserHistorySummary {
+  months: number;
+  avg_units: number;
+  top_item: { name: string; name_en: string | null } | null;
+}
+
+// Phiếu từng tháng của một người trong một năm (Adm D&E, chỉ đọc); summary là 6 kỳ đã khóa gần nhất, không theo năm
 export function useUserHistory(sub: string, year: number) {
   return useQuery({
     queryKey: ['admin-user-history', sub, year],
-    queryFn: () => apiFetch<{ sub: string; full_name: string | null; year: number; items: UserHistoryItem[] }>(`/api/admin/users/${encodeURIComponent(sub)}/requests?year=${year}`),
+    queryFn: () => apiFetch<{ sub: string; full_name: string | null; year: number; items: UserHistoryItem[]; summary: UserHistorySummary }>(`/api/admin/users/${encodeURIComponent(sub)}/requests?year=${year}`),
   });
 }

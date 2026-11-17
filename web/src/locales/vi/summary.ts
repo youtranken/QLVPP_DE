@@ -13,6 +13,10 @@ const summary = {
       lines: 'Các món trong phiếu',
       reduced: 'Adm D&E giảm {{before}} → {{after}} · {{reason}}',
       removed: 'Adm D&E bỏ khỏi phiếu · {{reason}}',
+      avgLabel: 'Trung bình {{months}} tháng:',
+      avgValue: '{{avg}} đơn vị/tháng',
+      topLabel: 'Hay đặt nhất:',
+      summaryNone: 'Chưa đặt trong {{months}} tháng gần nhất',
     },
     page: {
       noMatch: 'Không có phiếu nào khớp',
