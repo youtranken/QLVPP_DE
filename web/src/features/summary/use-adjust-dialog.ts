@@ -18,7 +18,7 @@ export function useRefreshAfterAdjust() {
   return useRefreshAfterLineChange([REVIEW_KEY]);
 }
 
-export function useAdjustDialog(requestId: string, onDone: () => void, preset?: AdjustReason, onSaved?: () => void) {
+export function useAdjustDialog(requestId: string, onDone: () => void, preset?: AdjustReason, onSaved?: (refreshed: Promise<unknown>) => void) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
   const toast = useToast();
@@ -54,8 +54,8 @@ export function useAdjustDialog(requestId: string, onDone: () => void, preset?: 
       try {
         await saveAdjust(requestId, adjustBody(view, picks, reason, note), csrfToken);
         done.current = true;
-        onSaved?.();
-        void refresh();
+        const refreshed = refresh();
+        onSaved?.(refreshed);
         toast.show({ text: t('summary.adjust.saved', { name: view.full_name ?? view.user_sub }), tone: 'ok' });
         onDone();
       } catch (e) {

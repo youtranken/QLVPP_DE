@@ -7,9 +7,9 @@ import { UsersService } from '../users/users.service';
 import { SUSPENDED_LINE } from './line-predicates';
 import { requestNotFound } from './request-errors';
 import { RequestViewBuilder } from './request-view';
-import type { RequestView } from './request-view';
 import * as repo from './requests.repo';
 import { SummaryService } from './summary.service';
+import { withAdjustments, type MemberRequestView } from './member-adjustments';
 
 export type RegistrationRow = {
   request_id: string;
@@ -66,7 +66,7 @@ export class RegistrationsService {
   async one(
     ym: string,
     id: string,
-  ): Promise<RequestView & { team: string | null; user_status: string }> {
+  ): Promise<MemberRequestView & { team: string | null; user_status: string }> {
     const { isOpen } = await this.summary.assertViewable(ym);
     const head = await repo.findRequest(this.db, { id });
     if (!head || head.period_ym !== ym)
@@ -75,7 +75,7 @@ export class RegistrationsService {
     if (!view) throw requestNotFound('Không tìm thấy phiếu.');
     const owner = await this.users.findBySub(view.user_sub);
     return {
-      ...view,
+      ...(await withAdjustments(this.db, view)),
       team: owner?.team ?? null,
       user_status: owner?.status ?? 'unknown',
     };

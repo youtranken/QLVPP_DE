@@ -9,7 +9,7 @@ export const OTHER_NOTE_MIN = 3;
 // Phần đã giao + đã hủy nợ không giảm được (server QTY_BELOW_DELIVERED); Từ chối = về đúng sàn này
 export const floorOf = (l: LineView) => l.delivered_qty + l.cancelled_qty;
 
-// Dòng ngoài DM chờ duyệt duyệt ở Xem phiếu (G8); dòng đã giao/hủy hết thì không còn gì để giảm
+// Dòng ngoài DM chờ duyệt duyệt ở Xem phiếu; dòng đã giao/hủy hết thì không còn gì để giảm
 export const adjustable = (l: LineView) => l.review_status !== 'pending' && l.review_status !== 'rejected' && l.qty > floorOf(l);
 
 // "Giảm còn n": n ≥ max(1, sàn) và n < số cũ; về sàn dùng "Từ chối"

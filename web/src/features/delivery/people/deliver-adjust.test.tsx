@@ -1,3 +1,4 @@
+import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderWithI18n, screen, userEvent, waitFor, within } from '@/test/test-utils';
@@ -6,7 +7,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { ConfirmProvider } from '@/ui/confirm-provider';
 import { ToastProvider } from '@/ui/toast-provider';
 import { putCalls, stubAdjust } from '@/features/summary/adjust-dialog-fixtures';
-import type { DeliveryPerson } from './delivery-people.api';
+import { DELIVERY_PEOPLE_KEY, type DeliveryPerson } from './delivery-people.api';
 import { DeliverDialog } from './deliver-dialog';
 import { person, pLine } from './people-fixtures';
 
@@ -21,6 +22,25 @@ const ui = (p: DeliveryPerson) => (
       <ToastProvider>
         <ConfirmProvider>
           <DeliverDialog person={p} people={[p]} onDone={vi.fn()} onClose={vi.fn()} onOpenPerson={vi.fn()} />
+        </ConfirmProvider>
+      </ToastProvider>
+    </MemoryRouter>
+  </MeContext.Provider>
+);
+// Danh sách người lấy từ query thật (khóa DELIVERY_PEOPLE_KEY) để lần nạp sau khi lưu đi đúng đường của app
+const source = { current: BEFORE };
+let client: QueryClient | null = null;
+function LivePeople() {
+  client = useQueryClient();
+  const q = useQuery({ queryKey: [...DELIVERY_PEOPLE_KEY, 'test'], queryFn: () => source.current });
+  return q.data ? <DeliverDialog person={q.data} people={[q.data]} onDone={vi.fn()} onClose={vi.fn()} onOpenPerson={vi.fn()} /> : null;
+}
+const live = () => (
+  <MeContext.Provider value={makeMe('admin')}>
+    <MemoryRouter>
+      <ToastProvider>
+        <ConfirmProvider>
+          <LivePeople />
         </ConfirmProvider>
       </ToastProvider>
     </MemoryRouter>
@@ -49,7 +69,9 @@ describe('DeliverDialog — "Từ chối / giảm dòng…" (G4)', () => {
 
   it('lưu điều chỉnh xong → hộp Giao lấy lại số còn chờ mới (7 → 2)', async () => {
     const f = stubAdjust();
-    const { rerender } = renderWithI18n(ui(BEFORE));
+    source.current = BEFORE;
+    renderWithI18n(live());
+    await screen.findByRole('dialog', { name: 'Giao cho Nguyễn Văn An?' });
     expect(waitingQty()).toBe('7');
     await userEvent.click(within(deliver()).getByRole('button', { name: 'Từ chối / giảm dòng…' }));
     const adjust = await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Nguyễn Văn An' });
@@ -58,10 +80,10 @@ describe('DeliverDialog — "Từ chối / giảm dòng…" (G4)', () => {
     await userEvent.clear(reduce);
     await userEvent.type(reduce, '5');
     await userEvent.click(within(within(adjust).getByRole('radiogroup', { name: 'Lý do' })).getByRole('radio', { name: 'Hết hàng' }));
+    // server đã giảm: lần nạp lại sau khi lưu trả số mới
+    source.current = AFTER;
     await userEvent.click(within(adjust).getByRole('button', { name: /^Lưu 1 thay đổi$/ }));
     await waitFor(() => expect(putCalls(f)).toHaveLength(1));
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Điều chỉnh phiếu Nguyễn Văn An' })).toBeNull());
-    rerender(ui(AFTER));
     await waitFor(() => expect(waitingQty()).toBe('2'));
   });
 
@@ -76,5 +98,27 @@ describe('DeliverDialog — "Từ chối / giảm dòng…" (G4)', () => {
     await new Promise((r) => setTimeout(r, 50));
     expect(waitingQty()).toBe('7');
   });
-});
 
+  it('lưu điều chỉnh mà lần nạp lại trả y dữ liệu cũ → lần nạp sau đó (người khác giao) không thay số đang hiện', async () => {
+    const f = stubAdjust();
+    source.current = BEFORE;
+    renderWithI18n(live());
+    await screen.findByRole('dialog', { name: 'Giao cho Nguyễn Văn An?' });
+    await userEvent.click(within(deliver()).getByRole('button', { name: 'Từ chối / giảm dòng…' }));
+    const adjust = await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Nguyễn Văn An' });
+    await userEvent.click(await within(adjust).findByRole('checkbox', { name: 'Chọn Bút bi xanh' }));
+    const reduce = within(adjust).getByRole('spinbutton', { name: 'Giảm còn: Bút bi xanh' });
+    await userEvent.clear(reduce);
+    await userEvent.type(reduce, '5');
+    await userEvent.click(within(within(adjust).getByRole('radiogroup', { name: 'Lý do' })).getByRole('radio', { name: 'Hết hàng' }));
+    await userEvent.click(within(adjust).getByRole('button', { name: /^Lưu 1 thay đổi$/ }));
+    await waitFor(() => expect(putCalls(f)).toHaveLength(1));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Điều chỉnh phiếu Nguyễn Văn An' })).toBeNull());
+    await new Promise((r) => setTimeout(r, 50));
+    expect(waitingQty()).toBe('7');
+    source.current = AFTER;
+    await client!.refetchQueries({ queryKey: [...DELIVERY_PEOPLE_KEY, 'test'] });
+    await new Promise((r) => setTimeout(r, 50));
+    expect(waitingQty()).toBe('7');
+  });
+});

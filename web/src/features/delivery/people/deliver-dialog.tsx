@@ -85,15 +85,17 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
     waiting: waitingIndex(people),
   });
   const [snap, setSnap] = useState(snapOf);
-  // G4: lưu điều chỉnh xong → lần nạp danh sách người kế tiếp là số mới, chụp lại đúng lần đó; hủy thì không chụp lại
+  // Lưu điều chỉnh xong → lần nạp danh sách người kế tiếp là số mới, chụp lại đúng lần đó; hủy thì không chụp lại
   const [adjusting, setAdjusting] = useState(false);
   const resnap = useRef(false);
+  // Nạp lại trả y dữ liệu cũ thì person/people giữ tham chiếu: lượt đếm này vẫn kích chụp lại và tắt cờ
+  const [refreshed, setRefreshed] = useState(0);
   useEffect(() => {
     if (!resnap.current) return;
     resnap.current = false;
     setSnap(snapOf());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [person, people]);
+  }, [person, people, refreshed]);
   const [values, setValues] = useState<Record<string, number>>(initial ?? {});
   const [result, setResult] = useState<SendResult | null>(null);
   // Món ngoài danh mục chờ duyệt đang hiện trong hộp: giao sẽ ghi Không mua đúng các món này, phải hỏi lại trước
@@ -215,7 +217,11 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
           )}
         </div>
       </Dialog>
-      {adjusting && person.request_id && <AdjustDialog requestId={person.request_id} onSaved={() => (resnap.current = true)} onClose={() => setAdjusting(false)} />}
+      {adjusting && person.request_id && <AdjustDialog requestId={person.request_id} onSaved={(done) => {
+            resnap.current = true;
+            // React Query báo dữ liệu mới cho component qua setTimeout 0 sau khi nạp xong → đếm sau lượt báo đó
+            void done.finally(() => setTimeout(() => setRefreshed((n) => n + 1), 0));
+          }} onClose={() => setAdjusting(false)} />}
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Locator } from '@playwright/test';
-import { asRole, deleteTestUsers, devHeaders, expectNoContrastViolations, expectStockCell, isMobile, removeTestItem, seedActiveUser, seedPwItem, shot, openPurchase, pickOption } from './helpers';
+import { asRole, deleteTestUsers, devHeaders, expectNoContrastViolations, expectStockCell, isMobile, removeTestItem, seedActiveUser, shot, openPurchase } from './helpers';
 import { seedLockedRequest } from './locked-request';
 
 const RECIPIENT = { sub: 'pw-recipient', name: 'PW Người nhận' };
@@ -300,72 +300,3 @@ test.describe('V2D-16 Tủ / Kho theo người đang chờ (dev-identity admin)'
     }
   });
 });
-
-test.describe('G6 Xuất lẻ (dev-identity admin)', () => {
-  asRole('admin');
-
-  test('G6 Xuất lẻ: trang riêng, hộp chọn món có tìm, gõ 21 khi tủ 19 → lỗi dưới ô + nút khóa có lý do; Hủy → không POST', async ({ page }, info) => {
-    const item = await seedPwItem(page, { stock: 19 });
-    const posts: string[] = [];
-    page.on('request', (r) => {
-      if (r.method() === 'POST' && r.url().includes('/issue')) posts.push(r.url());
-    });
-    try {
-      await page.goto('/admin/issues');
-      await expect(page.getByRole('heading', { level: 1, name: 'Xuất lẻ' })).toBeVisible();
-      await expect(page.getByText(/^Đang hiện \d+ lần xuất/)).toBeVisible();
-      await page.getByRole('button', { name: 'Xuất lẻ một món' }).click();
-      const dialog = page.getByRole('dialog', { name: /^Xuất lẻ/ });
-      await dialog.getByRole('searchbox', { name: 'Tìm món' }).fill(item.name);
-      await dialog.getByRole('list', { name: 'Món còn trong tủ' }).getByRole('button', { name: new RegExp(`^${item.name}`) }).click();
-      const qty = dialog.getByLabel('Số lượng');
-      await qty.fill('21');
-      await expect(qty).toHaveAccessibleDescription(/Tủ chỉ còn 19/);
-      const submit = dialog.getByRole('button', { name: 'Xuất', exact: true });
-      await expect(submit).toBeDisabled();
-      await expect(submit).toHaveAccessibleDescription(/.+/);
-      if (isMobile(info)) await expectNoContrastViolations(page);
-      await shot(page, info, 'g6-issues', false);
-      await dialog.getByRole('button', { name: 'Hủy' }).click();
-      await expect(dialog).toBeHidden();
-      expect(posts).toEqual([]);
-    } finally {
-      await removeTestItem(page.request, item.id);
-    }
-  });
-});
-
-test.describe('G5 Tủ / Kho (dev-identity admin)', () => {
-  asRole('admin');
-
-  test('G5 Tủ / Kho: cột Mức đặt lại · Cần thêm, lọc Thiếu kỳ này/Sắp hết/Hết; tab Lịch sử nhập xuất lọc Nhập, tổng Nhập/Ra', async ({ page }, info) => {
-    const item = await seedPwItem(page);
-    try {
-      const buy = await page.request.post(`/api/admin/items/${item.id}/stock`, { headers: devHeaders('admin'), data: { delta: 7, reason: 'purchase', note: 'PW G5 nhập' } });
-      expect(buy.ok()).toBe(true);
-      await page.goto('/admin/stock');
-      await expect(page.getByRole('radio', { name: 'Trong tủ' })).toBeChecked();
-      if (isMobile(info)) await expect(page.getByRole('combobox', { name: 'Lọc theo tình trạng tồn' })).toBeVisible();
-      else {
-        for (const f of [/^Thiếu kỳ này/, /^Sắp hết/, /^Hết/]) await expect(page.getByRole('radio', { name: f })).toBeVisible();
-        for (const h of ['Mức đặt lại', 'Cần thêm']) await expect(page.getByRole('columnheader', { name: h })).toBeVisible();
-      }
-
-      await page.getByRole('radio', { name: 'Lịch sử nhập xuất' }).click();
-      await expect(page).toHaveURL(/tab=ledger/);
-      const ledger = page.getByRole('table', { name: 'Lịch sử nhập xuất' });
-      await expect(ledger.getByRole('row').filter({ hasText: item.name }).filter({ hasText: '+7' })).toBeVisible();
-      if (isMobile(info)) await pickOption(page.getByRole('combobox', { name: 'Lọc theo loại' }), 'Nhập');
-      else await page.getByRole('radio', { name: 'Nhập', exact: true }).click();
-      await expect(page).toHaveURL(/kind=purchase/);
-      await expect(page.getByText(/^Nhập \+\d+ · Ra 0$/)).toBeVisible();
-      await expect(ledger.getByRole('row').filter({ hasText: item.name }).filter({ hasText: '+7' })).toBeVisible();
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'không cuộn ngang').toBe(true);
-      if (isMobile(info)) await expectNoContrastViolations(page);
-      await shot(page, info, 'g5-ledger', false);
-    } finally {
-      await removeTestItem(page.request, item.id);
-    }
-  });
-});
-

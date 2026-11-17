@@ -33,7 +33,9 @@ function stub() {
     if (r) {
       const v = registrationView('q-a');
       const lines = [lineView({ id: 'l1', item_id: 'i-pen', item: { ...v.lines[0]!.item!, name: 'Bút bi xanh' }, qty: 5, adjustments: [{ before: 10, after: 5, reason_code: 'over_quota', reason_note: null, at: '2026-10-12T03:00:00Z' }] })];
-      return jsonResponse(200, { ...v, id: r[2], period_ym: r[1], lines });
+      // dòng bị bỏ hẳn không còn trong lines, server trả ở removed_lines
+      const removed_lines = [{ name: 'Kẹp giấy', name_en: null, unit: 'hop', before: 2, reason_code: 'adm_out_of_stock', reason_note: null, at: '2026-10-12T03:00:00Z' }];
+      return jsonResponse(200, { ...v, id: r[2], period_ym: r[1], lines, removed_lines });
     }
     return jsonResponse(200, {});
   });
@@ -63,6 +65,10 @@ describe('OrderHistoryDialog — lịch sử đặt hàng một nhân viên (G3)
     expect(within(tabs).getByRole('tab', { name: 'T9, Không đặt' })).toBeInTheDocument();
     expect(await within(dialog).findByText('Bút bi xanh')).toBeInTheDocument();
     expect(within(dialog).getByText('Adm D&E giảm 10 → 5 · Số lượng quá nhiều')).toBeInTheDocument();
+    const lines = within(dialog).getByRole('list', { name: /món/i });
+    const removed = within(lines).getByText('Kẹp giấy').closest('li')!;
+    expect(removed).toHaveTextContent(/0 hộp/);
+    expect(within(removed as HTMLElement).getByText(/^Adm D&E bỏ khỏi phiếu · /)).toBeInTheDocument();
   });
 
   it('bấm tháng không đặt → "Không đặt tháng này", không gọi phiếu', async () => {

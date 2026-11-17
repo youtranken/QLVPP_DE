@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from '@/ui/toast-context';
 import { useUnregistered } from '@/features/summary/summary.api';
 
-// G1: người chưa đặt không có dòng trong bảng — chỉ đếm ở bước "Đã đặt" và chép tên để nhắc
+// Người chưa đặt không có dòng trong bảng — chỉ đếm ở bước "Đã đặt" và chép tên để nhắc
 export function MonthUnregisteredCopy({ ym }: { ym: string }) {
   const { t } = useTranslation();
   const toast = useToast();

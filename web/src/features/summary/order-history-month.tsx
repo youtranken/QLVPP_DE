@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Loading, LoadError } from '@/ui/load-state';
 import { useRequestFormat } from '@/features/request/request-format';
-import type { LineAdjustment, LineView } from '@/features/request/request.api';
+import type { LineAdjustment, LineView, RemovedLine } from '@/features/request/request.api';
 import { useRegistration } from './summary.api';
 
 function AdjustNote({ a }: { a: LineAdjustment }) {
@@ -18,9 +18,21 @@ function Line({ line }: { line: LineView }) {
     <li className="oh-line">
       <span className="oh-line__name">{name}</span>
       <b className="num">{`${line.qty} ${fmt.unit(line.item?.unit ?? line.custom_unit)}`}</b>
-      {(line.adjustments ?? []).map((a) => (
-        <AdjustNote key={a.at} a={a} />
+      {(line.adjustments ?? []).map((a, i) => (
+        <AdjustNote key={i} a={a} />
       ))}
+    </li>
+  );
+}
+
+// Dòng Adm D&E bỏ hẳn không còn trong lines: hiện số 0 kèm lý do để popup đủ mọi điều chỉnh
+function RemovedRow({ line }: { line: RemovedLine }) {
+  const fmt = useRequestFormat();
+  return (
+    <li className="oh-line">
+      <span className="oh-line__name">{fmt.name(line)}</span>
+      <b className="num">{`0 ${fmt.unit(line.unit)}`}</b>
+      <AdjustNote a={{ ...line, after: 0 }} />
     </li>
   );
 }
@@ -36,6 +48,9 @@ export function OrderHistoryMonth({ ym, requestId }: { ym: string; requestId: st
     <ul className="oh-lines" aria-label={t('summary.history.lines')}>
       {lines.map((l) => (
         <Line key={l.id} line={l} />
+      ))}
+      {(view.data.removed_lines ?? []).map((l, i) => (
+        <RemovedRow key={`removed-${i}`} line={l} />
       ))}
     </ul>
   );

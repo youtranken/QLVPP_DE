@@ -210,7 +210,7 @@ export interface UserHistoryItem {
   cancelled_qty: number;
 }
 
-// G3: phiếu từng tháng của một người trong một năm (Adm D&E, chỉ đọc)
+// Phiếu từng tháng của một người trong một năm (Adm D&E, chỉ đọc)
 export function useUserHistory(sub: string, year: number) {
   return useQuery({
     queryKey: ['admin-user-history', sub, year],

@@ -14,7 +14,7 @@ export class UserHistoryQuery {
   year!: number;
 }
 
-// G3: chỉ đọc, không audit — popup Lịch sử đặt hàng của một nhân viên
+// Chỉ đọc, không audit — popup Lịch sử đặt hàng của một nhân viên
 @Controller('admin')
 @Roles('admin', 'sa')
 export class AdminUserHistoryController {

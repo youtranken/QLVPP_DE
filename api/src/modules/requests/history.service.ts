@@ -115,7 +115,7 @@ export class HistoryService {
     };
   }
 
-  // G3: Adm D&E xem phiếu từng tháng của một người trong một năm; request_id để mở chi tiết phiếu
+  // Adm D&E xem phiếu từng tháng của một người trong một năm; request_id để mở chi tiết phiếu
   async forYear(
     userSub: string,
     year: number,

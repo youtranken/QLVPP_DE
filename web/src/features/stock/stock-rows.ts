@@ -37,7 +37,7 @@ export function stockStats(rows: StockRow[]): Record<StockFilter | 'all', number
   return { all: rows.length, incoming: count('incoming'), low: count('low'), none: count('none') };
 }
 
-// G5 "Thiếu kỳ này n": còn phải giao (tháng đang giao + nợ) mà tủ không đủ, trước khi trừ hàng đang về
+// "Thiếu kỳ này n": còn phải giao (tháng đang giao + nợ) mà tủ không đủ, trước khi trừ hàng đang về
 export const periodShortOf = (r: Pick<StockRow, 'held' | 'stock_qty'>): number => Math.max(0, r.held - r.stock_qty);
 
 export const shortCount = (facts: Pick<StockFacts, 'short'>[]): number => facts.filter((f) => f.short > 0).length;

@@ -12,11 +12,11 @@ export interface MonthItemRow {
   need: number;
 }
 
-// Theo món (G1): Số người đặt và Đặt từ danh sách theo món; Tồn và Cần mua lấy nguyên số Báo cáo (needOf BR-15 ở server),
-// không tính lại ở web. Món ngoài DM gộp một dòng; Cần mua của dòng đó là tổng các món ngoài DM của Báo cáo
+// Số người đặt và Đặt từ danh sách theo món; Tồn và Cần mua lấy nguyên số Báo cáo, không tính lại ở web.
+// Món ngoài DM khớp dòng Báo cáo theo cùng key (custom:[tên, đvt])
 export function monthItemRows(items: ItemSummaryRow[], report: Pick<MonthReport, 'byItem' | 'custom'>): MonthItemRow[] {
   const byId = new Map(report.byItem.map((r) => [r.item_id, r]));
-  const customNeed = report.custom.reduce((sum, r) => sum + r.need, 0);
+  const customByKey = new Map(report.custom.map((r) => [r.key, r.need]));
   return items.map((r) => {
     const rep = r.item_id ? byId.get(r.item_id) : undefined;
     return {
@@ -27,7 +27,7 @@ export function monthItemRows(items: ItemSummaryRow[], report: Pick<MonthReport,
       people: r.people,
       ordered: r.requested_qty,
       stock: rep ? rep.stock : null,
-      need: r.item_id === null ? customNeed : (rep?.need ?? 0),
+      need: r.item_id === null ? (customByKey.get(r.key) ?? 0) : (rep?.need ?? 0),
     };
   });
 }

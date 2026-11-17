@@ -11,7 +11,7 @@ import { useUserHistory, type UserHistoryItem } from './summary.api';
 const TONE: Record<RequestStatusKey, string> = { done: 'ok', partial: 'info', notDelivered: 'warn', owed: 'warn', cancelled: 'muted' };
 const pad = (m: number) => String(m).padStart(2, '0');
 
-// G3: năm + tab tháng (chấm trạng thái), mặc định tháng mới nhất có phiếu; không tiến quá năm của kỳ đang mở
+// Năm + tab tháng (chấm trạng thái), mặc định tháng mới nhất có phiếu; không tiến quá năm của kỳ đang mở
 export function OrderHistoryDialog({ sub, name, onClose }: { sub: string; name: string; onClose: () => void }) {
   const { t } = useTranslation();
   const current = useCurrentPeriod();

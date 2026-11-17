@@ -2,7 +2,7 @@ import { foldVi } from './search';
 
 export type CategoryIcon = 'pen' | 'paper' | 'clip' | 'folder' | 'box';
 
-// G9: món chưa có ảnh hiện biểu tượng theo tên nhóm; thứ tự quan trọng ("bìa" trước "giấy" không trùng nhau)
+// Món chưa có ảnh hiện biểu tượng theo tên nhóm; thứ tự quan trọng ("bìa" trước "giấy" không trùng nhau)
 const RULES: [CategoryIcon, string[]][] = [
   ['pen', ['but']],
   ['folder', ['luu tru', 'bia', 'ho so']],

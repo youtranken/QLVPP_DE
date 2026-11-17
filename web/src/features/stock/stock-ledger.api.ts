@@ -26,7 +26,7 @@ interface LedgerPage {
   totals: { in: number; out: number };
 }
 
-// Sổ cái toàn kho một tháng (G5); thêm trang bằng cursor, tổng Nhập/Ra của cả tháng đã lọc nằm ở mọi trang
+// Sổ cái toàn kho một tháng; thêm trang bằng cursor, tổng Nhập/Ra của cả tháng đã lọc nằm ở mọi trang
 export function useStockLedger(ym: string, kind: LedgerKind | null) {
   return useInfiniteQuery({
     queryKey: [...STOCK_KEY, 'ledger', ym, kind],

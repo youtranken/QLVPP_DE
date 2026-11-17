@@ -42,10 +42,10 @@ export function useMonthParams(openYm: string | undefined, defaultYm: string | u
   // ?left=1 từ nhắc người đã nghỉ: chỉ liệt kê người đã nghỉ; phiếu của họ chọn sẵn lý do "Người đã nghỉ"
   const left = params.get('left') === '1' || legacy === 'left';
   const rawChip = params.get('chip');
-  // ?pending=1: link cũ của trang Món ngoài danh mục (G8) → chip "Có món chờ duyệt"
+  // ?pending=1: link cũ của trang Món ngoài danh mục → chip "Có món chờ duyệt"
   const pendingLink = params.get('pending') === '1';
   const chip: MonthChip = isChip(rawChip) ? rawChip : pendingLink ? 'pending' : ((legacy && LEGACY_FILTER[legacy]) || (left ? 'undelivered' : 'all'));
-  // G1: ?view=items = chế độ Theo món; giá trị khác (link Tổng hợp cũ) bỏ
+  // ?view=items = chế độ Theo món; giá trị khác (link Tổng hợp cũ) bỏ
   const view: MonthView = params.get('view') === 'items' ? 'items' : 'people';
   const hasView = params.has('view') && view === 'people';
   const areas = params.getAll('area');

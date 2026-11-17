@@ -6,7 +6,7 @@ export const MONTH_CHIPS: readonly MonthChip[] = ['all', 'noted', 'undelivered',
 
 type ChipRow = Pick<PersonRow, 'over_max' | 'adjusted' | 'custom_pending' | 'total_qty' | 'delivered_qty' | 'cancelled_qty'>;
 
-// pending (G8): người có món ngoài danh mục chờ duyệt — duyệt trong Xem phiếu
+// pending: người có món ngoài danh mục chờ duyệt — duyệt trong Xem phiếu
 export function chipOf(row: ChipRow): Record<Exclude<MonthChip, 'all'>, boolean> {
   return {
     noted: row.over_max || row.adjusted || row.custom_pending > 0 || row.total_qty === 0,

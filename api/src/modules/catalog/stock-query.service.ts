@@ -56,7 +56,7 @@ export class StockQueryService {
     );
   }
 
-  // G5 sổ cái toàn kho một tháng (giờ VN), lọc theo loại; tổng Nhập/Ra tính trên cả tháng đã lọc, không theo trang
+  // Sổ cái toàn kho một tháng (giờ VN), lọc theo loại; tổng Nhập/Ra tính trên cả tháng đã lọc, không theo trang
   async ledger(
     ym: string,
     kind: LedgerKind | undefined,

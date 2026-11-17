@@ -47,7 +47,7 @@ function useColumns() {
   );
 }
 
-// G5: sổ cái toàn kho theo tháng, lọc theo loại, chỉ đọc
+// Sổ cái toàn kho theo tháng, lọc theo loại, chỉ đọc
 export function StockLedgerPage() {
   const { t } = useTranslation();
   const p = useLedgerParams();

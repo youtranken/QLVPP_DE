@@ -17,7 +17,7 @@ export function StockPage() {
   const [params] = useSearchParams();
   const [, update] = useUrlPatch();
   const ledger = params.get('tab') === TAB_LEDGER;
-  // Xuất lẻ thành trang riêng (G6): link cũ ?tab=issues chuyển sang, giữ tháng
+  // Xuất lẻ thành trang riêng: link cũ ?tab=issues chuyển sang, giữ tháng
   if (params.get('tab') === 'issues') {
     const ym = params.get('ym');
     return <Navigate replace to={ym ? `/admin/issues?ym=${encodeURIComponent(ym)}` : '/admin/issues'} />;
@@ -35,7 +35,7 @@ export function StockPage() {
           </Link>
         }
       />
-      {/* G5: Trong tủ / Lịch sử nhập xuất (sổ cái toàn kho) */}
+      {/* Trong tủ / Lịch sử nhập xuất (sổ cái toàn kho) */}
       <Segmented
         label={t('stock.book.tabs')}
         value={ledger ? TAB_LEDGER : TAB_STOCK}

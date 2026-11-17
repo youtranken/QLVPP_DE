@@ -16,7 +16,7 @@ const FLUID = {
 // Ảnh có thể dính 429/lỗi mạng thoáng qua → thử lại tối đa 2 lần (500 ms, 1500 ms), tham số ?r=n chỉ thêm khi thử lại
 const RETRY_DELAYS_MS = [500, 1500];
 
-// G9: chưa có ảnh → biểu tượng theo nhóm (category = tên nhóm) trên nền tông nhóm; món ngoài danh mục → ô "?" viền đứt
+// Chưa có ảnh → biểu tượng theo nhóm (category = tên nhóm) trên nền tông nhóm; món ngoài danh mục → ô "?" viền đứt
 export function ItemThumb({ fileId, alt, tone, size, category, custom = false }: { fileId: string | null; alt: string; tone: Tone; size: ThumbSize; category?: string | null; custom?: boolean }) {
   const [failedId, setFailedId] = useState<string | null>(null);
   const [retry, setRetry] = useState({ id: fileId, n: 0, waiting: false });

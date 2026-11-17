@@ -11,7 +11,7 @@ import { reviewLine, useReviewCache, type ReviewBody } from '@/features/review/r
 
 type Open = 'convert' | 'reject' | null;
 
-// G8: dòng ngoài DM chờ duyệt — Chấp nhận (tick "Thêm luôn vào danh mục" → điền món mới) hoặc Từ chối (lý do bắt buộc)
+// Dòng ngoài DM chờ duyệt — Chấp nhận (tick "Thêm luôn vào danh mục" → điền món mới) hoặc Từ chối (lý do bắt buộc)
 export function ReviewBlock({ line, requestUpdatedAt, onDone }: { line: LineView; requestUpdatedAt: string; onDone: () => void }) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();

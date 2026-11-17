@@ -62,6 +62,6 @@ export const ADMIN_ROUTE_CLASSES: Record<`${Method} ${string}`, RouteClass> = {
   'POST /api/admin/directory/sync': 'none',
   'GET /api/admin/directory/status': 'none',
   'GET /api/admin/users': 'none',
-  // G3: phiếu mọi kỳ của một người kể cả kỳ đang mở, chỉ đọc (đếm, không chi tiết dòng)
+  // Phiếu mọi kỳ của một người kể cả kỳ đang mở, chỉ đọc (đếm, không chi tiết dòng)
   'GET /api/admin/users/:sub/requests': 'none',
 };

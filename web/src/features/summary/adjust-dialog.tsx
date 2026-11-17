@@ -65,8 +65,8 @@ export function AdjustDialog({ requestId, presetReason, onClose, onSaved, nav }:
   // Mở từ lọc người đã nghỉ (?left=1): chọn sẵn lý do "Người đã nghỉ"
   presetReason?: AdjustReason;
   onClose: () => void;
-  // Gọi ngay khi lưu thành công, trước khi nạp lại dữ liệu (hộp Giao dùng để biết lần nạp sau là số mới)
-  onSaved?: () => void;
+  // Gọi ngay khi lưu thành công, kèm lời hứa nạp lại dữ liệu (hộp Giao chụp lại số khi nạp xong)
+  onSaved?: (refreshed: Promise<unknown>) => void;
   nav?: Omit<PanelNav, 'prevLabel' | 'nextLabel'>;
 }) {
   const { t } = useTranslation();

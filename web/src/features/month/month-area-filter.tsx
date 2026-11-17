@@ -9,7 +9,7 @@ interface Props {
   onChange: (next: string[]) => void;
 }
 
-// G1: lọc nhiều khu (phòng); không chọn khu nào = mọi khu
+// Lọc nhiều khu (phòng); không chọn khu nào = mọi khu
 export function MonthAreaFilter({ options, value, onChange }: Props) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState<string[] | null>(null);
