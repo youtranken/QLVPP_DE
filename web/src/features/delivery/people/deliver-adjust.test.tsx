@@ -64,4 +64,17 @@ describe('DeliverDialog — "Từ chối / giảm dòng…" (G4)', () => {
     rerender(ui(AFTER));
     await waitFor(() => expect(waitingQty()).toBe('2'));
   });
+
+  it('mở Điều chỉnh rồi hủy, danh sách nạp lại sau đó → hộp Giao giữ số đang hiện (chỉ chụp lại sau khi lưu)', async () => {
+    stubAdjust();
+    const { rerender } = renderWithI18n(ui(BEFORE));
+    await userEvent.click(within(deliver()).getByRole('button', { name: 'Từ chối / giảm dòng…' }));
+    await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Nguyễn Văn An' });
+    await userEvent.keyboard('{Escape}');
+    await screen.findByRole('dialog', { name: 'Giao cho Nguyễn Văn An?' });
+    rerender(ui(AFTER));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(waitingQty()).toBe('7');
+  });
 });
+

@@ -97,6 +97,26 @@ describe('G3 Kỳ tháng — Lịch sử đặt hàng', () => {
   });
 });
 
+describe('Điều chỉnh phiếu — bước ‹ › không mang nháp của người trước (review Phase 2b)', () => {
+  it('chọn Khác + gõ ghi chú ở A, bấm "Phiếu sau", bỏ thay đổi → phiếu B lý do chưa chọn, ghi chú trống', async () => {
+    stubMonthApi();
+    open();
+    await userEvent.click(within(await rowOf('Nhân viên A')).getByRole('button', { name: 'Thao tác cho Nhân viên A' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Điều chỉnh phiếu' }));
+    const dialog = await screen.findByRole('dialog', { name: /^Điều chỉnh phiếu/ });
+    await screen.findAllByRole('checkbox');
+    await userEvent.click(within(within(dialog).getByRole('radiogroup', { name: 'Lý do' })).getByRole('radio', { name: 'Khác' }));
+    await userEvent.type(within(dialog).getByLabelText(/^Ghi thêm/), 'trùng phiếu phòng họp');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Phiếu sau' }));
+    const discard = screen.queryByRole('button', { name: 'Bỏ thay đổi' });
+    if (discard) await userEvent.click(discard);
+    await waitFor(() => expect(search()).toContain('request=r-b'));
+    const next = await screen.findByRole('dialog', { name: /^Điều chỉnh phiếu/ });
+    await waitFor(() => expect(within(next).getByLabelText(/^Ghi thêm/)).toHaveValue(''));
+    expect(within(within(next).getByRole('radiogroup', { name: 'Lý do' })).getByRole('radio', { name: 'Khác' })).not.toBeChecked();
+  });
+});
+
 describe('G1 Kỳ tháng — lọc khu', () => {
   const AREA_PEOPLE = [
     person({ request_id: 'r-1', user_sub: 'u-1', full_name: 'Người A1', department: 'Phòng A' }),

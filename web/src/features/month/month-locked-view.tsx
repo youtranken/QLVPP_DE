@@ -117,7 +117,7 @@ export function MonthLockedView({ ym, openYm, chip, view, areas, q, left, preset
       )}
       {index >= 0 && <RegistrationDialog ym={ym} deadline={null} rows={viewRows} index={index} onIndex={(i) => setViewing(viewRows[i]!.request_id)} onClose={() => setViewing(null)} />}
       {history && <OrderHistoryDialog sub={history.user_sub} name={history.full_name ?? history.email ?? history.user_sub} onClose={() => setHistory(null)} />}
-      {panel.id && <AdjustDialog requestId={panel.id} presetReason={presetReason} onClose={panel.close} nav={{ index: panel.index, total: panel.total, onStep: panel.step }} />}
+      {panel.id && <AdjustDialog key={panel.id} requestId={panel.id} presetReason={presetReason} onClose={panel.close} nav={{ index: panel.index, total: panel.total, onStep: panel.step }} />}
     </>
   );
 }

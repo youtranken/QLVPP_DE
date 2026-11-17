@@ -60,16 +60,18 @@ function Footer({ a }: { a: AdjustDialogState }) {
   );
 }
 
-export function AdjustDialog({ requestId, presetReason, onClose, nav }: {
+export function AdjustDialog({ requestId, presetReason, onClose, onSaved, nav }: {
   requestId: string;
   // Mở từ lọc người đã nghỉ (?left=1): chọn sẵn lý do "Người đã nghỉ"
   presetReason?: AdjustReason;
   onClose: () => void;
+  // Gọi ngay khi lưu thành công, trước khi nạp lại dữ liệu (hộp Giao dùng để biết lần nạp sau là số mới)
+  onSaved?: () => void;
   nav?: Omit<PanelNav, 'prevLabel' | 'nextLabel'>;
 }) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
-  const a = useAdjustDialog(requestId, onClose, presetReason);
+  const a = useAdjustDialog(requestId, onClose, presetReason, onSaved);
   const view = a.view;
   const preview = view ? previewText(t, fmt.unit, view, a.picks, a.reason, a.note) : null;
   return (

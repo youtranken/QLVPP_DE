@@ -85,7 +85,7 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
     waiting: waitingIndex(people),
   });
   const [snap, setSnap] = useState(snapOf);
-  // G4: điều chỉnh phiếu từ hộp này → chụp lại khi danh sách người nạp lại sau khi lưu (chỉ lần đó, không mỗi lần nạp)
+  // G4: lưu điều chỉnh xong → lần nạp danh sách người kế tiếp là số mới, chụp lại đúng lần đó; hủy thì không chụp lại
   const [adjusting, setAdjusting] = useState(false);
   const resnap = useRef(false);
   useEffect(() => {
@@ -189,10 +189,7 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
                   type="button"
                   className="btn btn--ghost dd-adjust"
                   disabled={sending}
-                  onClick={() => {
-                    resnap.current = true;
-                    setAdjusting(true);
-                  }}
+                  onClick={() => setAdjusting(true)}
                 >
                   {t('delivery.confirm.adjust')}
                 </button>
@@ -218,7 +215,7 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
           )}
         </div>
       </Dialog>
-      {adjusting && person.request_id && <AdjustDialog requestId={person.request_id} onClose={() => setAdjusting(false)} />}
+      {adjusting && person.request_id && <AdjustDialog requestId={person.request_id} onSaved={() => (resnap.current = true)} onClose={() => setAdjusting(false)} />}
     </>
   );
 }
