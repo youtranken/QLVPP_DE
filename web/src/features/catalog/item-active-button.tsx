@@ -17,7 +17,7 @@ export function ItemActiveButton({ row, name, groupActive, quietHint = false }: 
     <>
       <button
         type="button"
-        className={checked ? 'btn btn--sm btn--quiet-danger' : 'btn btn--sm'}
+        className={checked ? 'btn btn--sm btn--danger-line' : 'btn btn--sm'}
         aria-label={t(checked ? 'catalog.grid.pauseFor' : 'catalog.grid.reactivateFor', { name })}
         aria-describedby={locked ? hintId : undefined}
         disabled={locked}

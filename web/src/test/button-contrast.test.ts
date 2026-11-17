@@ -24,7 +24,7 @@ const rule = (sel: string) => base.match(new RegExp(`\\[data-shell='admin'\\] ${
 const varOf = (body: string, prop: string) => body.match(new RegExp(`${prop}:\\s*var\\((--[\\w-]+)\\)`))?.[1];
 
 describe('Nút đỏ nhạt (danger-soft): tương phản từ token', () => {
-  const body = rule('.btn--danger-ghost');
+  const body = rule('.btn--danger');
   const bg = hex(varOf(body, '--btn-bg')!);
   const hover = hex(varOf(body, '--btn-bg-hover')!);
   const active = hex(varOf(body, '--btn-bg-active')!);

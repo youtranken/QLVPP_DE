@@ -50,7 +50,7 @@ function ActiveToggle({ item, groupActive, saving, notify }: { item: AdminItem; 
     <>
       <button
         type="button"
-        className={checked ? 'btn btn--quiet-danger' : 'btn'}
+        className={checked ? 'btn btn--danger-line' : 'btn'}
         aria-label={t(checked ? 'catalog.grid.pauseFor' : 'catalog.grid.reactivateFor', { name: item.name })}
         aria-describedby={locked ? hintId : undefined}
         disabled={saving || locked}
@@ -75,7 +75,7 @@ function Footer({ f, item, groupActive, formId }: { f: ItemForm; item: AdminItem
       {item && (
         <div className="ct-foot-left">
           <ActiveToggle item={item} groupActive={groupActive} saving={f.saving} notify={f.notify} />
-          <button type="button" className="btn btn--ghost ct-delete" disabled={f.saving} onClick={() => void f.remove()}>
+          <button type="button" className="btn btn--danger-line ct-delete" disabled={f.saving} onClick={() => void f.remove()}>
             {t('catalog.drawer.delete')}
           </button>
         </div>

@@ -309,12 +309,12 @@ describe('Panel Sửa sản phẩm — đầu, hai khối, chân (Nhóm 1 · m�
     expect(within(dialog).getByRole('heading', { level: 3, name: 'Đặt hàng' })).toBeInTheDocument();
   });
 
-  it('footer: "Tạm ngưng" (btn--quiet-danger) bên trái → hỏi xác nhận → PATCH {active:false} + toast thường (không Hoàn tác); "Xóa" cạnh đó; "Quay lại" và "Lưu" bên phải; thân không còn "Xóa món"', async () => {
+  it('footer: "Tạm ngưng" (btn--danger-line) bên trái → hỏi xác nhận → PATCH {active:false} + toast thường (không Hoàn tác); "Xóa" cạnh đó; "Quay lại" và "Lưu" bên phải; thân không còn "Xóa món"', async () => {
     const f = stubDrawerApi((_url, init) => (init.method === 'PATCH' ? jsonResponse(200, PEN) : undefined));
     renderDrawer({ item: PEN, nav });
     expect(screen.queryByRole('button', { name: 'Xóa món' })).toBeNull();
     const pause = screen.getByRole('button', { name: 'Tạm ngưng Bút bi xanh' });
-    expect(pause).toHaveClass('btn--quiet-danger');
+    expect(pause).toHaveClass('btn--danger-line');
     expect(pause.nextElementSibling).toBe(screen.getByRole('button', { name: 'Xóa' }));
     expect(screen.getByRole('button', { name: 'Xóa' })).toHaveClass('ct-delete');
     expect(screen.getByRole('button', { name: 'Hủy' })).toBeInTheDocument();

@@ -69,14 +69,14 @@ describe('BacklogPage — thao tác trên dòng', () => {
     await waitFor(() => expect(hasItem('Bút bi xanh')).toBe(false));
   });
 
-  it('1280: "Hủy nợ" là nút chữ phụ ngay trên dòng (không còn menu ⋯ một mục); chọn lý do "Người nhận không cần nữa" → dòng biến mất, dòng khác còn, toast "Đã hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức"', async () => {
+  it('1280: "Hủy nợ" là nút viền đỏ ngay trên dòng (không còn menu ⋯ một mục); chọn lý do "Người nhận không cần nữa" → dòng biến mất, dòng khác còn, toast "Đã hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức"', async () => {
     const f = stubBacklog([PEN_DUC, PEN_LAN]);
     openPage();
     const row = await rowOf('Phạm Văn Đức');
     expect(within(row).getByRole('button', { name: 'Giao bổ sung' })).toBeInTheDocument();
     expect(within(row).queryByRole('button', { name: /^Thao tác khác/ })).toBeNull();
     const cancel = within(row).getByRole('button', { name: 'Hủy nợ Bút bi xanh — Phạm Văn Đức' });
-    expect(cancel).toHaveClass('btn--ghost');
+    expect(cancel).toHaveClass('btn--danger-line');
     expect(cancel).toHaveTextContent('Hủy nợ');
     await userEvent.click(cancel);
     expect(screen.getByRole('dialog', { name: 'Hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức?' })).toBeInTheDocument();

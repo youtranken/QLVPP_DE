@@ -73,7 +73,7 @@ export function UnitTable({ ordered, busy, sorting, onMove, onMoveTo, onEdit, on
                       {t('units.page.edit')}
                     </button>
                     {u.active ? (
-                      <button type="button" className="btn btn--sm btn--quiet-danger" aria-label={t('units.page.deactivateFor', { name: u.name })} disabled={busy || sorting} aria-describedby={lock.describedBy} onClick={() => onToggleActive(u)}>
+                      <button type="button" className="btn btn--sm btn--danger-line" aria-label={t('units.page.deactivateFor', { name: u.name })} disabled={busy || sorting} aria-describedby={lock.describedBy} onClick={() => onToggleActive(u)}>
                         {t('units.page.deactivate')}
                       </button>
                     ) : (
@@ -82,7 +82,7 @@ export function UnitTable({ ordered, busy, sorting, onMove, onMoveTo, onEdit, on
                       </button>
                     )}
                     {!u.in_use && (
-                      <button type="button" className="btn btn--sm btn--quiet-danger" aria-label={t('units.page.deleteFor', { name: u.name })} disabled={busy || sorting} aria-describedby={lock.describedBy} onClick={() => onDelete(u)}>
+                      <button type="button" className="btn btn--sm btn--danger-line" aria-label={t('units.page.deleteFor', { name: u.name })} disabled={busy || sorting} aria-describedby={lock.describedBy} onClick={() => onDelete(u)}>
                         {t('units.page.delete')}
                       </button>
                     )}

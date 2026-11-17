@@ -95,7 +95,7 @@ export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onM
                       {t('catalog.categories.edit')}
                     </button>
                     {c.active ? (
-                      <button type="button" className="btn btn--sm btn--quiet-danger" aria-label={t('catalog.categories.pauseFor', { name: c.name })} disabled={busy || !countsReady || sorting} aria-describedby={lock.describedBy} onClick={() => onToggleActive(c)}>
+                      <button type="button" className="btn btn--sm btn--danger-line" aria-label={t('catalog.categories.pauseFor', { name: c.name })} disabled={busy || !countsReady || sorting} aria-describedby={lock.describedBy} onClick={() => onToggleActive(c)}>
                         {t('catalog.categories.pause')}
                       </button>
                     ) : (

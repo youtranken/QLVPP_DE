@@ -4,6 +4,3 @@
 [data-shell='admin'] .flt-chip[aria-pressed='true'] .flt-cnt { color: var(--c-acc-ink); opacity: 1; }
 
 /* Nút nguy hiểm lặp theo thẻ/dòng: trung tính, chỉ đỏ khi rê chuột hoặc lấy focus bàn phím */
-[data-shell='admin'] .btn--quiet-danger { --btn-bg-hover: var(--c-danger); --btn-bg-active: var(--c-danger-solid-hover); --btn-fg-active: var(--c-on-dark); --btn-sh-hover: none; }
-[data-shell='admin'] .btn--quiet-danger:hover:not(:disabled), [data-shell='admin'] .btn--quiet-danger:focus-visible:not(:disabled) { color: var(--c-on-dark); }
-[data-shell='admin'] .btn--quiet-danger:focus-visible:not(:disabled) { background: var(--c-danger); }

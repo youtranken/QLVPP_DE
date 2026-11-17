@@ -34,7 +34,7 @@ export function CatalogBulkBar({ tab, count, pending, scope, onReactivate, onMov
         {t('catalog.bulk.move')}
       </button>
       {scope.pause > 0 && (
-        <button type="button" className="btn btn--sm btn--quiet-danger" disabled={pending} onClick={onPause}>
+        <button type="button" className="btn btn--sm btn--danger-line" disabled={pending} onClick={onPause}>
           {t('catalog.bulk.pauseN', { n: scope.pause })}
         </button>
       )}

@@ -43,10 +43,10 @@ describe('Danh mục — hàng loạt', () => {
     expect(screen.queryByRole('toolbar', { name: 'Hành động trên các dòng đã chọn' })).toBeNull();
   });
 
-  it('tab Đang dùng chọn 1 → "Đổi tối đa/tháng", "Chuyển nhóm", "Tạm ngưng" (quiet-danger); tab Tạm ngưng chọn 2 → chỉ "Dùng lại" (primary), "Chuyển nhóm", "Bỏ chọn"', async () => {
+  it('tab Đang dùng chọn 1 → "Đổi tối đa/tháng", "Chuyển nhóm", "Tạm ngưng" (danger-line); tab Tạm ngưng chọn 2 → chỉ "Dùng lại" (primary), "Chuyển nhóm", "Bỏ chọn"', async () => {
     await openCatalog({ items: [...ITEMS, OLD, adminItem({ id: 'i-old2', name: 'Bút cũ 2', category_id: 'c-pen', active: false })] }, '/admin/catalog?tab=active');
     await pick('Bút bi xanh');
-    expect(bulkBar().getByRole('button', { name: /^Tạm ngưng \(\d+\)$/ })).toHaveClass('btn--quiet-danger');
+    expect(bulkBar().getByRole('button', { name: /^Tạm ngưng \(\d+\)$/ })).toHaveClass('btn--danger-line');
     expect(bulkBar().getByRole('button', { name: 'Đổi tối đa/tháng' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /^Tạm ngưng \d/ }));
     await pick('Bút xóa cũ');
@@ -234,6 +234,6 @@ describe('Danh mục — hàng loạt', () => {
     await pick('Bút bi xanh');
     await pick('Bút xóa cũ');
     expect(bulkBar().getByRole('button', { name: 'Dùng lại (1)' })).toHaveClass('btn--primary');
-    expect(bulkBar().getByRole('button', { name: 'Tạm ngưng (1)' })).toHaveClass('btn--quiet-danger');
+    expect(bulkBar().getByRole('button', { name: 'Tạm ngưng (1)' })).toHaveClass('btn--danger-line');
   });
 });

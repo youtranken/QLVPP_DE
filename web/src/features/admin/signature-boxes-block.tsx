@@ -51,7 +51,7 @@ export function SignatureBoxesBlock({ state }: { state: ConfigBlockState<BoxDraf
             {draft.length > 1 && (
               <button
                 type="button"
-                className="btn btn--ghost btn--sm cf-box__remove"
+                className="btn btn--danger-line btn--sm cf-box__remove"
                 aria-label={title ? t('config.signers.removeNamed', { n: i + 1, title }) : t('config.signers.removeN', { n: i + 1 })}
                 onClick={() => reshape((boxes) => boxes.filter((b) => b.id !== box.id))}
               >

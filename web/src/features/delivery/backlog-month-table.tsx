@@ -33,7 +33,7 @@ function Actions({ line, phone, onAction }: { line: BacklogLine; phone: boolean;
             <Icon name="history" size={18} />
           </button>
           {/* Chỉ một thao tác phụ: nút chữ thấy ngay, không giấu sau menu ⋯ một mục */}
-          <button type="button" className="btn btn--sm btn--ghost bl-cancel" aria-label={t('delivery.backlog.cancelOf', who)} onClick={() => onAction('cancel', line)}>
+          <button type="button" className="btn btn--sm btn--danger-line bl-cancel" aria-label={t('delivery.backlog.cancelOf', who)} onClick={() => onAction('cancel', line)}>
             {t('delivery.backlog.cancel')}
           </button>
         </>
@@ -76,7 +76,7 @@ function PersonRows({ person, phone, onAction }: { person: BacklogPerson; phone:
             <DeliveryAvatar name={name} />
             <b>{name}</b>
             <small>{person.department ?? t('delivery.noDepartment')}</small>
-            {isLeft(person) && <span className="tag tag--warn">{t('delivery.backlog.left')}</span>}
+            {isLeft(person) && <span className="tag tag--outline">{t('delivery.backlog.left')}</span>}
           </span>
         </th>
       </tr>

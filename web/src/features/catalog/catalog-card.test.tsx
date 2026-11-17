@@ -168,12 +168,12 @@ describe('Tải ảnh lên ở thẻ', () => {
 describe('Ngừng / Dùng lại ở thẻ', () => {
   const bodies = (f: ReturnType<typeof stub>) => patches(f).map((c) => JSON.parse(String((c[1] as RequestInit).body)) as unknown);
 
-  it('món đang dùng: nút "Tạm ngưng" trung tính (btn--quiet-danger, không btn--danger) cạnh "Sửa"; bấm → hỏi "Tạm ngưng Bút bi xanh?" → xác nhận → PATCH {active:false} → toast thường, không "Hoàn tác"', async () => {
+  it('món đang dùng: nút "Tạm ngưng" viền đỏ (btn--danger-line, không đỏ đặc) cạnh "Sửa"; bấm → hỏi "Tạm ngưng Bút bi xanh?" → xác nhận → PATCH {active:false} → toast thường, không "Hoàn tác"', async () => {
     const f = stub();
     const onEdit = renderCard(PEN);
     const stop = screen.getByRole('button', { name: 'Tạm ngưng Bút bi xanh' });
     expect(stop).toHaveTextContent('Tạm ngưng');
-    expect(stop).toHaveClass('btn--quiet-danger');
+    expect(stop).toHaveClass('btn--danger-line');
     expect(stop).not.toHaveClass('btn--danger');
     expect(screen.getByRole('button', { name: 'Sửa Bút bi xanh' }).nextElementSibling).toBe(stop);
     await userEvent.click(stop);
@@ -195,7 +195,7 @@ describe('Ngừng / Dùng lại ở thẻ', () => {
     expect(screen.getByRole('heading', { name: 'Bút bi xanh' }).className).not.toMatch(/paused|struck/);
     const back = screen.getByRole('button', { name: 'Dùng lại Bút bi xanh' });
     expect(back).toHaveTextContent('Dùng lại');
-    expect(back).not.toHaveClass('btn--quiet-danger');
+    expect(back).not.toHaveClass('btn--danger-line');
     await userEvent.click(back);
     let ask = await screen.findByRole('dialog', { name: 'Dùng lại Bút bi xanh?' });
     expect(within(ask).getByText('Nhân viên đặt được món này trở lại từ kỳ đang mở.')).toBeInTheDocument();

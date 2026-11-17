@@ -116,10 +116,11 @@
 /* Luật gốc chỉ ĐỌC biến: biến thể chỉ khai --btn-bg/-hover/-active/--btn-fg (+ --btn-sh*), không viết lại :hover/:active */
 [data-shell='admin'] .btn:hover:not(:disabled) { background: var(--btn-bg-hover, var(--c-surface-hover)); box-shadow: var(--btn-sh-hover, inset 0 0 0 1px var(--c-line-strong)); }
 [data-shell='admin'] .btn:active:not(:disabled) { transform: scale(0.97); background: var(--btn-bg-active, var(--c-surface-2)); color: var(--btn-fg-active, var(--btn-fg, var(--c-ink))); box-shadow: var(--btn-sh-active, var(--btn-sh-hover, inset 0 0 0 1px var(--c-line-strong))); }
-[data-shell='admin'] .btn--primary { --btn-bg: var(--c-acc); --btn-bg-hover: var(--c-acc-hover); --btn-bg-active: var(--c-acc-press); --btn-fg: var(--c-on-acc); --btn-sh: var(--e-acc); --btn-sh-hover: var(--e-acc); --btn-sh-active: none; }
+[data-shell='admin'] .btn--primary { --btn-bg: var(--c-acc); --btn-bg-hover: var(--c-acc-hover); --btn-bg-active: var(--c-acc-press); --btn-fg: var(--c-on-acc); --btn-sh: none; --btn-sh-hover: none; --btn-sh-active: none; }
 [data-shell='admin'] .btn--ghost { --btn-bg: transparent; --btn-bg-hover: var(--c-surface-2); --btn-bg-active: var(--c-surface-sunk); --btn-fg: var(--c-ink-2); --btn-sh: none; --btn-sh-hover: none; }
-[data-shell='admin'] .btn--danger,
-[data-shell='admin'] .btn--danger-ghost { --btn-bg: var(--c-danger-soft); --btn-bg-hover: var(--c-danger-hover); --btn-bg-active: var(--c-danger-press); --btn-fg: var(--c-danger); --btn-fg-active: var(--c-danger-ink-press); --btn-sh: none; --btn-sh-hover: inset 0 0 0 1px var(--c-danger); }
+[data-shell='admin'] .btn--danger { --btn-bg: var(--c-danger-soft); --btn-bg-hover: var(--c-danger-hover); --btn-bg-active: var(--c-danger-press); --btn-fg: var(--c-danger); --btn-fg-active: var(--c-danger-ink-press); --btn-sh: none; --btn-sh-hover: inset 0 0 0 1px var(--c-danger); }
+/* Nút nguy hiểm trong hàng / chân ngăn (TN-04): chữ đỏ, viền đỏ nhạt; đỏ đặc chỉ ở nút xác nhận cuối trong hộp */
+[data-shell='admin'] .btn--danger-line { --btn-bg: var(--c-surface); --btn-bg-hover: var(--c-danger-soft); --btn-bg-active: var(--c-danger-hover); --btn-fg: var(--c-danger); --btn-fg-active: var(--c-danger-ink-press); --btn-sh: inset 0 0 0 1px var(--c-danger-line); --btn-sh-hover: inset 0 0 0 1px var(--c-danger); }
 [data-shell='admin'] .btn--danger.btn--solid { --btn-bg: var(--c-danger); --btn-bg-hover: var(--c-danger-solid-hover); --btn-bg-active: var(--c-danger-solid-press); --btn-fg: var(--c-on-dark); --btn-fg-active: var(--c-on-dark); --btn-sh: none; --btn-sh-hover: none; }
 [data-shell='admin'] .btn--dark { --btn-bg: var(--c-dark); --btn-bg-hover: var(--c-ink-2); --btn-bg-active: var(--c-dark-press); --btn-fg: var(--c-on-dark); --btn-sh: none; --btn-sh-hover: none; }
 [data-shell='admin'] .btn--sm { height: 36px; padding: 0 16px; font-size: 13px; }
@@ -132,7 +133,7 @@
 /* Vô hiệu bằng màu riêng, không opacity: chữ/nền ≥ 3:1 dù nút nằm trên nền nào */
 [data-shell='admin'] .btn:disabled { background: var(--btn-bg-disabled, var(--c-surface-2)); color: var(--btn-fg-disabled, var(--c-muted)); transform: none; box-shadow: none; cursor: not-allowed; }
 [data-shell='admin'] .icon-btn:disabled { color: var(--c-muted); background: transparent; cursor: not-allowed; }
-[data-shell='admin'] .icon-btn { width: 36px; height: 36px; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--c-ink-2); }
+[data-shell='admin'] .icon-btn { width: 36px; height: 36px; border: 0; border-radius: var(--r-sm); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-ink-2); }
 [data-shell='admin'] .icon-btn:hover:not(:disabled) { background: var(--c-acc-soft); color: var(--c-acc); }
 [data-shell='admin'] .icon-btn:focus-visible { box-shadow: var(--focus); }
 /* Vùng chạm 44 ở điện thoại là kích thước thật của nút (pseudo-element không được tính khi chạm cạnh và khi đo) */
@@ -145,11 +146,13 @@
 }
 
 [data-shell='admin'] .tag { display: inline-flex; align-items: center; gap: var(--s-1); height: 22px; padding: 0 8px; border-radius: var(--r-pill); background: var(--c-surface-2); color: var(--c-ink-2); font: var(--t-micro); white-space: nowrap; }
-[data-shell='admin'] .tag--ok { background: var(--c-ok-soft); color: var(--c-ok); }
-[data-shell='admin'] .tag--warn { background: var(--c-warn-soft); color: var(--c-warn); }
-[data-shell='admin'] .tag--danger { background: var(--c-danger-soft); color: var(--c-danger); }
-[data-shell='admin'] .tag--info { background: var(--c-info-soft); color: var(--c-info); }
-[data-shell='admin'] .tag--brand { background: var(--c-acc-soft); color: var(--c-acc); }
+[data-shell='admin'] .tag--ok { background: var(--c-ok-soft); color: var(--c-ok); box-shadow: inset 0 0 0 1px var(--c-ok-line); }
+[data-shell='admin'] .tag--warn { background: var(--c-warn-soft); color: var(--c-warn); box-shadow: inset 0 0 0 1px var(--c-warn-line); }
+[data-shell='admin'] .tag--danger { background: var(--c-danger-soft); color: var(--c-danger); box-shadow: inset 0 0 0 1px var(--c-danger-line); }
+[data-shell='admin'] .tag--info { background: var(--c-info-soft); color: var(--c-info); box-shadow: inset 0 0 0 1px var(--c-info-line); }
+[data-shell='admin'] .tag--brand { background: var(--c-acc-soft); color: var(--c-acc-ink); box-shadow: inset 0 0 0 1px var(--c-acc-line); }
+/* Nhãn trạng thái có chấm 6px màu chữ (TC-09); nhãn nhóm --g* không có chấm */
+[data-shell='admin'] .tag--dot::before, [data-shell='admin'] .tag--ok::before, [data-shell='admin'] .tag--warn::before, [data-shell='admin'] .tag--danger::before, [data-shell='admin'] .tag--info::before, [data-shell='admin'] .tag--brand::before { content: ''; flex: none; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 [data-shell='admin'] .tag--dark { background: var(--c-dark); color: var(--c-on-dark); }
 [data-shell='admin'] .tag--out { background: var(--c-danger-soft); color: var(--c-danger); }
 [data-shell='admin'] .tag--sm { height: 18px; padding: 0 var(--s-2); font: var(--t-tag-sm); }

@@ -23,7 +23,7 @@
   /* nút: nền hover/nhấn của biến thể; đỏ nhạt cách nhau ≥ 1.15, chữ lúc nhấn đậm hơn để giữ ≥ 4.5 */
   --c-danger-hover: #FDDCD8;  --c-danger-press: #FBC2BB;  --c-danger-ink-press: #912018;  --c-danger-solid-hover: #912018;  --c-danger-solid-press: #7A271A;
   --c-dark-press: #0A1530;  --c-cta-hover: #DBE6FE;  --c-cta-press: #BFD2FD;
-  --c-info: #0E7490;   --c-info-soft: #ECFEFF;
+  --c-info: #0E7490;   --c-info-soft: #ECFEFF;  --c-info-line: #A5E8F2;
   --c-dot: #D92D20;   /* chấm chưa đọc trên chuông */
   /* tờ in (bản in A4): đen trắng tuyệt đối */
   --c-print-ink: #000000;  --c-print-paper: #FFFFFF;  --c-print-muted: #333333;

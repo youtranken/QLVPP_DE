@@ -14,8 +14,8 @@ a { color: var(--brand-ink); }
 .btn--primary { background: var(--brand-deep); border-color: var(--brand-deep); color: #fff; }
 .btn--primary:hover { background: var(--brand-ink); }
 .btn--danger { background: var(--danger); border-color: var(--danger); color: #fff; }
-.btn--danger-ghost { color: var(--danger); border-color: var(--danger-soft); }
-.btn--danger-ghost:hover { background: var(--danger-soft); }
+.btn--danger-line { color: var(--danger); border-color: var(--c-danger-line); }
+.btn--danger-line:hover { background: var(--danger-soft); }
 .btn--sm { height: 32px; padding: 0 12px; font-size: 13px; }
 .btn--lg { height: 48px; font-size: 15px; }
 .btn--xl { height: 52px; font-size: 16px; font-weight: 800; white-space: normal; text-align: center; line-height: 1.25; }

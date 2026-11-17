@@ -183,11 +183,11 @@ describe('Trang Nhóm món', () => {
     expect(within(rowOf('Giấy & sổ')).queryByText('Tạm ngưng', { selector: '.tag' })).toBeNull();
   });
 
-  it('nhóm đang dùng: "Sửa" và "Tạm ngưng" (btn--quiet-danger) trực tiếp trên dòng, không menu ⋯', async () => {
+  it('nhóm đang dùng: "Sửa" và "Tạm ngưng" (btn--danger-line) trực tiếp trên dòng, không menu ⋯', async () => {
     await open();
     const row = within(rowOf('Bút & viết'));
     expect(row.getByRole('button', { name: 'Sửa nhóm Bút & viết' })).toHaveClass('btn');
-    expect(row.getByRole('button', { name: 'Tạm ngưng nhóm Bút & viết' })).toHaveClass('btn--quiet-danger');
+    expect(row.getByRole('button', { name: 'Tạm ngưng nhóm Bút & viết' })).toHaveClass('btn--danger-line');
     expect(screen.queryByRole('button', { name: /^Thao tác cho / })).toBeNull();
     expect(screen.queryByRole('menu')).toBeNull();
   });

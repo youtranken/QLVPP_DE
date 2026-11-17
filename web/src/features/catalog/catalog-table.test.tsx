@@ -96,10 +96,10 @@ describe('Sản phẩm bảng — nút Tạm ngưng / Dùng lại (Nhóm 1 · m�
     expect(screen.getByRole('button', { name: 'Thêm món vào nhóm Bút & viết' })).toBeInTheDocument();
   });
 
-  it('"Tạm ngưng Bút bi xanh" là nút trung tính btn--quiet-danger; bấm → hỏi "Tạm ngưng Bút bi xanh?" → xác nhận → PATCH {active:false} → toast thường, không "Hoàn tác"', async () => {
+  it('"Tạm ngưng Bút bi xanh" là nút viền đỏ btn--danger-line; bấm → hỏi "Tạm ngưng Bút bi xanh?" → xác nhận → PATCH {active:false} → toast thường, không "Hoàn tác"', async () => {
     const f = await openCatalog({ items: ITEMS });
     const stop = inRow('Bút bi xanh').getByRole('button', { name: 'Tạm ngưng Bút bi xanh' });
-    expect(stop).toHaveClass('btn--quiet-danger');
+    expect(stop).toHaveClass('btn--danger-line');
     await userEvent.click(stop);
     await confirmIn('Tạm ngưng Bút bi xanh?', 'Tạm ngưng');
     expect(await screen.findByText('Đã tạm ngưng Bút bi xanh')).toBeInTheDocument();
