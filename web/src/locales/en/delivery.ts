@@ -180,6 +180,7 @@ const delivery: Messages<typeof vi> = {
       pickAll: 'Select all',
       pickAllNone: 'Nobody can be delivered right now — the cabinet has no stock or everything is delivered',
       pickNoStock: 'Can’t deliver yet — no stock in the cabinet for this request',
+      pickLeft: 'Left the company — deliver one by one when someone receives on their behalf',
       pickDone: 'Already delivered',
       title_one: 'Deliver {{count}} request?',
       title_other: 'Deliver {{count}} requests?',

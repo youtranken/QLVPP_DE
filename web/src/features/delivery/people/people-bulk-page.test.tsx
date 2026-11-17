@@ -51,6 +51,17 @@ describe('DeliveryPeoplePage — bảng và giao nhiều phiếu', () => {
     expect(row).toHaveAttribute('title', 'Chưa giao được — tủ chưa có hàng cho phiếu này');
   });
 
+  it('người đã nghỉ, tủ đủ: ô chọn khóa với lý do người đã nghỉ (không phải "tủ chưa có hàng"), lý do đọc được qua aria-describedby', async () => {
+    const left = person({ user_status: 'left', lines: [pLine({ stock_qty: 20 })] });
+    stub({ people: [left] });
+    open();
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
+    const row = screen.getByRole('checkbox', { name: 'Chọn Nguyễn Văn An' });
+    expect(row).toBeDisabled();
+    expect(row).toHaveAccessibleDescription('Người đã nghỉ — giao từng người khi có người nhận thay');
+    expect(row.getAttribute('title') ?? '').not.toContain('tủ chưa có hàng');
+  });
+
   it('bảng kẻ ô (G4): ☐ · Người · Tiến độ giao · Tủ · Còn nợ · Thao tác; mỗi dòng có Giao… và ⋯; tab Chưa nhận 2 · Còn nợ 2 · Đã nhận 1 · Tất cả 4', async () => {
     stub();
     open();

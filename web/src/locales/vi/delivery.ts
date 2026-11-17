@@ -178,6 +178,7 @@ const delivery = {
       pickAll: 'Chọn tất cả',
       pickAllNone: 'Chưa có người nào giao được ngay — tủ chưa có hàng hoặc đã giao xong',
       pickNoStock: 'Chưa giao được — tủ chưa có hàng cho phiếu này',
+      pickLeft: 'Người đã nghỉ — giao từng người khi có người nhận thay',
       pickDone: 'Đã giao xong',
       title_one: 'Giao {{count}} phiếu?',
       title_other: 'Giao {{count}} phiếu?',

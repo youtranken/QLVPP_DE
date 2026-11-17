@@ -109,6 +109,10 @@ function PickHeader() {
   );
 }
 
+// Người đã nghỉ không được chia hàng ưu tiên (gợi ý 0) nên không vào giao nhiều phiếu — nói đúng lý do đó, không phải "tủ chưa có hàng"
+const pickBlockedKey = (p: DeliveryPerson) =>
+  p.status === 'done' ? 'delivery.bulk.pickDone' : p.user_status !== 'active' ? 'delivery.bulk.pickLeft' : 'delivery.bulk.pickNoStock';
+
 function PickCell({ person }: { person: DeliveryPerson }) {
   const { t } = useTranslation();
   const { selected, selectable, onToggle } = useCtx();
@@ -117,7 +121,7 @@ function PickCell({ person }: { person: DeliveryPerson }) {
       id={pickId(person)}
       checked={selected.has(person.user_sub)}
       disabled={!selectable(person)}
-      title={selectable(person) ? undefined : t(person.status === 'done' ? 'delivery.bulk.pickDone' : 'delivery.bulk.pickNoStock')}
+      title={selectable(person) ? undefined : t(pickBlockedKey(person))}
       label={t('delivery.bulk.pick', { name: nameOf(person) })}
       onChange={() => onToggle(person.user_sub)}
     />
