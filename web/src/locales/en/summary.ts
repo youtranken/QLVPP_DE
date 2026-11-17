@@ -32,6 +32,7 @@ const summary: Messages<typeof vi> = {
       prev: 'Previous person',
       next: 'Next person',
       customStatus: { pending: 'Off-catalog · awaiting review', accepted: 'Off-catalog · accepted' },
+      review: { toCatalog: 'Also add to the catalog', accept: 'Accept', acceptFor: 'Accept {{name}}', reject: 'Reject', rejectFor: 'Reject {{name}}' },
       lines: 'Lines in the order',
     },
     table: {

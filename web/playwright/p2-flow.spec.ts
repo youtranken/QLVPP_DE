@@ -51,18 +51,15 @@ async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom
   await snap(page, info, 'member-a-saved');
 }
 
-async function openDrawer(admin: Page, person: Person) {
-  await admin.getByRole('row').filter({ hasText: person.name }).getByRole('button', { name: /^Điều chỉnh phiếu của/ }).click();
-  const drawer = admin.getByRole('dialog', { name: `Điều chỉnh phiếu ${person.name}` });
-  await expect(drawer.getByText('Đã khóa', { exact: true })).toBeVisible();
-  return drawer;
-}
-
-// Kỳ khóa Hành chính: thêm món ngoài DM vào danh mục (áp dụng ngay), rồi bấm X bỏ món y (lý do tự là "removed") và Lưu
+// Kỳ khóa: G8 duyệt món ngoài DM trong Xem phiếu (tick "Thêm luôn vào danh mục" → món mới), G2 từ chối dòng y bằng hộp Điều chỉnh
 async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person, custom: string, dropped: string) {
   await searchMonthPeople(admin, tag);
-  const drawer = await openDrawer(admin, a);
-  await drawer.getByRole('group', { name: `Xử lý ${custom}` }).getByRole('button', { name: `Thêm vào danh mục — ${custom}` }).click();
+  const row = admin.getByRole('row').filter({ hasText: a.name });
+  await row.getByRole('button', { name: `Xem phiếu của ${a.name}` }).click();
+  const view = admin.getByRole('dialog', { name: `Phiếu của ${a.name}` });
+  const line = view.getByRole('listitem').filter({ hasText: custom });
+  await line.getByRole('checkbox', { name: 'Thêm luôn vào danh mục' }).check();
+  await line.getByRole('button', { name: `Chấp nhận ${custom}` }).click();
   const convert = admin.getByRole('dialog', { name: 'Sản phẩm mới' });
   await convert.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio').first().click();
   // Dòng Món khác không có ảnh → món mới phải có ảnh mới chọn ở đây
@@ -70,14 +67,18 @@ async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person,
   await expect(convert.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
   await convert.getByRole('button', { name: 'Mua và thêm vào danh mục', exact: true }).click();
   await expect(convert).toBeHidden();
-  await expect(drawer.getByText('Đã thêm vào danh mục')).toBeVisible();
+  await expect(line.getByRole('button', { name: `Chấp nhận ${custom}` })).toHaveCount(0);
   await snap(admin, info, 'admin-converted');
-  await drawer.getByRole('button', { name: `Bỏ ${dropped} khỏi phiếu` }).click();
-  // Bỏ cả dòng: không hỏi lý do, chỉ "Sẽ bỏ khỏi phiếu" + "Giữ lại"
-  await expect(drawer.getByRole('listitem').filter({ hasText: dropped }).getByRole('radiogroup')).toHaveCount(0);
+  await view.getByRole('button', { name: 'Đóng' }).last().click();
+
+  await row.getByRole('button', { name: /^Điều chỉnh phiếu của/ }).click();
+  const adjust = admin.getByRole('dialog', { name: `Điều chỉnh phiếu ${a.name}` });
+  await adjust.getByRole('checkbox', { name: `Chọn ${dropped}` }).check();
+  await adjust.getByRole('radiogroup', { name: `Cách điều chỉnh ${dropped}` }).getByRole('radio', { name: 'Từ chối' }).check();
+  await adjust.getByRole('radiogroup', { name: 'Lý do' }).getByRole('radio', { name: 'Hết hàng' }).check();
   await snap(admin, info, 'admin-adjust');
-  await drawer.getByRole('button', { name: 'Lưu điều chỉnh' }).click();
-  await expect(drawer).toBeHidden();
+  await adjust.getByRole('button', { name: 'Lưu 1 thay đổi' }).click();
+  await expect(adjust).toBeHidden();
 }
 
 async function summaryKpi(request: APIRequestContext, ym: string) {
@@ -136,7 +137,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       await page.goto(`/history/${LOCKED_YM}`);
       await expect(page.getByRole('row').filter({ hasText: x.name })).toBeVisible();
       // R-D6.11: dòng bị bỏ vẫn hiện ở Lịch sử kèm lý do của Hành chính
-      await expect(page.getByRole('row').filter({ hasText: y.name }).getByText('Adm D&E bỏ món · Adm D&E bỏ khỏi phiếu')).toBeVisible();
+      await expect(page.getByRole('row').filter({ hasText: y.name }).getByText('Adm D&E bỏ món · Hết hàng')).toBeVisible();
       await expect(page.getByRole('row').filter({ hasText: custom }).getByText('Đã thêm vào danh mục')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'member-a-after');

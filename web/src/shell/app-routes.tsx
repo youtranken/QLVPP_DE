@@ -19,7 +19,7 @@ const HistoryPage = memberChunk.page('HistoryPage');
 const HistoryDetailPage = memberChunk.page('HistoryDetailPage');
 const ProfilePage = memberChunk.page('ProfilePage');
 const MonthPage = adminChunk.page('MonthPage');
-const ReviewPage = adminChunk.page('ReviewPage');
+const ReviewRedirect = adminChunk.page('ReviewRedirect');
 const ArrivalsPage = adminChunk.page('ArrivalsPage');
 const DeliveryPeoplePage = adminChunk.page('DeliveryPeoplePage');
 const DeliveryClassicRedirect = adminChunk.page('DeliveryClassicRedirect');
@@ -106,7 +106,7 @@ export function AppRoutes() {
         <Route path="month" element={<MonthPage />} />
         <Route path="home" element={<RedirectKeepSearch to="/admin/month" />} />
         <Route path="summary" element={<RedirectKeepSearch to="/admin/month" />} />
-        <Route path="review" element={<ReviewPage />} />
+        <Route path="review" element={<ReviewRedirect />} />
         <Route path="arrivals" element={<ArrivalsPage />} />
         <Route path="send-adm" element={<RedirectKeepSearch to="/admin/reports" />} />
         <Route path="delivery" element={<DeliveryPeoplePage />} />

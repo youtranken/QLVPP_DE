@@ -12,6 +12,7 @@ import { usePeriodSummary, type AdjustReason, type PersonRow } from '@/features/
 import { usePersonTableRows } from '@/features/summary/use-person-table-rows';
 import { MonthChips } from './month-chips-bar';
 import { matchesChip, type MonthChip } from './month-chips';
+import { keepViewing } from './keep-viewing';
 import { MonthLeftReminder } from './month-left-reminder';
 import { MonthPeopleTable } from './month-people-table';
 import { MonthStrip } from './month-strip';
@@ -44,6 +45,7 @@ export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChi
   const visible = useMemo(() => shown.rows.filter((r) => matchesChip(r, chip) && (!left || r.user_status !== 'active')), [shown.rows, chip, left]);
   const open = useCallback((r: PersonRow) => setViewing(r.request_id), []);
   const panel = usePanelParam('request', { order: useMemo(() => visible.map((r) => r.request_id), [visible]) });
+  const viewRows = useMemo(() => keepViewing(visible, shown.rows, viewing), [visible, shown.rows, viewing]);
 
   const failed = [summary, all.query, send.query, plan].find((x) => 'isError' in x && x.isError);
   if (failed) return <LoadError onRetry={() => void failed.refetch()} />;
@@ -64,7 +66,7 @@ export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChi
     },
     t,
   );
-  const index = visible.findIndex((r) => r.request_id === viewing);
+  const index = viewRows.findIndex((r) => r.request_id === viewing);
   return (
     <>
       <MonthStrip steps={steps} />
@@ -87,7 +89,7 @@ export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChi
           }}
         />
       )}
-      {index >= 0 && <RegistrationDialog ym={ym} deadline={null} rows={visible} index={index} onIndex={(i) => setViewing(visible[i]!.request_id)} onClose={() => setViewing(null)} />}
+      {index >= 0 && <RegistrationDialog ym={ym} deadline={null} rows={viewRows} index={index} onIndex={(i) => setViewing(viewRows[i]!.request_id)} onClose={() => setViewing(null)} />}
       {panel.id && <AdjustDialog requestId={panel.id} presetReason={presetReason} onClose={panel.close} nav={{ index: panel.index, total: panel.total, onStep: panel.step }} />}
     </>
   );

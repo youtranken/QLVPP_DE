@@ -85,6 +85,17 @@ describe('MonthPage: kỳ khóa', () => {
     expect(calledUrls(f).filter((u) => u.includes('/requests?') && u.includes('chip')).length).toBe(0);
   });
 
+  it('G8: chip "Có món chờ duyệt 1" chỉ còn người có món ngoài DM chờ duyệt; ?pending=1 (link cũ) chọn sẵn chip đó', async () => {
+    stubMonthApi();
+    open('/admin/month?ym=2026-10&pending=1');
+    const t = await table();
+    expect(screen.getByRole('radio', { name: /^Có món chờ duyệt/ })).toBeChecked();
+    expect(screen.getByRole('radio', { name: /^Có món chờ duyệt/ })).toHaveTextContent('1');
+    await waitFor(() => expect(t.queryByText('Nhân viên A')).toBeNull());
+    expect(t.getByText('Nguyễn Văn An')).toBeInTheDocument();
+    expect(search()).toContain('chip=pending');
+  });
+
   it('số trên chip đếm đúng: Tất cả 5, Có ghi chú 4, Chưa giao xong 3', async () => {
     stubMonthApi();
     open();
@@ -227,7 +238,7 @@ describe('MonthPage: chuyển kỳ', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 9' })).toBeInTheDocument();
     await waitFor(() => expect(steps()[2]).toBe('Nhận hàng19/21 món'));
     expect(steps()[3]).toBe('Giao—');
-    expect(chips()).toEqual(['Tất cả—', 'Có ghi chú—', 'Chưa giao xong—']);
+    expect(chips()).toEqual(['Tất cả—', 'Có ghi chú—', 'Chưa giao xong—', 'Có món chờ duyệt—']);
     expect(screen.queryByText('Nhân viên A')).toBeNull();
   });
 

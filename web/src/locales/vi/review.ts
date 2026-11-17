@@ -73,10 +73,10 @@ const review = {
       ok: 'Mua lần này',
     },
     reject: {
-      title: 'Không mua “{{name}}”',
+      title: 'Từ chối “{{name}}”',
       reason: 'Lý do từ chối',
       hint: 'Ít nhất 3 ký tự. Viết cho người đăng ký đọc.',
-      submit: 'Không mua',
+      submit: 'Từ chối',
     },
     convert: {
       title: 'Sản phẩm mới',

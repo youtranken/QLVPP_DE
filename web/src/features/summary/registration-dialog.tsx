@@ -7,6 +7,7 @@ import { ItemThumb } from '@/ui/item-thumb';
 import { Loading, LoadError } from '@/ui/load-state';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import type { LineView } from '@/features/request/request.api';
+import { ReviewBlock } from './review-block';
 import { useRegistration, type RegistrationRow } from './summary.api';
 
 export type RegistrationTarget = Pick<RegistrationRow, 'request_id' | 'user_sub' | 'full_name' | 'email'> & { saved_at?: string };
@@ -21,7 +22,8 @@ interface Props {
   onClose: () => void;
 }
 
-function Line({ line }: { line: LineView }) {
+// review: kỳ đã khóa thì dòng chờ duyệt có khối duyệt (server chỉ duyệt khi kỳ khóa)
+function Line({ line, review }: { line: LineView; review?: { updatedAt: string; onDone: () => void } }) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
   const paused = line.item?.active === false;
@@ -36,6 +38,7 @@ function Line({ line }: { line: LineView }) {
         {!line.item && <small className="rg-line__custom">{t(line.review_status === 'accepted' ? 'summary.open.customStatus.accepted' : 'summary.open.customStatus.pending')}</small>}
       </span>
       <b className="num">{`${line.qty} ${unit}`}</b>
+      {review && line.review_status === 'pending' && <ReviewBlock line={line} requestUpdatedAt={review.updatedAt} onDone={review.onDone} />}
     </li>
   );
 }
@@ -95,7 +98,7 @@ export function RegistrationDialog({ ym, deadline, rows, index, onIndex, onClose
       ) : (
         <ul className="rg-lines" aria-label={t('summary.open.lines')}>
           {lines.map((l) => (
-            <Line key={l.id} line={l} />
+            <Line key={l.id} line={l} review={!deadline && view.data ? { updatedAt: view.data.updated_at, onDone: () => void view.refetch() } : undefined} />
           ))}
         </ul>
       )}

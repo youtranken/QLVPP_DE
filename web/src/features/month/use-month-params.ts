@@ -40,7 +40,9 @@ export function useMonthParams(openYm: string | undefined, defaultYm: string | u
   // ?left=1 từ nhắc người đã nghỉ: chỉ liệt kê người đã nghỉ; phiếu của họ chọn sẵn lý do "Người đã nghỉ"
   const left = params.get('left') === '1' || legacy === 'left';
   const rawChip = params.get('chip');
-  const chip: MonthChip = isChip(rawChip) ? rawChip : ((legacy && LEGACY_FILTER[legacy]) || (left ? 'undelivered' : 'all'));
+  // ?pending=1: link cũ của trang Món ngoài danh mục (G8) → chip "Có món chờ duyệt"
+  const pendingLink = params.get('pending') === '1';
+  const chip: MonthChip = isChip(rawChip) ? rawChip : pendingLink ? 'pending' : ((legacy && LEGACY_FILTER[legacy]) || (left ? 'undelivered' : 'all'));
   const hasView = params.has('view');
   const hasItem = params.has('item');
 
@@ -49,6 +51,10 @@ export function useMonthParams(openYm: string | undefined, defaultYm: string | u
     if (openYm && ym && asked !== ym) patch.ym = ym;
     if (hasView) patch.view = null;
     if (hasItem) patch.item = null;
+    if (params.has('pending')) {
+      patch.pending = null;
+      if (pendingLink && !isChip(rawChip)) patch.chip = 'pending';
+    }
     if (legacy !== null) {
       patch.filter = null;
       const mapped = LEGACY_FILTER[legacy];
@@ -56,7 +62,7 @@ export function useMonthParams(openYm: string | undefined, defaultYm: string | u
       if (legacy === 'left') patch.left = '1';
     }
     if (Object.keys(patch).length) update(patch, true);
-  }, [openYm, ym, asked, legacy, rawChip, hasView, hasItem, update]);
+  }, [openYm, ym, asked, legacy, rawChip, hasView, hasItem, params, pendingLink, update]);
 
   return {
     ym,

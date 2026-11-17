@@ -10,7 +10,7 @@ import { MonthChips } from '@/features/month/month-chips-bar';
 import { GroupChips } from './group-chips';
 import { fadeEdges } from './use-scroll-fade';
 
-// Rà soát 13/11 Gu #11: hàng chip/tab cuộn ngang ở 360/390 (Kỳ tháng, Nhận hàng, Tủ/Kho, Món ngoài danh mục,
+// Rà soát 13/11 Gu #11: hàng chip/tab cuộn ngang ở 360/390 (Kỳ tháng, Nhận hàng, Tủ/Kho,
 // Sản phẩm, chip nhanh Nhật ký) cắt thẳng qua chữ, không có dấu còn mục khuất.
 
 const box = (scrollWidth: number, clientWidth: number, scrollLeft: number) => ({ scrollWidth, clientWidth, scrollLeft }) as HTMLElement;
@@ -72,10 +72,6 @@ describe('các hàng chip dùng chung mờ mép', () => {
     act(() => grow());
     expect(screen.getByRole('group')).toBe(row);
     await waitFor(() => expect(row).toHaveAttribute('data-fade', 'end'));
-  });
-
-  it('Món ngoài danh mục: hàng tab là ScrollFade', () => {
-    expect(readFileSync(resolve(process.cwd(), 'src/features/review/review-page.tsx'), 'utf8')).toMatch(/<ScrollFade className="toolbar rv-tabs">/);
   });
 });
 

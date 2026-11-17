@@ -32,6 +32,7 @@ const month = {
       all: 'Tất cả',
       noted: 'Có ghi chú',
       undelivered: 'Chưa giao xong',
+      pending: 'Có món chờ duyệt',
     },
     table: {
       team: 'Nhóm',

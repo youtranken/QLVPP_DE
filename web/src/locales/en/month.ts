@@ -35,6 +35,7 @@ const month: Messages<typeof vi> = {
       all: 'All',
       noted: 'With notes',
       undelivered: 'Not fully delivered',
+      pending: 'Items awaiting review',
     },
     table: {
       team: 'Team',

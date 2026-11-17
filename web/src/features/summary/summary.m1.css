@@ -84,3 +84,12 @@
 [data-shell='admin'] .rg-line__custom { font: var(--t-cap); color: var(--c-warn); }
 [data-shell='admin'] .sm-group-meta { margin-left: var(--s-3); color: var(--c-muted); font: var(--t-sm); font-weight: 600; }
 [data-shell='admin'] .rg-saved { display: block; margin-bottom: var(--s-3); color: var(--c-ink-2); font: var(--t-cap); }
+[data-shell='admin'] .rg-review { grid-column: 2 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); }
+[data-shell='admin'] .rg-review__catalog { display: flex; align-items: center; gap: var(--s-2); min-height: var(--ctl-h, 40px); font: var(--t-sm); cursor: pointer; }
+[data-shell='admin'] .rg-review__catalog input { width: 18px; height: 18px; }
+[data-shell='admin'] .rg-review__actions { display: flex; gap: var(--s-2); margin-left: auto; }
+[data-shell='admin'] .rg-review .ff-error { flex-basis: 100%; margin: 0; }
+@media (max-width: 767px) {
+  [data-shell='admin'] .rg-review { grid-column: 1 / -1; }
+  [data-shell='admin'] .rg-review__actions { margin-left: 0; }
+}

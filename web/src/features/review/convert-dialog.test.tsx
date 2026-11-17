@@ -3,8 +3,11 @@ import { jsonResponse, renderWithI18n, screen, userEvent, waitFor, within, pickO
 import { makeMe } from '@/test/fixtures-me';
 import { MeContext } from '@/lib/me';
 import { ConfirmProvider } from '@/ui/confirm-provider';
+import { ToastProvider } from '@/ui/toast-provider';
 import type { AdminItem, Category } from '@/features/catalog/catalog.api';
-import { ReviewActions, type ReviewableLine } from './review-actions';
+import { lineView } from '@/test/fixtures-request';
+import { ReviewBlock } from '@/features/summary/review-block';
+import type { ReviewableLine } from './review.api';
 import { reviewResult } from './review-fixtures';
 
 const LINE: ReviewableLine = {
@@ -68,11 +71,14 @@ async function openConvert(line: ReviewableLine = LINE) {
   renderWithI18n(
     <MeContext.Provider value={makeMe('admin')}>
       <ConfirmProvider>
-        <ReviewActions line={line} onDone={onDone} />
+        <ToastProvider>
+        <ReviewBlock line={lineView({ ...line })} requestUpdatedAt="2026-11-05T03:00:00.000Z" onDone={onDone} />
+        </ToastProvider>
       </ConfirmProvider>
     </MeContext.Provider>,
   );
-  await userEvent.click(screen.getByRole('button', { name: `Mua và thêm vào danh mục — ${line.custom_name}` }));
+  await userEvent.click(screen.getByRole('checkbox', { name: 'Thêm luôn vào danh mục' }));
+  await userEvent.click(screen.getByRole('button', { name: `Chấp nhận ${line.custom_name}` }));
   const dialog = screen.getByRole('dialog', { name: 'Sản phẩm mới' });
   // Hộp đã tải xong khi ô Nhóm có lựa chọn
   await within(dialog).findAllByText(/Văn phòng/);
@@ -100,8 +106,8 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
     expect(sentBody(fetchMock)).toEqual({
       action: 'convert',
       item: { name: 'Băng keo 2 mặt', name_en: null, unit: 'cai', pack_note: null, category_id: 'c-1', max_qty: 20 },
+      expected_updated_at: '2026-11-05T03:00:00.000Z',
     });
-    expect(screen.getByText('Đã thêm vào danh mục')).toBeInTheDocument();
   });
 
   it('món mới chưa chọn nhóm → báo tại ô Nhóm, không gửi', async () => {

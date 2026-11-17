@@ -25,7 +25,7 @@ afterEach(() => {
 });
 
 describe('AdminSidebar: đếm', () => {
-  it('review trả 3 dòng → "Món ngoài danh mục" hiện 3; giao 6 người giao được ngay (1 người chưa nhận nhưng tủ trống không tính), Tủ/Kho 4 món thiếu cho người chờ kèm nhãn đọc màn hình', async () => {
+  it('review trả 3 dòng → "Kỳ tháng" hiện 3 (G8); giao 6 người giao được ngay (1 người chưa nhận nhưng tủ trống không tính), Tủ/Kho 4 món thiếu cho người chờ kèm nhãn đọc màn hình', async () => {
     mockViewport(1280);
     stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(200, rows(3)),
@@ -33,8 +33,8 @@ describe('AdminSidebar: đếm', () => {
       '/api/admin/stock': () => jsonResponse(200, Array.from({ length: 4 }, (_, i) => ({ item_id: `i${i}`, short: i + 1, stock_state: 'short' }))),
     });
     renderApp(makeMe('admin'), '/admin/catalog');
-    await waitFor(() => expect(navLink('Món ngoài danh mục')).toHaveTextContent('3'));
-    expect(navLink('Món ngoài danh mục')).toHaveAccessibleName('Món ngoài danh mục, 3 món chờ xem');
+    await waitFor(() => expect(navLink('Kỳ tháng')).toHaveTextContent('3'));
+    expect(navLink('Kỳ tháng')).toHaveAccessibleName('Kỳ tháng, 3 món ngoài danh mục chờ duyệt');
     await waitFor(() => expect(navLink('Giao hàng')).toHaveAccessibleName('Giao hàng, 6 người chưa nhận'));
     await waitFor(() => expect(navLink('Tủ / Kho')).toHaveAccessibleName('Tủ / Kho, 4 món thiếu cho người chờ'));
   });
@@ -51,12 +51,12 @@ describe('AdminSidebar: đếm', () => {
     renderApp(makeMe('admin'), '/admin/catalog');
     // Đếm giao hàng phụ thuộc kỳ hiện tại → khi nó hiện thì đếm review (độc lập) cũng đã về
     await waitFor(() => expect(navLink('Giao hàng')).toHaveTextContent('2'));
-    if (shown) expect(navLink('Món ngoài danh mục')).toHaveAccessibleName('Món ngoài danh mục, 1 món chờ xem');
-    else expect(navLink('Món ngoài danh mục')).toHaveAccessibleName('Món ngoài danh mục');
-    expect(navLink('Món ngoài danh mục')).toHaveTextContent(shown ? /1/ : /^Món ngoài danh mục$/);
+    if (shown) expect(navLink('Kỳ tháng')).toHaveAccessibleName('Kỳ tháng, 1 món ngoài danh mục chờ duyệt');
+    else expect(navLink('Kỳ tháng')).toHaveAccessibleName('Kỳ tháng');
+    expect(navLink('Kỳ tháng')).toHaveTextContent(shown ? /1/ : /^Kỳ tháng$/);
   });
 
-  it('lỗi tải đếm → không có số, sidebar vẫn đủ 13 mục', async () => {
+  it('lỗi tải đếm → không có số, sidebar vẫn đủ 12 mục', async () => {
     mockViewport(1280);
     const f = stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(500, null),
@@ -67,7 +67,7 @@ describe('AdminSidebar: đếm', () => {
     await waitFor(() => expect(f.mock.calls.some(([u]) => u === '/api/admin/periods/2026-10/delivery-people')).toBe(true));
     await new Promise((r) => setTimeout(r, 0));
     const links = within(sideNav()).getAllByRole('link');
-    expect(links).toHaveLength(13);
+    expect(links).toHaveLength(12);
     for (const a of links) expect(a.textContent).not.toMatch(/\d/);
   });
 });
@@ -82,7 +82,7 @@ describe('AdminSidebar: nhóm', () => {
     expect(groups.map((g) => g.getAttribute('aria-label'))).toEqual(['Hằng tháng', 'Danh mục và tủ', 'Quản lý']);
     expect(within(groups[0]).getByRole('link', { name: 'Còn nợ' })).toHaveAttribute('href', '/admin/backlog');
     expect(within(groups[0]).queryByRole('link', { name: 'Giao hàng (bản cũ)' })).toBeNull();
-    expect(within(groups[1]).getByRole('link', { name: /Món ngoài danh mục/ })).toBeInTheDocument();
+    expect(within(groups[1]).getByRole('link', { name: 'Xuất lẻ' })).toBeInTheDocument();
   });
 });
 
@@ -252,7 +252,7 @@ describe('AdminSidebar: tên đầy đủ khi nhãn bị cắt', () => {
     stubWidth(1440);
     stubShellApi({});
     renderApp(makeMe('admin'), '/admin/catalog');
-    const long = navLink('Món ngoài danh mục');
+    const long = navLink('Báo cáo & gửi NCC');
     const short = navLink('Danh mục');
     const label = (a: HTMLElement) => a.querySelector<HTMLElement>('.side__label')!;
     Object.defineProperty(label(long), 'scrollWidth', { configurable: true, value: 220 });
@@ -260,7 +260,7 @@ describe('AdminSidebar: tên đầy đủ khi nhãn bị cắt', () => {
     Object.defineProperty(label(short), 'scrollWidth', { configurable: true, value: 60 });
     Object.defineProperty(label(short), 'clientWidth', { configurable: true, value: 140 });
     await userEvent.hover(long);
-    expect(long).toHaveAttribute('title', 'Món ngoài danh mục');
+    expect(long).toHaveAttribute('title', 'Báo cáo & gửi NCC');
     await userEvent.hover(short);
     expect(short).not.toHaveAttribute('title');
   });
@@ -269,7 +269,7 @@ describe('AdminSidebar: tên đầy đủ khi nhãn bị cắt', () => {
     const subs = stubWidth(1440);
     stubShellApi({ '/api/admin/review?status=pending': () => jsonResponse(200, rows(3)) });
     renderApp(makeMe('admin'), '/admin/catalog');
-    await waitFor(() => expect(navLink('Món ngoài danh mục')).toHaveTextContent('3'));
+    await waitFor(() => expect(navLink('Kỳ tháng')).toHaveTextContent('3'));
     // AdminSidebar + khối người dùng cuối cột
     expect(subs.add).toBe(2);
     expect(subs.remove).toBe(0);
@@ -277,7 +277,7 @@ describe('AdminSidebar: tên đầy đủ khi nhãn bị cắt', () => {
 });
 
 describe('AdminSidebar: tên app (Q2)', () => {
-  it('đầu sidebar có logo + "QLVPP" (liên kết về trang đầu Adm D&E), nằm ngoài menu 13 mục', async () => {
+  it('đầu sidebar có logo + "QLVPP" (liên kết về trang đầu Adm D&E), nằm ngoài menu 12 mục', async () => {
     mockViewport(1280);
     stubShellApi({});
     renderApp(makeMe('admin'), '/admin/catalog');

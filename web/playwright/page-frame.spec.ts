@@ -4,7 +4,7 @@ import { devHeaders, isMobile, skipNewPeriodPopup } from './helpers';
 // Giao diện A (L4/L5): tiêu đề trang, dòng đếm, bảng đứng yên. Chỉ đọc — mọi request /api khác GET bị chặn.
 const ADMIN_ROUTES = [
   '/admin/month',
-  '/admin/review',
+  '/admin/issues',
   '/admin/arrivals',
   '/admin/delivery',
   '/admin/backlog',

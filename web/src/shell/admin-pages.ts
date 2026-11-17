@@ -1,6 +1,6 @@
 // Chunk "admin": mọi màn Hành chính nạp lười một lần (nhân viên không tải mã Báo cáo, Kho, Nhật ký…)
 export { MonthPage } from '@/features/month/month-page';
-export { ReviewPage } from '@/features/review/review-page';
+export { ReviewRedirect } from '@/shell/review-redirect';
 export { ArrivalsPage } from '@/features/arrivals/arrivals-page';
 export { DeliveryClassicRedirect, DeliveryPeoplePage } from '@/features/delivery/people/delivery-people-page';
 export { BacklogPage } from '@/features/delivery/backlog-page';

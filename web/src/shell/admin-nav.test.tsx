@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { screen, userEvent, within } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -56,4 +56,17 @@ describe('Menu theo luồng chuẩn', () => {
     expect(labels[labels.indexOf('Tủ / Kho') + 1]).toBe('Xuất lẻ');
     expect(within(group).getByRole('link', { name: 'Xuất lẻ' })).toHaveAttribute('href', '/admin/issues');
   });
+
+  it('G8: không còn mục "Món ngoài danh mục"; /admin/review chuyển về Kỳ tháng lọc "Có món chờ duyệt" ở kỳ cũ nhất còn món chờ', async () => {
+    mockViewport(1280);
+    stubShellApi({
+      '/api/admin/review?status=pending': () => jsonResponse(200, { items: [{ line_id: 'l1', period_ym: '2026-10' }, { line_id: 'l2', period_ym: '2026-09' }] }),
+    });
+    renderApp(makeMe('admin'), '/admin/review');
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/admin/month'));
+    expect(screen.getByTestId('location-search')).toHaveTextContent('ym=2026-09');
+    expect(screen.getByTestId('location-search')).toHaveTextContent('chip=pending');
+    expect(within(sideNav()).queryByRole('link', { name: /^Món ngoài danh mục/ })).toBeNull();
+  });
 });
+

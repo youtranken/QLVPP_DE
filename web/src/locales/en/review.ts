@@ -76,10 +76,10 @@ const review: Messages<typeof vi> = {
       ok: 'Buy this once',
     },
     reject: {
-      title: 'Do not buy “{{name}}”',
+      title: 'Reject “{{name}}”',
       reason: 'Reason',
       hint: 'At least 3 characters. Write it for the requester to read.',
-      submit: 'Do not buy',
+      submit: 'Reject',
     },
     convert: {
       title: 'New product',

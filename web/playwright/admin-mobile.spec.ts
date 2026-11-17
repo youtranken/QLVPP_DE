@@ -4,7 +4,7 @@ import { seedLockedRequest, type Seed } from './locked-request';
 
 const PAGES = [
   ['month', 'Kỳ tháng'],
-  ['review', 'Món ngoài danh mục'],
+  ['issues', 'Xuất lẻ'],
   ['delivery', 'Giao hàng'],
   ['backlog', 'Còn nợ'],
   ['reports', 'Báo cáo & gửi NCC'],
@@ -126,7 +126,7 @@ test.describe('E9-S7 Adm D&E 390 px (dev-identity admin)', () => {
     await expect(menu(page)).toBeVisible();
     await expectNoContrastViolations(page);
 
-    for (const [path, title] of [['month', 'Kỳ tháng'], ['review', 'Món ngoài danh mục'], ['delivery', 'Giao hàng'], ['backlog', 'Còn nợ'], ['categories', 'Danh mục'], ['categories/units', 'Danh mục']] as const) {
+    for (const [path, title] of [['month', 'Kỳ tháng'], ['issues', 'Xuất lẻ'], ['delivery', 'Giao hàng'], ['backlog', 'Còn nợ'], ['categories', 'Danh mục'], ['categories/units', 'Danh mục']] as const) {
       await openPage(page, path, title);
       await expectTouchTargets(page, title);
     }

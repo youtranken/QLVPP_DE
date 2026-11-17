@@ -29,6 +29,7 @@ const summary = {
       prev: 'Người trước',
       next: 'Người sau',
       customStatus: { pending: 'Ngoài danh mục · chờ duyệt', accepted: 'Ngoài danh mục · đã chấp nhận' },
+      review: { toCatalog: 'Thêm luôn vào danh mục', accept: 'Chấp nhận', acceptFor: 'Chấp nhận {{name}}', reject: 'Từ chối', rejectFor: 'Từ chối {{name}}' },
       lines: 'Các dòng trong phiếu',
     },
     table: {

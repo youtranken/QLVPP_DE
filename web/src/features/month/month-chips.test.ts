@@ -43,7 +43,7 @@ describe('chipOf: Chưa giao xong', () => {
 describe('chipCounts và matchesChip', () => {
   const rows = [row({ over_max: true }), row({ delivered_qty: 10 }), row({ total_qty: 0 }), row()];
   it('đếm Tất cả / Có ghi chú / Chưa giao xong', () => {
-    expect(chipCounts(rows)).toEqual({ all: 4, noted: 2, undelivered: 2 });
+    expect(chipCounts(rows)).toEqual({ all: 4, noted: 2, undelivered: 2, pending: 0 });
   });
   it('matchesChip lọc đúng từng chip', () => {
     expect(rows.filter((r) => matchesChip(r, 'all'))).toHaveLength(4);
@@ -51,3 +51,11 @@ describe('chipCounts và matchesChip', () => {
     expect(rows.filter((r) => matchesChip(r, 'undelivered'))).toHaveLength(2);
   });
 });
+
+describe('chipOf: Có món chờ duyệt (G8)', () => {
+  it('custom_pending 0 → không; 1 → có', () => {
+    expect(chipOf(row({ custom_pending: 0 })).pending).toBe(false);
+    expect(chipOf(row({ custom_pending: 1 })).pending).toBe(true);
+  });
+});
+
