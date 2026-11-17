@@ -1,4 +1,5 @@
-[data-shell='admin'] .table-wrap { overflow-x: auto; border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); }
+/* position: relative giữ chữ ẩn sr-only (position: absolute) trong ô ở lại trong khung cuộn, không đẩy cả trang cuộn ngang */
+[data-shell='admin'] .table-wrap { position: relative; overflow-x: auto; border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); }
 [data-shell='admin'] .table-wrap:has(.dt-group) { overflow: clip; }
 [data-shell='admin'] .table { width: 100%; border-collapse: separate; border-spacing: 0; color: var(--c-ink); font: var(--t-sm); }
 [data-shell='admin'] .table th { position: sticky; top: 0; z-index: 2; height: 36px; padding: 0 12px; border-bottom: 1px solid var(--c-line); background: var(--c-surface); color: var(--c-muted); font: var(--t-cap); text-align: left; text-transform: none; white-space: nowrap; }
@@ -130,4 +131,6 @@
 @media (min-width: 768px) {
   [data-shell='admin'] :where(.table-wrap) .col-actions { position: sticky; right: 0; z-index: 1; background: var(--c-surface); box-shadow: inset 1px 0 0 var(--c-line); }
   [data-shell='admin'] :where(.table-wrap) th.col-actions { z-index: 3; }
+  /* Ô dính nào cũng là một lớp riêng: ô đang mở menu ⋯ phải nổi trên ô dính của dòng dưới và tiêu đề */
+  [data-shell='admin'] :where(.table-wrap) td.col-actions:has([aria-expanded='true']) { z-index: 4; }
 }

@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { devHeaders, isMobile, skipNewPeriodPopup } from './helpers';
 
 // L1: bảng vừa khung ở 768–1280 (sidebar mở), chữ không tràn ô, cột không nhảy khi lọc. Chỉ đọc.
-const ROUTES = ['/admin/month?ym=2026-11', '/admin/month?ym=2026-12', '/admin/delivery', '/admin/reports', '/admin/users', '/admin/audit', '/admin/catalog?view=table', '/admin/stock'];
+const ROUTES = ['/admin/month?ym=2026-11', '/admin/month?ym=2026-12', '/admin/delivery', '/admin/reports', '/admin/users', '/admin/audit', '/admin/catalog?view=table', '/admin/stock', '/admin/stock?tab=ledger', '/admin/issues'];
 
 async function as(page: Page) {
   await skipNewPeriodPopup(page);
@@ -64,7 +64,39 @@ test.describe('Bảng vừa khung', () => {
       for (const path of ROUTES) {
         await go(page, path);
         expect.soft(await fit(page), `${path} @${width}`).toEqual([]);
+        // cả trang không cuộn ngang (chữ ẩn sr-only trong ô không được thoát khỏi khung bảng)
+        const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+        expect.soft(over, `${path} @${width} trang cuộn ngang`).toBeLessThanOrEqual(0);
       }
+    });
+  }
+
+  for (const width of [1280, 1024]) {
+    test(`${width}: menu ⋯ của từng dòng Giao hàng nằm trên mọi dòng khác, bấm trúng mục`, async ({ page }, info) => {
+      test.skip(isMobile(info), 'đo ở desktop');
+      test.setTimeout(120_000);
+      await page.setViewportSize({ width, height: 900 });
+      await as(page);
+      await go(page, '/admin/delivery');
+      const triggers = page.getByRole('button', { name: /^Thao tác cho / });
+      const n = await triggers.count();
+      expect(n, 'cần dữ liệu Giao hàng có dòng').toBeGreaterThan(1);
+      const blocked: string[] = [];
+      for (let i = 0; i < n; i++) {
+        await triggers.nth(i).click();
+        const menu = page.getByRole('menu');
+        await expect(menu).toBeVisible();
+        const hit = await menu.evaluate((m) =>
+          [...m.querySelectorAll<HTMLElement>('[role=menuitem]')].every((it) => {
+            const r = it.getBoundingClientRect();
+            const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+            return !!el && it.contains(el);
+          }),
+        );
+        if (!hit) blocked.push((await triggers.nth(i).getAttribute('aria-label')) ?? String(i));
+        await page.keyboard.press('Escape');
+      }
+      expect(blocked).toEqual([]);
     });
   }
 
