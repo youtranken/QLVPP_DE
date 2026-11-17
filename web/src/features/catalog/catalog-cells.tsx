@@ -46,17 +46,17 @@ export function CodeCell({ code }: { code: string | null }) {
   );
 }
 
-// Cột đã có tiêu đề "Tồn kho": ô chỉ ghi số (chữ "Tủ:" chỉ cần ở thẻ lưới, nơi không có tiêu đề cột)
+// Cột đã có tiêu đề "Tủ": ô chỉ ghi số (chữ "Tủ:" chỉ cần ở thẻ lưới, nơi không có tiêu đề cột)
 // Trạng thái tủ lấy từ GET admin/stock — cùng luật "Sắp hết" với Tủ/Kho (server), web không tự tính
 export function StockCell({ row }: { row: CatalogRow }) {
   const { t } = useTranslation();
   const stock = useQuery(stockListQuery());
   const state = stock.data?.find((f) => f.item_id === row.id)?.stock_state;
   return (
-    <>
+    <span className="ct-stock-cell">
       <span className="ct-stock num">{row.stock_qty}</span>
       {state === 'low' && <span className="tag tag--warn tag--sm">{t('catalog.list.stockLow')}</span>}
       {state === 'none' && <span className="tag tag--danger tag--sm">{t('catalog.list.stockOut')}</span>}
-    </>
+    </span>
   );
 }

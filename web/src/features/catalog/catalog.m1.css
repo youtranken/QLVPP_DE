@@ -23,6 +23,8 @@
 [data-shell='admin'] .ct-item__name { font: var(--t-label); color: var(--c-ink); overflow-wrap: anywhere; }
 [data-shell='admin'] .ct-item__note { color: var(--c-muted); font: var(--t-sm); }
 [data-shell='admin'] .ct-item__error { color: var(--c-danger); font: var(--t-sm); font-weight: 600; }
+/* Cột Tủ hẹp (4.5rem): nhãn Sắp hết/Hết xuống dưới số để không tràn ô */
+[data-shell='admin'] .ct-stock-cell { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 [data-shell='admin'] .ct-stock { color: var(--c-muted); font: var(--t-sm); white-space: nowrap; }
 [data-shell='admin'] .ct-edit { width: 52px; }
 [data-shell='admin'] .ct-empty-actions { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: var(--s-2); }

@@ -89,7 +89,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await shotTo(page, info, 'confirm', 'task-C5');
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
       await expect(cart.getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
-      await expect(cart.getByText(/^Phiếu đã lưu\. Bấm Sửa phiếu để thêm, bớt\. Sửa được tới hết \d{2}\/\d{2}\.$/)).toBeVisible();
+      await expect(cart.getByText(/^Phiếu đã lưu\. Thêm, bớt ngay trên thẻ món hoặc bấm Sửa phiếu\. Sửa được tới hết \d{2}\/\d{2}\.$/)).toBeVisible();
       await expect(cart.getByRole('button', { name: 'Sửa phiếu' })).toBeVisible();
       await shotTo(page, info, 'after-save', 'task-C5');
     } finally {

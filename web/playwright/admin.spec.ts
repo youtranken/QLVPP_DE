@@ -71,8 +71,8 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
 
     const day = page.getByLabel('Hạn đăng ký (ngày)');
     await day.fill('29');
-    await page.getByRole('button', { name: 'Lưu kỳ đăng ký' }).click();
     await expect(day).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.getByRole('button', { name: 'Lưu kỳ đăng ký' })).toBeDisabled();
     await expect(page.getByText('Nhập số từ 3 đến 28.')).toBeVisible();
 
     const contactForm = page.getByRole('form', { name: 'Liên hệ Adm D&E và báo sắp hết hàng' });

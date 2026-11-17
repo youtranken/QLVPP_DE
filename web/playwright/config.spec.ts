@@ -64,10 +64,9 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     for (const typed of ['2', '29']) {
       await lastDay.fill(typed);
       await expect(page.getByText('Nhập ngày hạn hợp lệ để xem trước')).toBeVisible();
-      const sent = putBody(page);
-      await period.getByRole('button', { name: 'Lưu kỳ đăng ký' }).click();
-      expect(await sent).toEqual({ registration_last_day: Number(typed) });
+      // ô sai báo ngay khi gõ, nút Lưu khóa nên không gửi PUT (server vẫn chặn 2/29 ở e2e api)
       await expect(lastDay).toHaveAttribute('aria-invalid', 'true');
+      await expect(period.getByRole('button', { name: 'Lưu kỳ đăng ký' })).toBeDisabled();
       await expect(lastDay).toHaveAccessibleDescription('Nhập số từ 3 đến 28.');
     }
 

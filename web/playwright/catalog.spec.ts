@@ -165,7 +165,7 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
 
       for (const [from, bad] of [[5, 0], [5, 1000]] as const) {
         const input = await editMax(page, nameA, from, bad);
-        await expect(rowA.getByText('Tối đa từ 1 đến 999.')).toBeVisible();
+        await expect(rowA.getByText('Nhập số nguyên từ 1 đến 999')).toBeVisible();
         await expect(input).toHaveAttribute('aria-invalid', 'true');
         await input.press('Escape');
       }

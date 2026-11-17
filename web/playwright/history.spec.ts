@@ -76,7 +76,7 @@ test.describe('E2-S6 lịch sử', () => {
       await page.screenshot({ path: `../live-real/v2c/final/history-${info.project.name}.png` });
 
       await open.click();
-      await expect(page.getByRole('heading', { level: 1, name: new RegExp(`^Đăng ký văn phòng phẩm tháng ${month}$`) })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: new RegExp(`^Đăng ký văn phòng phẩm tháng ${month}(/\\d{4})?$`) })).toBeVisible();
       await page.getByRole('navigation', { name: isMobile(info) ? 'Điều hướng chính' : 'Chuyển trang' }).getByRole('link', { name: 'Lịch sử' }).click();
       await prev.click();
 
@@ -196,7 +196,7 @@ test.describe('E2-S6 lịch sử', () => {
       const tap = (target: ReturnType<Page['getByRole']>) => (isMobile(info) ? target.tap() : target.click());
       await tap(strip.getByRole('link', { name: `Tháng ${monthOf(prevYm)} còn chờ 2 món` }));
       await expect(page).toHaveURL(new RegExp(`/history/${prevYm}$`));
-      await expect(page.getByText(`13/${prevYm.slice(5)} 09:10 · ${tape.name} 3 thành 1 · Lý do: Vượt định mức`)).toBeVisible();
+      await expect(page.getByText(`13/${prevYm.slice(5)} · 09:10 · ${tape.name} 3 thành 1 · Lý do: Số lượng quá nhiều`)).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
     } finally {
       deleteTestUsers(sub);
