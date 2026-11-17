@@ -114,7 +114,7 @@ test.describe('E0-S9 màn vào (chưa đăng nhập)', () => {
     await page.route('**/api/auth/login**', (route) => route.fulfill({ status: 200, contentType: 'text/plain', body: 'sso' }));
     const sso = page.waitForRequest((r) => r.url().includes('/api/auth/login'));
     await page.getByLabel('Email', { exact: true }).fill('an.nguyen@pmh.com.vn');
-    await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+    await page.getByRole('button', { name: 'Tiếp tục', exact: true }).click();
     const url = new URL((await sso).url());
     expect(url.searchParams.get('login_hint')).toBe('an.nguyen@pmh.com.vn');
     expect(url.searchParams.get('ui_locales')).toBe('vi');
@@ -123,7 +123,7 @@ test.describe('E0-S9 màn vào (chưa đăng nhập)', () => {
   test('E0-S9 đăng nhập: chữ không phải email, không phải tên SA → "Email không hợp lệ", không lộ bước mật khẩu', async ({ page }) => {
     await page.goto('/');
     await page.getByLabel('Email', { exact: true }).fill('applicant1');
-    await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+    await page.getByRole('button', { name: 'Tiếp tục', exact: true }).click();
     await expect(page.getByRole('alert')).toHaveText('Email không hợp lệ.');
     await expect(page.getByLabel('Mật khẩu', { exact: true })).toHaveCount(0);
   });
@@ -133,7 +133,7 @@ test.describe('E0-S9 màn vào (chưa đăng nhập)', () => {
     const saName = process.env.PW_SA_USERNAME ?? 'sa';
     await page.goto('/');
     await page.getByLabel('Email', { exact: true }).fill(saName);
-    await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+    await page.getByRole('button', { name: 'Tiếp tục', exact: true }).click();
     await expect(page.getByText('Đăng nhập với')).toBeVisible();
     const password = page.getByLabel('Mật khẩu', { exact: true });
     await expect(password).toHaveAttribute('type', 'password');
