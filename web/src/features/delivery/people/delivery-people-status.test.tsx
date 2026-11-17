@@ -32,38 +32,19 @@ describe('DeliveryPeoplePage — Chưa nhận / Còn nợ chồng nhau', () => {
   });
 });
 
-describe('PeopleTable — số trên dòng', () => {
-  it('dòng ghi "3 món" và 18 đơn vị (món chưa nhận + nợ còn giao được; nợ + kỳ này cùng bút là 1 món); người đã nhận đủ không có dòng số', async () => {
-    const many = person({
-      user_sub: 'u-m',
-      full_name: 'Mai Nhiều Món',
-      lines: [
-        pLine({ line_id: 'm1', is_debt: true, period_ym: '2026-09', remaining_qty: 2 }),
-        pLine({ line_id: 'm2', remaining_qty: 5 }),
-        pLine({ line_id: 'm3', item_id: 'i-a4', remaining_qty: 3 }),
-        pLine({ line_id: 'm4', item_id: 'i-clip', remaining_qty: 8 }),
-        pLine({ line_id: 'm5', item_id: null, review_status: 'pending', remaining_qty: 2 }),
-      ],
-    });
-    open([many, D]);
-    await screen.findByText('Mai Nhiều Món', { selector: '.pt-person b' });
-    const cells = within(card('Mai Nhiều Món')).getAllByRole('cell').map((c) => c.textContent);
-    expect(cells).toEqual(expect.arrayContaining(['3 món', '18']));
-    expect(within(card('Đỗ Mai Linh')).getAllByRole('cell').map((c) => c.textContent)).toEqual(expect.arrayContaining(['0 món', '0']));
-  });
-});
-
-describe('DeliveryPeoplePage — một nhãn trạng thái phiếu (đếm đơn vị)', () => {
-  it('giao 4/9 → "Đã giao 4/9"; chưa giao → "Chưa giao"; còn nợ tháng trước 2 → "Còn nợ 2"; xong → "Đã nhận đủ"', async () => {
+describe('DeliveryPeoplePage — Tiến độ giao và Còn nợ (G4, đếm đơn vị)', () => {
+  it('giao 4/9 → "4/9"; chưa giao → "0/3"; chỉ còn nợ T9 → "0/2" và "1 món · T9"; xong (hủy 1) → "2/2"', async () => {
     open([
       person({ user_sub: 'p1', full_name: 'Người Một', lines: [pLine({ line_id: 'a', qty: 9, delivered_qty: 4, remaining_qty: 5 })] }),
       person({ user_sub: 'p2', full_name: 'Người Hai', lines: [pLine({ line_id: 'b', qty: 3, delivered_qty: 0, remaining_qty: 3 })] }),
       person({ user_sub: 'p3', full_name: 'Người Ba', status: 'debt', lines: [pLine({ line_id: 'c', qty: 2, delivered_qty: 0, remaining_qty: 2, is_debt: true, period_ym: '2026-09' })] }),
       person({ user_sub: 'p4', full_name: 'Người Bốn', status: 'done', lines: [pLine({ line_id: 'd', qty: 3, delivered_qty: 2, cancelled_qty: 1, remaining_qty: 0 })] }),
     ]);
-    expect(await within(await screen.findByText('Người Một', { selector: '.pt-person b' }).then((b) => b.closest('tr')!)).findByText('Đã giao 4/9')).toBeInTheDocument();
-    expect(within(card('Người Hai')).getByText('Chưa giao')).toBeInTheDocument();
-    expect(within(card('Người Ba')).getByText('Còn nợ 2')).toBeInTheDocument();
-    expect(within(card('Người Bốn')).getByText('Đã nhận đủ')).toBeInTheDocument();
+    await screen.findByText('Người Một', { selector: '.pt-person b' });
+    expect(within(card('Người Một')).getByText('4/9')).toBeInTheDocument();
+    expect(within(card('Người Hai')).getByText('0/3')).toBeInTheDocument();
+    expect(within(card('Người Ba')).getByText('0/2')).toBeInTheDocument();
+    expect(within(card('Người Ba')).getByText('1 món · T9')).toBeInTheDocument();
+    expect(within(card('Người Bốn')).getByText('2/2')).toBeInTheDocument();
   });
 });

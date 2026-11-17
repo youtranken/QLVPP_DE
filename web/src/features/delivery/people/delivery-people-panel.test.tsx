@@ -53,10 +53,11 @@ describe('DeliveryPeoplePage — panel và Người tiếp theo', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it.each([390, 1280])('%i px: không còn cột bên; "Xem" mở panel phủ có tên người, bộ đếm, ↓ sang người kế; đóng bỏ ?person=', async (width) => {
+  it.each([390, 1280])('%i px: không còn cột bên; ⋯ → "Xem chi tiết" mở panel phủ có tên người, bộ đếm, ↓ sang người kế; đóng bỏ ?person=', async (width) => {
     stub();
     open('/admin/delivery', width);
-    await userEvent.click(await screen.findByRole('button', { name: 'Xem Nguyễn Văn An' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Thao tác cho Nguyễn Văn An' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Xem chi tiết' }));
     const dlg = await screen.findByRole('dialog', { name: 'Nguyễn Văn An' });
     expect(within(dlg).getByRole('button', { name: 'Giao…' })).toBeInTheDocument();
     expect(within(dlg).getByText('1/2')).toBeInTheDocument();

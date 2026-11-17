@@ -16,6 +16,7 @@ import { SelectBox } from '@/ui/data-table-row';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
 import { usePeriodSummary } from '@/features/summary/summary.api';
+import { OrderHistoryDialog } from '@/features/summary/order-history-dialog';
 import { useDeliveryPeople, type DeliveryPerson } from './delivery-people.api';
 import { filterPeople, overlapCount, tabCounts, type PeopleTab } from './people-filter';
 import { stockShortages } from './deliver-plan';
@@ -65,6 +66,7 @@ function PeopleBoard({ ym }: { ym: string }) {
   const open = (sub: string) => panel.open(sub);
   const quick = useQuickDeliver(people);
   const [confirmFor, setConfirmFor] = useState<string | null>(null);
+  const [historyOf, setHistoryOf] = useState<DeliveryPerson | null>(null);
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set());
   // Kế hoạch chụp lúc bấm: làm mới danh sách giữa chừng không đổi số đang gửi
   const [bulk, setBulk] = useState<BulkPlan | null>(null);
@@ -189,8 +191,10 @@ function PeopleBoard({ ym }: { ym: string }) {
           onToggleAll={toggleAll}
           onView={open}
           onDeliver={setConfirmFor}
+          onHistory={(sub) => setHistoryOf(people.find((p) => p.user_sub === sub) ?? null)}
         />
       )}
+      {historyOf && <OrderHistoryDialog sub={historyOf.user_sub} name={historyOf.full_name ?? historyOf.user_sub} onClose={() => setHistoryOf(null)} />}
       {personPanel}
       {bulk && (
         <BulkDeliverDialog

@@ -110,10 +110,6 @@
 [data-shell='admin'] .pt-person { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
 [data-shell='admin'] .pt-person b { min-width: 0; overflow-wrap: anywhere; }
 [data-shell='admin'] .pt-person .pp-avatar { width: 28px; height: 28px; font: var(--t-micro); font-weight: 800; }
-[data-shell='admin'] .pt-status { display: grid; gap: var(--s-1); justify-items: start; }
-[data-shell='admin'] .pt-chips { display: flex; flex-wrap: wrap; gap: var(--s-1); }
-[data-shell='admin'] .pt-chips .pp-chip { white-space: nowrap; }
-[data-shell='admin'] .pt-debt { color: var(--c-warn); font: var(--t-cap); font-weight: 700; }
 /* "Xem" bám mép trái cột, nút giao bám mép phải: "Xem" thẳng hàng giữa các dòng dù nút sau dài ngắn khác nhau */
 [data-shell='admin'] .pt-acts__in { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s-2); }
 [data-shell='admin'] .pt-acts__in > :last-child { margin-left: auto; }
@@ -146,3 +142,8 @@
   [data-shell='admin'] .pt-bulk { left: var(--s-4); right: var(--s-4); bottom: calc(env(safe-area-inset-bottom) + var(--s-3)); transform: none; justify-content: space-between; }
   [data-shell='admin'] .pt-bulk .btn--primary { flex: 1; }
 }
+[data-shell='admin'] .pt-person__text { display: grid; min-width: 0; }
+[data-shell='admin'] .pt-person__text small { color: var(--c-muted); font: var(--t-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-shell='admin'] .pt-progress { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
+[data-shell='admin'] .pt-progress .progress { flex: 1; min-width: 0; }
+[data-shell='admin'] .pt-short { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }

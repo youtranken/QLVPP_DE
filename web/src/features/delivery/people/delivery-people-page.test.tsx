@@ -30,13 +30,13 @@ describe('DeliveryPeoplePage — đầu trang và tab', () => {
     expect(names()).toEqual(['Nguyễn Văn An', 'Lê Thị Bình']);
   });
 
-  it('người chỉ có nợ (không phiếu kỳ này) có ở tab Còn nợ với dòng cam "Nợ tháng 9: 1 món"; đổi tab ghi ?tab=debt', async () => {
+  it('người chỉ có nợ (không phiếu kỳ này) có ở tab Còn nợ, cột Còn nợ "1 món · T9"; đổi tab ghi ?tab=debt', async () => {
     stub();
     open();
     await userEvent.click(await screen.findByRole('radio', { name: 'Còn nợ, 2' }));
     expect(search()).toContain('tab=debt');
     expect(names()).toEqual(['Lê Thị Bình', 'Trần Minh Khoa']);
-    expect(within(card('Trần Minh Khoa')).getByText('Nợ tháng 9: 1 món')).toBeInTheDocument();
+    expect(within(card('Trần Minh Khoa')).getByText('1 món · T9')).toBeInTheDocument();
   });
 
   it('?tab=done mở thẳng tab Đã nhận; nút thẻ đã nhận là "Đã giao" và vô hiệu', async () => {
@@ -57,14 +57,15 @@ describe('DeliveryPeoplePage — đầu trang và tab', () => {
     expect(names()).toEqual(['Đỗ Mai Linh']);
   });
 
-  it('cột cố định bề rộng (đổi tab không dời cột); "Xem" và nút giao chung một khối ô Thao tác', async () => {
+  it('cột cố định bề rộng (đổi tab không dời cột); nút giao và ⋯ chung một khối ô Thao tác (G4)', async () => {
     stub();
     open();
     await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
     expectFixedColumns(screen.getByRole('table'));
     const acts = card('Nguyễn Văn An').querySelector('td.pt-acts > .pt-acts__in');
     expect(acts?.children).toHaveLength(2);
-    expect(acts?.firstElementChild).toHaveAccessibleName(/^Xem/);
+    expect(acts?.firstElementChild).toHaveAccessibleName(/, Nguyễn Văn An$/);
+    expect(acts?.lastElementChild).toHaveAccessibleName('Thao tác cho Nguyễn Văn An');
   });
 
   it('tìm "zzzz" không ai khớp → "Không có ai khớp" + nút "Xóa lọc" (bỏ ?q=, hiện lại danh sách); số trên tab giữ theo tab', async () => {
@@ -143,15 +144,15 @@ describe('DeliveryPeoplePage — giao thiếu và tủ trống', () => {
 });
 
 describe('DeliveryPeoplePage — tiến độ trên thẻ', () => {
-  it('đã giao một phần (7/10) → "Đã giao 7/10"; chưa giao gì → không có dòng tiến độ; trừ phần hủy khỏi mẫu số', async () => {
+  it('Tiến độ giao (G4): đã giao 7/10 → "7/10"; chưa giao → "0/3"; trừ phần hủy khỏi mẫu số → "4/8"', async () => {
     const partial = person({ user_sub: 'u-p', full_name: 'Phan Văn Phần', status: 'debt', lines: [pLine({ line_id: 'lp', qty: 10, delivered_qty: 7, remaining_qty: 3, stock_qty: 0 })] });
     const cancelled = person({ user_sub: 'u-x', full_name: 'Xuân Hủy', status: 'debt', lines: [pLine({ line_id: 'lx', qty: 10, delivered_qty: 4, cancelled_qty: 2, remaining_qty: 4, stock_qty: 9 })] });
     stub({ people: [partial, cancelled, A] });
     open('/admin/delivery?tab=all');
     await screen.findByText('Phan Văn Phần', { selector: '.pt-person b' });
-    expect(within(card('Phan Văn Phần')).getByText('Đã giao 7/10')).toBeInTheDocument();
-    expect(within(card('Xuân Hủy')).getByText('Đã giao 4/8')).toBeInTheDocument();
-    expect(within(card('Nguyễn Văn An')).queryByText(/^Đã giao \d/)).toBeNull();
+    expect(within(card('Phan Văn Phần')).getByText('7/10')).toBeInTheDocument();
+    expect(within(card('Xuân Hủy')).getByText('4/8')).toBeInTheDocument();
+    expect(within(card('Nguyễn Văn An')).getByText('0/3')).toBeInTheDocument();
   });
 });
 
@@ -240,21 +241,22 @@ describe('DeliveryPeoplePage — nút chính trên thẻ mở hộp giao', () =>
 });
 
 describe('DeliveryPeoplePage — tủ thiếu', () => {
-  it('tủ bút 7 < A + B chờ 13 → chip "Tủ thiếu 1 món" ở dòng của A và B; không còn banner đầu trang, không có "Xem ở Tủ / Kho"', async () => {
+  it('tủ bút 7 < A + B chờ 13 → cột Tủ "Thiếu: Bút bi xanh" ở dòng của A và B; không còn banner đầu trang, không có "Xem ở Tủ / Kho"', async () => {
     stub();
     open();
     await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
-    expect(within(card('Nguyễn Văn An')).getByText('Tủ thiếu 1 món')).toBeInTheDocument();
-    expect(within(card('Lê Thị Bình')).getByText('Tủ thiếu 1 món')).toBeInTheDocument();
+    expect(within(card('Nguyễn Văn An')).getByText('Thiếu: Bút bi xanh')).toBeInTheDocument();
+    expect(within(card('Lê Thị Bình')).getByText('Thiếu: Bút bi xanh')).toBeInTheDocument();
     expect(screen.queryByText(/chưa đủ tủ cho người/)).toBeNull();
     expect(screen.queryByRole('link', { name: 'Xem ở Tủ / Kho' })).toBeNull();
   });
 
-  it('đủ tủ → không có chip', async () => {
+  it('đủ tủ → cột Tủ "Đủ", không có "Thiếu:"', async () => {
     stub({ people: [A] });
     open();
     await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
-    expect(screen.queryByText(/Tủ thiếu/)).toBeNull();
+    expect(within(card('Nguyễn Văn An')).getByText('Đủ')).toBeInTheDocument();
+    expect(screen.queryByText(/^Thiếu:/)).toBeNull();
   });
 });
 

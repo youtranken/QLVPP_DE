@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
@@ -6,6 +6,7 @@ import { useSingleFlight } from '@/lib/use-single-flight';
 import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { useToast } from '@/ui/toast-context';
 import { useRequestFormat } from '@/features/request/request-format';
+import { AdjustDialog } from '@/features/summary/adjust-dialog';
 import { lineErrorText } from '../delivery-errors';
 import type { DeliveryPerson, DeliveryPersonLine } from './delivery-people.api';
 import { dialogRows, limitsOf, priorityFor, stepsOf, stockShortages, totalsOf, type Totals } from './deliver-plan';
@@ -78,11 +79,21 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
   const titleRef = useRef<HTMLHeadingElement>(null);
   const succeeded = useRef(false);
   // Tủ và phần còn lại chụp lúc mở: số đang hiện là số gửi đi, server mới là chuẩn
-  const [snap] = useState(() => ({
+  const snapOf = () => ({
     rows: dialogRows(person, priorityFor(person, people)),
     shortages: stockShortages(people),
     waiting: waitingIndex(people),
-  }));
+  });
+  const [snap, setSnap] = useState(snapOf);
+  // G4: điều chỉnh phiếu từ hộp này → chụp lại khi danh sách người nạp lại sau khi lưu (chỉ lần đó, không mỗi lần nạp)
+  const [adjusting, setAdjusting] = useState(false);
+  const resnap = useRef(false);
+  useEffect(() => {
+    if (!resnap.current) return;
+    resnap.current = false;
+    setSnap(snapOf());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [person, people]);
   const [values, setValues] = useState<Record<string, number>>(initial ?? {});
   const [result, setResult] = useState<SendResult | null>(null);
   // Món ngoài danh mục chờ duyệt đang hiện trong hộp: giao sẽ ghi Không mua đúng các món này, phải hỏi lại trước
@@ -114,83 +125,100 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
     if (e.repeat) e.preventDefault();
   };
 
+  // Điều chỉnh mở thì hộp Giao ẩn (vẫn giữ trạng thái): hai lớp modal chồng nhau thì panel Điều chỉnh nằm sau, không bấm được
   return (
-    <Dialog
-      open
-      onOpenChange={(o) => !o && onClose()}
-      dismissible={!sending}
-      className="sheet a-form dd-sheet"
-      maxWidth={720}
-      onOpenAutoFocus={(e) => {
-        e.preventDefault();
-        titleRef.current?.focus();
-      }}
-      onCloseFocus={() => succeeded.current && (focusAfter?.() ?? false)}
-    >
-      <div className="sheet-header">
-        <div>
-          <DialogTitle ref={titleRef} tabIndex={-1} className="sheet-title">
-            {t('delivery.confirm.title', { name })}
-          </DialogTitle>
-          <DialogDescription className="dd-sub">
-            <span>{person.department ?? t('delivery.people.card.noDepartment')}</span>
-            {person.user_status !== 'active' && <span className="dd-leftuser">{t('delivery.confirm.leftUser')}</span>}
-          </DialogDescription>
+    <>
+      <Dialog
+        open={!adjusting}
+        onOpenChange={(o) => !o && onClose()}
+        dismissible={!sending}
+        className="sheet a-form dd-sheet"
+        maxWidth={720}
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          titleRef.current?.focus();
+        }}
+        onCloseFocus={() => succeeded.current && (focusAfter?.() ?? false)}
+      >
+        <div className="sheet-header">
+          <div>
+            <DialogTitle ref={titleRef} tabIndex={-1} className="sheet-title">
+              {t('delivery.confirm.title', { name })}
+            </DialogTitle>
+            <DialogDescription className="dd-sub">
+              <span>{person.department ?? t('delivery.people.card.noDepartment')}</span>
+              {person.user_status !== 'active' && <span className="dd-leftuser">{t('delivery.confirm.leftUser')}</span>}
+            </DialogDescription>
+          </div>
         </div>
-      </div>
-      <div className="sheet-body">
-        {!result && (
-          <>
-            <DeliverRows
-              rows={snap.rows}
-              limits={limits}
-              disabled={sending}
-              waiting={(l) => (l.item_id ? snap.waiting(l.item_id, person.user_sub) : NO_WAIT)}
-              shortage={(l) => (l.item_id ? snap.shortages.get(l.item_id) : undefined)}
-              onChange={(id, n) => setValues((v) => ({ ...v, [id]: n }))}
-            />
-            <p id={sumId} className="dd-sum num">
-              {sumText(totals, t)}
-            </p>
-            <p className="dd-note">{t('delivery.confirm.noUndo')}</p>
-          </>
-        )}
-        <Results result={result} lineOf={lineOf} />
-      </div>
-      <div className="sheet-footer">
-        {result ? (
-          <>
-            <button type="button" className="btn btn--ghost" onClick={onOpenPerson}>
-              {t('delivery.confirm.openPerson')}
-            </button>
-            <DialogClose asChild>
-              <button type="button" className="btn btn--primary">
-                {t('delivery.confirm.close')}
+        <div className="sheet-body">
+          {!result && (
+            <>
+              <DeliverRows
+                rows={snap.rows}
+                limits={limits}
+                disabled={sending}
+                waiting={(l) => (l.item_id ? snap.waiting(l.item_id, person.user_sub) : NO_WAIT)}
+                shortage={(l) => (l.item_id ? snap.shortages.get(l.item_id) : undefined)}
+                onChange={(id, n) => setValues((v) => ({ ...v, [id]: n }))}
+              />
+              <p id={sumId} className="dd-sum num">
+                {sumText(totals, t)}
+              </p>
+              <p className="dd-note">{t('delivery.confirm.noUndo')}</p>
+            </>
+          )}
+          <Results result={result} lineOf={lineOf} />
+        </div>
+        <div className="sheet-footer">
+          {result ? (
+            <>
+              <button type="button" className="btn btn--ghost" onClick={onOpenPerson}>
+                {t('delivery.confirm.openPerson')}
               </button>
-            </DialogClose>
-          </>
-        ) : (
-          <>
-            <DialogClose asChild>
-              <button type="button" className="btn btn--ghost" disabled={sending}>
-                {t('delivery.confirm.cancel')}
+              <DialogClose asChild>
+                <button type="button" className="btn btn--primary">
+                  {t('delivery.confirm.close')}
+                </button>
+              </DialogClose>
+            </>
+          ) : (
+            <>
+              {person.request_id && (
+                <button
+                  type="button"
+                  className="btn btn--ghost dd-adjust"
+                  disabled={sending}
+                  onClick={() => {
+                    resnap.current = true;
+                    setAdjusting(true);
+                  }}
+                >
+                  {t('delivery.confirm.adjust')}
+                </button>
+              )}
+              <DialogClose asChild>
+                <button type="button" className="btn btn--ghost" disabled={sending}>
+                  {t('delivery.confirm.cancel')}
+                </button>
+              </DialogClose>
+              <button
+                type="button"
+                className="btn btn--primary"
+                disabled={!canSend || sending}
+                aria-busy={sending}
+                aria-describedby={[sumId, noQty.describedBy].filter(Boolean).join(' ')}
+                onKeyDown={blockRepeat}
+                onClick={ask}
+              >
+                {sending ? t('delivery.confirm.sending') : t('delivery.confirm.ok')}
               </button>
-            </DialogClose>
-            <button
-              type="button"
-              className="btn btn--primary"
-              disabled={!canSend || sending}
-              aria-busy={sending}
-              aria-describedby={[sumId, noQty.describedBy].filter(Boolean).join(' ')}
-              onKeyDown={blockRepeat}
-              onClick={ask}
-            >
-              {sending ? t('delivery.confirm.sending') : t('delivery.confirm.ok')}
-            </button>
-            {noQty.node}
-          </>
-        )}
-      </div>
-    </Dialog>
+              {noQty.node}
+            </>
+          )}
+        </div>
+      </Dialog>
+      {adjusting && person.request_id && <AdjustDialog requestId={person.request_id} onClose={() => setAdjusting(false)} />}
+    </>
   );
 }

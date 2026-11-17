@@ -4,11 +4,12 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { initialsOf } from '@/lib/initials';
 import { DataTable } from '@/ui/data-table';
 import { SelectBox } from '@/ui/data-table-row';
-import { monthOf } from '@/features/request/request-format';
+import { Progress } from '@/ui/progress';
+import { RowMenu } from '@/ui/row-menu';
+import { EmptyValue } from '@/ui/empty-cell';
 import type { DeliveryPerson } from './delivery-people.api';
 import type { Shortage } from './deliver-plan';
-import { cardSummary, isOpenLine } from './people-filter';
-import { requestStatus, requestStatusText } from '@/lib/request-status';
+import { isOpenLine } from './people-filter';
 
 export function PersonAvatar({ name, large = false }: { name: string; large?: boolean }) {
   return (
@@ -26,13 +27,6 @@ function actionLabel(person: DeliveryPerson, canDeliver: boolean, t: (k: string)
   return t('delivery.people.card.noStock');
 }
 
-// Kỳ cũ nhất còn chờ; người đã nhận đủ thì kỳ mới nhất của họ
-function periodOf(p: DeliveryPerson): string | null {
-  const open = p.lines.filter((l) => l.remaining_qty > 0).map((l) => l.period_ym);
-  const all = p.lines.map((l) => l.period_ym);
-  return (open.length > 0 ? open.sort() : all.sort().reverse())[0] ?? null;
-}
-
 interface Props {
   rows: DeliveryPerson[];
   shortages: ReadonlyMap<string, Shortage>;
@@ -44,6 +38,7 @@ interface Props {
   onToggleAll: (checked: boolean) => void;
   onView: (sub: string) => void;
   onDeliver: (sub: string) => void;
+  onHistory: (sub: string) => void;
 }
 
 // Cột giữ nguyên giữa các lần vẽ (TanStack coi mỗi hàm cell mới là component mới và dựng lại ô, mất tiêu điểm);
@@ -58,28 +53,40 @@ const nameOf = (r: DeliveryPerson) => r.full_name ?? r.user_sub;
 // Ô chọn và tên người nối bằng label: điện thoại bấm cả tên cũng chọn (vùng bấm đủ 44px)
 const pickId = (r: DeliveryPerson) => `pt-pick-${encodeURIComponent(r.user_sub)}`;
 
-function StatusCell({ person }: { person: DeliveryPerson }) {
+// Mọi dòng (tháng đang giao + nợ): đã giao trên phần còn phải giao (đã hủy ra khỏi mẫu số)
+function ProgressCell({ person }: { person: DeliveryPerson }) {
   const { t } = useTranslation();
-  const { shortages } = useCtx();
-  const shortItems = new Set(person.lines.filter((l) => isOpenLine(l) && l.item_id && shortages.has(l.item_id)).map((l) => l.item_id)).size;
-  const debt = person.lines.filter((l) => l.is_debt && l.remaining_qty > 0);
-  const months = [...new Set(debt.map((l) => monthOf(l.period_ym)))].join(', ');
-  const current = person.lines.filter((l) => !l.is_debt);
-  const status = requestStatus({
-    qty: current.reduce((n, l) => n + l.qty, 0),
-    delivered: current.reduce((n, l) => n + l.delivered_qty, 0),
-    cancelled: current.reduce((n, l) => n + l.cancelled_qty, 0),
-    owedPrevMonths: debt.reduce((n, l) => n + l.remaining_qty, 0),
-  });
+  const done = person.lines.reduce((n, l) => n + l.delivered_qty, 0);
+  const total = person.lines.reduce((n, l) => n + l.qty - l.cancelled_qty, 0);
+  if (total === 0) return <EmptyValue />;
   return (
-    <span className="pt-status">
-      <span className="pt-chips">
-        <span className={`pp-chip pp-chip--${person.status}`}>{requestStatusText(t, status)}</span>
-        {shortItems > 0 && <span className="pp-chip pp-chip--short">{t('delivery.people.shortChip', { n: shortItems })}</span>}
-      </span>
-      {debt.length > 0 && <small className="pt-debt">{t('delivery.people.card.debt', { months, n: debt.length })}</small>}
+    <span className="pt-progress">
+      <Progress done={done} total={total} label={t('delivery.people.progressLabel', { done, total })} text={`${done}/${total}`} />
     </span>
   );
+}
+
+function StockCell({ person }: { person: DeliveryPerson }) {
+  const { t } = useTranslation();
+  const { shortages } = useCtx();
+  const open = person.lines.filter(isOpenLine);
+  if (open.length === 0) return <EmptyValue />;
+  const names = [...new Set(open.filter((l) => l.item_id && shortages.has(l.item_id)).map((l) => l.name))];
+  if (names.length === 0) return <span className="tag tag--ok">{t('delivery.people.stockOk')}</span>;
+  const text = t('delivery.people.stockShort', { names: names.join(', ') });
+  return (
+    <span className="tag tag--warn pt-short" title={text}>
+      {text}
+    </span>
+  );
+}
+
+function DebtCell({ person }: { person: DeliveryPerson }) {
+  const { t } = useTranslation();
+  const debt = person.lines.filter((l) => l.is_debt && l.remaining_qty > 0);
+  if (debt.length === 0) return <EmptyValue />;
+  const months = [...new Set(debt.map((l) => l.period_ym))].sort().map((ym) => t('delivery.people.monthShort', { month: Number(ym.slice(5)) }));
+  return <span className="num">{t('delivery.people.debtValue', { n: debt.length, months: months.join(', ') })}</span>;
 }
 
 function PickHeader() {
@@ -119,31 +126,26 @@ function PickCell({ person }: { person: DeliveryPerson }) {
 
 function ActionsCell({ person }: { person: DeliveryPerson }) {
   const { t } = useTranslation();
-  const { canDeliver, onView, onDeliver } = useCtx();
+  const { canDeliver, onView, onDeliver, onHistory } = useCtx();
   const can = canDeliver(person);
   const label = actionLabel(person, can, t);
   return (
     <span className="pt-acts__in">
-      <button type="button" className="btn btn--ghost btn--sm pp-card__view" aria-label={t('delivery.people.card.viewLabel', { name: nameOf(person) })} onClick={() => onView(person.user_sub)}>
-        {t('delivery.people.card.view')}
-      </button>
       <button type="button" className="btn btn--sm" aria-label={`${label}, ${nameOf(person)}`} disabled={!can} onClick={() => onDeliver(person.user_sub)}>
         {label}
       </button>
+      <RowMenu
+        label={t('delivery.people.more', { name: nameOf(person) })}
+        items={[
+          { label: t('delivery.people.viewDetail'), onSelect: () => onView(person.user_sub) },
+          { label: t('summary.history.open'), onSelect: () => onHistory(person.user_sub) },
+        ]}
+      />
     </span>
   );
 }
 
-function PeriodCell({ person }: { person: DeliveryPerson }) {
-  const { t } = useTranslation();
-  const ym = periodOf(person);
-  return <>{ym ? t('delivery.people.period', { month: monthOf(ym) }) : t('common.empty')}</>;
-}
-
-// Bề rộng cột cố định (DataTable → table--fixed): đổi tab Chưa nhận/Còn nợ/Tất cả thì cột không nhảy theo chữ trong ô.
-// Cột Tháng vừa "Tháng 12"/"September" (73px) một dòng cộng đệm 24px; bù phần lớn từ Phòng (vừa "Phòng D&E"/"Department")
-// và Thao tác (25.5% vẫn đủ 235px cho hai nút một hàng ở 1280) để cột Người không hẹp thêm.
-// Thao tác theo % để ở 1280 đủ "Xem" + "Tủ chưa có hàng" một hàng; ở 1024 hẹp hơn thì nút sau xuống dòng thay vì bảng cuộn ngang
+// Bề rộng cột cố định (DataTable → table--fixed): đổi tab Chưa nhận/Còn nợ/Tất cả thì cột không nhảy theo chữ trong ô
 function useColumns() {
   const { t } = useTranslation();
   return useMemo<ColumnDef<DeliveryPerson, unknown>[]>(() => {
@@ -155,16 +157,17 @@ function useColumns() {
         cell: ({ row: { original: r } }) => (
           <label className="pt-person" htmlFor={pickId(r)}>
             <PersonAvatar name={nameOf(r)} />
-            <b>{nameOf(r)}</b>
+            <span className="pt-person__text">
+              <b>{nameOf(r)}</b>
+              <small>{r.department ?? t('delivery.people.card.noDepartment')}</small>
+            </span>
           </label>
         ),
       },
-      { id: 'dept', header: t('delivery.people.cols.dept'), meta: { width: '6.125rem' }, cell: ({ row }) => row.original.department ?? t('delivery.people.card.noDepartment') },
-      { id: 'period', header: t('delivery.people.cols.period'), meta: { width: '6.125rem' }, cell: ({ row }) => <PeriodCell person={row.original} /> },
-      { id: 'items', header: t('delivery.people.cols.items'), meta: { className: 'num r', width: '4.5rem' }, cell: ({ row }) => t('delivery.people.itemsCount', { n: cardSummary(row.original).n }) },
-      { id: 'units', header: t('delivery.people.cols.units'), meta: { className: 'num r', width: '4rem' }, cell: ({ row }) => cardSummary(row.original).u },
-      { id: 'status', header: t('delivery.people.cols.status'), meta: { width: '9.5rem' }, cell: ({ row }) => <StatusCell person={row.original} /> },
-      { id: 'actions', header: () => <span className="r">{t('delivery.people.cols.actions')}</span>, meta: { className: 'r pt-acts', label: '', width: '25.5%' }, cell: ({ row }) => <ActionsCell person={row.original} /> },
+      { id: 'progress', header: t('delivery.people.cols.progress'), meta: { width: '11rem' }, cell: ({ row }) => <ProgressCell person={row.original} /> },
+      { id: 'stock', header: t('delivery.people.cols.stock'), meta: { width: '10rem' }, cell: ({ row }) => <StockCell person={row.original} /> },
+      { id: 'debt', header: t('delivery.people.cols.debt'), meta: { width: '8rem' }, cell: ({ row }) => <DebtCell person={row.original} /> },
+      { id: 'actions', header: () => <span className="r">{t('delivery.people.cols.actions')}</span>, meta: { className: 'r pt-acts', label: '', width: '12rem' }, cell: ({ row }) => <ActionsCell person={row.original} /> },
     ];
     return cols.map((c) => ({ ...c, enableSorting: false }));
   }, [t]);

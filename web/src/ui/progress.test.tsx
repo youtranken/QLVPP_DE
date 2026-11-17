@@ -23,4 +23,12 @@ describe('Progress', () => {
     renderWithI18n(<Progress done={0} total={0} label="đã giao 0/0" />);
     expect(screen.getByRole('progressbar').firstElementChild).toHaveStyle({ width: '0%' });
   });
+
+  it('text: chữ hiện "3/5" khác tên đọc màn hình "Đã giao 3/5", không lặp chữ', () => {
+    renderWithI18n(<Progress done={3} total={5} label="Đã giao 3/5" text="3/5" />);
+    expect(screen.getByRole('progressbar', { name: 'Đã giao 3/5' })).toBeInTheDocument();
+    expect(screen.getByText('3/5')).toBeInTheDocument();
+    expect(screen.queryByText('Đã giao 3/5')).toBeNull();
+  });
 });
+

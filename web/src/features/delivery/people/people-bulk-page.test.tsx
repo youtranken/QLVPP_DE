@@ -51,15 +51,14 @@ describe('DeliveryPeoplePage — bảng và giao nhiều phiếu', () => {
     expect(row).toHaveAttribute('title', 'Chưa giao được — tủ chưa có hàng cho phiếu này');
   });
 
-  it('bảng kẻ ô: ☐ · Người · Phòng · Kỳ · Số món · Đơn vị · Tình trạng · Thao tác; mỗi dòng có Xem và Giao…; tab Chưa nhận 2 · Còn nợ 2 · Đã nhận 1 · Tất cả 4', async () => {
+  it('bảng kẻ ô (G4): ☐ · Người · Tiến độ giao · Tủ · Còn nợ · Thao tác; mỗi dòng có Giao… và ⋯; tab Chưa nhận 2 · Còn nợ 2 · Đã nhận 1 · Tất cả 4', async () => {
     stub();
     open();
     await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
-    expect(screen.getAllByRole('columnheader').map((c) => c.textContent)).toEqual(['', 'Người', 'Phòng', 'Tháng', 'Số món', 'Đơn vị', 'Tình trạng', 'Thao tác']);
+    expect(screen.getAllByRole('columnheader').map((c) => c.textContent)).toEqual(['', 'Người', 'Tiến độ giao', 'Tủ', 'Còn nợ', 'Thao tác']);
     expect(screen.getByRole('table')).toHaveClass('grid-table');
-    expect(within(card('Nguyễn Văn An')).getByText('Tháng 10')).toBeInTheDocument();
-    expect(within(card('Lê Thị Bình')).getByText('Tháng 9')).toBeInTheDocument();
-    for (const n of ['Xem Nguyễn Văn An', 'Giao…, Nguyễn Văn An']) expect(screen.getByRole('button', { name: n })).toBeInTheDocument();
+    expect(within(card('Nguyễn Văn An')).getByText('Tổ Giám sát')).toBeInTheDocument();
+    for (const n of ['Thao tác cho Nguyễn Văn An', 'Giao…, Nguyễn Văn An']) expect(screen.getByRole('button', { name: n })).toBeInTheDocument();
   });
 
   it('chọn 2 dòng → nút "Giao 2 phiếu" + "Bỏ chọn"; không có chữ "Đã chọn … đơn vị"; Bỏ chọn xóa', async () => {
