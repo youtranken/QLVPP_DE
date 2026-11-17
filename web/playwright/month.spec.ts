@@ -163,3 +163,15 @@ test.describe('Vòng3-KT Kỳ tháng', () => {
   });
 });
 
+
+test.describe('Kỳ tháng 390: việc chính thấy ngay khi mở', () => {
+  test('390: dòng người đầu tiên nằm trong màn 390×844 không cần cuộn (kỳ 2026-12 có băng người đã nghỉ)', async ({ page }, info) => {
+    test.skip(!isMobile(info), 'chỉ đo ở 390');
+    await page.goto('/admin/month?ym=2026-12');
+    const first = page.getByRole('button', { name: /^Thao tác cho / }).first();
+    await expect(first).toBeVisible();
+    await settled(page);
+    const top = await first.evaluate((el) => el.closest('tr')!.getBoundingClientRect().top);
+    expect(top).toBeLessThan(844);
+  });
+});

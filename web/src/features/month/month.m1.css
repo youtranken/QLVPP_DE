@@ -23,6 +23,8 @@
 [data-shell='admin'] .mk-notes .tag { max-width: 100%; height: auto; min-height: 22px; white-space: normal; }
 @media (max-width: 767px) {
   [data-shell='admin'] .mk-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Điện thoại: tên người đã nghỉ 2 dòng (đủ tên ở Xử lý) để dòng người đầu thấy ngay khi mở */
+  [data-shell='admin'] .mk-left span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
   /* Điện thoại: viên ‹ tháng › một hàng riêng; chip và link xuống hàng dưới */
   [data-shell='admin'] .mk-switch { width: 100%; }
   [data-shell='admin'] .mk-switch > .month-switch { flex: 1 1 100%; }
