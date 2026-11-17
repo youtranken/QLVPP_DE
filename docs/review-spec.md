@@ -161,3 +161,24 @@ Mockup: canvas https://claude.ai/artifact/Jow9EJotq5TXajAxVfqizq (bảng "Thang 
 - Chủ dự án chốt 17/11/2026 (sau review Phase 2): Sản phẩm hiện nhãn "Sắp hết"/"Hết" của server (`stock_state`, cùng luật Tủ/Kho — trống ≤ 20% mức đặt lại), không thêm luật ở web; một chữ "Tủ" cho số đang có trong tủ ("Tủ: 20", tab "Trong tủ"); giữ hộp xác nhận Nhận hàng và "NCC hết hàng" (đảo quyết định 9/11 "lưu ngay không hỏi"); phiếu đã lưu vẫn sửa thẳng trên thẻ món (không khóa tới khi bấm Sửa phiếu). H13: trần Nhập mua là 1.000.000 (= StockChangeDto), 99.999 là trần dòng Nhận hàng.
 - Chủ dự án chốt 17/11/2026 (sau khi xem Kỳ tháng trên prod): bỏ nút "Chép DS n người chưa đặt" (G1 ngày 15/11) và link nhảy kỳ "Tháng X đang giao / đang đăng ký" — không phục vụ việc gì, chuyển kỳ bằng ‹ Tháng › là đủ; giữ chip trạng thái kỳ cạnh bộ chọn tháng.
 - Tên app "QLVPP" ở mọi chỗ (Q2). H9: "Thay thế bản Excel gửi NCC lúc …" / "Thay thế bản in gửi NCC lúc …" (Q3).
+
+## I. Giao diện họ QLHS/QLTS (chủ dự án, 18/11/2026)
+
+Trang Trước/Sau: https://claude.ai/artifact/9tSeCyKhUDVYcfgUP9sJGA (bản 5). Thiết kế: `docs/superpowers/specs/2026-11-18-giao-dien-ho-qlhs-design.md`. Plan: `docs/superpowers/plans/2026-11-18-giao-dien-ho-qlhs.md`. Điều dưới thắng `_SPEC.md` và mục H khi lệch.
+- TC-00: bảng màu lấy theo QLHS/QLTS. Màu chính `#1d4ed8`, sidebar navy `#0f1f3d`, nền `#f3f6fb`, vạch đang chọn `#60a5fa`. Thay bảng "Teal kính" v2; thang bo góc A giữ nguyên.
+- TC-01: khung trang bỏ vỏ tối và tấm nội dung nổi. Admin có thanh trên trắng 60px (đường dẫn, tìm nhanh, chuông, tài khoản); sidebar navy rộng 236.
+- TC-03: luật "đang chọn" 3 kiểu, thay luật `--c-sel` nền tối:
+  - (A) điều hướng trên nền tối: nền trắng 10% + vạch 3px;
+  - (B) xem/lọc trên nền sáng: nền xanh nhạt + viền xanh, bo 6, không bo tròn; danh sách dọc thêm vạch trái;
+  - (C) chọn một giá trị: xanh đặc.
+- TC-14: trang Đăng ký theo khung họ. Thẻ món đã chọn giữ nền cam nhạt viền cam và bỏ số tròn trên ảnh (NV-15).
+- AD-08: "+ Thêm khu" → ô chọn nhiều "Lọc phòng" trong hàng lọc.
+- AD-09 / TN-13: "Đang hiện x/y" chỉ hiện khi đang lọc hoặc tìm và x < y.
+- NV-04: hạn sửa phiếu nói một lần, ở mô tả đầu trang.
+- NV-11: bỏ "+ Thêm món khác" ở thanh lọc; giữ thẻ cuối lưới và nút trong giỏ.
+- NV-19: bỏ chế độ xem / "Sửa phiếu". Giỏ luôn có −/+ và nút "Lưu phiếu" khi kỳ còn mở.
+- NV-33: màn đăng nhập có một nút chính "Đăng nhập bằng Tài khoản D&E". Ô email không bắt buộc, chỉ dùng để điền sẵn.
+- TN-04: nút nguy hiểm trong hàng có chữ đỏ, viền đỏ nhạt; nút xác nhận cuối trong hộp là đỏ đặc.
+- AD-33: nút thoát của hộp Hủy nợ là "Quay lại", không phải "Hủy", để khỏi lẫn với nút "Hủy nợ" cạnh bên. Đây là ngoại lệ của luật "hủy thao tác = Hủy" ở mục H.
+- AD-38: bỏ trang Xuất lẻ riêng (G6 ngày 15/11), gộp vào Tủ / Kho → tab Lịch sử, lọc "Xuất lẻ"; nút "Xuất lẻ một món" ở đầu Tủ / Kho; `/admin/issues` chuyển hướng tới đó.
+- TC-06: Adm D&E mở app vào trang "Việc hôm nay" (`/admin`).
