@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
-import { STOCK, callsTo, facts, item, stubStockApi } from './stock-fixtures';
+import { callsTo, facts, item, stubStockApi } from './stock-fixtures';
 import { expectFixedColumns } from '@/test/fixed-columns';
 
 const LOW_BELL = {
@@ -28,20 +28,12 @@ async function open(path = '/admin/stock', ready = 'Giấy A4', width = 1280) {
 const rowOf = (name: string) => screen.getByText(name).closest('tr')!;
 
 describe('StockPage', () => {
-  it('tải tồn lỗi: vẫn có bộ chuyển Tồn kho/Xuất lẻ (1280 và 390) để sang tab Xuất lẻ', async () => {
-    for (const width of [1280, 390]) {
-      mockViewport(width);
-      stubStockApi((url) => {
-        const path = url.split('?')[0];
-        if (path === '/api/admin/stock') return jsonResponse(500, { code: 'X', message: 'x' });
-        return path === '/api/admin/issues' ? jsonResponse(200, []) : undefined;
-      });
-      const { unmount } = renderApp(makeMe('admin'), '/admin/stock');
-      expect(await screen.findByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
-      await userEvent.click(screen.getByRole('radio', { name: 'Xuất lẻ' }));
-      expect(await screen.findByRole('button', { name: 'Xuất lẻ một món' })).toBeInTheDocument();
-      unmount();
-    }
+  it('tải tồn lỗi → báo lỗi kèm "Thử lại", trang vẫn giữ tiêu đề Tủ / Kho', async () => {
+    mockViewport(1280);
+    stubStockApi((url) => (url.split('?')[0] === '/api/admin/stock' ? jsonResponse(500, { code: 'X', message: 'x' }) : undefined));
+    renderApp(makeMe('admin'), '/admin/stock');
+    expect(await screen.findByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Tủ / Kho' })).toBeInTheDocument();
   });
 
   it('đúng một h1 "Tủ / Kho" + liên kết "Sản phẩm"; không còn liên kết "Hàng NCC về? → Hàng về"', async () => {
@@ -206,96 +198,19 @@ describe('StockPage', () => {
       expect(screen.queryByRole('button', { name: /^Xem thêm/ })).toBeNull();
     });
   });
-  describe('tab Xuất lẻ', () => {
-    const ISSUE = {
-      id: 'm-1',
-      item_id: 'i-1',
-      item_name: 'Giấy A4',
-      item_name_en: null,
-      unit: 'ram',
-      qty: 1,
-      recipient_sub: 'u-binh',
-      recipient_name: 'Trần Thị Bình',
-      note: null,
-      actor_sub: 'u-hc',
-      created_at: '2026-11-03T03:00:00.000Z',
-    };
-    const issuesApi = (url: string) => {
-      if (url.startsWith('/api/admin/issues')) return jsonResponse(200, url.endsWith('2026-10') ? [] : [ISSUE]);
-      if (url === '/api/periods/current') return jsonResponse(200, { ym: '2026-11' });
-      return undefined;
-    };
+  describe('G6: Xuất lẻ thành trang riêng', () => {
+    it('không còn bộ chuyển "Trong tủ / Xuất lẻ" trên Tủ / Kho', async () => {
+      await open();
+      expect(screen.queryByRole('radio', { name: 'Xuất lẻ' })).toBeNull();
+      expect(screen.queryByRole('radiogroup', { name: 'Chế độ xem Kho' })).toBeNull();
+    });
 
-    async function openIssues(path: string) {
+    it('link cũ /admin/stock?tab=issues&ym=2026-10 → chuyển sang /admin/issues?ym=2026-10', async () => {
       mockViewport(1280);
-      const f = stubStockApi(issuesApi);
-      renderApp(makeMe('admin'), path);
-      await screen.findByText(/lần xuất/);
-      return f;
-    }
-
-    it('tab Xuất lẻ đổi URL và hiện bảng xuất lẻ', async () => {
-      mockViewport(1280);
-      stubStockApi(issuesApi);
-      renderApp(makeMe('admin'), '/admin/stock');
-      await screen.findByText('Giấy A4');
-      expect(screen.getByRole('radio', { name: 'Trong tủ' })).toBeChecked();
-      await userEvent.click(screen.getByRole('radio', { name: 'Xuất lẻ' }));
-      expect(screen.getByTestId('location-search')).toHaveTextContent('?tab=issues');
-      expect(await screen.findByText('Trần Thị Bình')).toBeInTheDocument();
-      expect(screen.getByRole('columnheader', { name: 'Người nhận' })).toBeInTheDocument();
-      await userEvent.click(screen.getByRole('radio', { name: 'Trong tủ' }));
-      expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
-      expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
-    });
-
-    it('?tab=issues&ym=2026-10: radio Xuất lẻ đang chọn, API gọi với ym=2026-10', async () => {
-      const f = await openIssues('/admin/stock?tab=issues&ym=2026-10');
-      expect(screen.getByRole('radio', { name: 'Xuất lẻ' })).toBeChecked();
-      expect(callsTo(f, '/api/admin/issues?ym=2026-10')).toHaveLength(1);
-    });
-
-    it('thiếu ym thì lấy THÁNG LỊCH hiện tại (giờ VN), không phải kỳ đăng ký đang mở: 25/11 với kỳ mở là 2026-12 → ym=2026-11', async () => {
-      vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-11-25T03:00:00Z') });
-      try {
-        const f = stubStockApi((url) => (url === '/api/periods/current' ? jsonResponse(200, { ym: '2026-12', registration_last_day: 10 }) : issuesApi(url)));
-        mockViewport(1280);
-        renderApp(makeMe('admin'), '/admin/stock?tab=issues');
-        await screen.findByText(/lần xuất/);
-        expect(callsTo(f, '/api/admin/issues?ym=2026-11')).toHaveLength(1);
-        expect(callsTo(f, '/api/admin/issues?ym=2026-12')).toHaveLength(0);
-        expect(screen.getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
-      } finally {
-        vi.useRealTimers();
-      }
-    });
-
-    it('tab Xuất lẻ có nút chính "Xuất lẻ một món" → hộp chọn món, chọn Giấy A4 thì hiện tồn 6 ram', async () => {
-      await openIssues('/admin/stock?tab=issues');
-      await userEvent.click(screen.getByRole('button', { name: 'Xuất lẻ một món' }));
-      const dialog = await screen.findByRole('dialog', { name: /^Xuất lẻ/ });
-      const list = within(dialog).getByRole('list', { name: 'Món còn trong tủ' });
-      expect(within(list).queryByText('Kẹp giấy')).toBeNull();
-      await userEvent.click(within(list).getByRole('button', { name: /^Giấy A4/ }));
-      expect(within(dialog).getByText('Tủ: 6 ram')).toBeInTheDocument();
-    });
-
-    it('tủ trống mọi món → "Xuất lẻ một món" khóa, lý do "Tủ đang trống"; còn 1 món có hàng → nút bật', async () => {
-      mockViewport(1280);
-      const empty = STOCK.map((r) => ({ ...r, stock_qty: 0, free: 0, held: 0 }));
-      stubStockApi((url) => (url.split('?')[0] === '/api/admin/stock' ? jsonResponse(200, empty) : issuesApi(url)));
-      const { unmount } = renderApp(makeMe('admin'), '/admin/stock?tab=issues');
-      await screen.findByText(/lần xuất/);
-      await waitFor(() => expect(screen.getByRole('button', { name: 'Xuất lẻ một món' })).toHaveAccessibleDescription('Tủ đang trống'));
-      expect(screen.getByRole('button', { name: 'Xuất lẻ một món' })).toBeDisabled();
-      unmount();
-      await openIssues('/admin/stock?tab=issues');
-      await waitFor(() => expect(screen.getByRole('button', { name: 'Xuất lẻ một món' })).toBeEnabled());
-    });
-
-    it('tab lạ rơi về Tồn kho', async () => {
-      await open('/admin/stock?tab=zzz');
-      expect(screen.getByRole('radio', { name: 'Trong tủ' })).toBeChecked();
+      stubStockApi((url) => (url.startsWith('/api/admin/issues') ? jsonResponse(200, []) : undefined));
+      renderApp(makeMe('admin'), '/admin/stock?tab=issues&ym=2026-10');
+      expect(await screen.findByRole('heading', { level: 1, name: 'Xuất lẻ' })).toBeInTheDocument();
+      expect(screen.getByTestId('location-search')).toHaveTextContent('?ym=2026-10');
     });
   });
 });

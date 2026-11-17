@@ -8,7 +8,12 @@ import { PeriodsService } from '../periods/periods.service';
 import { ITEM_COLUMNS } from './catalog-sql';
 import { ITEM_ORDER } from './item-order';
 import type { ItemDbRow, ItemRow } from './catalog-sql';
-import { catalogStates, lowStockIds, stockList, withStockState } from './stock-list';
+import {
+  catalogStates,
+  lowStockIds,
+  stockList,
+  withStockState,
+} from './stock-list';
 import type { StockListRow } from './stock-list';
 
 export interface Page<T> {
@@ -62,17 +67,18 @@ export class StockQueryService {
     );
   }
 
-  // Báo cáo đọc-only: được join users để hiện tên người nhận
+  // Báo cáo đọc-only: được join users để hiện tên người nhận và người xuất
   async issuesInMonth(ym: string, db: Executor = this.db) {
     const start = sql`(${ym} || '-01')::timestamp`;
     const result = await db.execute(sql`
       SELECT m.id, m.item_id, i.name AS item_name, i.name_en AS item_name_en,
              i.unit, -m.delta AS qty,
              m.recipient_sub, u.full_name AS recipient_name, m.note, m.actor_sub,
-             m.created_at
+             a.full_name AS actor_name, m.created_at
       FROM stock_movements m
       JOIN items i ON i.id = m.item_id
       LEFT JOIN users u ON u.sub = m.recipient_sub
+      LEFT JOIN users a ON a.sub = m.actor_sub
       WHERE m.reason = 'issue'
         AND m.created_at >= ${start} AT TIME ZONE 'Asia/Ho_Chi_Minh'
         AND m.created_at < (${start} + interval '1 month') AT TIME ZONE 'Asia/Ho_Chi_Minh'

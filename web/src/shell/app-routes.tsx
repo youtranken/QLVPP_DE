@@ -26,6 +26,7 @@ const DeliveryClassicRedirect = adminChunk.page('DeliveryClassicRedirect');
 const BacklogPage = adminChunk.page('BacklogPage');
 const ReportSendPage = adminChunk.page('ReportSendPage');
 const StockPage = adminChunk.page('StockPage');
+const IssuesPage = adminChunk.page('IssuesPage');
 const CatalogPage = adminChunk.page('CatalogPage');
 const CategoriesPage = adminChunk.page('CategoriesPage');
 const UnitsPage = adminChunk.page('UnitsPage');
@@ -113,6 +114,7 @@ export function AppRoutes() {
         <Route path="backlog" element={<BacklogPage />} />
         <Route path="reports" element={<ReportSendPage />} />
         <Route path="stock" element={<StockPage />} />
+        <Route path="issues" element={<IssuesPage />} />
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="categories/units" element={<UnitsPage />} />

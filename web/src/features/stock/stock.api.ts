@@ -47,6 +47,7 @@ export interface IssueRow {
   recipient_name: string | null;
   note: string | null;
   actor_sub: string;
+  actor_name: string | null;
   created_at: string;
 }
 

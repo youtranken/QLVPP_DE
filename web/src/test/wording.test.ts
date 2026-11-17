@@ -27,6 +27,7 @@ const PAGE_TITLE: Record<string, { key: string; dynamic?: true }> = {
   backlog: { key: 'delivery.backlog.title' },
   catalog: { key: 'catalog.title' },
   stock: { key: 'stock.page.title' },
+  issues: { key: 'nav.issues' },
   review: { key: 'nav.review' },
   categories: { key: 'catalog.setup.title' },
   users: { key: 'users.title' },

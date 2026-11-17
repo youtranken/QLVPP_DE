@@ -46,4 +46,14 @@ describe('Menu theo luồng chuẩn', () => {
     expect(within(sideNav()).queryByText('Danh mục món')).toBeNull();
     expect(within(sideNav()).queryByText('Nhóm & đơn vị')).toBeNull();
   });
+
+  it('G6: mục "Xuất lẻ" ngay sau "Tủ / Kho", trỏ /admin/issues', () => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/catalog');
+    const group = within(sideNav()).getByRole('group', { name: 'Danh mục và tủ' });
+    const labels = within(group).getAllByRole('link').map((a) => a.querySelector('.side__label')?.textContent);
+    expect(labels[labels.indexOf('Tủ / Kho') + 1]).toBe('Xuất lẻ');
+    expect(within(group).getByRole('link', { name: 'Xuất lẻ' })).toHaveAttribute('href', '/admin/issues');
+  });
 });

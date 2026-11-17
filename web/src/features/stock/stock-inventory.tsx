@@ -1,4 +1,4 @@
-import { useCallback, useState, type ReactNode } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePanelParam } from '@/lib/use-panel-param';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
@@ -29,7 +29,7 @@ interface Open {
 
 const EMPTY_KEY: Record<StockFilter, string> = { incoming: 'emptyIncoming', low: 'emptyLow', none: 'emptyNone' };
 
-export function StockInventory({ p, end }: { p: StockParams; end?: ReactNode }) {
+export function StockInventory({ p }: { p: StockParams }) {
   const { t, i18n } = useTranslation();
   const d = useStockData();
   const [search, setSearch] = useUrlSearchBox(p.view.q, p.setQ);
@@ -48,15 +48,7 @@ export function StockInventory({ p, end }: { p: StockParams; end?: ReactNode }) 
   const ledger = usePanelParam('item', { order: shown.map((r) => r.id), known: (id) => (d.loaded ? d.rows.some((r) => r.id === id) : undefined) });
   const { open: openLedger } = ledger;
   const onAction = useCallback((action: StockAction, r: StockRow) => (action === 'ledger' ? openLedger(r.id) : setOpen({ action, id: r.id })), [openLedger]);
-  // Tải tồn lỗi vẫn giữ bộ chuyển Tồn kho/Xuất lẻ để sang tab kia được
-  if (d.failed) {
-    return (
-      <>
-        {end && <div className="toolbar">{end}</div>}
-        <LoadError onRetry={d.retry} />
-      </>
-    );
-  }
+  if (d.failed) return <LoadError onRetry={d.retry} />;
 
   const target = open ? d.rows.find((r) => r.id === open.id) : undefined;
   const ledgerItem = ledger.id ? d.rows.find((r) => r.id === ledger.id) : undefined;
@@ -65,7 +57,6 @@ export function StockInventory({ p, end }: { p: StockParams; end?: ReactNode }) 
   return (
     <>
       <Toolbar search={{ value: search, onChange: setSearch, label: t('stock.page.search'), placeholder: t('stock.page.search'), maxLength: MAX_SEARCH }}>
-        {end}
         {/* Hàng "Đang lọc" nằm cùng hàng chip (chip chỉ dài nửa hàng): bật lọc không chèn thêm hàng đẩy bảng xuống */}
         {d.loaded && (
           <div className="sk-filter-row">

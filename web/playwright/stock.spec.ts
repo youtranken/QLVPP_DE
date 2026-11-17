@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Locator } from '@playwright/test';
-import { asRole, deleteTestUsers, devHeaders, expectNoContrastViolations, expectStockCell, isMobile, removeTestItem, seedActiveUser, shot, openPurchase } from './helpers';
+import { asRole, deleteTestUsers, devHeaders, expectNoContrastViolations, expectStockCell, isMobile, removeTestItem, seedActiveUser, seedPwItem, shot, openPurchase } from './helpers';
 import { seedLockedRequest } from './locked-request';
 
 const RECIPIENT = { sub: 'pw-recipient', name: 'PW Người nhận' };
@@ -65,8 +65,9 @@ test.describe('E1-S4 Tủ / Kho: nhập, xuất lẻ, lịch sử nhập xuất 
       await issue.getByLabel('Số lượng').fill('30');
       await issue.getByLabel('Dùng chung').check();
       await issue.getByLabel('Lý do').fill('Thử quá tồn');
-      await issue.getByRole('button', { name: 'Xuất', exact: true }).click();
-      await expect(issue.getByText(/Chỉ còn 10 /)).toBeVisible();
+      // Task 13: web chặn ngay tại ô (server vẫn trả STOCK_INSUFFICIENT — e2e api)
+      await expect(issue.getByRole('button', { name: 'Xuất', exact: true })).toBeDisabled();
+      await expect(issue.getByLabel('Số lượng')).toHaveAccessibleDescription(/Tủ chỉ còn 10/);
 
       await issue.getByLabel('Số lượng').fill('3');
       await issue.getByLabel('Dùng chung').uncheck();
@@ -86,7 +87,7 @@ test.describe('E1-S4 Tủ / Kho: nhập, xuất lẻ, lịch sử nhập xuất 
       await expect(ledger.getByRole('listitem').nth(0)).toContainText('“Người mới vào giữa kỳ”');
       await expect(ledger.getByRole('listitem').nth(1)).toContainText('Nhập ngoài kỳ 10 cái');
       await expect(ledger.getByRole('listitem').nth(1)).toContainText('“Đơn PW”');
-      await expect(ledger.getByText(/Tồn\s*7/)).toBeVisible();
+      await expect(ledger.getByText(/Tủ\s*7/)).toBeVisible();
       await shot(page, info, 'stock-ledger', false);
       await page.keyboard.press('Escape');
       await expect(ledger).toBeHidden();
@@ -163,8 +164,8 @@ test.describe('E9-S5 Tủ / Kho M1 (dev-identity admin)', () => {
       await again.getByLabel('Dùng chung').check();
       await again.getByLabel('Lý do').fill('PW biên');
       await again.getByLabel('Số lượng', { exact: false }).first().fill('4');
-      await again.getByRole('button', { name: 'Xuất', exact: true }).click();
-      await expect(again.getByText(/^Chỉ còn 3 /)).toBeVisible();
+      await expect(again.getByRole('button', { name: 'Xuất', exact: true })).toBeDisabled();
+      await expect(again.getByLabel('Số lượng', { exact: false }).first()).toHaveAccessibleDescription(/Tủ chỉ còn 3/);
       await expect(again.getByLabel('Số lượng', { exact: false }).first()).toHaveAttribute('aria-invalid', 'true');
       await again.getByLabel('Số lượng', { exact: false }).first().fill('3');
       await again.getByRole('button', { name: 'Xuất', exact: true }).click();
@@ -214,8 +215,7 @@ test.describe('E9-S5 Tủ / Kho M1 (dev-identity admin)', () => {
       await issue.getByRole('button', { name: 'Xuất', exact: true }).click();
       await expect(issue).toBeHidden();
 
-      await page.getByRole('radio', { name: 'Xuất lẻ' }).click();
-      await expect(page).toHaveURL(/tab=issues/);
+      await page.goto('/admin/issues');
       const issued = page.getByRole('row').filter({ hasText: itemName });
       await expect(issued).toBeVisible();
       await expect(issued).toContainText('3 cái');
@@ -228,9 +228,11 @@ test.describe('E9-S5 Tủ / Kho M1 (dev-identity admin)', () => {
     }
   });
 
-  test('E9-S5 Kho: ?filter=low chỉ còn món Sắp hết và bỏ lọc được', async ({ page }) => {
+  test('E9-S5 Kho: ?filter=low chỉ còn món Sắp hết và bỏ lọc được', async ({ page }, info) => {
     await page.goto('/admin/stock?filter=low');
-    await expect(page.getByRole('button', { name: /^Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
+    // Điện thoại: bộ lọc thu thành ô chọn
+    if (isMobile(info)) await expect(page.getByRole('combobox', { name: 'Lọc theo tình trạng tồn' })).toContainText('Sắp hết');
+    else await expect(page.getByRole('radio', { name: /^Sắp hết/ })).toBeChecked();
     await expect(page.getByText(/^Đang lọc: Sắp hết/)).toBeVisible();
     await page.getByRole('button', { name: 'Xóa lọc' }).click();
     await expect(page).not.toHaveURL(/filter=/);
@@ -254,13 +256,15 @@ test.describe('V2D-16 Tủ / Kho theo người đang chờ (dev-identity admin)'
       await page.goto('/admin/stock');
       await expect(page.getByRole('heading', { level: 1, name: 'Tủ / Kho' })).toBeVisible();
       await expect(page.getByRole('link', { name: /Hàng ADM về/ })).toHaveCount(0);
-      const chips = page.getByRole('group', { name: 'Lọc theo tình trạng tồn' });
-      await expect(chips.getByRole('button')).toHaveCount(4);
-      await chips.getByRole('button', { name: /Sắp hết/ }).click();
-      await expect(page).toHaveURL(/filter=low/);
-      await expect(chips.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
-      await chips.getByRole('button', { name: /Sắp hết/ }).click();
-      await expect(page).not.toHaveURL(/filter=/);
+      if (!isMobile(info)) {
+        const chips = page.getByRole('radiogroup', { name: 'Lọc theo tình trạng tồn' });
+        await expect(chips.getByRole('radio')).toHaveCount(4);
+        await chips.getByRole('radio', { name: /Sắp hết/ }).click();
+        await expect(page).toHaveURL(/filter=low/);
+        await expect(chips.getByRole('radio', { name: /Sắp hết/ })).toBeChecked();
+        await chips.getByRole('radio', { name: /^Tất cả/ }).click();
+        await expect(page).not.toHaveURL(/filter=/);
+      }
       await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(item.name);
       const row = page.getByRole('row').filter({ hasText: item.name });
       await expectStockCell(row, 5);
@@ -290,10 +294,45 @@ test.describe('V2D-16 Tủ / Kho theo người đang chờ (dev-identity admin)'
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'v2d16-stock-short', false);
 
-      await page.getByRole('radio', { name: 'Xuất lẻ' }).click();
+      await page.goto('/admin/issues');
       await expect(page.getByRole('button', { name: 'Xuất lẻ một món' })).toBeVisible();
     } finally {
       seed.cleanup();
     }
   });
 });
+
+test.describe('G6 Xuất lẻ (dev-identity admin)', () => {
+  asRole('admin');
+
+  test('G6 Xuất lẻ: trang riêng, hộp chọn món có tìm, gõ 21 khi tủ 19 → lỗi dưới ô + nút khóa có lý do; Hủy → không POST', async ({ page }, info) => {
+    const item = await seedPwItem(page, { stock: 19 });
+    const posts: string[] = [];
+    page.on('request', (r) => {
+      if (r.method() === 'POST' && r.url().includes('/issue')) posts.push(r.url());
+    });
+    try {
+      await page.goto('/admin/issues');
+      await expect(page.getByRole('heading', { level: 1, name: 'Xuất lẻ' })).toBeVisible();
+      await expect(page.getByText(/^Đang hiện \d+ lần xuất/)).toBeVisible();
+      await page.getByRole('button', { name: 'Xuất lẻ một món' }).click();
+      const dialog = page.getByRole('dialog', { name: /^Xuất lẻ/ });
+      await dialog.getByRole('searchbox', { name: 'Tìm món' }).fill(item.name);
+      await dialog.getByRole('list', { name: 'Món còn trong tủ' }).getByRole('button', { name: new RegExp(`^${item.name}`) }).click();
+      const qty = dialog.getByLabel('Số lượng');
+      await qty.fill('21');
+      await expect(qty).toHaveAccessibleDescription(/Tủ chỉ còn 19/);
+      const submit = dialog.getByRole('button', { name: 'Xuất', exact: true });
+      await expect(submit).toBeDisabled();
+      await expect(submit).toHaveAccessibleDescription(/.+/);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await shot(page, info, 'g6-issues', false);
+      await dialog.getByRole('button', { name: 'Hủy' }).click();
+      await expect(dialog).toBeHidden();
+      expect(posts).toEqual([]);
+    } finally {
+      await removeTestItem(page.request, item.id);
+    }
+  });
+});
+

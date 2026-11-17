@@ -34,7 +34,7 @@ describe('Câu chữ còn lệch sau rà soát giao diện A', () => {
   });
 
   it('một chữ "Tủ" cho số đang có trong tủ (chủ dự án chốt 17/11): không còn "Tồn kho"/"Tồn hiện tại"/"Tồn sau"', () => {
-    expect(VI('stock.issues.tabStock')).toBe('Trong tủ');
+    expect(VI('stock.page.colStock')).toBe('Trong tủ');
     expect(VI('catalog.list.colStock')).toBe('Tủ');
     expect(VI('arrivals.table.stock')).toBe('Tủ');
     expect(VI('stock.dialog.current', { qty: 20, unit: 'ram' })).toBe('Tủ: 20 ram');

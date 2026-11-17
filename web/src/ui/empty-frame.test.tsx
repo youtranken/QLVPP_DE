@@ -43,7 +43,7 @@ describe('EmptyFrame: dùng ở cả năm chỗ', () => {
     ['features/month/month-open-table.tsx', /empty=\{\{ art: 'no-request' \}\}/],
     ['features/arrivals/arrivals-page.tsx', /<EmptyFrame flush variant="no-match"/],
     ['features/delivery/backlog-page.tsx', /<EmptyFrame/],
-    ['features/stock/issues-panel.tsx', /empty=\{\{ art: 'nothing-deliver' \}\}/],
+    ['features/issues/issues-table.tsx', /empty=\{\{ art: 'nothing-deliver' \}\}/],
   ])('%s', (file, re) => {
     const text = src(file);
     expect(text).toMatch(re);

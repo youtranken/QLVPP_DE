@@ -27,6 +27,7 @@ const nav: Messages<typeof vi> = {
     month: 'Month period',
     catalog: 'Products',
     stock: 'Cupboard',
+    issues: 'Issues',
     users: 'Directory',
     review: 'Off-catalog items',
     arrivals: 'Receiving',

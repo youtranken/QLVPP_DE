@@ -22,7 +22,7 @@ describe('Báo cáo & gửi NCC: bảng và ô Đề nghị', () => {
     expect(t.getByText('2 món')).toBeInTheDocument();
     expect(screen.queryByText(/Phần 2/)).toBeNull();
     expect(screen.queryByText('Bản chốt')).toBeNull();
-    expect(screen.queryByText(/Xuất lẻ/)).toBeNull();
+    expect(within(screen.getByRole('main')).queryByText(/Xuất lẻ/)).toBeNull();
   });
 
   it('mọi Đề nghị = 0 và chưa gửi → nút "Tháng này không cần đề nghị NCC", Xuất/In vô hiệu', async () => {

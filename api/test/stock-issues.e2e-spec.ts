@@ -70,6 +70,32 @@ describe('GET admin/issues: biên tháng theo giờ Asia/Ho_Chi_Minh', () => {
     expect(await notes('2031-04')).toEqual(['đầu tháng 4']);
   });
 
+  it('mỗi dòng có actor_name = tên người xuất trong danh bạ (cột "Người xuất"); không có trong danh bạ → null', async () => {
+    await pool.query(
+      `INSERT INTO users (sub, full_name, status) VALUES ($1, 'Lê Hành Chính', 'active') ON CONFLICT (sub) DO NOTHING`,
+      [`e2e-isu-actor-${RUN}`],
+    );
+    await pool.query(
+      `INSERT INTO stock_movements (item_id, delta, reason, note, actor_sub, created_at)
+       VALUES ($1, -1, 'issue', $2, $3, '2031-03-15T09:00:00+07:00')`,
+      [itemId, `${RUN} có người xuất`, `e2e-isu-actor-${RUN}`],
+    );
+    const rows = (await list(YM).expect(200)).body as Array<{
+      note: string;
+      actor_name: string | null;
+    }>;
+    const named = rows.find((r) => r.note === `${RUN} có người xuất`);
+    const unknown = rows.find((r) => r.note === `${RUN} đầu tháng 3`);
+    expect(named?.actor_name).toBe('Lê Hành Chính');
+    expect(unknown).toHaveProperty('actor_name', null);
+    await pool.query('DELETE FROM stock_movements WHERE note = $1', [
+      `${RUN} có người xuất`,
+    ]);
+    await pool.query('DELETE FROM users WHERE sub = $1', [
+      `e2e-isu-actor-${RUN}`,
+    ]);
+  });
+
   it('member gọi admin/issues → 403 FORBIDDEN_ROLE', async () => {
     const res = await list(YM, 'member').expect(403);
     expect(res.body).toMatchObject({ code: 'FORBIDDEN_ROLE' });

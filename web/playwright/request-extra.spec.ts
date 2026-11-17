@@ -121,7 +121,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
     const nameA = `PW chép thường ${stamp}`;
     const nameB = `PW chép ngừng ${stamp}`;
     const itemA = await createItem(request, nameA, { max_qty: 5 });
-    const itemB = await createItem(request, nameB);
+    const itemB = await createItem(request, nameB, {});
     psql(`UPDATE items SET active = false WHERE id = '${itemB}'`);
     const other = await seedPwItem(page);
     const period = await (await request.get('/api/periods/current', { headers: me.headers })).json();
