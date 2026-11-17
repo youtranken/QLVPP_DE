@@ -60,7 +60,7 @@ describe('chuông period_locked: số đăng ký từ S, custom_pending, kỳ 0 
         headcount: 3,
         custom_pending: 2,
       },
-      link: '/admin/review?ym=2027-01',
+      link: '/admin/month?ym=2027-01&chip=pending',
     });
   });
 });

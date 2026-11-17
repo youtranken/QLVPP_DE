@@ -2,7 +2,7 @@
  "schema_version": 1,
  "diagram_type": "sequence",
  "meta": {
-  "title": "VPP — giao hàng: hộp giao, giao nhiều phiếu (mỗi phiếu một tx) và mọi đường giao/hủy (vòng 3)",
+  "title": "VPP — giao hàng: hộp Giao, giao n phiếu, Không mua món chờ duyệt, điều chỉnh từ hộp Giao (giao diện A)",
   "output": "docs/diagrams/vpp-giao-hang.html",
   "locale": "vi",
   "quality_profile": "showcase",
@@ -10,7 +10,7 @@
    "url": "https://github.com/youtranken/QLVPP_DE.git",
    "provider": "github",
    "link_mode": "local-only",
-   "revision": "65fe03077b62a5ddac8c2a454e59f5ac72c815e3"
+   "revision": "e86f6443ca655e2f06ab1012cd555c36820a50ab"
   },
   "legend": {
    "entries": {
@@ -41,21 +41,21 @@
    "sources": [
     {
      "path": "web/src/features/delivery/people/deliver-dialog.tsx",
-     "line": 67,
-     "end_line": 100,
+     "line": 72,
+     "end_line": 110,
      "label": "DeliverDialog"
     },
     {
      "path": "web/src/features/delivery/people/deliver-plan.ts",
-     "line": 109,
-     "end_line": 133,
-     "label": "dialogRows"
+     "line": 138,
+     "end_line": 176,
+     "label": "dialogRows, limitsOf"
     },
     {
      "path": "web/src/features/delivery/people/deliver-send.ts",
-     "line": 27,
-     "end_line": 54,
-     "label": "sendSteps"
+     "line": 28,
+     "end_line": 75,
+     "label": "runStep, sendWithRejects"
     }
    ]
   },
@@ -67,13 +67,13 @@
    "sources": [
     {
      "path": "web/src/features/delivery/backlog-page.tsx",
-     "line": 80,
-     "end_line": 85
+     "line": 38,
+     "end_line": 90
     },
     {
      "path": "web/src/features/delivery/deliver-more-dialog.tsx",
-     "line": 24,
-     "end_line": 25
+     "line": 25,
+     "end_line": 40
     }
    ]
   },
@@ -85,13 +85,13 @@
    "sources": [
     {
      "path": "api/src/modules/delivery/delivery-people.service.ts",
-     "line": 32,
+     "line": 33,
      "end_line": 60,
      "label": "holds"
     },
     {
      "path": "api/src/modules/delivery/delivery-people.service.ts",
-     "line": 114,
+     "line": 115,
      "end_line": 135
     }
    ]
@@ -110,8 +110,8 @@
     },
     {
      "path": "api/src/modules/delivery/custom-cap.ts",
-     "line": 12,
-     "end_line": 29,
+     "line": 13,
+     "end_line": 27,
      "label": "trần ngoài DM"
     }
    ]
@@ -124,9 +124,21 @@
    "sources": [
     {
      "path": "api/src/modules/delivery/bulk-delivery.service.ts",
-     "line": 47,
-     "end_line": 75,
+     "line": 49,
+     "end_line": 76,
      "label": "deliver, deliverRequest"
+    },
+    {
+     "path": "api/src/modules/delivery/bulk-delivery.service.ts",
+     "line": 77,
+     "end_line": 115,
+     "label": "reject_line_ids"
+    },
+    {
+     "path": "api/src/modules/requests/review-writer.ts",
+     "line": 119,
+     "end_line": 140,
+     "label": "rejectLinesWithin"
     }
    ]
   },
@@ -139,13 +151,39 @@
     {
      "path": "api/src/modules/delivery/cancel-remaining.service.ts",
      "line": 40,
-     "end_line": 95
+     "end_line": 97
     },
     {
      "path": "api/src/modules/delivery/cancel-remaining.service.ts",
-     "line": 97,
+     "line": 98,
      "end_line": 140,
      "label": "chuông"
+    }
+   ]
+  },
+  {
+   "id": "adj",
+   "type": "backend",
+   "label": "AdminRequest",
+   "sublabel": "điều chỉnh phiếu",
+   "sources": [
+    {
+     "path": "api/src/modules/requests/admin-request.service.ts",
+     "line": 40,
+     "end_line": 92,
+     "label": "saveLines"
+    },
+    {
+     "path": "api/src/modules/requests/adjust-rules.ts",
+     "line": 98,
+     "end_line": 170,
+     "label": "planAdjust"
+    },
+    {
+     "path": "web/src/features/delivery/people/deliver-dialog.tsx",
+     "line": 189,
+     "end_line": 224,
+     "label": "nút Điều chỉnh → AdjustDialog"
     }
    ]
   },
@@ -157,13 +195,13 @@
    "sources": [
     {
      "path": "api/src/modules/requests/line-notifier.ts",
-     "line": 56,
-     "end_line": 61
+     "line": 54,
+     "end_line": 70
     },
     {
      "path": "api/src/modules/notifications/notifications.service.ts",
-     "line": 74,
-     "end_line": 100
+     "line": 72,
+     "end_line": 110
     }
    ]
   },
@@ -182,35 +220,45 @@
      "path": "api/src/migrations/0117_custom_receipts.sql",
      "line": 1,
      "end_line": 11
+    },
+    {
+     "path": "api/src/migrations/0130_adjust_reason_cannot_buy.sql",
+     "line": 1,
+     "end_line": 5
     }
    ]
   }
  ],
  "segments": [
   {
-   "from": 165,
-   "to": 285,
+   "from": 148,
+   "to": 320,
    "label": "Mở hộp: đề xuất"
   },
   {
-   "from": 305,
-   "to": 595,
+   "from": 358,
+   "to": 726,
    "label": "Giao từng dòng, nợ cũ trước"
   },
   {
-   "from": 615,
-   "to": 815,
-   "label": "Hủy phần thiếu ADM hết hàng"
+   "from": 764,
+   "to": 1045,
+   "label": "Hủy phần thiếu NCC hết hàng"
   },
   {
-   "from": 835,
-   "to": 1035,
+   "from": 1083,
+   "to": 1314,
    "label": "Còn nợ: Giao bổ sung · Hủy nợ"
   },
   {
-   "from": 1055,
-   "to": 1350,
-   "label": "Giao n phiếu: mỗi phiếu một tx"
+   "from": 1352,
+   "to": 1736,
+   "label": "Giao n phiếu / món chờ duyệt: mỗi phiếu một tx"
+  },
+  {
+   "from": 1774,
+   "to": 2178,
+   "label": "Điều chỉnh từ hộp Giao: giảm / từ chối"
   }
  ],
  "messages": [
@@ -218,7 +266,7 @@
    "id": "m1",
    "from": "dlg",
    "to": "people",
-   "y": 185,
+   "y": 170,
    "label": "GET periods/:ym/delivery-people",
    "note": "dòng kỳ K* + nợ; adm_out; deliver_cap"
   },
@@ -226,7 +274,7 @@
    "id": "m2",
    "from": "people",
    "to": "dlg",
-   "y": 245,
+   "y": 240,
    "label": "{people}",
    "variant": "return",
    "note": "đề xuất: đăng ký trước giữ trước; người nghỉ 0"
@@ -235,7 +283,7 @@
    "id": "m3",
    "from": "dlg",
    "to": "dsvc",
-   "y": 330,
+   "y": 380,
    "label": "POST lines/:id/deliver {qty, expected}",
    "variant": "emphasis",
    "note": "tuần tự; lỗi một dòng không chặn dòng sau"
@@ -244,7 +292,7 @@
    "id": "m4",
    "from": "dsvc",
    "to": "db",
-   "y": 385,
+   "y": 475,
    "label": "FOR UPDATE requests → request_lines",
    "variant": "security"
   },
@@ -252,7 +300,7 @@
    "id": "m5",
    "from": "dsvc",
    "to": "db",
-   "y": 420,
+   "y": 517,
    "label": "ngoài DM: Σ đã về − Σ đã giao",
    "variant": "security",
    "note": "vượt → 409 CUSTOM_NOT_RECEIVED"
@@ -261,7 +309,7 @@
    "id": "m6",
    "from": "dsvc",
    "to": "db",
-   "y": 480,
+   "y": 587,
    "label": "UPDATE items WHERE stock_qty >= q",
    "variant": "emphasis",
    "note": "0 dòng → 409 STOCK_INSUFFICIENT"
@@ -270,7 +318,7 @@
    "id": "m7",
    "from": "dsvc",
    "to": "notif",
-   "y": 540,
+   "y": 657,
    "label": "notifyIfComplete",
    "variant": "dashed"
   },
@@ -278,7 +326,7 @@
    "id": "m8",
    "from": "dsvc",
    "to": "dlg",
-   "y": 575,
+   "y": 699,
    "label": "200 {line, stock_qty, request_complete}",
    "variant": "return"
   },
@@ -286,16 +334,16 @@
    "id": "m9",
    "from": "dlg",
    "to": "csvc",
-   "y": 640,
+   "y": 786,
    "label": "POST cancel-remaining {adm_out_of_stock}",
    "variant": "emphasis",
-   "note": "sau mọi lần giao; bỏ qua nếu giao dòng đó lỗi"
+   "note": "dòng NCC hết hàng; bỏ qua nếu giao dòng đó lỗi"
   },
   {
    "id": "m10",
    "from": "csvc",
    "to": "db",
-   "y": 700,
+   "y": 881,
    "label": "khóa dấu out → khóa dòng",
    "variant": "security",
    "note": "K* không đánh dấu → 409 ITEM_NOT_ADM_OUT"
@@ -304,7 +352,7 @@
    "id": "m11",
    "from": "csvc",
    "to": "notif",
-   "y": 760,
+   "y": 976,
    "label": "linesAdjusted (chuông ngày)",
    "variant": "dashed"
   },
@@ -312,7 +360,7 @@
    "id": "m12",
    "from": "csvc",
    "to": "dlg",
-   "y": 795,
+   "y": 1018,
    "label": "200 {cancelled_now}",
    "variant": "return"
   },
@@ -320,7 +368,7 @@
    "id": "m13",
    "from": "back",
    "to": "dsvc",
-   "y": 860,
+   "y": 1105,
    "label": "Giao bổ sung: POST deliver",
    "note": "cùng luật khóa và trần như hộp giao"
   },
@@ -328,7 +376,7 @@
    "id": "m14",
    "from": "back",
    "to": "csvc",
-   "y": 920,
+   "y": 1175,
    "label": "Hủy nợ: POST cancel-remaining {reason_code}",
    "variant": "emphasis",
    "note": "dòng K* → 409 NOT_DEBT_YET"
@@ -337,7 +385,7 @@
    "id": "m15",
    "from": "csvc",
    "to": "notif",
-   "y": 980,
+   "y": 1245,
    "label": "line_cancelled (trừ user_left)",
    "variant": "dashed"
   },
@@ -345,7 +393,7 @@
    "id": "m16",
    "from": "csvc",
    "to": "back",
-   "y": 1015,
+   "y": 1287,
    "label": "200 {line, cancelled_now}",
    "variant": "return"
   },
@@ -353,25 +401,25 @@
    "id": "b1",
    "from": "dlg",
    "to": "bsvc",
-   "y": 1100,
-   "label": "POST deliveries/bulk {requests:[{request_id, lines}]}",
+   "y": 1374,
+   "label": "POST deliveries/bulk {requests:[{request_id, lines, reject_line_ids?}]}",
    "variant": "emphasis",
-   "note": "n = số người chọn; web chia lô ≤ 100 phiếu; số từng dòng tính như hộp giao"
+   "note": "Giao n phiếu; hộp Giao cũng đi đường này khi phiếu có món ngoài DM chờ duyệt"
   },
   {
    "id": "b2",
    "from": "bsvc",
    "to": "db",
-   "y": 1160,
-   "label": "mỗi phiếu: BEGIN → FOR UPDATE → UPDATE items",
+   "y": 1494,
+   "label": "mỗi phiếu: BEGIN → FOR UPDATE → Không mua → UPDATE items",
    "variant": "security",
-   "note": "tủ thiếu: giao phần có, phần thiếu thành Còn nợ"
+   "note": "món chờ đã duyệt/không còn → 409 REJECT_LINES_STALE; tủ thiếu: phần thiếu thành Còn nợ"
   },
   {
    "id": "b3",
    "from": "bsvc",
    "to": "notif",
-   "y": 1237,
+   "y": 1614,
    "label": "notifyIfComplete (sau mỗi phiếu)",
    "variant": "dashed"
   },
@@ -379,69 +427,125 @@
    "id": "b4",
    "from": "bsvc",
    "to": "dlg",
-   "y": 1295,
+   "y": 1656,
    "label": "200 {results:[{request_id, ok, error?}]}",
    "variant": "return",
    "note": "một phiếu lỗi không kéo phiếu khác; PERIOD_NOT_LOCKED trả theo phiếu"
+  },
+  {
+   "id": "a1",
+   "from": "dlg",
+   "to": "adj",
+   "y": 1796,
+   "label": "PUT admin/requests/:id/lines {expected_updated_at, lines}",
+   "variant": "emphasis",
+   "note": "Giảm còn n / Từ chối; một lý do: Hết hàng · Số lượng quá nhiều · Không mua được · Khác"
+  },
+  {
+   "id": "a2",
+   "from": "adj",
+   "to": "db",
+   "y": 1916,
+   "label": "FOR UPDATE phiếu → dòng · assertLocked",
+   "variant": "security",
+   "note": "mốc lệch → 409 STALE_UPDATE; tăng → 409 QTY_INCREASE_FORBIDDEN"
+  },
+  {
+   "id": "a3",
+   "from": "adj",
+   "to": "db",
+   "y": 2011,
+   "label": "audit request.updated + request_line_adjustments",
+   "variant": "emphasis"
+  },
+  {
+   "id": "a4",
+   "from": "adj",
+   "to": "notif",
+   "y": 2053,
+   "label": "linesAdjusted (chuông ngày)",
+   "variant": "dashed",
+   "note": "chỉ user_left thì không chuông"
+  },
+  {
+   "id": "a5",
+   "from": "adj",
+   "to": "dlg",
+   "y": 2123,
+   "label": "200 {request, adjustments}",
+   "variant": "return",
+   "note": "hộp Giao nạp lại rồi chụp lại đề xuất"
   }
  ],
  "activations": [
   {
    "participant": "dlg",
-   "from": 180,
-   "to": 800,
+   "from": 165,
+   "to": 1023,
    "type": "frontend"
   },
   {
    "participant": "dsvc",
-   "from": 330,
-   "to": 580,
+   "from": 375,
+   "to": 704,
    "type": "backend"
   },
   {
    "participant": "csvc",
-   "from": 640,
-   "to": 800,
+   "from": 781,
+   "to": 1023,
    "type": "backend"
   },
   {
    "participant": "back",
-   "from": 855,
-   "to": 1020,
+   "from": 1100,
+   "to": 1292,
    "type": "frontend"
   },
   {
    "participant": "csvc",
-   "from": 920,
-   "to": 1020,
+   "from": 1170,
+   "to": 1292,
    "type": "backend"
   },
   {
    "participant": "bsvc",
-   "from": 1100,
-   "to": 1275,
+   "from": 1369,
+   "to": 1661,
    "type": "backend"
   },
   {
    "participant": "dlg",
-   "from": 1095,
-   "to": 1300,
+   "from": 1369,
+   "to": 1661,
    "type": "frontend"
+  },
+  {
+   "participant": "dlg",
+   "from": 1791,
+   "to": 2128,
+   "type": "frontend"
+  },
+  {
+   "participant": "adj",
+   "from": 1791,
+   "to": 2128,
+   "type": "backend"
   }
  ],
  "cards": [
   {
    "dot": "cyan",
-   "title": "Đề xuất trong hộp",
+   "title": "Đề xuất trong hộp Giao",
    "items": [
     "Hàng: nợ trước (kỳ cũ nhất trước), rồi kỳ này; trong kỳ theo thứ tự món chung",
     "Tủ thuộc về món: dòng trên lấy trước; \"Giữ k cho m người đăng ký trước\"",
-    "Dòng chờ duyệt không giao; dòng ngoài DM có trong bản in chỉ giao trong số đã về"
+    "Món ngoài DM chờ duyệt: gửi kèm reject_line_ids → ghi Không mua (auto:not_approved) cùng tx với phần giao"
    ]
   },
   {
    "dot": "amber",
-   "title": "Dòng ADM hết hàng",
+   "title": "Dòng NCC hết hàng",
    "items": [
     "Gợi ý = phần tủ còn cho người này; phần thiếu bị hủy (không thành nợ)",
     "Chủ phiếu nhận một chuông ngày line_adjusted, không phải line_cancelled",
@@ -453,17 +557,17 @@
    "title": "Chống ghi đè",
    "items": [
     "Mỗi request kèm expected_delivered_qty (và expected_qty khi hủy) → 409 STALE_UPDATE",
-    "Phiên hết giữa chừng: các dòng sau đánh dấu \"chưa gửi\"",
-    "Không có route giao cả phiếu (deliver-all đã gỡ); giao nhiều phiếu = bulk, mỗi phiếu một tx"
+    "Hộp Điều chỉnh gửi expected_updated_at của phiếu; giao vừa đổi phiếu thì nhận STALE_UPDATE",
+    "Không có route giao cả phiếu; giao nhiều phiếu = bulk, mỗi phiếu một tx"
    ]
   },
   {
    "dot": "emerald",
-   "title": "Giao nhiều phiếu (bảng Giao hàng)",
+   "title": "Giao n phiếu (bảng Giao hàng)",
    "items": [
-    "Nút \"Giao n phiếu\": n = số người đang chọn; chỉ dòng kiểu \"giao\", dòng ADM hết hàng vẫn xử lý ở hộp từng người",
+    "Nút \"Giao n phiếu\": n = số người đang chọn; chỉ dòng kiểu \"giao\", dòng NCC hết hàng vẫn xử lý ở hộp từng người",
     "Kết quả từng phiếu; lỗi giữa chừng → tải lại danh sách, phiếu chưa gửi ghi \"Chưa gửi\"",
-    "Idempotent nhờ expected_delivered_qty: bấm lần hai nhận STALE_UPDATE thay vì giao đôi"
+    "Người có món giao lỗi thì không gửi phần ghi Không mua (REJECT_SKIPPED ở web)"
    ]
   }
  ]

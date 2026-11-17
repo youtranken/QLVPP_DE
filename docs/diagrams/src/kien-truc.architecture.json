@@ -2,7 +2,7 @@
  "schema_version": 1,
  "diagram_type": "architecture",
  "meta": {
-  "title": "VPP Công trình — kiến trúc thành phần (hết Plan v2-D)",
+  "title": "VPP Công trình — kiến trúc thành phần (hết Plan giao diện A)",
   "output": "docs/diagrams/vpp-kien-truc.html",
   "locale": "vi",
   "quality_profile": "showcase",
@@ -10,7 +10,7 @@
    "url": "https://github.com/youtranken/QLVPP_DE.git",
    "provider": "github",
    "link_mode": "local-only",
-   "revision": "e5d57874ceec1ebcd998227c71f05088c110d70c"
+   "revision": "e86f6443ca655e2f06ab1012cd555c36820a50ab"
   }
  },
  "components": [
@@ -31,8 +31,13 @@
     {
      "path": "web/src/App.tsx",
      "line": 10,
-     "end_line": 26,
-     "label": "boot /api/auth/me"
+     "end_line": 27,
+     "label": "boot GET auth/session"
+    },
+    {
+     "path": "web/src/shell/use-auth-boot.ts",
+     "line": 69,
+     "end_line": 86
     }
    ]
   },
@@ -53,8 +58,8 @@
    "sources": [
     {
      "path": "docker-compose.yml",
-     "line": 41,
-     "end_line": 46,
+     "line": 55,
+     "end_line": 60,
      "label": "mạng edge, alias vpp-web"
     }
    ]
@@ -75,8 +80,9 @@
    "sources": [
     {
      "path": "web/nginx.conf",
-     "line": 22,
-     "end_line": 39
+     "line": 45,
+     "end_line": 57,
+     "label": "proxy /api"
     }
    ]
   },
@@ -97,13 +103,13 @@
    "sources": [
     {
      "path": "api/src/modules/auth/auth.module.ts",
-     "line": 30,
-     "end_line": 35
+     "line": 47,
+     "end_line": 51
     },
     {
      "path": "api/src/modules/auth/identity.guard.ts",
-     "line": 85,
-     "end_line": 98,
+     "line": 90,
+     "end_line": 104,
      "label": "@Public ẩn danh khi 503"
     }
    ]
@@ -125,28 +131,28 @@
    "sources": [
     {
      "path": "api/src/modules/auth/auth.controller.ts",
-     "line": 87,
-     "end_line": 135,
+     "line": 104,
+     "end_line": 141,
      "label": "sa-login"
     },
     {
      "path": "api/src/modules/auth/session-auth.service.ts",
-     "line": 95,
-     "end_line": 132,
+     "line": 166,
+     "end_line": 200,
      "label": "refresh → 503"
     },
     {
      "path": "api/src/modules/users/directory-sync.scheduler.ts",
-     "line": 40,
-     "end_line": 46
+     "line": 11,
+     "end_line": 49
     }
    ]
   },
   {
    "id": "pmhid",
    "type": "external",
-   "label": "PMH ID",
-   "sublabel": "OIDC · JWKS · Directory API",
+   "label": "Tài khoản D&E",
+   "sublabel": "PMH ID · OIDC · JWKS · Directory",
    "pos": [
     960,
     40
@@ -158,20 +164,20 @@
    "sources": [
     {
      "path": "api/src/modules/auth/openid-client.provider.ts",
-     "line": 34,
-     "end_line": 60,
+     "line": 35,
+     "end_line": 66,
      "label": "discovery"
     },
     {
      "path": "api/src/modules/auth/jwt-verifier.service.ts",
-     "line": 22,
-     "end_line": 35,
-     "label": "JWKS"
+     "line": 34,
+     "end_line": 80,
+     "label": "JWKS · ver 3"
     },
     {
      "path": "api/src/modules/users/directory.client.ts",
-     "line": 49,
-     "end_line": 80
+     "line": 94,
+     "end_line": 137
     }
    ]
   },
@@ -179,7 +185,7 @@
    "id": "core",
    "type": "backend",
    "label": "catalog · periods · requests",
-   "sublabel": "phiếu · giảm có lý do · tủ · hàng về",
+   "sublabel": "phiếu · điều chỉnh · duyệt · tủ · nhận hàng",
    "pos": [
     640,
     380
@@ -191,19 +197,22 @@
    "tag": "container api",
    "sources": [
     {
-     "path": "api/src/app.module.ts",
-     "line": 58,
-     "end_line": 72
-    },
-    {
      "path": "api/src/modules/requests/admin-request.service.ts",
      "line": 40,
-     "end_line": 89
+     "end_line": 92,
+     "label": "PUT admin/requests/:id/lines"
     },
     {
-     "path": "api/src/modules/catalog/adm-out.controller.ts",
-     "line": 23,
-     "end_line": 85
+     "path": "api/src/modules/requests/admin-user-history.controller.ts",
+     "line": 18,
+     "end_line": 36,
+     "label": "users/:sub/requests"
+    },
+    {
+     "path": "api/src/modules/catalog/stock.controller.ts",
+     "line": 56,
+     "end_line": 95,
+     "label": "stock · movements · issues"
     }
    ]
   },
@@ -211,7 +220,7 @@
    "id": "delivery",
    "type": "backend",
    "label": "delivery",
-   "sublabel": "giao từng dòng · còn nợ · hủy nợ",
+   "sublabel": "giao dòng · giao n phiếu · hủy nợ",
    "pos": [
     340,
     380
@@ -228,14 +237,15 @@
      "end_line": 70
     },
     {
-     "path": "api/src/modules/delivery/cancel-remaining.service.ts",
-     "line": 40,
-     "end_line": 95
+     "path": "api/src/modules/delivery/bulk-delivery.service.ts",
+     "line": 49,
+     "end_line": 110,
+     "label": "bulk + reject_line_ids"
     },
     {
-     "path": "api/src/modules/delivery/delivery-people.service.ts",
-     "line": 114,
-     "end_line": 135
+     "path": "api/src/modules/delivery/cancel-remaining.service.ts",
+     "line": 40,
+     "end_line": 97
     }
    ]
   },
@@ -256,13 +266,13 @@
    "sources": [
     {
      "path": "api/src/modules/reports/snapshots.service.ts",
-     "line": 104,
-     "end_line": 148
+     "line": 71,
+     "end_line": 136
     },
     {
      "path": "api/src/modules/reports/send-state.service.ts",
-     "line": 41,
-     "end_line": 97
+     "line": 44,
+     "end_line": 90
     },
     {
      "path": "api/src/modules/reports/xlsx-report.ts",
@@ -288,8 +298,8 @@
    "sources": [
     {
      "path": "api/src/modules/notifications/notifications.service.ts",
-     "line": 65,
-     "end_line": 89
+     "line": 72,
+     "end_line": 110
     },
     {
      "path": "api/src/modules/notifications/notification-events.ts",
@@ -303,7 +313,7 @@
    "id": "reminders",
    "type": "backend",
    "label": "reminders (cron)",
-   "sublabel": "khóa sổ · tự hủy ADM hết hàng",
+   "sublabel": "khóa sổ · tự hủy NCC hết hàng",
    "pos": [
     40,
     560
@@ -316,13 +326,13 @@
    "sources": [
     {
      "path": "api/src/modules/reminders/notification-scheduler.ts",
-     "line": 120,
-     "end_line": 145
+     "line": 76,
+     "end_line": 135
     },
     {
      "path": "api/src/modules/reminders/adm-out-settlement.ts",
-     "line": 23,
-     "end_line": 70
+     "line": 33,
+     "end_line": 75
     }
    ]
   },
@@ -330,7 +340,7 @@
    "id": "postgres",
    "type": "database",
    "label": "PostgreSQL 18",
-   "sublabel": "pgdata · migrations 0001–0119",
+   "sublabel": "pgdata · migrations 0001–0130",
    "pos": [
     640,
     560
@@ -342,13 +352,18 @@
    "sources": [
     {
      "path": "docker-compose.yml",
-     "line": 51,
-     "end_line": 61
+     "line": 65,
+     "end_line": 80
     },
     {
      "path": "api/src/database/database.module.ts",
      "line": 13,
      "end_line": 28
+    },
+    {
+     "path": "api/src/migrations/0130_adjust_reason_cannot_buy.sql",
+     "line": 1,
+     "end_line": 5
     }
    ]
   },
@@ -368,8 +383,8 @@
    "sources": [
     {
      "path": "docker-compose.yml",
-     "line": 24,
-     "end_line": 26
+     "line": 40,
+     "end_line": 40
     },
     {
      "path": "api/src/modules/files/files.service.ts",
@@ -395,8 +410,8 @@
    "sources": [
     {
      "path": "docker-compose.yml",
-     "line": 68,
-     "end_line": 91
+     "line": 82,
+     "end_line": 105
     }
    ]
   }
@@ -461,12 +476,12 @@
   {
    "from": "guards",
    "to": "core",
-   "label": "phiếu · tủ · hàng về"
+   "label": "phiếu · tủ · nhận hàng"
   },
   {
    "from": "guards",
    "to": "delivery",
-   "label": "admin/lines · delivery-people"
+   "label": "lines · deliveries/bulk"
   },
   {
    "from": "guards",
@@ -476,17 +491,17 @@
   {
    "from": "delivery",
    "to": "core",
-   "label": "khóa dòng · trừ kho"
+   "label": "khóa dòng · trừ tủ · Không mua"
   },
   {
    "from": "delivery",
    "to": "notifications",
-   "label": "giao đủ · hủy · ADM hết"
+   "label": "giao đủ · hủy · NCC hết"
   },
   {
    "from": "core",
    "to": "notifications",
-   "label": "giảm phiếu · món ngoài DM"
+   "label": "điều chỉnh · duyệt ngoài DM"
   },
   {
    "from": "reminders",
@@ -543,11 +558,11 @@
   },
   {
    "dot": "amber",
-   "title": "PMH ID sập",
+   "title": "Tài khoản D&E (PMH ID) sập",
    "items": [
     "Refresh lỗi mạng → route bảo vệ 503 SSO_UNAVAILABLE, phiên được giữ",
-    "Route @Public (sa-login, public-config, health) đi tiếp ẩn danh",
-    "SA local là lối vào break-glass; lockout (IP, user) 5 sai, toàn cục 50"
+    "Route @Public (sa-login, identify, public-config) đi tiếp ẩn danh; auth/session trả 503 để web hiện banner",
+    "SA local là lối vào break-glass; lockout cặp (IP, user) 5 sai, theo IP 10, toàn cục 50 / 15′"
    ]
   },
   {
@@ -555,27 +570,27 @@
    "title": "Gộp trong sơ đồ",
    "items": [
     "auth · users: AuthModule import UsersModule (directory sync 60′ gọi Directory API)",
-    "delivery ghi request_lines qua LineDeliveryStore, trừ tủ qua StockService; deliver-all đã gỡ",
-    "reminders lúc khóa sổ: ghi headcount_subs, AdmOutSettlement hủy phần chưa giao của món ADM hết hàng mọi kỳ trước",
-    "ConfigAdminModule tách khỏi SystemConfigModule (sửa cấu hình cần kỳ đang mở); audit được mọi module gọi"
+    "delivery ghi request_lines qua LineDeliveryStore, trừ tủ qua StockService; giao n phiếu ghi Không mua món ngoài DM chờ (reject_line_ids) qua ReviewWriter trong cùng tx",
+    "requests: AdminRequestService giảm/từ chối có lý do (hộp Điều chỉnh ở Kỳ tháng và hộp Giao); duyệt món ngoài DM trong hộp Xem phiếu",
+    "reminders lúc khóa sổ: ghi headcount_subs, AdmOutSettlement hủy phần chưa giao của món NCC hết hàng mọi kỳ trước"
    ]
   },
   {
    "dot": "violet",
-   "title": "Bảng/cột mới Plan v2-D",
+   "title": "Migration của Plan giao diện A",
    "items": [
-    "0113 request_line_adjustments (chỉ-thêm, trigger chặn UPDATE/DELETE/TRUNCATE) · 0114 period_adm_out (out · owed_closed)",
-    "0115 stock_movements.receipt_ym · 0116 periods.headcount_subs · 0117 custom_receipts",
-    "0118 periods.no_order_at/by · 0119 chỉ mục audit_log(detail->>'batch_id')"
+    "0129 bỏ items.admin_only (dừng nếu còn món bật cờ) — G7",
+    "0130 request_line_adjustments.reason_code thêm cannot_buy (Không mua được) — G2",
+    "Bảng/cột v2-D vẫn giữ: 0113 request_line_adjustments · 0114 period_adm_out · 0115 receipt_ym · 0117 custom_receipts · 0118 no_order"
    ]
   },
   {
    "dot": "emerald",
-   "title": "Endpoint mới Plan v2-D",
+   "title": "Endpoint đổi trong Plan giao diện A",
    "items": [
-    "admin/periods/:ym: arrivals-plan · adm-out/:line_key · adm-owed-closed/:line_key · custom-receipts · send-state · no-order",
-    "GET admin/reports/:ym/sent · GET admin/stock · GET admin/items/:id/pending-arrival",
-    "Đã gỡ: POST admin/requests (tạo phiếu hộ), POST admin/requests/:id/deliver-all, ?exclude_admin của admin/users"
+    "Mới: GET admin/users/:sub/requests?year (popup Lịch sử đặt hàng) · GET admin/stock/movements (tab Lịch sử nhập xuất) · GET admin/issues thêm actor_name (trang Xuất lẻ)",
+    "Thêm trường: periods/:ym/registrations/:id có lines[].adjustments + removed_lines; periods/:ym/requests?by=person có short_items",
+    "Đã gỡ: POST admin/items/:id/stock/count (Kiểm kê). GET admin/review còn — web chỉ dùng để chuyển /admin/review sang Kỳ tháng"
    ]
   }
  ]

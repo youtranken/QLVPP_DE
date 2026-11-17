@@ -141,7 +141,7 @@ export class NotificationScheduler
       params: { ym: period.ym, registered, headcount, custom_pending },
       link:
         custom_pending > 0
-          ? `/admin/review?ym=${period.ym}`
+          ? `/admin/month?ym=${period.ym}&chip=pending`
           : `/admin/month?ym=${period.ym}`,
       now,
     });

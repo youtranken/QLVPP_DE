@@ -2,7 +2,7 @@
  "schema_version": 3,
  "diagram_type": "lifecycle",
  "meta": {
-  "title": "VPP — vòng đời phần chưa giao của một dòng (v2-D)",
+  "title": "VPP — vòng đời phần chưa giao của một dòng (giao diện A)",
   "output": "docs/diagrams/vpp-vong-thang.html",
   "locale": "vi",
   "quality_profile": "showcase",
@@ -10,7 +10,7 @@
    "url": "https://github.com/youtranken/QLVPP_DE.git",
    "provider": "github",
    "link_mode": "local-only",
-   "revision": "e5d57874ceec1ebcd998227c71f05088c110d70c"
+   "revision": "e86f6443ca655e2f06ab1012cd555c36820a50ab"
   }
  },
  "mainPath": [
@@ -25,7 +25,7 @@
    "step": "01",
    "label": "Trong phiếu kỳ mở",
    "sublabel": "nhân viên sửa tự do",
-   "tag": "HC chỉ thấy tiến độ",
+   "tag": "Adm D&E chỉ thấy tiến độ",
    "sources": [
     {
      "path": "api/src/modules/requests/me-request.controller.ts",
@@ -51,20 +51,20 @@
    "sources": [
     {
      "path": "api/src/modules/catalog/stock-held-sql.ts",
-     "line": 8,
+     "line": 9,
      "end_line": 16,
      "label": "heldSql"
     },
     {
      "path": "api/src/modules/requests/adjust-rules.ts",
      "line": 150,
-     "end_line": 178,
+     "end_line": 170,
      "label": "không thêm/tăng"
     },
     {
      "path": "api/src/modules/delivery/delivery-people.service.ts",
-     "line": 32,
-     "end_line": 42,
+     "line": 33,
+     "end_line": 60,
      "label": "holds"
     }
    ]
@@ -100,13 +100,13 @@
    "sources": [
     {
      "path": "api/src/modules/requests/line-predicates.ts",
-     "line": 14,
-     "end_line": 16,
+     "line": 29,
+     "end_line": 35,
      "label": "DEBT_LINE_SQL"
     },
     {
      "path": "api/src/modules/delivery/delivery-people.service.ts",
-     "line": 123,
+     "line": 124,
      "end_line": 135,
      "label": "is_debt"
     }
@@ -115,14 +115,14 @@
   {
    "id": "removed",
    "type": "neutral",
-   "label": "Đã giảm / bỏ",
+   "label": "Đã giảm / từ chối",
    "sublabel": "request_line_adjustments",
-   "tag": "lý do từng dòng",
+   "tag": "một lý do chip",
    "sources": [
     {
      "path": "api/src/modules/requests/admin-request.service.ts",
-     "line": 128,
-     "end_line": 148,
+     "line": 145,
+     "end_line": 180,
      "label": "apply"
     },
     {
@@ -130,26 +130,32 @@
      "line": 50,
      "end_line": 75,
      "label": "insertAdjustments"
+    },
+    {
+     "path": "api/src/migrations/0130_adjust_reason_cannot_buy.sql",
+     "line": 1,
+     "end_line": 5,
+     "label": "cannot_buy"
     }
    ]
   },
   {
    "id": "admout",
    "type": "failure",
-   "label": "Hủy: ADM hết hàng",
+   "label": "Hủy: NCC hết hàng",
    "sublabel": "không thành nợ",
-   "tag": "cancel_note ADM hết hàng",
+   "tag": "cancel_note NCC hết hàng",
    "sources": [
     {
      "path": "web/src/features/delivery/people/deliver-send.ts",
-     "line": 27,
-     "end_line": 31,
+     "line": 28,
+     "end_line": 32,
      "label": "hộp giao"
     },
     {
      "path": "api/src/modules/reminders/adm-out-settlement.ts",
-     "line": 23,
-     "end_line": 70,
+     "line": 48,
+     "end_line": 75,
      "label": "tự hủy lúc khóa"
     }
    ]
@@ -170,6 +176,27 @@
      "path": "api/src/modules/delivery/cancel-reason.ts",
      "line": 10,
      "end_line": 29
+    }
+   ]
+  },
+  {
+   "id": "notbought",
+   "type": "failure",
+   "label": "Không mua (ngoài DM)",
+   "sublabel": "review_status = rejected",
+   "tag": "chuông note_code",
+   "sources": [
+    {
+     "path": "api/src/modules/requests/review-writer.ts",
+     "line": 119,
+     "end_line": 140,
+     "label": "rejectLinesWithin"
+    },
+    {
+     "path": "api/src/modules/delivery/bulk-delivery.service.ts",
+     "line": 77,
+     "end_line": 110,
+     "label": "reject_line_ids"
     }
    ]
   }
@@ -201,14 +228,14 @@
    "id": "t-reduce",
    "from": "waiting",
    "to": "removed",
-   "label": "Tổng hợp giảm",
-   "note": "PUT admin/requests/:id/lines"
+   "label": "Điều chỉnh: giảm / từ chối",
+   "note": "PUT admin/requests/:id/lines — từ Kỳ tháng hoặc hộp Giao"
   },
   {
    "id": "t-adm",
    "from": "waiting",
    "to": "admout",
-   "label": "ADM hết hàng",
+   "label": "NCC hết hàng",
    "variant": "dashed"
   },
   {
@@ -224,6 +251,14 @@
    "label": "Hủy nợ",
    "variant": "security",
    "note": "K* → 409 NOT_DEBT_YET"
+  },
+  {
+   "id": "t-reject",
+   "from": "waiting",
+   "to": "notbought",
+   "label": "món chờ duyệt: Không mua",
+   "variant": "dashed",
+   "note": "Xem phiếu hoặc hộp Giao (reject_line_ids)"
   }
  ],
  "cards": [
@@ -233,17 +268,17 @@
    "items": [
     "K* = kỳ khóa mới nhất (thường là tháng trước kỳ đang mở); phần còn lại của K* là Chưa nhận, của kỳ trước nữa là Còn nợ",
     "Khóa sổ = 00:00 ngày lastDay+1 giờ VN; cron chụp headcount_subs một lần",
-    "Hành chính không thấy số dòng và nhật ký phiếu của kỳ đang mở"
+    "Adm D&E không thấy số dòng và nhật ký phiếu của kỳ đang mở"
    ]
   },
   {
    "dot": "amber",
-   "title": "Giảm và hủy",
+   "title": "Giảm, từ chối và hủy",
    "items": [
-    "ADM hết hàng: hộp giao giao phần tủ có rồi hủy phần thiếu; dòng chưa giao bị cron hủy khi kỳ sau khóa (arrival.adm_out_settled)",
-    "Giảm: over_quota · adm_out_of_stock · duplicate · user_left · other (ghi chú ≥ 3 chữ); sàn = đã giao + đã hủy",
-    "Bỏ hết dòng vẫn giữ phiếu (vẫn tính đã đăng ký); user_left và chủ phiếu đã nghỉ không có chuông",
-    "Hủy nợ: không cần nữa · người đã nghỉ · ADM hết hàng · khác; không gửi chuông giao đủ"
+    "Hộp Điều chỉnh: Giảm còn n ∈ [max(1, đã giao + đã hủy), số cũ − 1] hoặc Từ chối (về đúng đã giao + đã hủy)",
+    "Lý do web cho chọn: Hết hàng (adm_out_of_stock) · Số lượng quá nhiều (over_quota) · Không mua được (cannot_buy, 0130) · Khác (≥ 3 chữ); Người đã nghỉ (user_left) khi chủ phiếu nghỉ",
+    "NCC hết hàng: hộp giao giao phần tủ có rồi hủy phần thiếu; dòng chưa giao bị cron hủy khi kỳ sau khóa",
+    "Hủy nợ: không cần nữa · người đã nghỉ · NCC hết hàng · khác; không gửi chuông giao đủ"
    ]
   },
   {
@@ -252,7 +287,7 @@
    "items": [
     "Tăng số hoặc thêm món sau khóa sổ (LINE_ADD_FORBIDDEN, QTY_INCREASE_FORBIDDEN)",
     "Hoàn tác một đợt giao",
-    "Hủy Chưa nhận của K* bằng Hủy nợ (trừ dòng ADM hết hàng từ hộp giao)"
+    "Hủy Chưa nhận của K* bằng Hủy nợ (trừ dòng NCC hết hàng từ hộp giao)"
    ]
   }
  ]

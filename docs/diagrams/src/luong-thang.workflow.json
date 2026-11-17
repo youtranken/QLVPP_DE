@@ -2,7 +2,7 @@
  "schema_version": 2,
  "diagram_type": "workflow",
  "meta": {
-  "title": "VPP — một tháng chuẩn v2-D (11 bước)",
+  "title": "VPP — một tháng chuẩn (11 bước, giao diện A)",
   "output": "docs/diagrams/vpp-luong-thang.html",
   "locale": "vi",
   "quality_profile": "showcase",
@@ -10,7 +10,7 @@
    "url": "https://github.com/youtranken/QLVPP_DE.git",
    "provider": "github",
    "link_mode": "local-only",
-   "revision": "e5d57874ceec1ebcd998227c71f05088c110d70c"
+   "revision": "e86f6443ca655e2f06ab1012cd555c36820a50ab"
   },
   "legend": {
    "entries": {
@@ -33,12 +33,12 @@
   },
   {
    "id": "sys",
-   "label": "Kỳ · cron · PMH ID",
+   "label": "Kỳ · cron · Tài khoản D&E",
    "variant": "exception"
   },
   {
    "id": "prep",
-   "label": "Hành chính: chuẩn bị hàng"
+   "label": "Adm D&E: chuẩn bị hàng"
   },
   {
    "id": "data",
@@ -46,7 +46,7 @@
   },
   {
    "id": "give",
-   "label": "Hành chính: tủ · giao · nợ"
+   "label": "Adm D&E: tủ · giao · nợ"
   }
  ],
  "mainPath": [
@@ -104,18 +104,18 @@
    "sources": [
     {
      "path": "api/src/modules/catalog/stock-held-sql.ts",
-     "line": 8,
+     "line": 9,
      "end_line": 16
     },
     {
      "path": "api/src/modules/reports/order-default.ts",
-     "line": 21,
+     "line": 22,
      "end_line": 30
     },
     {
      "path": "api/src/modules/requests/line-notifier.ts",
-     "line": 56,
-     "end_line": 61
+     "line": 58,
+     "end_line": 63
     }
    ]
   },
@@ -124,18 +124,25 @@
    "lane": "prep",
    "col": 1,
    "type": "frontend",
-   "label": "3 Tổng hợp: giảm",
-   "sublabel": "lý do từng dòng",
+   "label": "3 Kỳ tháng: điều chỉnh",
+   "sublabel": "giảm / từ chối · duyệt ngoài DM",
    "sources": [
     {
      "path": "api/src/modules/requests/admin-request.service.ts",
      "line": 40,
-     "end_line": 89
+     "end_line": 92,
+     "label": "saveLines"
     },
     {
      "path": "api/src/modules/requests/adjust-rules.ts",
-     "line": 169,
-     "end_line": 194
+     "line": 98,
+     "end_line": 170,
+     "label": "planAdjust"
+    },
+    {
+     "path": "web/src/features/month/month-locked-view.tsx",
+     "line": 44,
+     "end_line": 120
     }
    ]
   },
@@ -144,23 +151,23 @@
    "lane": "prep",
    "col": 2,
    "type": "frontend",
-   "label": "4 Gửi ADM: in",
+   "label": "4 Gửi NCC: in",
    "sublabel": "bản chốt in tại chỗ",
    "sources": [
     {
      "path": "api/src/modules/reports/snapshots.service.ts",
-     "line": 104,
-     "end_line": 148
+     "line": 71,
+     "end_line": 136
     },
     {
      "path": "api/src/modules/reports/send-state.service.ts",
-     "line": 62,
-     "end_line": 97
+     "line": 44,
+     "end_line": 90
     },
     {
      "path": "web/src/features/reports/use-print-in-place.ts",
-     "line": 86,
-     "end_line": 95
+     "line": 15,
+     "end_line": 40
     }
    ]
   },
@@ -169,18 +176,18 @@
    "lane": "prep",
    "col": 3,
    "type": "frontend",
-   "label": "5 ADM hết hàng",
+   "label": "5 NCC hết hàng",
    "sublabel": "đánh dấu theo món",
    "sources": [
     {
      "path": "api/src/modules/catalog/adm-out.controller.ts",
      "line": 39,
-     "end_line": 46
+     "end_line": 56
     },
     {
      "path": "api/src/modules/catalog/adm-out.service.ts",
-     "line": 71,
-     "end_line": 91
+     "line": 72,
+     "end_line": 92
     }
    ]
   },
@@ -189,22 +196,22 @@
    "lane": "prep",
    "col": 4,
    "type": "frontend",
-   "label": "6 Hàng về",
+   "label": "6 Nhận hàng",
    "sublabel": "theo bản in · về bù",
    "sources": [
     {
      "path": "api/src/modules/catalog/stock-receipt.service.ts",
      "line": 36,
-     "end_line": 117
+     "end_line": 96
     },
     {
      "path": "api/src/modules/catalog/receipt-sheet.ts",
-     "line": 7,
+     "line": 1,
      "end_line": 26
     },
     {
      "path": "api/src/modules/catalog/adm-out.service.ts",
-     "line": 102,
+     "line": 94,
      "end_line": 110
     }
    ]
@@ -219,18 +226,18 @@
    "sources": [
     {
      "path": "api/src/modules/catalog/stock-state.ts",
-     "line": 18,
-     "end_line": 35
+     "line": 21,
+     "end_line": 40
     },
     {
      "path": "api/src/modules/catalog/stock-held-sql.ts",
-     "line": 8,
+     "line": 9,
      "end_line": 16
     },
     {
      "path": "api/src/modules/catalog/stock.controller.ts",
-     "line": 88,
-     "end_line": 92
+     "line": 84,
+     "end_line": 89
     }
    ]
   },
@@ -240,22 +247,23 @@
    "col": 4,
    "type": "frontend",
    "label": "8 Hộp giao",
-   "sublabel": "giao · hủy phần thiếu",
+   "sublabel": "giao · hủy thiếu · điều chỉnh",
    "sources": [
     {
      "path": "web/src/features/delivery/people/deliver-plan.ts",
-     "line": 109,
-     "end_line": 121
-    },
-    {
-     "path": "web/src/features/delivery/people/deliver-plan.ts",
-     "line": 187,
-     "end_line": 195
+     "line": 138,
+     "end_line": 176
     },
     {
      "path": "web/src/features/delivery/people/deliver-send.ts",
-     "line": 27,
-     "end_line": 56
+     "line": 28,
+     "end_line": 75
+    },
+    {
+     "path": "web/src/features/delivery/people/deliver-dialog.tsx",
+     "line": 189,
+     "end_line": 224,
+     "label": "AdjustDialog"
     }
    ]
   },
@@ -269,13 +277,13 @@
    "sources": [
     {
      "path": "api/src/modules/delivery/delivery-people.service.ts",
-     "line": 123,
+     "line": 124,
      "end_line": 135
     },
     {
      "path": "api/src/modules/reminders/adm-out-settlement.ts",
-     "line": 23,
-     "end_line": 70
+     "line": 48,
+     "end_line": 75
     }
    ]
   },
@@ -320,12 +328,17 @@
    "col": 1,
    "type": "database",
    "label": "line_adjustments",
-   "sublabel": "0113 · chỉ-thêm",
+   "sublabel": "0113 · 0130 cannot_buy",
    "sources": [
     {
      "path": "api/src/migrations/0113_request_line_adjustments.sql",
      "line": 1,
      "end_line": 37
+    },
+    {
+     "path": "api/src/migrations/0130_adjust_reason_cannot_buy.sql",
+     "line": 1,
+     "end_line": 5
     }
    ]
   },
@@ -404,21 +417,21 @@
    "id": "m3",
    "from": "s3",
    "to": "s4",
-   "label": "giảm",
+   "label": "đã điều chỉnh",
    "variant": "emphasis"
   },
   {
    "id": "m4",
    "from": "s4",
    "to": "s5",
-   "label": "ADM hết",
+   "label": "NCC hết",
    "variant": "emphasis"
   },
   {
    "id": "m5",
    "from": "s5",
    "to": "s6",
-   "label": "hàng về",
+   "label": "nhận hàng",
    "variant": "emphasis"
   },
   {
@@ -504,39 +517,39 @@
    "dot": "slate",
    "title": "Endpoint từng bước",
    "items": [
-    "1 PUT me/request/lines · 3 PUT admin/requests/:id/lines · 4 POST admin/reports/:ym/snapshots, POST|DELETE admin/periods/:ym/no-order",
+    "1 PUT me/request/lines · 3 PUT admin/requests/:id/lines (giảm/từ chối), POST admin/lines/:id/review (duyệt ngoài DM trong hộp Xem phiếu) · 4 POST admin/reports/:ym/snapshots, POST|DELETE admin/periods/:ym/no-order",
     "5 PUT|DELETE admin/periods/:ym/adm-out/:line_key · 6 POST admin/stock/receipts, PUT|DELETE …/adm-owed-closed/:line_key, POST …/custom-receipts",
-    "7 GET admin/stock · 8 POST admin/lines/:id/deliver, POST …/cancel-remaining (adm_out_of_stock) · 10 POST admin/lines/:id/cancel-remaining",
+    "7 GET admin/stock · 8 POST admin/lines/:id/deliver, POST admin/deliveries/bulk (reject_line_ids), POST …/cancel-remaining (adm_out_of_stock) · 10 POST admin/lines/:id/cancel-remaining",
     "2 và 9: NotificationScheduler.runHourly (khóa sổ = 00:00 ngày lastDay+1 giờ VN)"
    ]
   },
   {
    "dot": "amber",
-   "title": "Gửi ADM (bước 4)",
+   "title": "Kỳ tháng và Gửi NCC (bước 3–4)",
    "items": [
-    "Đề nghị mặc định = đăng ký + nợ − phần người đã nghỉ − hàng ADM còn nợ giao; không trừ tủ; món ngừng = 0",
-    "In trình ký tạo bản chốt rồi in ngay trong trang (PrintPortal + window.print); reuse_if_unchanged dùng lại bản trùng",
-    "Đổi số → bản mới có replaces; Hàng về luôn theo bản có hàng mới nhất",
-    "Tổng đề nghị = 0 → \"không cần đề nghị ADM\" (POST no-order); tạo bản chốt sau đó tự xóa cờ"
+    "Hộp Điều chỉnh: Giảm còn n hoặc Từ chối, một lý do chip: Hết hàng · Số lượng quá nhiều · Không mua được · Khác (+ Người đã nghỉ khi chủ phiếu nghỉ)",
+    "Món ngoài DM chờ duyệt: duyệt/từ chối trong hộp Xem phiếu (trang Món ngoài danh mục đã bỏ); /admin/review chuyển về Kỳ tháng chip pending",
+    "Đề nghị mặc định = đăng ký + nợ − phần người đã nghỉ − hàng NCC còn nợ giao; không trừ tủ; món ngừng = 0",
+    "In trình ký tạo bản chốt rồi in ngay trong trang; đổi số → bản mới có replaces; tổng = 0 → \"không cần đề nghị\" (no-order)"
    ]
   },
   {
    "dot": "cyan",
-   "title": "Hàng về (bước 5–6)",
+   "title": "Nhận hàng (bước 5–6)",
    "items": [
     "Nhập kèm snapshot_id đang xem; bản in đổi → 409 STALE_UPDATE, tải lại",
-    "Món đánh ADM hết hàng không nhập được (ITEM_ADM_OUT); bỏ đánh dấu bị khóa khi kỳ sau đã khóa (ADM_OUT_FINAL)",
-    "ADM giao thiếu kỳ P: còn hứa bù thì kỳ sau không đặt lại; \"ADM không giao nữa\" (adm-owed-closed) thì đặt lại",
-    "Nhập cho kỳ trước kỳ làm việc ghi \"Về bù kỳ P\"; món ngoài DM ghi custom_receipts làm trần giao"
+    "Món đánh NCC hết hàng không nhập được (ITEM_ADM_OUT); bỏ đánh dấu bị khóa khi kỳ sau đã khóa (ADM_OUT_FINAL)",
+    "NCC giao thiếu kỳ P: còn hứa bù thì kỳ sau không đặt lại; \"NCC không giao nữa\" (adm-owed-closed) thì đặt lại",
+    "Nhập cho kỳ trước ghi \"Về bù kỳ P\"; món ngoài DM ghi custom_receipts làm trần giao"
    ]
   },
   {
    "dot": "emerald",
    "title": "Tủ và giao (bước 7–8)",
    "items": [
-    "Đang giữ = phần chưa giao của kỳ đã khóa, chỉ người còn làm; còn trống = max(0, tủ − giữ)",
-    "Hộp giao: nợ cũ trước, rồi theo thứ tự đăng ký; người đã nghỉ gợi ý 0",
-    "Dòng ADM hết hàng: giao phần tủ có, hủy phần thiếu (adm_out_of_stock), không thành nợ"
+    "Đang giữ = phần chưa giao của kỳ đã khóa, chỉ người còn làm; còn trống = max(0, tủ − giữ); Tủ / Kho tách Sắp hết và Thiếu kỳ này, tab Lịch sử nhập xuất",
+    "Hộp giao: nợ cũ trước, rồi theo thứ tự đăng ký; người đã nghỉ gợi ý 0; nút Điều chỉnh mở hộp giảm/từ chối",
+    "Dòng NCC hết hàng: giao phần tủ có, hủy phần thiếu (adm_out_of_stock), không thành nợ; món chờ duyệt ghi Không mua cùng tx giao"
    ]
   },
   {
@@ -544,17 +557,17 @@
    "title": "Nợ (bước 9–10)",
    "items": [
     "Không có job đổi trạng thái: dòng kỳ < K* (kỳ khóa mới nhất) là Còn nợ khi đọc",
-    "Cron khóa sổ hủy phần chưa giao của món đánh ADM hết hàng ở mọi kỳ trước (arrival.adm_out_settled)",
-    "Hủy nợ: dòng của K* → 409 NOT_DEBT_YET; lý do không cần nữa · người đã nghỉ · ADM hết hàng · khác (≥ 3 chữ)"
+    "Cron khóa sổ hủy phần chưa giao của món đánh NCC hết hàng ở mọi kỳ trước (arrival.adm_out_settled)",
+    "Hủy nợ: dòng của K* → 409 NOT_DEBT_YET; lý do không cần nữa · người đã nghỉ · NCC hết hàng · khác (≥ 3 chữ)"
    ]
   },
   {
    "dot": "violet",
    "title": "Người đã nghỉ (bước 11)",
    "items": [
-    "users.status ≠ active (PMH ID khóa tài khoản): Tổng hợp giảm với lý do user_left, không chuông",
+    "users.status ≠ active (Tài khoản D&E khóa / mất quyền): điều chỉnh với lý do user_left, không chuông",
     "Không giữ tủ trước người khác; hộp giao gợi ý 0 (giao khi có người nhận thay)",
-    "Phần của họ (left_excluded) bị trừ khỏi đề nghị ADM mặc định; vẫn tính đã đăng ký trong headcount_subs"
+    "Phần của họ (left_excluded) bị trừ khỏi đề nghị NCC mặc định; vẫn tính đã đăng ký trong headcount_subs"
    ]
   }
  ]
