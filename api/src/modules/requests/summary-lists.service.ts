@@ -68,12 +68,12 @@ const FILTERS: Record<SummaryFilter, SQL> = {
   // Người đã nghỉ còn phần chưa nhận (nhắc ở Tháng này mở Tổng hợp ?left=1)
   left: sql`u.status <> 'active' AND count(l.id) FILTER (WHERE ${UNDELIVERED_LINE}) > 0`,
 };
-// Món người này còn phải giao mà tủ không đủ cho tổng còn phải giao của món trong kỳ (cột Tồn kho của Kỳ tháng)
+// Món tủ không đủ cho tổng còn phải giao của kỳ đang xem cộng nợ các kỳ trước — cùng cách tính với Giao hàng
 const SHORT_ITEMS = (ym: string) => sql`ARRAY(
   SELECT i.name FROM request_lines l JOIN items i ON i.id = l.item_id
   JOIN (SELECT l.item_id, sum(${REMAINING_QTY})::int AS need
         FROM request_lines l JOIN requests rq ON rq.id = l.request_id
-        WHERE rq.period_ym = ${ymToDate(ym)}::date AND ${UNDELIVERED_LINE}
+        WHERE rq.period_ym <= ${ymToDate(ym)}::date AND ${UNDELIVERED_LINE}
         GROUP BY l.item_id) n ON n.item_id = l.item_id
   WHERE l.request_id = r.id AND ${UNDELIVERED_LINE} AND i.stock_qty < n.need
   ORDER BY i.name)`;

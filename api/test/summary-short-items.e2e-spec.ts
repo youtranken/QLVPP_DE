@@ -11,12 +11,14 @@ describe('admin/periods/:ym/requests by=person — short_items (G1 cột Tủ)',
     await fx()
       .pool()
       .query('DELETE FROM request_lines WHERE item_id = $1', [enough]);
+    await fx().pool().query('DELETE FROM requests WHERE id = $1', [debtReq]);
     await fx().pool().query('DELETE FROM items WHERE id = $1', [enough]);
   });
   const f = adminSummaryFixture(YM);
   const fx = () => f;
   const { SUFFIX, ids, asAdmin } = f;
   let enough = '';
+  let debtReq = '00000000-0000-0000-0000-000000000000';
 
   const rowsOf = async () =>
     (
@@ -64,5 +66,58 @@ describe('admin/periods/:ym/requests by=person — short_items (G1 cột Tủ)',
     expect(rows.find((r) => r.request_id === ids.r2)!.short_items).toEqual([
       `e2e-sum-item-${SUFFIX}`,
     ]);
+  });
+
+  it('tính cả nợ kỳ trước như Giao hàng: còn phải giao kỳ này 10 + nợ 2023-03 là 2 → tủ 12 đủ, tủ 11 thiếu', async () => {
+    const pool = f.pool();
+    await pool.query(
+      `INSERT INTO periods (ym, deadline) VALUES ('2023-03-01', '2023-03-10T17:00:00Z') ON CONFLICT (ym) DO NOTHING`,
+    );
+    debtReq = (
+      await pool.query<{ id: string }>(
+        `INSERT INTO requests (period_ym, user_sub, department, created_by_sub)
+         VALUES ('2023-03-01', $1, 'Phòng B', $1) RETURNING id`,
+        [f.U3],
+      )
+    ).rows[0].id;
+    await f.addLine(debtReq, { item_id: enough, qty: 2 });
+    try {
+      await setStock(enough, 12);
+      let rows = await rowsOf();
+      expect(rows.find((r) => r.request_id === ids.r1)!.short_items).toEqual(
+        [],
+      );
+      await setStock(enough, 11);
+      rows = await rowsOf();
+      expect(rows.find((r) => r.request_id === ids.r1)!.short_items).toEqual([
+        `e2e-sum-enough-${SUFFIX}`,
+      ]);
+    } finally {
+      await pool.query('DELETE FROM requests WHERE id = $1', [debtReq]);
+    }
+  });
+
+  it('kỳ sau kỳ đang xem không tính: phiếu 2023-05 còn 5 không làm 2023-04 thiếu khi tủ 10', async () => {
+    const pool = f.pool();
+    await pool.query(
+      `INSERT INTO periods (ym, deadline) VALUES ('2023-05-01', '2023-05-10T17:00:00Z') ON CONFLICT (ym) DO NOTHING`,
+    );
+    const later = (
+      await pool.query<{ id: string }>(
+        `INSERT INTO requests (period_ym, user_sub, department, created_by_sub)
+         VALUES ('2023-05-01', $1, 'Phòng B', $1) RETURNING id`,
+        [f.U3],
+      )
+    ).rows[0].id;
+    await f.addLine(later, { item_id: enough, qty: 5 });
+    try {
+      await setStock(enough, 10);
+      const rows = await rowsOf();
+      expect(rows.find((r) => r.request_id === ids.r1)!.short_items).toEqual(
+        [],
+      );
+    } finally {
+      await pool.query('DELETE FROM requests WHERE id = $1', [later]);
+    }
   });
 });
