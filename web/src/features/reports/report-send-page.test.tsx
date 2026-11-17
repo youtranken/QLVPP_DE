@@ -238,7 +238,7 @@ describe('Báo cáo & gửi NCC: kỳ cũ hơn, ai đăng ký, các bản đã i
     await userEvent.click(await screen.findByRole('button', { name: /Xem ai đăng ký Bút bi \(3 người\)/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Bút bi' });
     expect(await within(dialog).findByText('Đăng ký 20 cây · sau điều chỉnh 19 · Đề nghị 5')).toBeInTheDocument();
-    expect(within(dialog).getByText('Adm D&E bỏ: Không có hàng')).toBeInTheDocument();
+    expect(within(dialog).getByText('Adm D&E bỏ: Hết hàng')).toBeInTheDocument();
     expect(within(dialog).getByText('Tổng sau điều chỉnh')).toBeInTheDocument();
     // < 768 bảng thành thẻ như bảng trang: mỗi ô có nhãn cột (data-label), ô ghi chú rỗng để CSS ẩn ở thẻ / hiện "—" ở bảng
     const table = within(dialog).getByRole('table');

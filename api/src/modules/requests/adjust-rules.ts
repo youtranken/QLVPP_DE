@@ -8,6 +8,7 @@ export const ADJUST_REASONS = [
   'duplicate',
   'user_left',
   'other',
+  'cannot_buy',
   // Hành chính bấm X bỏ cả dòng: chỉ hợp lệ khi về 0
   'removed',
 ] as const;

@@ -6,7 +6,7 @@ import { lockedYm } from '@/lib/ym';
 import { LoadError, Loading } from '@/ui/load-state';
 import { arrivalsPlanQuery } from '@/features/arrivals/arrivals.api';
 import { useSendState } from '@/features/send-adm/use-send-state';
-import { AdjustDrawer } from '@/features/summary/adjust-drawer';
+import { AdjustDialog } from '@/features/summary/adjust-dialog';
 import { RegistrationDialog } from '@/features/summary/registration-dialog';
 import { usePeriodSummary, type AdjustReason, type PersonRow } from '@/features/summary/summary.api';
 import { usePersonTableRows } from '@/features/summary/use-person-table-rows';
@@ -88,7 +88,7 @@ export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChi
         />
       )}
       {index >= 0 && <RegistrationDialog ym={ym} deadline={null} rows={visible} index={index} onIndex={(i) => setViewing(visible[i]!.request_id)} onClose={() => setViewing(null)} />}
-      {panel.id && <AdjustDrawer requestId={panel.id} presetReason={presetReason} onClose={panel.close} nav={{ index: panel.index, total: panel.total, onStep: panel.step }} />}
+      {panel.id && <AdjustDialog requestId={panel.id} presetReason={presetReason} onClose={panel.close} nav={{ index: panel.index, total: panel.total, onStep: panel.step }} />}
     </>
   );
 }

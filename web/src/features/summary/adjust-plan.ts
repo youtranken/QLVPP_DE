@@ -1,0 +1,38 @@
+import { noteLength } from '@/lib/note-text';
+import type { LineView } from '@/features/request/request.api';
+import type { AdjustLineBody, AdjustReason, AdminRequestView } from './summary.api';
+
+export type Pick = { mode: 'reduce'; qty: number | null } | { mode: 'reject' };
+
+export const OTHER_NOTE_MIN = 3;
+
+// Phần đã giao + đã hủy nợ không giảm được (server QTY_BELOW_DELIVERED); Từ chối = về đúng sàn này
+export const floorOf = (l: LineView) => l.delivered_qty + l.cancelled_qty;
+
+// Dòng ngoài DM chờ duyệt duyệt ở Xem phiếu (G8); dòng đã giao/hủy hết thì không còn gì để giảm
+export const adjustable = (l: LineView) => l.review_status !== 'pending' && l.review_status !== 'rejected' && l.qty > floorOf(l);
+
+// "Giảm còn n": n ≥ max(1, sàn) và n < số cũ; về sàn dùng "Từ chối"
+export const reduceRange = (l: LineView) => ({ min: Math.max(1, floorOf(l)), max: l.qty - 1 });
+
+export const canReduce = (l: LineView) => reduceRange(l).min <= reduceRange(l).max;
+
+export function reduceError(l: LineView, qty: number | null): { min: number; max: number } | null {
+  const r = reduceRange(l);
+  return qty !== null && Number.isInteger(qty) && qty >= r.min && qty <= r.max ? null : r;
+}
+
+export const targetOf = (l: LineView, p: Pick) => (p.mode === 'reject' ? floorOf(l) : (p.qty ?? l.qty));
+
+export const otherNoteMissing = (reason: AdjustReason | undefined, note: string) => reason === 'other' && noteLength(note) < OTHER_NOTE_MIN;
+
+// Server đòi mọi dòng kèm expected_qty; chỉ dòng được chọn đổi số và mang lý do chung
+export function adjustBody(view: AdminRequestView, picks: Record<string, Pick>, reason: AdjustReason, note: string) {
+  const clean = note.normalize('NFC').trim();
+  const lines = view.lines.map((l): AdjustLineBody => {
+    const p = picks[l.id];
+    if (!p) return { id: l.id, qty: l.qty, expected_qty: l.qty };
+    return { id: l.id, qty: targetOf(l, p), expected_qty: l.qty, reason_code: reason, ...(clean ? { reason_note: clean } : {}) };
+  });
+  return { lines, expected_updated_at: view.updated_at };
+}

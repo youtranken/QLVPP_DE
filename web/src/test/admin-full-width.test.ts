@@ -156,7 +156,7 @@ describe('Adm D&E toàn màn hình', () => {
     const code = /@\/ui\/drawer'|pp-side/;
     const hits = files.filter((f) => (f.endsWith('.css') ? css : code).test(readFileSync(f, 'utf8')));
     expect(hits.map((f) => relative(SRC, f))).toEqual([]);
-    const panels = ['features/summary/adjust-drawer.tsx', 'features/directory/user-drawer.tsx', 'features/delivery/deliveries-drawer.tsx', 'features/delivery/people/delivery-people-page.tsx', 'features/stock/movements-drawer.tsx'];
+    const panels = ['features/summary/adjust-dialog.tsx', 'features/directory/user-drawer.tsx', 'features/delivery/deliveries-drawer.tsx', 'features/delivery/people/delivery-people-page.tsx', 'features/stock/movements-drawer.tsx'];
     for (const f of panels) expect(readFileSync(join(SRC, f), 'utf8'), f).toMatch(/<OverlayPanel/);
   });
 });

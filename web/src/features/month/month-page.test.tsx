@@ -105,7 +105,7 @@ describe('MonthPage: kỳ khóa', () => {
     expect(await screen.findByRole('dialog', { name: 'Phiếu của Nhân viên B' })).toBeInTheDocument();
   });
 
-  it('"Điều chỉnh" mở AdjustDrawer ?request=<id>; mở từ ?left=1 chọn sẵn Người đã nghỉ', async () => {
+  it('"Điều chỉnh" mở AdjustDialog ?request=<id>; mở từ ?left=1 chọn sẵn Người đã nghỉ', async () => {
     stubMonthApi();
     open();
     const t = await table();

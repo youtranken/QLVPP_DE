@@ -32,8 +32,8 @@ const TAPE = { kind: 'adm_out', name: 'Băng keo', name_en: null, unit: 'cuon', 
 describe('chuông ngày line_adjusted', () => {
   it('one vi/en: giảm một dòng, lý do theo mã', () => {
     const p = { ym: '2026-12', lines: [cut(5, 3)], more: 0 };
-    expect(text(p, 'vi')).toBe('Adm D&E giảm Bút bi 5 → 3 cây (phiếu tháng 12): Vượt định mức');
-    expect(text(p, 'en')).toBe('D&E Admin reduced Ballpoint pen 5 → 3 stick (December request): Over quota');
+    expect(text(p, 'vi')).toBe('Adm D&E giảm Bút bi 5 → 3 cây (phiếu tháng 12): Số lượng quá nhiều');
+    expect(text(p, 'en')).toBe('D&E Admin reduced Ballpoint pen 5 → 3 stick (December request): Too many');
   });
 
   it('removed vi/en: bỏ dòng; lý do "other" hiện chính ghi chú, mã khác thì "nhãn: ghi chú"', () => {
@@ -63,7 +63,7 @@ describe('chuông ngày line_adjusted', () => {
   it('gộp cùng ngày: dòng giảm + dòng NCC hết hàng → hai câu trong một chuông', () => {
     const p = { ym: '2026-12', lines: [cut(5, 3), TAPE], more: 0 };
     expect(text(p, 'vi')).toBe(
-      'Adm D&E giảm Bút bi 5 → 3 cây (phiếu tháng 12): Vượt định mức Băng keo (2 cuộn) không giao được: nhà cung cấp hết hàng. Tháng sau cần thì đăng ký lại.',
+      'Adm D&E giảm Bút bi 5 → 3 cây (phiếu tháng 12): Số lượng quá nhiều Băng keo (2 cuộn) không giao được: nhà cung cấp hết hàng. Tháng sau cần thì đăng ký lại.',
     );
   });
 
@@ -74,7 +74,7 @@ describe('chuông ngày line_adjusted', () => {
 
   it('en: name_en null → tên vi', () => {
     const p = { ym: '2026-12', lines: [{ ...cut(5, 3), name_en: null }], more: 0 };
-    expect(text(p, 'en')).toBe('D&E Admin reduced Bút bi 5 → 3 stick (December request): Over quota');
+    expect(text(p, 'en')).toBe('D&E Admin reduced Bút bi 5 → 3 stick (December request): Too many');
   });
 
   it('thiếu lines hoặc ym hỏng → câu dự phòng', () => {

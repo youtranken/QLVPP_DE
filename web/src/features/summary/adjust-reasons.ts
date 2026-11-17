@@ -1,30 +1,7 @@
-import type { LineView } from '@/features/request/request.api';
 import type { AdjustReason } from './summary.api';
 
-// Nháp lý do của một dòng: giữ cả khi dòng về lại số cũ (khối ẩn) tới khi Lưu/Hủy
-export interface LineReason {
-  code?: AdjustReason;
-  note: string;
-}
-
-type Translate = (key: string, opts?: Record<string, unknown>) => string;
-
-// Tối đa/tháng bị hạ sau khi nhân viên lưu: dòng giữ số cũ lớn hơn tối đa hiện tại
-export const isOverMax = (l: LineView) => l.max_qty !== null && l.qty > l.max_qty;
-
-// "Người đã nghỉ" chỉ hiện khi cần: server không gửi chuông cho người đã nghỉ nên mã này còn nghĩa
+// G2: một lý do chung bằng chip; "Người đã nghỉ" chỉ hiện khi chủ phiếu đã nghỉ (server không gửi chuông cho họ)
 export function reasonChoices({ ownerLeft }: { ownerLeft: boolean }): AdjustReason[] {
-  const base: AdjustReason[] = ['adm_out_of_stock', 'other'];
+  const base: AdjustReason[] = ['adm_out_of_stock', 'over_quota', 'cannot_buy', 'other'];
   return ownerLeft ? ['user_left', ...base] : base;
-}
-
-export function defaultReason(line: LineView, preset: AdjustReason | undefined, t?: Translate): LineReason {
-  if (preset) return { code: preset, note: '' };
-  if (isOverMax(line) && t) return { code: 'other', note: t('summary.adjust.overMaxNote', { max: line.max_qty }) };
-  return { code: undefined, note: '' };
-}
-
-// Dòng bấm X bỏ cả dòng: không hỏi lý do; gửi "removed", hoặc lý do chọn sẵn (?left=1 → Người đã nghỉ)
-export function removedReason(preset: AdjustReason | undefined): LineReason {
-  return { code: preset ?? 'removed', note: '' };
 }

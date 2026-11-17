@@ -184,7 +184,7 @@ deliveries (id uuid PK, period_ym date, department text, delivered_by_sub text, 
 request_line_adjustments (id uuid PK, batch_id uuid NOT NULL,   -- = id audit request.updated
           period_ym date, user_sub text, request_id uuid, line_id uuid, item_id uuid, name text, unit text,
           qty_before int CHECK (> 0), qty_after int CHECK (>= 0 AND < qty_before),
-          reason_code text CHECK (IN ('over_quota','adm_out_of_stock','duplicate','other','user_left')),
+          reason_code text CHECK (IN ('over_quota','adm_out_of_stock','duplicate','other','user_left','removed','cannot_buy')),  -- 0123 removed, 0130 cannot_buy (G2)
           reason_note text (1–200; 'other' bắt buộc ≥ 3), actor_sub text, created_at,
           -- web vòng 3 chỉ cho chọn 'adm_out_of_stock' (nhãn "Không có hàng"), 'other', và 'user_left' khi chủ phiếu đã nghỉ; mã cũ giữ cho lịch sử
           UNIQUE (batch_id, line_id))                      -- 0113: chỉ-thêm (trigger chặn UPDATE/DELETE/TRUNCATE)

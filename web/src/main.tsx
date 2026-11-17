@@ -30,6 +30,7 @@ import '@/features/profile/profile.m1.css';
 import '@/features/request/filter-bar.m1.css';
 import '@/ui/paused-stamp.css';
 import '@/features/request/item-card.m1.css';
+import '@/features/summary/adjust-dialog.m1.css';
 import '@/features/request/request.m1.css';
 import '@/features/request/history.m1.css';
 import '@/features/catalog/catalog-filter.m1.css';

@@ -54,7 +54,7 @@ describe('HistoryDetailPage', () => {
     expect(screen.getByText('Đã nhận đủ')).toBeInTheDocument();
   });
 
-  it('bảng Món · ĐVT · Đăng ký · Được giao · Đã nhận · Tình trạng · Ghi chú; ghi chú "Nhận 09:10 08/11" và "Adm D&E bỏ món · Không có hàng"', async () => {
+  it('bảng Món · ĐVT · Đăng ký · Được giao · Đã nhận · Tình trạng · Ghi chú; ghi chú "Nhận 09:10 08/11" và "Adm D&E bỏ món · Hết hàng"', async () => {
     past([L('1', 'Bút bảng', { delivered_qty: 1, last_delivered_at: '2026-11-08T02:10:00.000Z' }), L('3', 'Bút dạ')], {
       removed_lines: [{ name: 'Bút ghi đĩa', name_en: null, unit: 'cay', before: 1, reason_code: 'adm_out_of_stock', reason_note: null, at: '2026-11-08T01:30:00.000Z' }],
     });
@@ -64,7 +64,7 @@ describe('HistoryDetailPage', () => {
     expect(within(rowOf('Bút bảng')).getByText('Nhận 09:10 08/11')).toBeInTheDocument();
     expect(within(rowOf('Bút dạ')).getByText('Chờ 1')).toBeInTheDocument();
     expect(within(rowOf('Bút ghi đĩa')).getByText('Không giao')).toBeInTheDocument();
-    expect(within(rowOf('Bút ghi đĩa')).getByText('Adm D&E bỏ món · Không có hàng')).toBeInTheDocument();
+    expect(within(rowOf('Bút ghi đĩa')).getByText('Adm D&E bỏ món · Hết hàng')).toBeInTheDocument();
   });
 
   it('bảng chi tiết có colgroup khớp số cột, chỉ cột Món không đặt bề rộng: đổi tháng thì cột không co giãn theo chữ', async () => {
@@ -96,7 +96,7 @@ describe('HistoryDetailPage', () => {
     expect([...document.querySelectorAll('td.hs-note')].every((td) => td.hasAttribute('data-empty'))).toBe(true);
   });
 
-  it('khối "Điều chỉnh của Adm D&E": "08/11 · 08:30 · Bút ghi đĩa 1 thành 0 · Lý do: Không có hàng"; lý do cũ over_quota hiện "Vượt định mức"', async () => {
+  it('khối "Điều chỉnh của Adm D&E": "08/11 · 08:30 · Bút ghi đĩa 1 thành 0 · Lý do: Hết hàng"; lý do over_quota hiện "Số lượng quá nhiều" (G2)', async () => {
     past(
       [L('1', 'Bút bi', { qty: 2, adjustments: [{ before: 3, after: 2, reason_code: 'over_quota', reason_note: null, at: '2026-11-08T02:00:00.000Z' }] })],
       { removed_lines: [{ name: 'Bút ghi đĩa', name_en: null, unit: 'cay', before: 1, reason_code: 'adm_out_of_stock', reason_note: null, at: '2026-11-08T01:30:00.000Z' }] },
@@ -104,8 +104,8 @@ describe('HistoryDetailPage', () => {
     renderApp(makeMe('member'), '/history/2026-10');
     const box = (await screen.findByRole('heading', { name: 'Điều chỉnh của Adm D&E' })).closest('section')!;
     expect(within(box).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
-      '08/11 · 08:30 · Bút ghi đĩa 1 thành 0 · Lý do: Không có hàng',
-      '08/11 · 09:00 · Bút bi 3 thành 2 · Lý do: Vượt định mức',
+      '08/11 · 08:30 · Bút ghi đĩa 1 thành 0 · Lý do: Hết hàng',
+      '08/11 · 09:00 · Bút bi 3 thành 2 · Lý do: Số lượng quá nhiều',
     ]);
   });
 

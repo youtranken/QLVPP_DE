@@ -102,6 +102,13 @@ describe('parseAdjustLines: VALIDATION của mã/ghi chú', () => {
     expect(a.reason_code).toBe(code);
   });
 
+  it('G2: mã mới cannot_buy ("Không mua được") hợp lệ', () => {
+    const [a] = parseAdjustLines([
+      { id: 'a', qty: 1, reason_code: 'cannot_buy' },
+    ]);
+    expect(a.reason_code).toBe('cannot_buy');
+  });
+
   it('mã lạ "out_of_stock" → VALIDATION lines.reason_code', () => {
     expect(
       body(() =>

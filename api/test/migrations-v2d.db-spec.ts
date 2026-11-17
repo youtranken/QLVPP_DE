@@ -145,6 +145,11 @@ describe('migration v2-D 0113–0121', () => {
         ],
       );
 
+    it('0130 (G2): CHECK lý do nhận cannot_buy; mã lạ abc → 23514', async () => {
+      expect(await insert({ reason: 'cannot_buy' })).toBe('OK');
+      expect(await insert({ reason: 'abc' })).toBe('23514');
+    });
+
     it('0113 CHECK chỉ giảm: after 5 before 5 → 23514; after 4 → ok', async () => {
       expect(await insert({ before: 5, after: 5 })).toBe('23514');
       expect(await insert({ before: 5, after: 4 })).toBe('OK');

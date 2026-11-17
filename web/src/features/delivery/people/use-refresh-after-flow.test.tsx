@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { useReviewCache } from '@/features/review/review.api';
 import { useRefreshStock } from '@/features/stock/stock.api';
 import { useRefreshArrivals } from '@/features/arrivals/use-arrivals-plan';
-import { useRefreshAfterAdjust } from '@/features/summary/use-adjust';
+import { useRefreshAfterAdjust } from '@/features/summary/use-adjust-dialog';
 import { useRefreshSendState } from '@/features/send-adm/send-adm.api';
 import { useRefreshAfterLineChange } from './use-refresh-after-flow';
 

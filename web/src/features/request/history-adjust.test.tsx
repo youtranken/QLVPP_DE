@@ -51,8 +51,8 @@ describe('Lịch sử — điều chỉnh của Adm D&E', () => {
     renderApp(makeMe('member'), '/history/2026-10');
     const box = (await screen.findByRole('heading', { name: 'Điều chỉnh của Adm D&E' })).closest('section')!;
     expect(within(box).getAllByRole('listitem').map((n) => n.textContent)).toEqual([
-      `13/12 · 08:00 · ${PEN.name} 5 thành 4 · Lý do: Vượt định mức`,
-      `13/12 · 09:10 · ${PEN.name} 4 thành 3 · Lý do: Vượt định mức`,
+      `13/12 · 08:00 · ${PEN.name} 5 thành 4 · Lý do: Số lượng quá nhiều`,
+      `13/12 · 09:10 · ${PEN.name} 4 thành 3 · Lý do: Số lượng quá nhiều`,
     ]);
     // Đăng ký lấy số gốc của lần giảm đầu
     expect(within(screen.getByRole('rowheader', { name: PEN.name }).closest('tr')!).getByText('5')).toBeInTheDocument();
@@ -82,7 +82,7 @@ describe('Lịch sử — điều chỉnh của Adm D&E', () => {
       ],
     });
     renderApp(makeMe('member'), '/history/2026-10');
-    expect(await screen.findByText('Adm D&E đã bỏ toàn bộ: Trùng với phiếu khác; Vượt định mức')).toBeInTheDocument();
+    expect(await screen.findByText('Adm D&E đã bỏ toàn bộ: Trùng với phiếu khác; Số lượng quá nhiều')).toBeInTheDocument();
     expect(screen.queryByText('Không có phiếu tháng này')).toBeNull();
   });
 
