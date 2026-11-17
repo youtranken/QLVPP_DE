@@ -23,9 +23,9 @@ sql() { $DC exec -T postgres psql -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1
 sql_file() { $DC exec -T postgres psql -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 -q; }
 
 confirm() {
-  local want=$1 ans
-  read -r -p "    Gõ $want để làm, Enter để thôi: " ans
-  [[ "$ans" == "$want" ]] || { echo "    Đã thôi, không đổi gì."; exit 0; }
+  local ans
+  read -r -p "    Làm không? [y/N]: " ans
+  [[ "$ans" == "y" || "$ans" == "Y" ]] || { echo "    Đã thôi, không đổi gì."; exit 0; }
 }
 
 backup() {
@@ -42,7 +42,7 @@ backup() {
 
 # Xóa tệp ảnh trên đĩa theo danh sách id (một id mỗi dòng từ stdin)
 remove_files() {
-  $DC exec -T api sh -c "while read -r id; do [ -n \"\$id\" ] && rm -f \"$FILES_DIR/\$id\".*; done"
+  $DC exec -T api sh -c "while read -r id; do if [ -n \"\$id\" ]; then rm -f \"$FILES_DIR/\$id\".*; fi; done"
 }
 
 open_period() { sql "SELECT to_char(ym,'YYYY-MM')||'|'||to_char(deadline AT TIME ZONE 'Asia/Ho_Chi_Minh','HH24:MI DD/MM/YYYY') FROM periods WHERE deadline > now() ORDER BY ym LIMIT 1;"; }
@@ -54,7 +54,7 @@ lock_now() {
   local n; n=$(sql "SELECT count(*) FROM requests WHERE period_ym = '$ym-01';")
   echo "==> Chốt kỳ tháng $ym NGAY BÂY GIỜ (hạn hiện tại $at, đang có $n phiếu)."
   echo "    Nhân viên sẽ không sửa phiếu kỳ này nữa; kỳ tháng sau tự mở đăng ký."
-  confirm CHOT
+  confirm
   sql_file <<SQL
 BEGIN;
 INSERT INTO audit_log (actor, action, object_type, object_id, detail)
@@ -66,8 +66,8 @@ COMMIT;
 SQL
   echo "    Đã chốt kỳ $ym."
   echo "    Chuông 'kỳ đã khóa' + chụp số người: tự chạy ở phút 5 của giờ kế tiếp."
-  local ans; read -r -p "    Gửi ngay bây giờ? (khởi động lại api ~10 giây, người đang dùng thấy chập chờn) [c/K]: " ans
-  if [[ "$ans" == "c" || "$ans" == "C" ]]; then
+  local ans; read -r -p "    Gửi chuông ngay bây giờ? (khởi động lại api ~10 giây, người đang dùng thấy chập chờn) [y/N]: " ans
+  if [[ "$ans" == "y" || "$ans" == "Y" ]]; then
     $DC restart api >/dev/null </dev/null && echo "    Đã khởi động lại api — lịch chạy một lượt khi api lên."
   fi
 }
@@ -82,7 +82,7 @@ reopen() {
   [[ "$later" == "0" ]] || { echo "!! Kỳ sau kỳ $ym đã có $later phiếu — mở lại sẽ lẫn hai kỳ. Dừng." >&2; exit 1; }
   echo "==> Mở lại kỳ tháng $ym, hạn trở về $(sql "SELECT to_char('$before'::timestamptz AT TIME ZONE 'Asia/Ho_Chi_Minh','HH24:MI DD/MM/YYYY');")."
   echo "    Phiếu giữ nguyên; xóa chuông 'kỳ đã khóa' của kỳ này để lần chốt sau gửi lại."
-  confirm MO
+  confirm
   sql_file <<SQL
 BEGIN;
 UPDATE periods SET deadline = '$before'::timestamptz, headcount = NULL, headcount_subs = NULL WHERE ym = '$ym-01';
@@ -101,7 +101,7 @@ clear_orders() {
   echo "==> CLEAR ĐƠN HÀNG: xóa mọi phiếu, điều chỉnh, giao/nhận hàng, báo cáo, thông báo, sổ nhập xuất, ảnh món ngoài danh mục, các kỳ; số trong tủ về 0."
   echo "    Giữ: món, nhóm, đơn vị tính, ảnh món, Danh bạ, Cấu hình, Nhật ký."
   echo "    Đang có: $(sql "SELECT count(*) FROM requests;") phiếu, $(sql "SELECT count(*) FROM stock_movements;") dòng nhập xuất."
-  confirm XOA
+  confirm
   backup
   # Ảnh dòng ngoài DM đã thành ảnh món khi thêm vào danh mục thì món còn dùng — giữ lại
   local keep="purpose = 'line_image' AND id NOT IN (SELECT image_file_id FROM items WHERE image_file_id IS NOT NULL)"
@@ -124,7 +124,7 @@ clear_all() {
   echo "==> CLEAR TẤT CẢ: như clear đơn hàng, thêm xóa mọi món, nhóm, đơn vị tính và mọi ảnh."
   echo "    Giữ: Danh bạ, Cấu hình, phiên đăng nhập, Nhật ký. Sau đó Adm D&E phải nhập lại danh mục."
   echo "    Đang có: $(sql "SELECT count(*) FROM items;") món, $(sql "SELECT count(*) FROM requests;") phiếu."
-  confirm XOA
+  confirm
   backup
   local ids; ids=$(sql "SELECT id FROM files;")
   sql_file <<SQL
@@ -143,7 +143,7 @@ choice=${1:-}
 if [[ -z "$choice" ]]; then
   echo "VPP — công cụ demo (DB: $DB_NAME)"
   echo "  1) Chốt kỳ ngay"
-  echo "  2) Mở lại kỳ vừa chốt"
+  echo "  2) Mở lại kỳ vừa chốt (kỳ tháng sau tự mở khi chốt, không cần lệnh)"
   echo "  3) Clear đơn hàng (giữ danh mục)"
   echo "  4) Clear tất cả"
   read -r -p "Chọn 1-4: " choice
