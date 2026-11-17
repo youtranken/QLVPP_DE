@@ -193,7 +193,6 @@ export class ReviewService {
       category_id: input.category_id,
       image_file_id: input.image_file_id ?? line.image_file_id,
       max_qty: input.max_qty,
-      admin_only: input.admin_only,
     };
     return this.catalog.createItemWithin(tx, dto, actor, {
       trustedImageId: line.image_file_id ?? undefined,
@@ -209,7 +208,6 @@ const NEW_ITEM_KEYS = [
   'category_id',
   'image_file_id',
   'max_qty',
-  'admin_only',
 ] as const;
 
 // Hoặc {existing_id} hoặc trường món mới — gửi cả hai là mơ hồ, không đoán ý admin

@@ -3,7 +3,7 @@ import { snapshotsFixture } from './report-snapshots.fixture';
 
 // Kỳ test dùng chung có thể đã có bản trước với số khác → bản này là bản thay thế, dòng đầu là "Thay thế bản in lúc …"
 const formTitle = (ws: ExcelJS.Worksheet) =>
-  String(ws.getCell('A1').value).startsWith('Thay thế bản ')
+  ws.getCell('A1').text.startsWith('Thay thế bản ')
     ? ws.getCell('A2').value
     : ws.getCell('A1').value;
 

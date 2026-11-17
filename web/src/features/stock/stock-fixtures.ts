@@ -13,7 +13,6 @@ export function item(over: Partial<AdminItem>): AdminItem {
     pack_note: null,
     category_id: 'c-1',
     image_file_id: 'f-1',
-    admin_only: false,
     max_qty: 20,
     stock_qty: 10,
     restock_level: 30,

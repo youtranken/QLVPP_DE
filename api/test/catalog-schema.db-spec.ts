@@ -95,9 +95,9 @@ describe('0100 catalog — ràng buộc item_categories / items / stock_movement
         ),
       ).toBe('23503');
     });
-    it('mặc định: max_qty 20, stock_qty 0, restock_level NULL, active true, admin_only false', async () => {
+    it('mặc định: max_qty 20, stock_qty 0, restock_level NULL, active true', async () => {
       const { rows } = await pool.query(
-        'SELECT max_qty, stock_qty, restock_level, active, admin_only, low_stock_notified_at FROM items WHERE id = $1',
+        'SELECT max_qty, stock_qty, restock_level, active, low_stock_notified_at FROM items WHERE id = $1',
         [itemId],
       );
       expect(rows[0]).toEqual({
@@ -105,7 +105,6 @@ describe('0100 catalog — ràng buộc item_categories / items / stock_movement
         stock_qty: 0,
         restock_level: null,
         active: true,
-        admin_only: false,
         low_stock_notified_at: null,
       });
     });

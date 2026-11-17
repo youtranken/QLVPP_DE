@@ -4,8 +4,7 @@ import type { MemberItem } from './request.api';
 import { applyFilters, DEFAULT_FILTER, filterPatch, groupCounts, parseFilter } from './item-filters';
 
 const item = (id: string, name: string, cat: string, extra: Partial<MemberItem> = {}): MemberItem => ({
-  id, name, name_en: null, unit: 'cai', pack_note: null, category_id: cat, image_file_id: null,
-  admin_only: false, max_qty: 5, active: true, usable: true, ...extra,
+  id, name, name_en: null, unit: 'cai', pack_note: null, category_id: cat, image_file_id: null, max_qty: 5, active: true, usable: true, ...extra,
 });
 const ITEMS = [
   item('1', 'Bút bi Thiên Long', 'g1'),

@@ -130,14 +130,6 @@ describe('useCart', () => {
     expect(cart.current.toBody().lines).toEqual([]);
   });
 
-  it('món chuyển sang chỉ Adm D&E sau khi lưu: stepper khóa min = max = số đang có', () => {
-    const LOCKED = memberItem({ id: 'i-lock', name: 'Mực in', max_qty: 10, admin_only: true });
-    const server: RequestView = { ...SERVER, lines: [lineView({ id: 'l-lock', item_id: LOCKED.id, item: facts(LOCKED), qty: 4 })] };
-    const cart = renderHook(() =>
-      useCart(server, { ym: '2026-11', items: new Map([[LOCKED.id, LOCKED]]), defaultMax: 20 }),
-    ).result;
-    expect(cart.current.lines[0]).toMatchObject({ min: 4, max: 4 });
-  });
 
   it('món còn bán nhưng SL đã lưu vượt max_qty (max bị hạ): max = SL đã lưu, giảm được, không tăng quá', () => {
     const server: RequestView = { ...SERVER, lines: [lineView({ id: 'l-pen', item_id: PEN.id, item: facts(PEN), qty: 8 })] };

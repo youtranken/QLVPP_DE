@@ -29,7 +29,6 @@ const adminItem = (over: Partial<AdminItem>): AdminItem => ({
   pack_note: null,
   category_id: 'c-1',
   image_file_id: 'f-x',
-  admin_only: false,
   max_qty: 20,
   stock_qty: 0,
   restock_level: null,
@@ -100,7 +99,7 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(sentBody(fetchMock)).toEqual({
       action: 'convert',
-      item: { name: 'Băng keo 2 mặt', name_en: null, unit: 'cai', pack_note: null, category_id: 'c-1', max_qty: 20, admin_only: false },
+      item: { name: 'Băng keo 2 mặt', name_en: null, unit: 'cai', pack_note: null, category_id: 'c-1', max_qty: 20 },
     });
     expect(screen.getByText('Đã thêm vào danh mục')).toBeInTheDocument();
   });

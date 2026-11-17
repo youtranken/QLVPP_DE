@@ -57,7 +57,7 @@ describe('RequestPage', () => {
     expect(retry.closest('.m-panel')).not.toBeNull();
   }, 20000);
 
-  it('chưa có phiếu: hero "Đăng ký văn phòng phẩm tháng 11", còn 4 ngày, "Chưa lưu phiếu tháng này"; món chỉ Adm D&E không hiện', async () => {
+  it('chưa có phiếu: hero "Đăng ký văn phòng phẩm tháng 11", còn 4 ngày, "Chưa lưu phiếu tháng này"', async () => {
     mockViewport(1280);
     stubRequestApi();
     renderApp(makeMe('member'), '/');
@@ -66,7 +66,6 @@ describe('RequestPage', () => {
     expect(screen.getByText('Chọn món, bấm Lưu phiếu. Bạn sửa được tới 23:59 ngày 10/11, còn 4 ngày.')).toBeInTheDocument();
     expect(await within(grid()).findByText('Bút bi xanh')).toBeInTheDocument();
     expect(within(grid()).getByText((_, el) => el?.classList.contains('rq-card-unit') === true && el.textContent === 'Tối đa 20 cây/tháng')).toBeInTheDocument();
-    expect(within(grid()).queryByText('Giấy A4')).toBeNull();
     expect(within(grid()).getByRole('button', { name: /Không thấy món cần\?/ })).toBeInTheDocument();
   });
 
@@ -324,7 +323,7 @@ describe('RequestPage', () => {
     expect(within(cartLine('Bút bi xanh')).getByRole('spinbutton')).toHaveValue(2);
   });
 
-  it('món tạm ngưng hiện trong lưới (có dấu), món admin_only vẫn không hiện', async () => {
+  it('món tạm ngưng hiện trong lưới (có dấu); G7: không còn món ẩn — Giấy A4 hiện như món thường', async () => {
     mockViewport(1280);
     stubRequestApi({ items: [PEN, PAUSED, A4] });
     renderApp(makeMe('member'), '/');
@@ -332,6 +331,6 @@ describe('RequestPage', () => {
     expect(await within(grid()).findByText('Bút dạ quang')).toBeInTheDocument();
     expect(within(grid()).getAllByRole('img', { name: 'Tạm ngưng' })).toHaveLength(1);
     expect(within(grid()).getByRole('button', { name: /Không đặt được/ })).toBeDisabled();
-    expect(within(grid()).queryByText('Giấy A4')).toBeNull();
+    expect(within(grid()).getByText('Giấy A4')).toBeInTheDocument();
   });
 });

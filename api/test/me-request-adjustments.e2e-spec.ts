@@ -115,7 +115,7 @@ describe('GET me/request: nhân viên thấy điều chỉnh của Hành chính 
       line_count: 1,
       removed_all: false,
     });
-    await cut(once.body.request, { 0: { qty: 0, ...over } }).expect(200);
+    await cut(view(once), { 0: { qty: 0, ...over } }).expect(200);
     expect(await history()).toMatchObject({ line_count: 0, removed_all: true });
   });
 

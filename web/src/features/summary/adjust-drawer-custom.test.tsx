@@ -8,14 +8,13 @@ const CATEGORY = ADJUST_CATEGORY.name;
 
 afterEach(() => vi.unstubAllGlobals());
 
-const facts = (name: string, unit: string, over: { active?: boolean; admin_only?: boolean } = {}) => ({
+const facts = (name: string, unit: string, over: { active?: boolean } = {}) => ({
   name,
   name_en: null,
   unit,
   pack_note: null,
   image_file_id: null,
   active: over.active ?? true,
-  admin_only: over.admin_only ?? false,
 });
 
 const REVIEW = '/api/admin/lines/l-tape/review';

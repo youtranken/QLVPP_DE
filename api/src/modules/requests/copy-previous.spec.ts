@@ -5,7 +5,6 @@ const IMG = '11111111-1111-4111-8111-111111111111';
 const item = (over: Partial<CopyItemFacts> = {}): CopyItemFacts => ({
   name: 'Bút bi',
   active: true,
-  admin_only: false,
   max_qty: 10,
   ...over,
 });
@@ -34,15 +33,13 @@ describe('buildCopy', () => {
   const items = new Map<string, CopyItemFacts>([
     ['ok', item({ name: 'Bút bi' })],
     ['off', item({ name: 'Bút ngừng', active: false })],
-    ['adm', item({ name: 'Máy in', admin_only: true })],
     ['cap', item({ name: 'Giấy A4', max_qty: 10 })],
   ]);
 
-  it('bỏ món ngừng, admin_only, dòng added_by_admin, dòng rejected với lý do', () => {
+  it('bỏ món ngừng, dòng added_by_admin, dòng rejected với lý do', () => {
     const r = buildCopy(
       [
         line({ item_id: 'off', qty: 2 }),
-        line({ item_id: 'adm', qty: 1 }),
         line({ item_id: 'ok', qty: 1, added_by_admin: true }),
         custom({ custom_name: 'Ghim lạ', review_status: 'rejected' }),
       ],
@@ -52,7 +49,6 @@ describe('buildCopy', () => {
     expect(r.lines).toEqual([]);
     expect(r.skipped).toEqual([
       { name: 'Bút ngừng', reason: 'INACTIVE' },
-      { name: 'Máy in', reason: 'ADMIN_ONLY' },
       { name: 'Bút bi', reason: 'ADDED_BY_ADMIN' },
       { name: 'Ghim lạ', reason: 'REJECTED' },
     ]);

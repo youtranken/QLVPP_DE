@@ -10,9 +10,9 @@ export class ItemsController {
 
   @Get()
   list(
-    @Query() query: ListItemsQuery,
+    @Query() _query: ListItemsQuery,
     @CurrentIdentity() identity: RequestIdentity,
   ) {
-    return this.catalog.listFor(identity, query.include_inactive_ids);
+    return this.catalog.listFor(identity);
   }
 }

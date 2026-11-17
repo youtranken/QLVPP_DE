@@ -21,7 +21,6 @@ function useLineFacts() {
   const toneOf = (item: AdminItem | undefined) => (item?.category_id ? (tones.get(item.category_id) ?? 'g0') : 'g0');
   const metaOf = (unit: string | null, item: AdminItem | undefined) => {
     const u = fmt.unit(unit);
-    if (item?.admin_only) return t('summary.adjust.metaAdminOnly', { unit: u });
     return item ? t('summary.adjust.meta', { unit: u, max: item.max_qty }) : u;
   };
   return { byId, toneOf, metaOf, fmt };
@@ -32,13 +31,11 @@ const isPaused = (line: LineView, item: AdminItem | undefined) => line.item?.act
 // Dòng món tạm ngưng chưa giao gì không được tính vào kỳ (server cùng luật) → chỉ đọc, không bỏ được; đã giao một phần thì sửa như thường
 const notCounted = (line: LineView, item: AdminItem | undefined) => isPaused(line, item) && line.delivered_qty === 0;
 
-function LineTags({ line, item }: { line: LineView; item: AdminItem | undefined }) {
+function LineTags({ line }: { line: LineView }) {
   const { t } = useTranslation();
-  const adminOnly = item?.admin_only ?? line.item?.admin_only ?? false;
   return (
     <>
       {line.added_by_admin && <span className="tag">{t('summary.adjust.addedByAdmin')}</span>}
-      {adminOnly && <span className="tag tag--dark">{t('summary.adjust.adminOnly')}</span>}
       {isOverMax(line) && <span className="tag tag--warn">{t('warn.W12a', { max: line.max_qty })}</span>}
       {line.delivered_qty > 0 && <span className="tag tag--ok">{t('summary.adjust.delivered', { n: line.delivered_qty })}</span>}
       {line.cancelled_qty > 0 && <span className="tag">{t('summary.adjust.cancelled', { n: line.cancelled_qty })}</span>}
@@ -122,7 +119,7 @@ export function AdjustLines({ a, view }: { a: Adjust; view: AdminRequestView }) 
               name={name}
               meta={f.metaOf(l.item?.unit ?? null, item)}
               thumb={<ItemThumb fileId={l.item?.image_file_id ?? null} alt="" tone={f.toneOf(item)} size={48} />}
-              tags={<LineTags line={l} item={item} />}
+              tags={<LineTags line={l} />}
             >
               {a.isReduced(l) && !removed && <LineReduce a={a} line={l} unit={f.fmt.unit(l.item?.unit ?? null)} />}
             </LineRow>

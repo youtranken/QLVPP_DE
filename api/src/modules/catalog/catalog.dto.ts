@@ -51,7 +51,6 @@ class ItemFields {
   @OptionalText() pack_note?: string | null;
   @IsOptional() @IsUUID() category_id?: string | null;
   @IsOptional() @IsUUID() image_file_id?: string | null;
-  @Present() @IsBoolean() admin_only?: boolean;
   @Present() @IsInt() @Min(1) @Max(999) max_qty?: number;
   @Present() @SortOrder() sort_order?: number;
 }

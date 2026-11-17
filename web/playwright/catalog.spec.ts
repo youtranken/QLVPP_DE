@@ -102,11 +102,10 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
   });
 
   test('E1-S5 trang Danh mục hiện nhãn "Thiếu ảnh" cho món seed', async ({ page, request }, info) => {
-    // Danh mục dev đã đặt lại (50 món thật có ảnh): test tự tạo món "PW … Thiếu ảnh" không ảnh, chỉ Hành chính
+    // Danh mục dev đã đặt lại (50 món thật có ảnh): test tự tạo món "PW … Thiếu ảnh" không ảnh
     const name = `PW Giấy A4 ${Date.now()}-${info.project.name}`;
     const id = await createItemViaApi(request, name);
     const imageId = psql(`SELECT image_file_id FROM items WHERE id = '${id}'`);
-    expect((await request.patch(`/api/admin/items/${id}`, { headers: devHeaders('admin'), data: { admin_only: true } })).ok()).toBe(true);
     psql(`UPDATE items SET image_file_id = NULL WHERE id = '${id}'`);
     deleteTestFiles([imageId]);
     try {
@@ -115,7 +114,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await search.fill(name);
       const row = page.getByRole('row').filter({ hasText: name });
       await expect(row.getByText('Thiếu ảnh', { exact: true })).toBeVisible();
-      await expect(row.getByText('Chỉ Adm D&E')).toBeVisible();
+      await expect(row.getByText('Chỉ Adm D&E')).toHaveCount(0);
       await search.fill('');
       await expect(page.getByText('Bút bi xanh')).toBeHidden();
       await shot(page, info, 'catalog-seed', false);

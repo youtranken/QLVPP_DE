@@ -31,7 +31,6 @@ export function reviewFixture(tag: string) {
     pack_note: 0,
     image_file_id: 0,
     active: 0,
-    admin_only: 0,
     max_qty: 0,
   };
 

@@ -86,7 +86,7 @@ describe('nhóm món ngừng ẩn món trong nhóm (không sửa items.active)',
     expect(await usableOf(A, selfOff)).toBe(false);
   });
 
-  it('GET item-categories: member nhận nhóm ngừng (active=false) khi còn món không admin_only, nhóm ngừng rỗng thì không', async () => {
+  it('GET item-categories: member nhận nhóm ngừng (active=false) khi còn món, nhóm ngừng rỗng thì không', async () => {
     const own = (
       await pool().query<{ id: string }>(
         'INSERT INTO item_categories (name, active) VALUES ($1, false) RETURNING id',
@@ -105,13 +105,10 @@ describe('nhóm món ngừng ẩn món trong nhóm (không sửa items.active)',
       own,
     ]);
     expect(await catsOf()).toMatchObject({ active: false });
-    await pool().query('UPDATE items SET admin_only = true WHERE id = $1', [
-      id,
-    ]);
-    expect(await catsOf()).toBeUndefined();
     await pool().query('UPDATE items SET category_id = NULL WHERE id = $1', [
       id,
     ]);
+    expect(await catsOf()).toBeUndefined();
     await pool().query('DELETE FROM item_categories WHERE id = $1', [own]);
   });
 

@@ -1,7 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { FormField } from '@/ui/form-field';
-import { InfoTip } from '@/ui/info-tip';
-import { Switch } from '@/ui/switch';
 import { UnitSelect } from '@/features/units/unit-select';
 import { Listbox } from '@/ui/listbox';
 import type { FieldErrors } from './catalog-errors';
@@ -93,10 +91,6 @@ export function ItemFields({
         <h3 className="ct-panel-sec__title">{t('catalog.panel.ordering')}</h3>
         <div className="ct-panel-row ct-panel-row--end">
           {number('max_qty', t('catalog.form.maxQty'), { required: true, min: 1, max: 999 })}
-          <div className="ct-switch-row">
-            <Switch checked={draft.admin_only} label={t('catalog.form.adminOnly')} text={t('catalog.form.adminOnly')} onChange={(v) => onChange('admin_only', v)} />
-            <InfoTip label={t('catalog.form.adminOnlyInfo')}>{t('catalog.form.adminOnlyHint')}</InfoTip>
-          </div>
         </div>
       </section>
     </>

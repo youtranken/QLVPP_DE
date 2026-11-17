@@ -25,9 +25,9 @@ try {
   for (const i of seed.items) {
     // Món đã có code là của Hành chính (có thể đã sửa tên/tối đa/nhóm) — seed chỉ thêm món mới
     await client.query(
-      `INSERT INTO items (code, name, name_en, unit, max_qty, admin_only, sort_order, category_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7,
-               (SELECT id FROM item_categories WHERE lower(name) = lower($8)))
+      `INSERT INTO items (code, name, name_en, unit, max_qty, sort_order, category_id)
+       VALUES ($1, $2, $3, $4, $5, $6,
+               (SELECT id FROM item_categories WHERE lower(name) = lower($7)))
        ON CONFLICT (code) DO NOTHING`,
       [
         i.code,
@@ -35,7 +35,6 @@ try {
         i.name_en,
         i.unit,
         i.max_qty,
-        i.admin_only,
         i.sort_order,
         i.category,
       ],

@@ -49,7 +49,6 @@ const MEMBER_ITEM_KEYS = [
   'pack_note',
   'category_id',
   'image_file_id',
-  'admin_only',
   'max_qty',
   'active',
   'usable',
@@ -106,7 +105,7 @@ export class CatalogService {
     }
     const { rows } = await tx.execute<ItemFacts>(sql`
       SELECT id, name, name_en, unit, pack_note, image_file_id, ${ITEM_USABLE_SQL} AS active,
-             admin_only, max_qty
+             max_qty
       FROM items WHERE id = ANY(${idList})
     `);
     return new Map(rows.map((r) => [r.id, r]));
@@ -123,10 +122,9 @@ export class CatalogService {
   }
 
   // missing_image: món seed chưa có ảnh để admin biết cần bổ sung
-  // Member thấy cả món tạm ngưng (usable=false) để thẻ hiện con dấu; admin_only vẫn ẩn trừ id được liệt kê (dòng cũ trong phiếu)
+  // Member thấy cả món tạm ngưng (usable=false) để thẻ hiện con dấu
   async listFor(
     identity: RequestIdentity,
-    includeIds: string[] = [],
   ): Promise<ListedItem[] | MemberListedItem[]> {
     const privileged = identity.role === 'admin' || identity.role === 'sa';
     const result = await this.db.execute<ListedItem & ItemDbRow>(sql`
@@ -135,9 +133,6 @@ export class CatalogService {
                ${ITEM_INACTIVE_REASON_SQL} AS inactive_reason,
                (image_file_id IS NULL) AS missing_image
         FROM items
-        WHERE ${privileged}
-           OR NOT admin_only
-           OR id = ANY(${sql.param(includeIds)}::uuid[])
       ) i
       LEFT JOIN item_categories c ON c.id = i.category_id
       ORDER BY ${ITEM_ORDER}

@@ -16,7 +16,7 @@ INSERT INTO users (sub, email, employee_code, full_name, status, department, tea
 
 INSERT INTO periods (ym, deadline) VALUES ('2026-11-01','2026-10-10T17:00:00Z'), ('2026-10-01','2026-09-10T17:00:00Z') ON CONFLICT DO NOTHING;
 
-CREATE TEMP TABLE it AS SELECT id, row_number() OVER (ORDER BY sort_order, name) n FROM items WHERE active AND NOT admin_only;
+CREATE TEMP TABLE it AS SELECT id, row_number() OVER (ORDER BY sort_order, name) n FROM items WHERE active;
 
 -- phiếu: (sub, ym, note, [(n, qty)])
 CREATE TEMP TABLE plan(sub text, ym date, note text, n int, qty int, pos int);

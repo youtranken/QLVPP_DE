@@ -127,7 +127,6 @@ const request = {
       skipped: 'Đã bỏ: {{name}} — {{reason}}',
       reasons: {
         INACTIVE: 'món đã ngừng',
-        ADMIN_ONLY: 'chỉ Adm D&E đặt',
         ADDED_BY_ADMIN: 'do Adm D&E thêm',
         REJECTED: 'Adm D&E không nhận',
         UNIT_INACTIVE: 'đơn vị tính đã ngừng dùng',
@@ -251,7 +250,6 @@ const request = {
         QTY_BELOW_DELIVERED: 'Không ít hơn số đã giao.',
         ITEM_INACTIVE: 'Món này đã ngừng — bỏ khỏi phiếu rồi lưu lại.',
         ITEM_NOT_FOUND: 'Món này không còn — bỏ khỏi phiếu rồi lưu lại.',
-        ADMIN_ONLY_ITEM: 'Món này chỉ Adm D&E đặt — bỏ khỏi phiếu rồi lưu lại.',
         DUPLICATE_ITEM: 'Món này đã có trong phiếu.',
         LINE_READONLY: 'Dòng này chỉ xem được — cần sửa thì liên hệ {{contact}}.',
         LINE_NOT_FOUND: 'Dòng này không còn — tải lại trang.',

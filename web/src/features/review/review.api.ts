@@ -42,7 +42,6 @@ export interface NewItemInput {
   category_id: string;
   image_file_id?: string;
   max_qty: number;
-  admin_only: boolean;
 }
 
 // expected_updated_at: mốc phiếu đang xem (ngăn Điều chỉnh) → phiếu đã đổi ở nơi khác thì STALE_UPDATE
@@ -60,7 +59,6 @@ export interface ReviewedItem {
   pack_note: string | null;
   image_file_id: string | null;
   active: boolean;
-  admin_only: boolean;
   max_qty: number;
 }
 

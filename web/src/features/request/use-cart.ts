@@ -49,9 +49,9 @@ function itemLabel(i: MemberItem): CartLabel {
 }
 
 const orderable = (item: MemberItem | undefined, l: LineView) =>
-  !!item && item.usable && !item.admin_only && l.item?.active !== false;
+  !!item && item.usable && l.item?.active !== false;
 
-// Server cho giảm dòng đã lưu bất kể max_qty hiện tại; món ngừng/chỉ Hành chính thì member chỉ được bỏ dòng
+// Server cho giảm dòng đã lưu bất kể max_qty hiện tại; món ngừng thì member chỉ được bỏ dòng
 function savedLimits(l: LineView, item: MemberItem | undefined, defaultMax: number) {
   if (!l.item_id) return { min: 1, max: Math.max(defaultMax, l.qty) };
   if (!orderable(item, l)) return { min: l.qty, max: l.qty };
@@ -89,7 +89,7 @@ function fromView(l: LineView, ctx: CartContext): CartLine {
   };
 }
 
-const canOrder = (i: MemberItem) => i.usable && !i.admin_only;
+const canOrder = (i: MemberItem) => i.usable;
 
 // Dòng chỉ đọc (Hành chính thêm…) không bao giờ làm gốc: dùng lại id của nó sẽ gửi trùng id
 function fromItem(i: MemberItem, qty: number, prior?: CartLine): CartLine {

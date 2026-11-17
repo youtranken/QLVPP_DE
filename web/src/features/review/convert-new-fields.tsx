@@ -81,12 +81,6 @@ export function ConvertNewFields({ draft, errors, categories, onChange, onUpload
           </p>
         )}
       </div>
-      <div className="a-check a-form-wide">
-        <label>
-          <input type="checkbox" checked={draft.admin_only} onChange={(e) => onChange('admin_only', e.target.checked)} />
-          {t('catalog.form.adminOnly')}
-        </label>
-      </div>
     </>
   );
 }

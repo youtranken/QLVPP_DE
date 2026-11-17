@@ -18,11 +18,10 @@ export type SourceLine = Omit<
 export interface CopyItemFacts {
   name: string;
   active: boolean;
-  admin_only: boolean;
   max_qty: number;
 }
 export type SkipReason =
-  'INACTIVE' | 'ADMIN_ONLY' | 'ADDED_BY_ADMIN' | 'REJECTED' | 'UNIT_INACTIVE';
+  'INACTIVE' | 'ADDED_BY_ADMIN' | 'REJECTED' | 'UNIT_INACTIVE';
 export type CopiedLine =
   | { item_id: string; qty: number }
   | {
@@ -117,7 +116,6 @@ function skipReason(
       : null;
   // Món không còn trong bảng (không thể khi đã có dòng dùng, nhưng phòng hờ) coi như ngừng
   if (!item || !item.active) return 'INACTIVE';
-  if (item.admin_only) return 'ADMIN_ONLY';
   return null;
 }
 

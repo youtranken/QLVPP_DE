@@ -1,6 +1,5 @@
 import { Type } from 'class-transformer';
 import {
-  IsBoolean,
   IsIn,
   IsInt,
   IsOptional,
@@ -43,7 +42,6 @@ export class ReviewItemInput {
   @ValidateIf(isNew) @IsUUID() category_id?: string;
   @IsOptional() @IsUUID() image_file_id?: string | null;
   @IsOptional() @IsInt() @Min(1) @Max(999) max_qty?: number;
-  @IsOptional() @IsBoolean() admin_only?: boolean;
 }
 
 export class ReviewBody {

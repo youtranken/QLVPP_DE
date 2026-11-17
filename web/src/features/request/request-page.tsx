@@ -114,7 +114,7 @@ function RequestEditor({
     if (!narrow) setSheetOpen(false);
   }, [narrow]);
 
-  const visible = useMemo(() => items.filter((i) => !i.admin_only), [items]);
+  const visible = items;
   const lineByKey = useMemo(() => new Map(cart.lines.map((l) => [l.key, l])), [cart.lines]);
   // "Hay dùng trước" = món có trong phiếu kỳ trước (GET, không phải chép lại); không có kỳ trước thì thành thứ tự nhóm
   const previousRequest = useMyRequest(period.previous?.ym);

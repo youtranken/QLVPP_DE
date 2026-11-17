@@ -89,7 +89,6 @@ export function toLineView(
           pack_note: item.pack_note,
           image_file_id: item.image_file_id,
           active: item.active,
-          admin_only: item.admin_only,
         }
       : null,
     custom_name: line.custom_name,

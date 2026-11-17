@@ -45,7 +45,6 @@ export interface LineItemFacts {
   pack_note: string | null;
   image_file_id: string | null;
   active: boolean;
-  admin_only: boolean;
 }
 
 export interface LineView {
@@ -95,7 +94,6 @@ export interface MemberItem {
   pack_note: string | null;
   category_id: string | null;
   image_file_id: string | null;
-  admin_only: boolean;
   max_qty: number;
   active: boolean;
   usable: boolean;
@@ -149,7 +147,7 @@ export function useMyRequest(ym: string | undefined) {
   });
 }
 
-// Món đã ngừng/chỉ Hành chính vẫn cần tên và giới hạn khi đang nằm trên phiếu
+// Món đã ngừng vẫn cần tên và giới hạn khi đang nằm trên phiếu
 export function useMemberItems(lineItemIds: string[] | undefined) {
   const ids = [...new Set(lineItemIds ?? [])].sort();
   return useQuery({
@@ -185,7 +183,7 @@ export const saveMyLines = (body: SaveLinesBody, csrfToken: string | null) =>
     csrfToken,
   });
 
-export type SkipReason = 'INACTIVE' | 'ADMIN_ONLY' | 'ADDED_BY_ADMIN' | 'REJECTED' | 'UNIT_INACTIVE';
+export type SkipReason = 'INACTIVE' | 'ADDED_BY_ADMIN' | 'REJECTED' | 'UNIT_INACTIVE';
 
 export type CopiedLine =
   | { item_id: string; qty: number }

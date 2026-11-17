@@ -6,14 +6,13 @@ import { SENT, less, noteBox, pick, reasons, renderDrawer, row, saveButton, stub
 
 afterEach(() => vi.unstubAllGlobals());
 
-const facts = (name: string, unit: string, over: { active?: boolean; admin_only?: boolean } = {}) => ({
+const facts = (name: string, unit: string, over: { active?: boolean } = {}) => ({
   name,
   name_en: null,
   unit,
   pack_note: null,
   image_file_id: null,
   active: over.active ?? true,
-  admin_only: over.admin_only ?? false,
 });
 
 const REASONS = ['Không có hàng', 'Khác'];
@@ -103,14 +102,14 @@ describe('AdjustDrawer — chỉ giảm sau khóa sổ (R-D6.3)', () => {
     expect(within(row(drawer, 'Giấy note vàng')).queryByText('Sẽ bỏ khỏi phiếu')).toBeNull();
   });
 
-  it('món tạm ngưng chưa giao: tên gạch ngang + "Tạm ngưng", chỉ đọc (không ô số, không X), không tính vào đầu mục; món chỉ Adm D&E: "Chỉ Adm D&E", "ram · Adm D&E đặt"', async () => {
+  it('món tạm ngưng chưa giao: tên gạch ngang + "Tạm ngưng", chỉ đọc (không ô số, không X), không tính vào đầu mục; G7: không còn nhãn "Chỉ Adm D&E"', async () => {
     stubAdjust({
       views: [
         adminRequest({
           lines: [
             ...adminRequest().lines,
             lineView({ id: 'l-old', item_id: 'i-old', item: facts('Giấy cũ', 'cai', { active: false }), qty: 5 }),
-            lineView({ id: 'l-a4', item_id: 'i-a4', item: facts('Giấy A4 Double A', 'ram', { admin_only: true }), qty: 40 }),
+            lineView({ id: 'l-a4', item_id: 'i-a4', item: facts('Giấy A4 Double A', 'ram'), qty: 40 }),
           ],
         }),
       ],
@@ -127,8 +126,7 @@ describe('AdjustDrawer — chỉ giảm sau khóa sổ (R-D6.3)', () => {
     expect(within(drawer).getByText('Món trong phiếu · 4 dòng')).toBeInTheDocument();
     expect(within(drawer).getByText('55 đơn vị')).toBeInTheDocument();
     const a4 = row(drawer, 'Giấy A4 Double A');
-    expect(within(a4).getByText('Chỉ Adm D&E')).toBeInTheDocument();
-    expect(within(a4).getByText('ram · Adm D&E đặt')).toBeInTheDocument();
+    expect(within(a4).queryByText('Chỉ Adm D&E')).toBeNull();
   });
 
   it('Quay lại sau khi sửa → hỏi "Bỏ thay đổi?"; Ở lại giữ ngăn, Bỏ thay đổi đóng; chân ngăn đếm thay đổi', async () => {

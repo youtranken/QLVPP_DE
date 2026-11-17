@@ -45,7 +45,7 @@ describe('HistoryDetailPage', () => {
       [
         L('1', 'Bút bảng', { qty: 2, delivered_qty: 2 }),
         L('2', 'Bìa còng', { qty: 3, review_status: 'accepted' }),
-        L('3', 'Bút dạ', { qty: 4, item_id: 'i-3', item: { name: 'Bút dạ', name_en: null, unit: 'cay', pack_note: null, image_file_id: null, active: false, admin_only: false } }),
+        L('3', 'Bút dạ', { qty: 4, item_id: 'i-3', item: { name: 'Bút dạ', name_en: null, unit: 'cay', pack_note: null, image_file_id: null, active: false } }),
       ],
       { saved_at: '2026-11-07T14:38:00.000Z', department: null },
     );

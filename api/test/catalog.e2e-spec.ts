@@ -26,7 +26,6 @@ interface Item {
   id: string;
   name: string;
   active: boolean;
-  admin_only: boolean;
   max_qty: number;
   image_file_id: string | null;
 }
@@ -202,7 +201,6 @@ describe('catalog: nhóm món, món', () => {
         unit: 'cay',
         pack_note: 'hộp 12 cây',
         image_file_id: image,
-        admin_only: false,
         stock_qty: 0,
         restock_level: null,
         stock_state: 'out',
@@ -228,7 +226,6 @@ describe('catalog: nhóm món, món', () => {
       expect(Object.keys(mine ?? {}).sort()).toEqual(
         [
           'active',
-          'admin_only',
           'category_id',
           'id',
           'image_file_id',
@@ -251,19 +248,17 @@ describe('catalog: nhóm món, món', () => {
         expect(full).toHaveProperty(k);
     });
 
-    it('món admin_only không có trong GET /items của member, có với admin', async () => {
+    it('G7: gửi admin_only bị whitelist lọc — món tạo được, không có khóa admin_only, nhân viên thấy món', async () => {
       const item = (
         await createItem(itemBody({ admin_only: true })).expect(201)
-      ).body as Item;
+      ).body as Item & Record<string, unknown>;
+      expect(item).not.toHaveProperty('admin_only');
       expect(
         ids((await member(http().get('/api/items')).expect(200)).body),
-      ).not.toContain(item.id);
-      expect(
-        ids((await admin(http().get('/api/items')).expect(200)).body),
       ).toContain(item.id);
     });
 
-    it('PATCH active=false → member vẫn thấy món với usable=false; món admin_only vẫn ẩn; audit item.deactivated', async () => {
+    it('PATCH active=false → member vẫn thấy món với usable=false; audit item.deactivated', async () => {
       const item = (await createItem(itemBody()).expect(201)).body as Item;
       const patched = await admin(http().patch(`/api/admin/items/${item.id}`))
         .send({ active: false, max_qty: 7 })
@@ -275,14 +270,6 @@ describe('catalog: nhóm món, món', () => {
         active: false,
         usable: false,
       });
-      const hidden = (
-        await createItem(itemBody({ admin_only: true, active: false })).expect(
-          201,
-        )
-      ).body as Item;
-      expect(
-        ids((await member(http().get('/api/items')).expect(200)).body),
-      ).not.toContain(hidden.id);
       const withIds = await member(
         http().get(`/api/items?include_inactive_ids=${item.id}`),
       ).expect(200);

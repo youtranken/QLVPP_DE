@@ -54,7 +54,7 @@ describe('receiveRows — biên', () => {
   });
 
   it('món tạm ngưng chưa giao → "paused", không tính vào tóm tắt (cùng luật server); đã giao một phần thì vẫn tính', () => {
-    const facts = { name: 'X', name_en: null, unit: 'cai', pack_note: null, image_file_id: null, admin_only: false };
+    const facts = { name: 'X', name_en: null, unit: 'cai', pack_note: null, image_file_id: null };
     const all = rows([
       line('1', 'A', { item_id: 'i1', item: { ...facts, active: false }, qty: 3 }),
       line('2', 'B', { item_id: 'i2', item: { ...facts, active: false }, qty: 3, delivered_qty: 1 }),

@@ -16,7 +16,6 @@ export function adminItem(over: Partial<AdminItem> = {}): AdminItem {
     pack_note: null,
     category_id: 'c-paper',
     image_file_id: 'f-1',
-    admin_only: false,
     max_qty: 20,
     stock_qty: 10,
     restock_level: 10,
@@ -30,7 +29,7 @@ export function adminItem(over: Partial<AdminItem> = {}): AdminItem {
   };
 }
 
-export const PAPER = adminItem({ id: 'i-paper', code: 'VPP-001', name: 'Giấy A4', unit: 'ram', admin_only: true, image_file_id: null, missing_image: true, stock_state: 'low', stock_qty: 2 });
+export const PAPER = adminItem({ id: 'i-paper', code: 'VPP-001', name: 'Giấy A4', unit: 'ram', image_file_id: null, missing_image: true, stock_state: 'low', stock_qty: 2 });
 export const PEN = adminItem({ id: 'i-pen', code: 'VPP-010', name: 'Bút bi xanh', unit: 'cay', pack_note: 'hộp 20 cây', category_id: 'c-pen', image_file_id: 'f-2', max_qty: 10 });
 export const PENCIL = adminItem({ id: 'i-pencil', name: 'Bút chì 2B', category_id: 'c-pen', stock_state: 'out', stock_qty: 0, sort_order: 1 });
 export const OLD = adminItem({ id: 'i-old', name: 'Bút xóa cũ', category_id: 'c-pen', active: false, sort_order: 2 });

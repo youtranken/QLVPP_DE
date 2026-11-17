@@ -80,18 +80,15 @@ export function meRequestFixture(tag: string) {
           .expect(201)
       ).body as { id: string }
     ).id;
-  const newItem = async (
-    over: { max_qty?: number; active?: boolean; admin_only?: boolean } = {},
-  ) =>
+  const newItem = async (over: { max_qty?: number; active?: boolean } = {}) =>
     (
       await pool.query<{ id: string }>(
-        `INSERT INTO items (name, unit, max_qty, active, admin_only)
-         VALUES ($1, 'cay', $2, $3, $4) RETURNING id`,
+        `INSERT INTO items (name, unit, max_qty, active)
+         VALUES ($1, 'cay', $2, $3) RETURNING id`,
         [
           `e2e-req-item-${SUFFIX}-${Math.random().toString(36).slice(2, 8)}`,
           over.max_qty ?? 5,
           over.active ?? true,
-          over.admin_only ?? false,
         ],
       )
     ).rows[0].id;

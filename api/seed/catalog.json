@@ -28,7 +28,6 @@
       "name_en": "A4 paper",
       "unit": "ram",
       "max_qty": 5,
-      "admin_only": true,
       "category": "Giấy & sổ",
       "sort_order": 0
     },
@@ -38,7 +37,6 @@
       "name_en": "A5 paper",
       "unit": "ram",
       "max_qty": 5,
-      "admin_only": false,
       "category": "Giấy & sổ",
       "sort_order": 1
     },
@@ -48,7 +46,6 @@
       "name_en": "Sticky notes",
       "unit": "bich",
       "max_qty": 10,
-      "admin_only": false,
       "category": "Giấy & sổ",
       "sort_order": 2
     },
@@ -58,7 +55,6 @@
       "name_en": "Spiral notebook",
       "unit": "cuon",
       "max_qty": 5,
-      "admin_only": false,
       "category": "Giấy & sổ",
       "sort_order": 3
     },
@@ -68,7 +64,6 @@
       "name_en": "Notebook",
       "unit": "cuon",
       "max_qty": 5,
-      "admin_only": false,
       "category": "Giấy & sổ",
       "sort_order": 4
     },
@@ -78,7 +73,6 @@
       "name_en": "Blue ballpoint pen",
       "unit": "cay",
       "max_qty": 20,
-      "admin_only": false,
       "category": "Bút & viết",
       "sort_order": 5
     },
@@ -88,7 +82,6 @@
       "name_en": "Red ballpoint pen",
       "unit": "cay",
       "max_qty": 20,
-      "admin_only": false,
       "category": "Bút & viết",
       "sort_order": 6
     },
@@ -98,7 +91,6 @@
       "name_en": "Gel pen",
       "unit": "cay",
       "max_qty": 20,
-      "admin_only": false,
       "category": "Bút & viết",
       "sort_order": 7
     },
@@ -108,7 +100,6 @@
       "name_en": "Pencil",
       "unit": "cay",
       "max_qty": 10,
-      "admin_only": false,
       "category": "Bút & viết",
       "sort_order": 8
     },
@@ -118,7 +109,6 @@
       "name_en": "Highlighter",
       "unit": "cay",
       "max_qty": 10,
-      "admin_only": false,
       "category": "Bút & viết",
       "sort_order": 9
     },
@@ -128,7 +118,6 @@
       "name_en": "Whiteboard marker",
       "unit": "cay",
       "max_qty": 10,
-      "admin_only": false,
       "category": "Bút & viết",
       "sort_order": 10
     },
@@ -138,7 +127,6 @@
       "name_en": "Eraser",
       "unit": "cai",
       "max_qty": 5,
-      "admin_only": false,
       "category": "Bút & viết",
       "sort_order": 11
     },
@@ -148,7 +136,6 @@
       "name_en": "Binder clip",
       "unit": "hop",
       "max_qty": 5,
-      "admin_only": false,
       "category": "Kẹp & dán",
       "sort_order": 12
     },
@@ -158,7 +145,6 @@
       "name_en": "Paper clip",
       "unit": "hop",
       "max_qty": 5,
-      "admin_only": false,
       "category": "Kẹp & dán",
       "sort_order": 13
     },
@@ -168,7 +154,6 @@
       "name_en": "Staples",
       "unit": "hop",
       "max_qty": 10,
-      "admin_only": false,
       "category": "Kẹp & dán",
       "sort_order": 14
     },
@@ -178,7 +163,6 @@
       "name_en": "Stapler",
       "unit": "cai",
       "max_qty": 2,
-      "admin_only": false,
       "category": "Kẹp & dán",
       "sort_order": 15
     },
@@ -188,7 +172,6 @@
       "name_en": "Clear tape",
       "unit": "cuon",
       "max_qty": 10,
-      "admin_only": false,
       "category": "Kẹp & dán",
       "sort_order": 16
     },
@@ -198,7 +181,6 @@
       "name_en": "Glue stick",
       "unit": "chai",
       "max_qty": 5,
-      "admin_only": false,
       "category": "Kẹp & dán",
       "sort_order": 17
     },
@@ -208,7 +190,6 @@
       "name_en": "Plastic sleeve",
       "unit": "bich",
       "max_qty": 20,
-      "admin_only": false,
       "category": "Lưu trữ",
       "sort_order": 18
     },
@@ -218,7 +199,6 @@
       "name_en": "Lever arch file",
       "unit": "cai",
       "max_qty": 10,
-      "admin_only": false,
       "category": "Lưu trữ",
       "sort_order": 19
     },
@@ -228,7 +208,6 @@
       "name_en": "Archive box",
       "unit": "cai",
       "max_qty": 10,
-      "admin_only": false,
       "category": "Lưu trữ",
       "sort_order": 20
     },
@@ -238,7 +217,6 @@
       "name_en": "Signature folder",
       "unit": "cai",
       "max_qty": 5,
-      "admin_only": false,
       "category": "Lưu trữ",
       "sort_order": 21
     },
@@ -248,7 +226,6 @@
       "name_en": "Calculator",
       "unit": "cai",
       "max_qty": 1,
-      "admin_only": false,
       "category": "Khác",
       "sort_order": 22
     },
@@ -258,7 +235,6 @@
       "name_en": "Scissors",
       "unit": "cai",
       "max_qty": 2,
-      "admin_only": false,
       "category": "Khác",
       "sort_order": 23
     },
@@ -268,7 +244,6 @@
       "name_en": "Utility knife",
       "unit": "cai",
       "max_qty": 2,
-      "admin_only": false,
       "category": "Khác",
       "sort_order": 24
     },
@@ -278,7 +253,6 @@
       "name_en": "Stamp ink",
       "unit": "chai",
       "max_qty": 2,
-      "admin_only": false,
       "category": "Khác",
       "sort_order": 25
     }

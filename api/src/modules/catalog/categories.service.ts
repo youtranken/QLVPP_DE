@@ -34,8 +34,7 @@ export class CategoriesService {
       SELECT ${CATEGORY_COLUMNS} FROM item_categories
       WHERE ${includeInactive} OR active
          OR EXISTS (
-           SELECT 1 FROM items i
-           WHERE i.category_id = item_categories.id AND NOT i.admin_only
+           SELECT 1 FROM items i WHERE i.category_id = item_categories.id
          )
       ORDER BY sort_order, lower(name)
     `);

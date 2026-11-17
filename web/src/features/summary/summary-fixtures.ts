@@ -63,7 +63,7 @@ export const CATEGORIES: Category[] = [
 ];
 
 export const SUMMARY_ITEMS = [
-  adminItem({ id: 'i-a4', name: 'Giấy A4', unit: 'ram', category_id: 'c-paper', stock_qty: 3, stock_state: 'low', admin_only: true }),
+  adminItem({ id: 'i-a4', name: 'Giấy A4', unit: 'ram', category_id: 'c-paper', stock_qty: 3, stock_state: 'low' }),
   adminItem({ id: 'i-pen', name: 'Bút bi xanh', unit: 'cay', category_id: 'c-pen', stock_qty: 0, stock_state: 'out' }),
   adminItem({ id: 'i-note', name: 'Giấy note', unit: 'loc', category_id: 'c-paper', stock_qty: 50, stock_state: 'ok' }),
 ];

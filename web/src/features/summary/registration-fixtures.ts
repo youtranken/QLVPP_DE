@@ -21,7 +21,7 @@ export const REGISTRATIONS: RegistrationRow[] = [
   row({ request_id: 'q-c', user_sub: 'u-c', full_name: 'Nhân viên C', saved_at: '2026-11-07T04:31:00.000Z' }),
 ];
 
-const item = (name: string, active = true) => ({ name, name_en: null, unit: 'cay', pack_note: null, image_file_id: null, active, admin_only: false });
+const item = (name: string, active = true) => ({ name, name_en: null, unit: 'cay', pack_note: null, image_file_id: null, active });
 
 export function registrationView(id: string): RegistrationView {
   const r = REGISTRATIONS.find((x) => x.request_id === id)!;

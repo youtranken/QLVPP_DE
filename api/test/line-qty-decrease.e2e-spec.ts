@@ -3,7 +3,7 @@ import type { RequestView } from './me-request.fixture';
 
 describe('giảm số lượng dòng đã có khi món đổi trạng thái sau khi lưu', () => {
   const f = meRequestFixture('decrease');
-  const { ADMIN, at, http, as, newItem, save, view, pool } = f;
+  const { ADMIN, at, http, as, newItem, save, view } = f;
 
   const patchItem = (id: string, body: object) =>
     as(http().patch(`/api/admin/items/${id}`), ADMIN, 'admin')
@@ -59,15 +59,6 @@ describe('giảm số lượng dòng đã có khi món đổi trạng thái sau 
     const res2 = await save([], { expected_updated_at: r.updated_at });
     expect(res2.status).toBe(200);
     expect(res2.body).toEqual({ request: null });
-  });
-
-  it('member đổi qty dòng món chuyển admin_only → ADMIN_ONLY_ITEM', async () => {
-    const { item, r } = await seedLine(4);
-    await pool().query('UPDATE items SET admin_only = true WHERE id = $1', [
-      item,
-    ]);
-    const res = await memberPut(r, 2).expect(400);
-    expect(res.body.code).toBe('ADMIN_ONLY_ITEM');
   });
 
   it('Hành chính sau hạn giảm dòng món đã ngừng và vượt max → 200; tăng → QTY_INCREASE_FORBIDDEN', async () => {

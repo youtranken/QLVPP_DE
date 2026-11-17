@@ -130,7 +130,6 @@ const request: Messages<typeof vi> = {
       skipped: 'Left out: {{name}} — {{reason}}',
       reasons: {
         INACTIVE: 'discontinued',
-        ADMIN_ONLY: 'only D&E Admin can order it',
         ADDED_BY_ADMIN: 'added by D&E Admin',
         REJECTED: 'not accepted by D&E Admin',
         UNIT_INACTIVE: 'unit of measure no longer in use',
@@ -254,7 +253,6 @@ const request: Messages<typeof vi> = {
         QTY_BELOW_DELIVERED: 'Cannot be less than what was delivered.',
         ITEM_INACTIVE: 'This item was discontinued — remove it, then save again.',
         ITEM_NOT_FOUND: 'This item no longer exists — remove it, then save again.',
-        ADMIN_ONLY_ITEM: 'Only D&E Admin can order this item — remove it, then save again.',
         DUPLICATE_ITEM: 'This item is already in your order.',
         LINE_READONLY: 'This line is read-only — contact {{contact}} to change it.',
         LINE_NOT_FOUND: 'This line no longer exists — reload the page.',

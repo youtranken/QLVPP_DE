@@ -8,7 +8,6 @@ const RESULT: CopyPreviousResult = {
   from_ym: '2026-10',
   lines: [{ item_id: 'i-pen', qty: 20 }],
   skipped: [
-    { name: 'Giấy A4', reason: 'ADMIN_ONLY' },
     { name: 'Bút dạ cũ', reason: 'INACTIVE' },
     { name: 'Kéo lớn', reason: 'ADDED_BY_ADMIN' },
     { name: 'Bìa lỗ', reason: 'REJECTED' },
@@ -26,7 +25,6 @@ describe('CopySummaryDialog', () => {
     );
     const dialog = await screen.findByRole('dialog', { name: 'Đã chép danh sách tháng 10' });
     for (const text of [
-      'Đã bỏ: Giấy A4 — chỉ Adm D&E đặt',
       'Đã bỏ: Bút dạ cũ — món đã ngừng',
       'Đã bỏ: Kéo lớn — do Adm D&E thêm',
       'Đã bỏ: Bìa lỗ — Adm D&E không nhận',

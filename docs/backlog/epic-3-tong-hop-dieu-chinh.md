@@ -10,7 +10,7 @@ KPI bấm-để-lọc, chọn tháng, bảng theo người/món, nhãn trạng t
 
 ## E3-S3 Điều chỉnh phiếu (admin)
 `PUT /admin/requests/:id/lines {lines, reason, expected_updated_at}`; drawer theo mockup (dòng đổi tô màu, giá trị cũ).
-**AC:** sau hạn không lý do → `REASON_REQUIRED`; `expected_updated_at` lệch → `STALE_UPDATE`; giảm qty dưới đã giao → `QTY_BELOW_DELIVERED {delivered}`; bớt dòng đã giao một phần bị từ chối; audit ghi `{added, removed, changed[{line, old, new}], reason, self}`; admin sửa phiếu của chính mình → `self=true`, lọc được ở Nhật ký; admin thêm được món `admin_only` → dòng có `added_by_admin=true`; UI: ô lý do riêng cho điều chỉnh, không dùng chung với Từ chối.
+**AC:** sau hạn không lý do → `REASON_REQUIRED`; `expected_updated_at` lệch → `STALE_UPDATE`; giảm qty dưới đã giao → `QTY_BELOW_DELIVERED {delivered}`; bớt dòng đã giao một phần bị từ chối; audit ghi `{added, removed, changed[{line, old, new}], reason, self}`; admin sửa phiếu của chính mình → `self=true`, lọc được ở Nhật ký; admin thêm món → dòng có `added_by_admin=true`; UI: ô lý do riêng cho điều chỉnh, không dùng chung với Từ chối.
 
 ## E3-S4 Tạo phiếu hộ — Đã gỡ (Đ9)
 > Đã gỡ 2026-11-06 (Đ9): Hành chính không tạo phiếu thay nhân viên; route trả 404. Phần dưới giữ làm lịch sử.

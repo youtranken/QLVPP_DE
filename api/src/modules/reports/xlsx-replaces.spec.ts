@@ -17,7 +17,9 @@ describe('buildWorkbook · bản thay thế', () => {
         replaces: { id: 'old', created_at: '2026-12-12T02:02:00.000Z' },
       }),
     );
-    expect(ws.getCell('A1').value).toBe('Thay thế bản in gửi NCC lúc 09:02 12/12');
+    expect(ws.getCell('A1').value).toBe(
+      'Thay thế bản in gửi NCC lúc 09:02 12/12',
+    );
     expect(ws.getCell('A1').font.bold).toBe(true);
     expect(ws.getCell('F1').master.address).toBe('A1');
     expect(ws.getCell('A2').value).toBe('Phiếu đề xuất văn phòng phẩm');
@@ -49,10 +51,16 @@ describe('buildWorkbook · bản thay thế', () => {
   it('bản bị thay là Excel (kind xlsx) → A1 "Thay thế bản Excel gửi NCC lúc 18:30 15/11"', async () => {
     const ws = await form(
       snapshotData({
-        replaces: { id: 'old', created_at: '2026-11-15T11:30:00.000Z', kind: 'xlsx' },
+        replaces: {
+          id: 'old',
+          created_at: '2026-11-15T11:30:00.000Z',
+          kind: 'xlsx',
+        },
       }),
     );
-    expect(ws.getCell('A1').value).toBe('Thay thế bản Excel gửi NCC lúc 18:30 15/11');
+    expect(ws.getCell('A1').value).toBe(
+      'Thay thế bản Excel gửi NCC lúc 18:30 15/11',
+    );
   });
 
   it('bản không có replaces → A1 vẫn là tiêu đề phiếu, không dòng thay thế', async () => {
@@ -60,7 +68,7 @@ describe('buildWorkbook · bản thay thế', () => {
     expect(ws.getCell('A1').value).toBe('Phiếu đề xuất văn phòng phẩm');
     let found = false;
     ws.eachRow((r) => {
-      if (String(r.getCell(1).value ?? '').startsWith('Thay thế')) found = true;
+      if (r.getCell(1).text.startsWith('Thay thế')) found = true;
     });
     expect(found).toBe(false);
   });

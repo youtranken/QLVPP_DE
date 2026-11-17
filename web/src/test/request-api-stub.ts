@@ -16,7 +16,7 @@ export const PEN = memberItem({ id: 'i-pen', name: 'Bút bi xanh', unit: 'cay', 
 export const NOTE = memberItem({ id: 'i-note', name: 'Giấy note vàng', unit: 'loc', max_qty: 10, category_id: 'c-2' });
 export const CLIP = memberItem({ id: 'i-clip', name: 'Kẹp giấy', unit: 'hop', max_qty: 10 });
 export const PAUSED = memberItem({ id: 'i-paused', name: 'Bút dạ quang', unit: 'cay', max_qty: 10, category_id: 'c-1', active: true, usable: false });
-export const A4 = memberItem({ id: 'i-a4', name: 'Giấy A4', unit: 'ram', max_qty: 5, admin_only: true });
+export const A4 = memberItem({ id: 'i-a4', name: 'Giấy A4', unit: 'ram', max_qty: 5 });
 export const CATEGORIES: Category[] = [
   { id: 'c-1', name: 'Bút & viết', name_en: null, sort_order: 0, active: true },
   { id: 'c-2', name: 'Giấy & sổ', name_en: null, sort_order: 1, active: true },
@@ -72,7 +72,7 @@ export function stubRequestApi(opts: StubOptions = {}) {
       const found = current?.period_ym === ym ? current : opts.others?.[ym];
       return res(found ? jsonResponse(200, found) : jsonResponse(404, { code: 'REQUEST_NOT_FOUND' }));
     }
-    if (url.startsWith('/api/items')) return res(jsonResponse(200, opts.items ?? [PEN, NOTE, CLIP, A4]));
+    if (url.startsWith('/api/items')) return res(jsonResponse(200, opts.items ?? [PEN, NOTE, CLIP]));
     if (url.startsWith('/api/me/requests') || url.startsWith('/api/me/issues')) return res(jsonResponse(200, { items: [], next_cursor: null }));
     if (url === '/api/item-categories') return res(jsonResponse(200, CATEGORIES));
     if (url === '/api/me/request/lines' && method === 'PUT' && opts.put) return res(opts.put(init));

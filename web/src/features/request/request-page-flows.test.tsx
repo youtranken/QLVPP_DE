@@ -17,7 +17,7 @@ const COPY = {
     { item_id: PEN.id, qty: 20 },
     { custom_name: 'Bìa còng 7cm', custom_unit: 'cai', custom_note: null, image_file_id: 'f-old', qty: 2 },
   ],
-  skipped: [{ name: 'Giấy A4', reason: 'ADMIN_ONLY' }],
+  skipped: [{ name: 'Giấy A4', reason: 'INACTIVE' }],
   capped: [{ name: 'Bút bi xanh', from: 30, to: 20 }],
   previously_accepted: [],
 };
@@ -114,13 +114,13 @@ describe('RequestPage — chép lại tháng trước', () => {
     expect(screen.queryByRole('button', { name: /Chép lại danh sách tháng/ })).toBeNull();
   });
 
-  it('giỏ rỗng → điền thẳng (chưa lưu) + hộp tóm tắt "Đã bỏ: Giấy A4 — chỉ Adm D&E đặt"; lưu gửi dòng ngoài DM kèm ảnh cũ', async () => {
+  it('giỏ rỗng → điền thẳng (chưa lưu) + hộp tóm tắt "Đã bỏ: Giấy A4 — món đã ngừng"; lưu gửi dòng ngoài DM kèm ảnh cũ', async () => {
     mockViewport(1280);
     const api = stubRequestApi({ copy: () => jsonResponse(200, COPY), put: () => jsonResponse(500, {}) });
     renderApp(makeMe('member'), '/');
     await userEvent.click(await screen.findByRole('button', { name: 'Chép lại danh sách tháng 10' }));
     const summary = await screen.findByRole('dialog', { name: 'Đã chép danh sách tháng 10' });
-    expect(within(summary).getByText('Đã bỏ: Giấy A4 — chỉ Adm D&E đặt')).toBeInTheDocument();
+    expect(within(summary).getByText('Đã bỏ: Giấy A4 — món đã ngừng')).toBeInTheDocument();
     await userEvent.click(within(summary).getByRole('button', { name: 'Đã hiểu' }));
     expect(within(cart()).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(20);
     expect(within(cart()).getByRole('button', { name: 'Sửa Bìa còng 7cm' })).toBeInTheDocument();

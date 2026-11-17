@@ -22,7 +22,6 @@ export interface AdminItem {
   pack_note: string | null;
   category_id: string | null;
   image_file_id: string | null;
-  admin_only: boolean;
   max_qty: number;
   stock_qty: number;
   // Tồn ngay sau lần nhập mua gần nhất; null = chưa nhập lần nào
@@ -48,7 +47,6 @@ export type ItemPayload = Partial<
     | 'pack_note'
     | 'category_id'
     | 'image_file_id'
-    | 'admin_only'
     | 'max_qty'
     | 'active'
   >

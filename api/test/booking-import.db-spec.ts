@@ -81,7 +81,7 @@ describe('nạp danh mục Booking — applyBookingImport', () => {
 
     const items = await pool.query<Record<string, unknown>>(
       `SELECT code, name, name_en, unit, pack_note, category_id, image_file_id,
-              max_qty, stock_qty, active, admin_only, sort_order
+              max_qty, stock_qty, active, sort_order
        FROM items ORDER BY sort_order`,
     );
     expect(items.rows.map((i) => [i.code, i.unit])).toEqual([
@@ -105,7 +105,6 @@ describe('nạp danh mục Booking — applyBookingImport', () => {
       max_qty: 7,
       stock_qty: 0,
       active: true,
-      admin_only: false,
       sort_order: 20,
     });
     // Không còn số hàng × 10: món mới nối cuối nhóm (chưa nhóm) theo thứ tự tạo

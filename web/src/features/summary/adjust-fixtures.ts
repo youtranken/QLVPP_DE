@@ -12,7 +12,6 @@ export function adminItem(over: Partial<AdminItem>): AdminItem {
     pack_note: null,
     category_id: 'c-1',
     image_file_id: null,
-    admin_only: false,
     max_qty: 20,
     stock_qty: 0,
     restock_level: null,
@@ -29,7 +28,7 @@ export function adminItem(over: Partial<AdminItem>): AdminItem {
 export const ADMIN_ITEMS: AdminItem[] = [
   adminItem({ id: 'i-pen', name: 'Bút bi xanh', unit: 'cay', max_qty: 20 }),
   adminItem({ id: 'i-note', name: 'Giấy note vàng', unit: 'bich', max_qty: 20 }),
-  adminItem({ id: 'i-a4', name: 'Giấy A4 Double A', unit: 'ram', admin_only: true, max_qty: 20 }),
+  adminItem({ id: 'i-a4', name: 'Giấy A4 Double A', unit: 'ram', max_qty: 20 }),
   adminItem({ id: 'i-clip', name: 'Kẹp giấy 33 mm', unit: 'hop', max_qty: 10 }),
   adminItem({ id: 'i-old', name: 'Giấy cũ', active: false }),
 ];
@@ -41,7 +40,6 @@ const facts = (i: AdminItem) => ({
   pack_note: i.pack_note,
   image_file_id: i.image_file_id,
   active: i.active,
-  admin_only: i.admin_only,
 });
 
 export function adminRequest(over: Partial<AdminRequestView> = {}): AdminRequestView {

@@ -14,7 +14,7 @@ const ROWS = [
 const CATEGORIES: Category[] = [{ id: 'c-1', name: 'Văn phòng', name_en: null, sort_order: 0, active: true }];
 const ITEM = {
   id: 'i-2', code: null, name: 'Băng keo trong', name_en: null, unit: 'cuon', pack_note: null, category_id: 'c-1',
-  image_file_id: 'f-x', admin_only: false, max_qty: 20, stock_qty: 0, restock_level: null, stock_state: 'out',
+  image_file_id: 'f-x', max_qty: 20, stock_qty: 0, restock_level: null, stock_state: 'out',
   active: true, usable: true, inactive_reason: null, sort_order: 0, missing_image: false,
 } satisfies AdminItem;
 

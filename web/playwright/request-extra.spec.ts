@@ -119,9 +119,10 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
     await routeAs(page, me.headers);
     const stamp = `${Date.now()}-${info.project.name}`;
     const nameA = `PW chép thường ${stamp}`;
-    const nameB = `PW chép Adm D&E ${stamp}`;
+    const nameB = `PW chép ngừng ${stamp}`;
     const itemA = await createItem(request, nameA, { max_qty: 5 });
-    const itemB = await createItem(request, nameB, { admin_only: true });
+    const itemB = await createItem(request, nameB);
+    psql(`UPDATE items SET active = false WHERE id = '${itemB}'`);
     const other = await seedPwItem(page);
     const period = await (await request.get('/api/periods/current', { headers: me.headers })).json();
     const prevYm = prevYmOf(period.ym);
@@ -157,7 +158,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       const ask = page.getByRole('dialog', { name: 'Thay giỏ hiện tại?' });
       await ask.getByRole('button', { name: 'Thay giỏ' }).click();
       const summary = page.getByRole('dialog', { name: `Đã chép danh sách tháng ${prevMonth}` });
-      await expect(summary.getByText(`Đã bỏ: ${nameB} — chỉ Adm D&E đặt`)).toBeVisible();
+      await expect(summary.getByText(`Đã bỏ: ${nameB} — món đã ngừng`)).toBeVisible();
       await expect(summary.getByText(`Đã giảm: ${nameA} từ 8 xuống 5 (tối đa mỗi tháng)`)).toBeVisible();
       await snap(page, info, 'copy-summary');
       await summary.getByRole('button', { name: 'Đã hiểu' }).click();

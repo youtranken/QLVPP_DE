@@ -9,7 +9,7 @@ Migration `0100_vpp_catalog.sql` với CHECK/UNIQUE theo architecture §5.
 **AC:** module viết mới theo `architecture.md` §8; file `.exe` đổi đuôi `.png` → `FILE_TYPE_INVALID`; 6 MB → `FILE_TOO_LARGE`; GET không phiên → 401; member GET ảnh món (admin tải) → 200 `inline` đúng mime; member A GET ảnh dòng của B → 404; member GET ảnh mình tải → 200; GET không ghi audit; tệp 25 h tuổi không tham chiếu bị cron xóa.
 
 ## E1-S3 CRUD món và nhóm (admin)
-API + trang Danh mục dạng lưới ảnh: tạo (ảnh bắt buộc), sửa, ngừng, sắp xếp, `admin_only`, `max_qty` (không có ô mức tồn tối thiểu — FR-50); nhãn "thiếu ảnh".
+API + trang Danh mục dạng lưới ảnh: tạo (ảnh bắt buộc), sửa, ngừng, sắp xếp, `max_qty` (G7 15/11/2026: bỏ `admin_only`) (không có ô mức tồn tối thiểu — FR-50); nhãn "thiếu ảnh".
 **AC:** tạo món không ảnh → `IMAGE_REQUIRED`; không unit → `UNIT_REQUIRED`; ngừng món → `GET /items` không trả nhưng `?include_inactive_ids=` vẫn trả để hiển thị dòng cũ; `DELETE` món từng có trong phiếu → `ITEM_IN_USE`; `pack_note` hiện cạnh tên.
 
 ## E1-S4 Kho: nhập, điều chỉnh, sổ cái, cảnh báo

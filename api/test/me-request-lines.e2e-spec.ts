@@ -48,11 +48,6 @@ describe('me/request: lỗi theo dòng, dòng chỉ đọc', () => {
         async () => ({ item_id: await newItem({ active: false }), qty: 1 }),
       ],
       [
-        'ADMIN_ONLY_ITEM',
-        400,
-        async () => ({ item_id: await newItem({ admin_only: true }), qty: 1 }),
-      ],
-      [
         'UNIT_REQUIRED',
         400,
         () => Promise.resolve(custom({ custom_unit: undefined })),

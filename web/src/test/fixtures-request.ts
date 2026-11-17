@@ -9,7 +9,6 @@ export function memberItem(over: Partial<MemberItem>): MemberItem {
     pack_note: null,
     category_id: null,
     image_file_id: null,
-    admin_only: false,
     max_qty: 20,
     active: true,
     usable: over.active ?? true,

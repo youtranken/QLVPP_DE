@@ -23,7 +23,6 @@ export function ItemCell({ row, error }: { row: CatalogRow; error?: string }) {
         <span className="ct-item__line">
           <span className={row.usable ? 'ct-item__name' : 'ct-item__name ct-item__name--paused'}>{row.name}</span>
           {!row.usable && <span className="ct-item__paused">{t('common.paused')}</span>}
-          {row.admin_only && <span className="tag tag--dark">{t('catalog.page.adminOnly')}</span>}
           {row.missing_image && <span className="tag tag--warn">{t('catalog.page.missingImage')}</span>}
         </span>
         {row.pack_note && <small className="ct-item__note">{row.pack_note}</small>}

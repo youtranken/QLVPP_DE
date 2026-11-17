@@ -41,7 +41,6 @@ function newItemOf(d: ItemDraft, lineImage: string | null): ConvertItem {
     pack_note: p.pack_note ?? null,
     category_id: d.category_id,
     max_qty: p.max_qty as number,
-    admin_only: d.admin_only,
     ...(d.image_file_id && d.image_file_id !== lineImage ? { image_file_id: d.image_file_id } : {}),
   };
 }

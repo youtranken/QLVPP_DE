@@ -19,7 +19,7 @@ export type { StockState };
 
 // stock_state không tính ở SQL: điền bằng catalogStates/withStockState (stock-list.ts), cùng nguồn với Tủ
 export const ITEM_COLUMNS = sql.raw(`
-  id, code, name, name_en, unit, pack_note, category_id, image_file_id, admin_only, max_qty, stock_qty, restock_level,
+  id, code, name, name_en, unit, pack_note, category_id, image_file_id, max_qty, stock_qty, restock_level,
   active, sort_order`);
 
 export const CATEGORY_COLUMNS = sql.raw(
@@ -35,7 +35,6 @@ export interface ItemDbRow extends Record<string, unknown> {
   pack_note: string | null;
   category_id: string | null;
   image_file_id: string | null;
-  admin_only: boolean;
   max_qty: number;
   stock_qty: number;
   restock_level: number | null;
@@ -53,7 +52,6 @@ export interface ItemFacts extends Record<string, unknown> {
   pack_note: string | null;
   image_file_id: string | null;
   active: boolean;
-  admin_only: boolean;
   max_qty: number;
 }
 
