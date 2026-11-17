@@ -156,12 +156,11 @@ test.describe('Điện thoại và màn vừa: khối không bị cắt (vòng 8
         const m = await page.locator('.mk-switch').evaluate((el) => {
           const pill = el.querySelector('.month-switch__label')!.closest('.month-switch')!.getBoundingClientRect();
           const chip = el.querySelector('.mk-switch__status')!.getBoundingClientRect();
-          const jump = el.querySelector('.mk-switch__jump')!.getBoundingClientRect();
-          return { pillH: pill.height, chipBelow: chip.top >= pill.bottom - 1, jumpBelow: jump.top >= pill.bottom - 1, strip: document.querySelector('.mk-strip')!.getBoundingClientRect().top, sw: document.documentElement.scrollWidth };
+          return { pillH: pill.height, chipBelow: chip.top >= pill.bottom - 1, strip: document.querySelector('.mk-strip')!.getBoundingClientRect().top, sw: document.documentElement.scrollWidth };
         });
         expect(m.pillH, `${width}px`).toBeLessThanOrEqual(48);
         expect(m.sw, `${width}px`).toBeLessThanOrEqual(width);
-        if (width < 768) expect([m.chipBelow, m.jumpBelow], `${width}px`).toEqual([true, true]);
+        if (width < 768) expect(m.chipBelow, `${width}px`).toBe(true);
         tops.push(m.strip);
       }
       // Dải bước (ngay trên bảng) đứng yên khi chuyển kỳ đang giao ↔ kỳ đăng ký

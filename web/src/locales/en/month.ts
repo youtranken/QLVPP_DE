@@ -11,8 +11,6 @@ const month: Messages<typeof vi> = {
       prev: 'Previous month',
       next: 'Next month',
       status: { locked: 'Delivering', open: 'Signing up', past: 'Past' },
-      toOpen: '{{month, MonthName}} sign-up',
-      toLocked: '{{month, MonthName}} delivery',
     },
     steps: {
       label: 'Steps of the month',
@@ -65,13 +63,6 @@ const month: Messages<typeof vi> = {
       cancel: 'Cancel',
       remove: 'Remove area {{name}}',
       label: 'Areas in filter',
-    },
-    unreg: {
-      copy_one: 'Copy list of {{count}} person not ordered',
-      copy_other: 'Copy list of {{count}} people not ordered',
-      copied_one: 'Copied {{count}} name',
-      copied_other: 'Copied {{count}} names',
-      failed: 'Could not copy — try again.',
     },
     items: {
       label: 'By item',

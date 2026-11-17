@@ -15,28 +15,24 @@ const group = () => screen.getByRole('group', { name: 'Chọn kỳ' });
 afterEach(() => void i18n.changeLanguage('vi'));
 
 describe('PeriodSwitch', () => {
-  it('kỳ đang giao: ‹ Tháng 12/2026 ›, chip "Đang giao", link "Tháng 1 đang đăng ký →" sang kỳ mở', async () => {
-    const onChange = setup('2026-12');
+  // Chủ dự án 17/11: bỏ link nhảy kỳ ("Tháng 1 đang đăng ký →" / "← Tháng 12 đang giao") — chuyển kỳ bằng ‹ Tháng › là đủ
+  it('kỳ đang giao: ‹ Tháng 12/2026 ›, chip "Đang giao", không có link nhảy kỳ', () => {
+    setup('2026-12');
     expect(within(group()).getByText('Tháng 12/2026')).toBeInTheDocument();
     expect(screen.getByText('Đang giao')).toHaveClass('tag', 'tag--brand');
-    const jump = screen.getByRole('button', { name: 'Tháng 1 đang đăng ký' });
-    expect(jump).toHaveTextContent('Tháng 1 đang đăng ký→');
-    await userEvent.click(jump);
-    expect(onChange).toHaveBeenCalledWith(OPEN);
+    expect(screen.queryByRole('button', { name: /đang đăng ký|đang giao/ })).toBeNull();
   });
 
-  it('kỳ đang đăng ký: chip "Đang đăng ký", › tắt (trần là kỳ mở), link "← Tháng 12 đang giao"', async () => {
-    const onChange = setup(OPEN);
+  it('kỳ đang đăng ký: chip "Đang đăng ký", › tắt (trần là kỳ mở), không có link nhảy kỳ', () => {
+    setup(OPEN);
     expect(screen.getByText('Đang đăng ký')).toHaveClass('tag--warn');
     expect(within(group()).getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
-    await userEvent.click(screen.getByRole('button', { name: 'Tháng 12 đang giao' }));
-    expect(onChange).toHaveBeenCalledWith('2026-12');
+    expect(screen.queryByRole('button', { name: /đang giao/ })).toBeNull();
   });
 
-  it('kỳ cũ: chip "Đã qua", link sang kỳ đăng ký; ‹ tắt ở kỳ cũ nhất có phiếu', () => {
+  it('kỳ cũ: chip "Đã qua"; ‹ tắt ở kỳ cũ nhất có phiếu', () => {
     setup('2026-10');
     expect(screen.getByText('Đã qua')).toHaveClass('tag');
-    expect(screen.getByRole('button', { name: 'Tháng 1 đang đăng ký' })).toBeInTheDocument();
     expect(within(group()).getByRole('button', { name: 'Tháng trước' })).toBeDisabled();
   });
 
@@ -76,6 +72,6 @@ describe('PeriodSwitch', () => {
     setup('2026-12');
     expect(within(screen.getByRole('group', { name: 'Choose period' })).getByText('December 2026')).toBeInTheDocument();
     expect(screen.getByText('Delivering')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'January sign-up' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'January sign-up' })).toBeNull();
   });
 });

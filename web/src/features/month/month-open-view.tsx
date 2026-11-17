@@ -5,7 +5,6 @@ import { RegistrationDialog, type RegistrationTarget } from '@/features/summary/
 import { usePeriodSummary } from '@/features/summary/summary.api';
 import { MonthOpenTable } from './month-open-table';
 import { MonthStrip } from './month-strip';
-import { MonthUnregisteredCopy } from './month-unregistered-copy';
 import { monthSteps } from './month-steps';
 
 // Kỳ đang đăng ký: chỉ xem, chỉ bước Đăng ký có số
@@ -21,7 +20,6 @@ export function MonthOpenView({ ym }: { ym: string }) {
   return (
     <>
       <MonthStrip steps={steps} onlyFirst />
-      <MonthUnregisteredCopy ym={ym} />
       <MonthOpenTable ym={ym} onView={onView} />
       {viewing && index >= 0 && (
         <RegistrationDialog

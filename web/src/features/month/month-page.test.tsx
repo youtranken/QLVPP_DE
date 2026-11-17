@@ -194,12 +194,12 @@ describe('MonthPage: kỳ mặc định khi URL không có ym', () => {
 });
 
 describe('MonthPage: chuyển kỳ', () => {
-  it('link "Tháng 11 đang đăng ký →" → bảng chỉ xem (Người · Nhóm · Số món · Tổng · Lưu lúc), dải chỉ bước Đăng ký sáng, URL ?ym=2026-11', async () => {
+  it('› sang kỳ đang đăng ký → bảng chỉ xem (Người · Nhóm · Số món · Tổng · Lưu lúc), dải chỉ bước Đăng ký sáng, URL ?ym=2026-11', async () => {
     stubMonthApi();
     open();
     await table();
     expect(screen.getByText('Đang giao')).toHaveClass('tag');
-    await userEvent.click(screen.getByRole('button', { name: 'Tháng 11 đang đăng ký' }));
+    await userEvent.click(within(screen.getByRole('group', { name: 'Chọn kỳ' })).getByRole('button', { name: 'Tháng sau' }));
     await waitFor(() => expect(search()).toContain('ym=2026-11'));
     expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 11' })).toBeInTheDocument();
     const t = await table();
@@ -210,7 +210,7 @@ describe('MonthPage: chuyển kỳ', () => {
     expect(within(steps).getAllByText('—')).toHaveLength(3);
   });
 
-  it('‹ → ?ym=2026-09, nhãn "Tháng 9/2026", chip "Đã qua", link sang kỳ đăng ký', async () => {
+  it('‹ → ?ym=2026-09, nhãn "Tháng 9/2026", chip "Đã qua"', async () => {
     stubMonthApi();
     open();
     await table();
@@ -219,7 +219,6 @@ describe('MonthPage: chuyển kỳ', () => {
     await waitFor(() => expect(search()).toContain('ym=2026-09'));
     expect(await within(group).findByText('Tháng 9/2026')).toBeInTheDocument();
     expect(screen.getByText('Đã qua')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Tháng 11 đang đăng ký' })).toBeInTheDocument();
   });
 
   // Rà soát 13/11 L2: danh sách người giữ dữ liệu tháng trước (keepPreviousData) → dải bước và chip tính bằng người T10 dưới tiêu đề T9

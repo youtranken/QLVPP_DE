@@ -20,23 +20,24 @@ const UNREG = { items: [{ sub: 'u-x', full_name: 'Lê Chưa Đặt', email: null
 const unregRoute = (url: string) => (url === '/api/admin/periods/2026-10/unregistered' ? jsonResponse(200, UNREG) : undefined);
 
 describe('G1 Kỳ tháng — theo người', () => {
-  it('bước đầu "Đã đặt 4/5"; nút "Chép DS 1 người chưa đặt" chép đúng tên người chưa đặt', async () => {
-    const writeText = vi.fn(() => Promise.resolve());
-    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  // Chủ dự án 17/11: bỏ nút "Chép DS x người chưa đặt" (không phục vụ việc gì) ở cả kỳ giao và kỳ đăng ký
+  it('bước đầu "Đã đặt 4/5"; không có nút chép danh sách người chưa đặt', async () => {
     stubMonthApi(unregRoute);
     open();
     await table();
     const steps = within(screen.getByRole('list', { name: 'Các bước của tháng' })).getAllByRole('listitem');
     expect(steps[0]).toHaveTextContent('Đã đặt4/5');
-    await userEvent.click(await screen.findByRole('button', { name: 'Chép DS 1 người chưa đặt' }));
-    expect(writeText).toHaveBeenCalledWith('Lê Chưa Đặt');
-    expect(await screen.findByText('Đã chép 1 tên')).toBeInTheDocument();
+    // đợi các truy vấn phụ (danh sách người chưa đặt) xong rồi mới khẳng định không có nút
+    await new Promise((r) => setTimeout(r, 100));
+    expect(screen.queryByRole('button', { name: /^Chép DS/ })).toBeNull();
   });
 
-  it('kỳ đang đăng ký cũng có nút chép người chưa đặt (lúc cần nhắc nhất)', async () => {
+  it('kỳ đang đăng ký cũng không có nút chép', async () => {
     stubMonthApi((url) => (url === '/api/admin/periods/2026-11/unregistered' ? jsonResponse(200, UNREG) : undefined));
     open('/admin/month?ym=2026-11');
-    expect(await screen.findByRole('button', { name: 'Chép DS 1 người chưa đặt' })).toBeInTheDocument();
+    await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 11' });
+    await new Promise((r) => setTimeout(r, 100));
+    expect(screen.queryByRole('button', { name: /^Chép DS/ })).toBeNull();
   });
 
   it('chỉ người đã đặt có dòng: người chưa đặt không có trong bảng', async () => {

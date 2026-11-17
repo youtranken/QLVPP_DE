@@ -19,7 +19,6 @@ import { MonthPeopleTable } from './month-people-table';
 import { MonthStrip } from './month-strip';
 import { MonthAreaFilter } from './month-area-filter';
 import { MonthItemsTable } from './month-items-table';
-import { MonthUnregisteredCopy } from './month-unregistered-copy';
 import { MonthViewBar } from './month-view-bar';
 import type { MonthView } from './use-month-params';
 import { monthSteps } from './month-steps';
@@ -85,7 +84,6 @@ export function MonthLockedView({ ym, openYm, chip, view, areas, q, left, preset
   return (
     <>
       <MonthStrip steps={steps} />
-      <MonthUnregisteredCopy ym={ym} />
       {latest && <MonthLeftReminder ym={ym} />}
       <MonthViewBar
         view={view}

@@ -8,8 +8,6 @@ const month = {
       prev: 'Tháng trước',
       next: 'Tháng sau',
       status: { locked: 'Đang giao', open: 'Đang đăng ký', past: 'Đã qua' },
-      toOpen: 'Tháng {{month}} đang đăng ký',
-      toLocked: 'Tháng {{month}} đang giao',
     },
     steps: {
       label: 'Các bước của tháng',
@@ -62,13 +60,6 @@ const month = {
       cancel: 'Hủy',
       remove: 'Bỏ khu {{name}}',
       label: 'Khu đang lọc',
-    },
-    unreg: {
-      copy_one: 'Chép DS {{count}} người chưa đặt',
-      copy_other: 'Chép DS {{count}} người chưa đặt',
-      copied_one: 'Đã chép {{count}} tên',
-      copied_other: 'Đã chép {{count}} tên',
-      failed: 'Không chép được — thử lại.',
     },
     items: {
       label: 'Theo món',

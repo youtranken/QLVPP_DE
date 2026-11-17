@@ -5,9 +5,6 @@
 /* Viền mảnh cùng màu chữ: nền tag nhạt gần trùng nền trang, thiếu viền thì chip như chữ trơn */
 [data-shell='admin'] .mk-switch__status { box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 35%, transparent); }
 [data-shell='admin'] .mk-switch__status::before { content: ''; flex: none; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-[data-shell='admin'] .mk-switch__jump { display: inline-flex; align-items: center; gap: var(--s-1); min-height: 36px; padding: 0 var(--s-1); border: 0; border-radius: var(--r-sm); background: none; color: var(--c-acc); font: var(--t-sm); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; cursor: pointer; }
-[data-shell='admin'] .mk-switch__jump:hover { color: var(--c-acc-hover); }
-[data-shell='admin'] .mk-switch__jump:focus-visible { outline: none; box-shadow: var(--focus); }
 [data-shell='admin'] .mk-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-3); margin: 0; padding: 0; list-style: none; }
 [data-shell='admin'] .mk-step { min-width: 0; border-radius: var(--r-lg); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); }
 [data-shell='admin'] .mk-step[data-state='current'] { box-shadow: inset 0 0 0 2px var(--c-acc); }
@@ -28,7 +25,6 @@
   /* Điện thoại: viên ‹ tháng › một hàng riêng; chip và link xuống hàng dưới */
   [data-shell='admin'] .mk-switch { width: 100%; }
   [data-shell='admin'] .mk-switch > .month-switch { flex: 1 1 100%; }
-  [data-shell='admin'] .mk-switch__jump { min-height: var(--hit); white-space: normal; text-align: left; }
   [data-shell='admin'] .mk-left .btn { min-height: var(--hit); }
 }
 [data-shell='admin'] .mk-head > .page-head__text { flex: 0 1 auto; }
@@ -36,7 +32,6 @@
 [data-shell='admin'] .mk-person__sub { flex-basis: 100%; color: var(--c-muted); font: var(--t-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 [data-shell='admin'] .mk-order { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-2); }
 [data-shell='admin'] .mk-short { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
-[data-shell='admin'] .mk-unreg { display: flex; justify-content: flex-end; }
 [data-shell='admin'] .mk-viewbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); }
 [data-shell='admin'] .mk-viewbar .list-meta { margin-left: auto; }
 [data-shell='admin'] .mk-areas { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
