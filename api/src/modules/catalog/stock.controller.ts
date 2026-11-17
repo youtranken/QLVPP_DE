@@ -14,12 +14,7 @@ import { Roles } from '../auth/roles.decorator';
 import { uuidParam } from './catalog.dto';
 import { YmPipe } from '../../common/ym';
 import { PageQuery } from '../../common/page.query';
-import {
-  IssueDto,
-  ReceiptBody,
-  StockChangeDto,
-  StockCountDto,
-} from './stock.dto';
+import { IssueDto, ReceiptBody, StockChangeDto } from './stock.dto';
 import { StockReceiptService } from './stock-receipt.service';
 import { StockQueryService } from './stock-query.service';
 import { StockService } from './stock.service';
@@ -41,16 +36,6 @@ export class StockController {
     @CurrentIdentity() identity: RequestIdentity,
   ) {
     return this.stock.change(id, dto, identity.sub);
-  }
-
-  @Post('admin/items/:id/stock/count')
-  @Roles('admin', 'sa')
-  count(
-    @Param('id', uuidParam) id: string,
-    @Body() dto: StockCountDto,
-    @CurrentIdentity() identity: RequestIdentity,
-  ) {
-    return this.stock.count(id, dto, identity.sub);
   }
 
   @Post('admin/items/:id/issue')

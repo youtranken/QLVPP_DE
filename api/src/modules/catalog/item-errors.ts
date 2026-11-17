@@ -62,3 +62,10 @@ export function unitRequired() {
     message: 'Chọn đơn vị tính.',
   });
 }
+
+export function reasonRequired() {
+  return new BadRequestException({
+    code: 'REASON_REQUIRED',
+    message: 'Cần ghi lý do.',
+  });
+}

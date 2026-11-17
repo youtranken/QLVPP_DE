@@ -83,7 +83,7 @@ Trạng thái: xong (chờ mốc kiểm S5 của chủ dự án). AC 1–4 (vite
 6. Sổ cái: sau nhập 10 rồi xuất 3 → 2 dòng, dòng mới "tồn 7", dòng cũ "tồn 10".
 7. Thẻ Sắp hết lọc qua URL `?filter=low` (chuông `low_stock` mở đúng lọc — giữ).
 8. (SPEC §12.1, api) Ngừng nhóm: món trong nhóm ẩn khỏi `GET items` của member, thêm/tăng → `ITEM_INACTIVE`, chép lại bỏ qua `INACTIVE`, convert vào món đó → `ITEM_INACTIVE`; `items.active` không đổi. Test: e2e `category-inactive.e2e-spec.ts` (gồm đua tx ngừng nhóm).
-9. (SPEC §12.2, api) Kiểm kê `POST admin/items/:id/stock/count`: đếm 0 được / −1 `VALIDATION`; 1 000 000 được / 1 000 001 `VALIDATION`; `expected` lệch 1 → `STALE_UPDATE {stock_qty}`; đếm bằng tồn → `VALIDATION`. Test: unit `stock.dto.spec.ts`, `stock-count.spec.ts`; db-spec `stock-count.db-spec.ts`.
+9. ~~(SPEC §12.2, api) Kiểm kê~~ — bỏ ở G6 (chủ dự án chốt 15/11/2026), endpoint trả 404 (`stock-count-removed.e2e-spec.ts`). Trước đây: `POST admin/items/:id/stock/count`: đếm 0 được / −1 `VALIDATION`; 1 000 000 được / 1 000 001 `VALIDATION`; `expected` lệch 1 → `STALE_UPDATE {stock_qty}`; đếm bằng tồn → `VALIDATION`. Test: unit `stock.dto.spec.ts`, `stock-count.spec.ts`; db-spec `stock-count.db-spec.ts`.
 Playwright: `E9-S5 Danh mục: sửa tại chỗ tối đa 0/1/999/1000, thêm món có ảnh trong ngăn kéo, hàng loạt đổi tối đa` · `E9-S5 Nhóm món: đổi thứ tự, màu theo vị trí, trùng tên` · `E9-S5 Kho: nhập 10, xuất lẻ 3 rồi 4 bị chặn, sổ cái tồn sau từng dòng`.
 
 ## E9-S5b Đơn vị tính do Hành chính quản lý

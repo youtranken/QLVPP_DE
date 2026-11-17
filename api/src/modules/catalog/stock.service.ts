@@ -14,9 +14,9 @@ import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
 import { catalogStates, lowStockIds } from './stock-list';
 import { itemNotFound } from './item-errors';
-import { countDelta, countNote, reasonRequired } from './stock-count';
+import { reasonRequired } from './item-errors';
 import { heldSql } from './stock-held-sql';
-import type { IssueDto, StockChangeDto, StockCountDto } from './stock.dto';
+import type { IssueDto, StockChangeDto } from './stock.dto';
 
 export interface StockResult {
   stock_qty: number;
@@ -92,33 +92,6 @@ export class StockService {
         actor,
       ),
     );
-  }
-
-  async count(
-    itemId: string,
-    dto: StockCountDto,
-    actor: string,
-  ): Promise<StockResult> {
-    const note = countNote(dto.note);
-    return this.db.transaction(async (tx) => {
-      const locked = (
-        await tx.execute<{ stock_qty: number }>(sql`
-          SELECT stock_qty FROM items WHERE id = ${itemId} FOR NO KEY UPDATE
-        `)
-      ).rows[0];
-      if (!locked) throw itemNotFound();
-      const delta = countDelta({
-        counted: dto.counted_qty,
-        expected: dto.expected_stock_qty,
-        stock: locked.stock_qty,
-      });
-      return this.applyChangeWithin(
-        tx,
-        itemId,
-        { delta, reason: 'adjust', note },
-        actor,
-      );
-    });
   }
 
   // Nhập mua đặt lại mốc Sắp hết; điều chỉnh + chỉ đặt mốc khi món chưa có (tồn đầu kỳ), không đổi mốc đã có
