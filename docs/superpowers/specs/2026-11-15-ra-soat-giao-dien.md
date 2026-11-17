@@ -129,3 +129,21 @@ Xác nhận lại nặng hơn khi có dữ liệu: **L1** (bảng tràn khung kh
 - H12/H13: vitest biên hai phía (tồn 20: 20 được / 21 lỗi; 0 lỗi; 2.5 lỗi; 99.999 được / 100.000 lỗi) + e2e mã lỗi server cùng biên.
 - L1 mở rộng: Playwright mọi bảng admin ở 1280/1024/768 — `scrollWidth ≤ clientWidth` hoặc cột thao tác trong khung.
 - Nhãn trạng thái: unit test một hàm `requestStatusLabel` dùng chung cho NV, Kỳ tháng, Giao.
+
+## 8. Sau khi sửa (17/11/2026, nhánh feat/giao-dien-a)
+
+Đo lại trên bản build (`vite preview`, dev-identity, mọi request ghi bị chặn) bằng 5 phép đo ra-soat-ui, hai nhóm song song: Nhân viên + đăng nhập (7 route + 4 trạng thái × 5 bề rộng, 8 trạng thái lọc, 9 lớp nổi), Adm D&E (21 route × 5 bề rộng, 72 trạng thái, 24 lớp nổi).
+
+**Lộ dữ liệu theo vai:** sạch — 18 họ tên + mọi email người khác, 0 trúng trên 46 phản hồi API của Nhân viên; endpoint admin trả 403.
+
+| Nhóm | Lỗi cũ đã hết | Hết một phần | Còn | Không đo được |
+|---|---|---|---|---|
+| Nhân viên + đăng nhập (28) | 15 | — | 12 | 1 |
+| Adm D&E (62) | 25 | 10 | 21 | 6 |
+
+- Đã hết đáng kể: H1, H2, H3, H4, H5, H10, H11, H12; L4 (tiêu đề cùng chỗ mọi route); "Quay lại sửa"; tên app thống nhất QLVPP; năm trên tiêu đề; trạng thái đã lưu/đang sửa.
+- Còn: H9 (bản in ghi "Thay thế bản in lúc …" trỏ nhầm bản Excel); L1 bảng rộng hơn khung ở 768 (12 trang) / 1024 (5 trang); L5 dòng đếm kết quả mỗi trang một chỗ; L13 chớp nền khi tải (kem → teal, CLS `/admin` ≈ 0.06); bản EN tên nhóm/đơn vị tiếng Việt; 3 kiểu viết giờ; "món" / "loại món"; POST copy-previous tự gửi khi mở Đăng ký; menu trượt 390/320 che Nhật ký/Cấu hình; vùng chạm < 44 ở vài nút (L9).
+- Lỗi mới do nhánh, **đã sửa** (5aabf81): menu ⋯ Giao hàng bị dòng dưới đè (1280/1024); Tủ/Kho 768 cuộn ngang cả trang 32px. Chặn tái phát: `table-fit.spec.ts`.
+- Lỗi mới chưa sửa (Lệch): Giao hàng ô chọn bị khóa ghi lý do "tủ chưa có hàng" cho người đã nghỉ và chỉ ở tooltip; Sửa món ô "Tối đa mỗi tháng" nhận 0/1000/2.5 không báo; Nhập ngoài kỳ nhận 100000; header ngăn phải không đệm trên; Sản phẩm/Bảng "Thu tất cả" che chip, "Tạm ngưng" bị cột dính cắt ở 1024; Tủ/Kho "Còn N" cạnh "Trong tủ" không giải thích; Kỳ tháng 390 dòng người đầu dưới đáy màn; Đăng ký 1024 chọn "Hay dùng trước" làm lưới tụt 52px; nút 32–40px ở sheet "Tôi"/hộp "Rời trang" (390).
+- Không đo được: bản EN (đổi ngôn ngữ phải ghi server), xem tổng kết (POST), Tủ trống, chuông có thông báo, duyệt món ngoài DM (thiếu dữ liệu), nhãn ô mật khẩu SA (đọc code: `login-screen.tsx` chỉ có `aria-label`).
+- Dữ liệu dev còn rác Playwright ("PW kho …", "PW Nhân viên …") hiện ở danh mục Nhân viên và Danh bạ.
