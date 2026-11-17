@@ -1,5 +1,20 @@
 const stock = {
   stock: {
+    book: {
+      tabs: 'Xem Tủ / Kho',
+      tabStock: 'Trong tủ',
+      tabLedger: 'Lịch sử nhập xuất',
+      kinds: 'Lọc theo loại',
+      all: 'Tất cả',
+      totals: 'Nhập {{in}} · Ra {{out}}',
+      colAt: 'Thời gian',
+      colItem: 'Món',
+      colKind: 'Loại',
+      colQty: 'Số lượng',
+      colPerson: 'Người',
+      colNote: 'Ghi chú',
+      empty: 'Tháng này chưa có lần nhập xuất nào.',
+    },
     page: {
       title: 'Tủ / Kho',
       description: 'Số trong tủ từng món và mọi lần nhập, xuất lẻ. Giao hàng tự trừ khỏi tủ.',
@@ -16,7 +31,9 @@ const stock = {
       colStock: 'Trong tủ',
       colHeld: 'Đang giữ cho người chờ',
       colFree: 'Còn trống',
-      colStatus: 'Trạng thái',
+      colStatus: 'Tình trạng',
+      colRestock: 'Mức đặt lại',
+      colNeed: 'Cần thêm',
       colActions: 'Thao tác',
       issue: 'Xuất lẻ',
       ledger: 'Lịch sử nhập xuất',
@@ -47,8 +64,10 @@ const stock = {
     },
     state: {
       paused: 'Tạm ngưng',
-      none: 'Không có',
+      none: 'Hết',
       ok: 'Còn {{n}}',
+      short: 'Thiếu kỳ này {{n}}',
+      awaiting: 'Hàng đang về {{n}}',
       low: 'Sắp hết',
       untracked: 'Không theo dõi',
     },
@@ -62,9 +81,9 @@ const stock = {
     stats: {
       label: 'Lọc theo tình trạng tồn',
       all: 'Tất cả',
-      incoming: 'Chờ hàng về',
+      incoming: 'Thiếu kỳ này',
       low: 'Sắp hết',
-      none: 'Không có',
+      none: 'Hết',
     },
     dialog: {
       purchaseTitle: 'Nhập ngoài kỳ (tự mua lẻ)',

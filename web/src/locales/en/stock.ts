@@ -3,6 +3,21 @@ import type { Messages } from '@/locales/messages';
 
 const stock: Messages<typeof vi> = {
   stock: {
+    book: {
+      tabs: 'Stock view',
+      tabStock: 'In stock',
+      tabLedger: 'Stock in/out history',
+      kinds: 'Filter by type',
+      all: 'All',
+      totals: 'In {{in}} · Out {{out}}',
+      colAt: 'Time',
+      colItem: 'Item',
+      colKind: 'Type',
+      colQty: 'Quantity',
+      colPerson: 'Person',
+      colNote: 'Note',
+      empty: 'No stock movements this month.',
+    },
     page: {
       title: 'Cupboard',
       description: 'Stock per item and every purchase and one-off issue. Deliveries deduct stock automatically.',
@@ -20,6 +35,8 @@ const stock: Messages<typeof vi> = {
       colHeld: 'Held for waiting staff',
       colFree: 'Free',
       colStatus: 'Status',
+      colRestock: 'Reorder level',
+      colNeed: 'Still needed',
       colActions: 'Actions',
       issue: 'Issue',
       ledger: 'Stock in/out history',
@@ -50,8 +67,10 @@ const stock: Messages<typeof vi> = {
     },
     state: {
       paused: 'Paused',
-      none: 'None',
+      none: 'Out',
       ok: '{{n}} free',
+      short: 'Short this period {{n}}',
+      awaiting: '{{n}} on the way',
       low: 'Low stock',
       untracked: 'Not tracked',
     },
@@ -65,9 +84,9 @@ const stock: Messages<typeof vi> = {
     stats: {
       label: 'Filter by stock status',
       all: 'All',
-      incoming: 'Awaiting delivery',
+      incoming: 'Short this period',
       low: 'Low stock',
-      none: 'None',
+      none: 'Out',
     },
     dialog: {
       purchaseTitle: 'Off-cycle purchase',

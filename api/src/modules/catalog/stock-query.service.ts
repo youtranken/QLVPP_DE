@@ -15,6 +15,7 @@ import {
   withStockState,
 } from './stock-list';
 import type { StockListRow } from './stock-list';
+import type { LedgerKind } from './stock.dto';
 
 export interface Page<T> {
   items: T[];
@@ -53,6 +54,42 @@ export class StockQueryService {
       limit,
       cursor,
     );
+  }
+
+  // G5 sổ cái toàn kho một tháng (giờ VN), lọc theo loại; tổng Nhập/Ra tính trên cả tháng đã lọc, không theo trang
+  async ledger(
+    ym: string,
+    kind: LedgerKind | undefined,
+    limit: number,
+    cursor?: string,
+  ) {
+    const start = sql`(${ym} || '-01')::timestamp`;
+    const where = sql`m.created_at >= ${start} AT TIME ZONE 'Asia/Ho_Chi_Minh'
+      AND m.created_at < (${start} + interval '1 month') AT TIME ZONE 'Asia/Ho_Chi_Minh'
+      AND (${kind ?? null}::text IS NULL OR m.reason = ${kind ?? null})`;
+    const page = await this.page(
+      sql`SELECT m.id, m.item_id, i.name AS item_name, i.name_en AS item_name_en, i.unit,
+                 m.delta, m.reason, m.note, m.actor_sub, a.full_name AS actor_name,
+                 coalesce(m.recipient_sub, rq.user_sub) AS recipient_sub,
+                 coalesce(u.full_name, o.full_name) AS recipient_name,
+                 to_char(m.receipt_ym, 'YYYY-MM') AS receipt_ym,
+                 m.created_at, m.created_at::text AS cursor_ts
+          FROM stock_movements m
+          JOIN items i ON i.id = m.item_id
+          LEFT JOIN users a ON a.sub = m.actor_sub
+          LEFT JOIN users u ON u.sub = m.recipient_sub
+          LEFT JOIN request_lines rl ON rl.id = m.ref_line_id
+          LEFT JOIN requests rq ON rq.id = rl.request_id
+          LEFT JOIN users o ON o.sub = rq.user_sub
+          WHERE ${where}`,
+      limit,
+      cursor,
+    );
+    const { rows } = await this.db.execute<{ in: number; out: number }>(sql`
+      SELECT coalesce(sum(m.delta) FILTER (WHERE m.delta > 0), 0)::int AS in,
+             coalesce(sum(m.delta) FILTER (WHERE m.delta < 0), 0)::int AS out
+      FROM stock_movements m WHERE ${where}`);
+    return { ...page, totals: rows[0] };
   }
 
   myIssues(sub: string, limit: number, cursor?: string) {

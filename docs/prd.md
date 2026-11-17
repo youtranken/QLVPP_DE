@@ -120,6 +120,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 
 ### 6.6 Kho (Admin)
 - FR-50 Tồn hiện tại từng món. **Sắp hết** khi đã dùng hết 80 % lượng tồn tính từ lần nhập mua gần nhất: mốc = ⌊20 % × tồn ngay sau lần nhập đó⌋ (hoặc lần điều chỉnh tồn đầu kỳ khi món chưa có mốc), sắp hết khi `0 < tồn ≤ mốc`; tồn = 0 là **Hết hàng** (kể cả món chưa có mốc). Món chưa từng nhập mua mà còn tồn không cảnh báo. Mỗi lần nhập mua tính lại mốc (ví dụ tồn 0 → nhập 30: mốc 6; còn 6 thì sắp hết; nhập thêm 20 lúc còn 6 → tồn 26, mốc 5). Không còn ô "mức tồn tối thiểu" nhập tay.
+- FR-50a (G5, chốt 15/11/2026; luật nhãn theo quyết định 17/11) Tủ / Kho tách hai nghĩa: **Sắp hết** = nhãn `stock_state = low` của server (phần còn trống ≤ ⌊20 % × mức đặt lại⌋, không thêm luật ở web); **Thiếu kỳ này n** = còn phải giao (tháng đang giao + nợ) − trong tủ khi > 0 (luôn đỏ; hàng NCC đang về đủ bù thì ghi trong title "Hàng đang về m"). Bảng: Món · ĐVT · Trong tủ · Mức đặt lại · Tình trạng · Cần thêm (phần thiếu sau khi trừ hàng đang về) · ⋯; lọc Tất cả · Thiếu kỳ này · Sắp hết · Hết. Tab **Lịch sử nhập xuất**: sổ cái toàn kho theo tháng (giờ VN), lọc Nhập/Giao/Xuất lẻ/Hoàn, tổng "Nhập +x · Ra −y" của cả tháng đã lọc, chỉ đọc.
 - FR-51 Nhập mua: +số lượng, ghi chú (đơn hàng/nguồn).
 - FR-52 Điều chỉnh kiểm kê: ±số lượng, lý do bắt buộc (dùng cho tồn đầu kỳ).
 - FR-53 Sổ cái: mọi biến động (nhập, giao, xuất lẻ, điều chỉnh) với người thực hiện, lý do và thời điểm; xem theo món.

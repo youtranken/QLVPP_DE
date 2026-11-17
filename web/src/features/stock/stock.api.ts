@@ -69,7 +69,7 @@ export interface StockFacts {
   stock_state: HeldStockState;
 }
 
-const STOCK_KEY = ['stock'] as const;
+export const STOCK_KEY = ['stock'] as const;
 export const ISSUES_KEY = ['admin', 'issues'] as const;
 const MOVEMENTS_PAGE = 20;
 

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Locator } from '@playwright/test';
-import { asRole, deleteTestUsers, devHeaders, expectNoContrastViolations, expectStockCell, isMobile, removeTestItem, seedActiveUser, seedPwItem, shot, openPurchase } from './helpers';
+import { asRole, deleteTestUsers, devHeaders, expectNoContrastViolations, expectStockCell, isMobile, removeTestItem, seedActiveUser, seedPwItem, shot, openPurchase, pickOption } from './helpers';
 import { seedLockedRequest } from './locked-request';
 
 const RECIPIENT = { sub: 'pw-recipient', name: 'PW Người nhận' };
@@ -47,7 +47,7 @@ test.describe('E1-S4 Tủ / Kho: nhập, xuất lẻ, lịch sử nhập xuất 
       const row = page.getByRole('row').filter({ hasText: itemName });
       // Tủ 0 mà không ai chờ: xám "Không có", không đỏ
       await expectStockCell(row, 0);
-      await expect(row.getByText('Không có')).toBeVisible();
+      await expect(row.getByText('Hết', { exact: true })).toBeVisible();
 
       await openPurchase(page, row);
       const purchase = page.getByRole('dialog', { name: `Nhập ngoài kỳ (tự mua lẻ) ${itemName}` });
@@ -103,7 +103,7 @@ test.describe('E1-S4 Tủ / Kho: nhập, xuất lẻ, lịch sử nhập xuất 
       expect((await issueApi(2)).status()).toBe(201);
       await page.reload();
       await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(itemName);
-      await expect(row.getByText('Không có')).toBeVisible();
+      await expect(row.getByText('Hết', { exact: true })).toBeVisible();
       await expect(row.getByText('Sắp hết')).toHaveCount(0);
       if (info.project.name === 'mobile-390') await expectNoContrastViolations(page);
       await shot(page, info, 'stock-out', false);
@@ -171,7 +171,7 @@ test.describe('E9-S5 Tủ / Kho M1 (dev-identity admin)', () => {
       await again.getByRole('button', { name: 'Xuất', exact: true }).click();
       await expect(again).toBeHidden();
       await expectStockCell(row, 0);
-      await expect(row.getByText('Không có')).toBeVisible();
+      await expect(row.getByText('Hết', { exact: true })).toBeVisible();
     } finally {
       await removeTestItem(request, itemId);
     }
@@ -249,7 +249,7 @@ test.describe('E9-S5 Tủ / Kho M1 (dev-identity admin)', () => {
 test.describe('V2D-16 Tủ / Kho theo người đang chờ (dev-identity admin)', () => {
   asRole('admin');
 
-  test('V2D-16 held stock: tủ 5 giữ 4 → Trong tủ 5 · Đang giữ 4 · Còn trống 1; xuất 3 "Vẫn xuất" → Chờ hàng về 2 (đỏ)', async ({ page, request }, info) => {
+  test('V2D-16 held stock: tủ 5 giữ 4; xuất 3 "Vẫn xuất" → Thiếu kỳ này 2 (đỏ), Cần thêm 2 (G5)', async ({ page, request }, info) => {
     const seed = await seedLockedRequest(request, info, [{ stock: 5, qty: 4 }]);
     const item = seed.items[0];
     try {
@@ -268,8 +268,6 @@ test.describe('V2D-16 Tủ / Kho theo người đang chờ (dev-identity admin)'
       await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(item.name);
       const row = page.getByRole('row').filter({ hasText: item.name });
       await expectStockCell(row, 5);
-      await expect(row.getByRole('cell').nth(3)).toHaveText(/4$/);
-      await expect(row.getByRole('cell').nth(4)).toHaveText(/1$/);
       await expect(page.getByText('Đủ dùng')).toHaveCount(0);
       await expect(row.getByRole('button', { name: 'Nhập mua' })).toHaveCount(0);
 
@@ -288,9 +286,10 @@ test.describe('V2D-16 Tủ / Kho theo người đang chờ (dev-identity admin)'
       await issue.getByRole('button', { name: 'Vẫn xuất' }).click();
       await expect(issue).toBeHidden();
       await expectStockCell(row, 2);
-      await expect(row.getByText('Chờ hàng về 2')).toBeVisible();
-      // "Chờ hàng về" luôn đỏ để nhìn lướt là thấy
-      await expect(row.getByText('Chờ hàng về 2')).toHaveClass(/tag--danger/);
+      // "Thiếu kỳ này" luôn đỏ để nhìn lướt là thấy; Cần thêm = phần thiếu khi không có hàng đang về
+      await expect(row.getByText('Thiếu kỳ này 2')).toHaveClass(/tag--danger/);
+      // Trong tủ 2 và Cần thêm 2
+      await expect(row.getByRole('cell').filter({ hasText: /^2$/ })).toHaveCount(2);
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'v2d16-stock-short', false);
 
@@ -330,6 +329,40 @@ test.describe('G6 Xuất lẻ (dev-identity admin)', () => {
       await dialog.getByRole('button', { name: 'Hủy' }).click();
       await expect(dialog).toBeHidden();
       expect(posts).toEqual([]);
+    } finally {
+      await removeTestItem(page.request, item.id);
+    }
+  });
+});
+
+test.describe('G5 Tủ / Kho (dev-identity admin)', () => {
+  asRole('admin');
+
+  test('G5 Tủ / Kho: cột Mức đặt lại · Cần thêm, lọc Thiếu kỳ này/Sắp hết/Hết; tab Lịch sử nhập xuất lọc Nhập, tổng Nhập/Ra', async ({ page }, info) => {
+    const item = await seedPwItem(page);
+    try {
+      const buy = await page.request.post(`/api/admin/items/${item.id}/stock`, { headers: devHeaders('admin'), data: { delta: 7, reason: 'purchase', note: 'PW G5 nhập' } });
+      expect(buy.ok()).toBe(true);
+      await page.goto('/admin/stock');
+      await expect(page.getByRole('radio', { name: 'Trong tủ' })).toBeChecked();
+      if (isMobile(info)) await expect(page.getByRole('combobox', { name: 'Lọc theo tình trạng tồn' })).toBeVisible();
+      else {
+        for (const f of [/^Thiếu kỳ này/, /^Sắp hết/, /^Hết/]) await expect(page.getByRole('radio', { name: f })).toBeVisible();
+        for (const h of ['Mức đặt lại', 'Cần thêm']) await expect(page.getByRole('columnheader', { name: h })).toBeVisible();
+      }
+
+      await page.getByRole('radio', { name: 'Lịch sử nhập xuất' }).click();
+      await expect(page).toHaveURL(/tab=ledger/);
+      const ledger = page.getByRole('table', { name: 'Lịch sử nhập xuất' });
+      await expect(ledger.getByRole('row').filter({ hasText: item.name }).filter({ hasText: '+7' })).toBeVisible();
+      if (isMobile(info)) await pickOption(page.getByRole('combobox', { name: 'Lọc theo loại' }), 'Nhập');
+      else await page.getByRole('radio', { name: 'Nhập', exact: true }).click();
+      await expect(page).toHaveURL(/kind=purchase/);
+      await expect(page.getByText(/^Nhập \+\d+ · Ra 0$/)).toBeVisible();
+      await expect(ledger.getByRole('row').filter({ hasText: item.name }).filter({ hasText: '+7' })).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'không cuộn ngang').toBe(true);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await shot(page, info, 'g5-ledger', false);
     } finally {
       await removeTestItem(page.request, item.id);
     }

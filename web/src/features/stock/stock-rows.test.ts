@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { indexCategories, toRows } from '@/features/catalog/catalog-rows';
-import { applyStockView, balancesAfter, shortCount, stockStats, toStockRows, stockViewOf } from './stock-rows';
+import { applyStockView, balancesAfter, shortCount, stockStats, toStockRows, stockViewOf, periodShortOf } from './stock-rows';
 import { CATEGORIES, facts, ITEMS, STOCK } from './stock-fixtures';
 
 const byId = (list = STOCK) => new Map(list.map((f) => [f.item_id, f]));
@@ -61,4 +61,11 @@ describe('stock-rows', () => {
     expect(balancesAfter([{ delta: -3 }, { delta: 10 }], 7)).toEqual([7, 10]);
     expect(balancesAfter([], 7)).toEqual([]);
   });
+
+  it('periodShortOf (G5 "Thiếu kỳ này n"): cần 5 tủ 4 → 1; cần 5 tủ 5 → 0; tủ dư → 0', () => {
+    expect(periodShortOf({ held: 5, stock_qty: 4 })).toBe(1);
+    expect(periodShortOf({ held: 5, stock_qty: 5 })).toBe(0);
+    expect(periodShortOf({ held: 0, stock_qty: 9 })).toBe(0);
+  });
 });
+

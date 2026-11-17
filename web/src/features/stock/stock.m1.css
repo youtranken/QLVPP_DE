@@ -45,3 +45,6 @@
   [data-shell='admin'] .table-stack tr:has(> td.sk-actions) > td:first-child { padding-right: var(--hit); }
 }
 @media (max-width: 767px) { [data-shell='admin'] .table td:has(> .sk-item) { min-height: var(--hit); } }
+[data-shell='admin'] .sk-in b { color: var(--ok); }
+[data-shell='admin'] .sk-out b { color: var(--c-ink); }
+[data-shell='admin'] .sk-more { justify-self: center; margin: var(--s-3) auto 0; display: block; }

@@ -45,13 +45,13 @@ describe('StockPage', () => {
     expect(main.getByRole('link', { name: 'Sản phẩm' })).toHaveAttribute('href', '/admin/catalog');
   });
 
-  it('một hàng chip lọc có số: Tất cả 6 (ẩn món ngừng tủ 0), Chờ hàng về 2 (gộp thiếu cho người chờ), Sắp hết 1, Không có 1', async () => {
+  it('một hàng chip lọc có số (G5): Tất cả 6 (ẩn món ngừng tủ 0), Thiếu kỳ này 2, Sắp hết 1, Hết 1', async () => {
     await open();
     expect(screen.getByRole('radio', { name: /Tất cả/ })).toHaveTextContent('6');
     expect(screen.queryByRole('button', { name: /Thiếu cho người chờ/ })).toBeNull();
-    expect(screen.getByRole('radio', { name: /Chờ hàng về/ })).toHaveTextContent('2');
+    expect(screen.getByRole('radio', { name: /Thiếu kỳ này/ })).toHaveTextContent('2');
     expect(screen.getByRole('radio', { name: /Sắp hết/ })).toHaveTextContent('1');
-    expect(screen.getByRole('radio', { name: /Không có/ })).toHaveTextContent('1');
+    expect(screen.getByRole('radio', { name: /^Hết/ })).toHaveTextContent('1');
     expect(screen.queryByText('Bút xóa cũ')).toBeNull();
     expect(within(screen.getByRole('radiogroup', { name: 'Lọc theo tình trạng tồn' })).getAllByRole('radio')).toHaveLength(4);
   });
@@ -71,8 +71,8 @@ describe('StockPage', () => {
     await open('/admin/stock?filter=incoming', 'Bìa còng');
     expect(screen.queryByText('Giấy A4')).toBeNull();
     expect(screen.getByText('Bút chì')).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /Chờ hàng về/ })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByText(/Đang lọc: Chờ hàng về · 2/)).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Thiếu kỳ này/ })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByText(/Đang lọc: Thiếu kỳ này · 2/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
     expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
     expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
@@ -85,9 +85,9 @@ describe('StockPage', () => {
     await waitFor(() => expect(screen.getByTestId('location-search')).toBeEmptyDOMElement());
   });
 
-  it('bấm thẻ Không có đặt URL ?filter=none; bấm "Tất cả" bỏ lọc', async () => {
+  it('bấm thẻ Hết đặt URL ?filter=none; bấm "Tất cả" bỏ lọc', async () => {
     await open();
-    await userEvent.click(screen.getByRole('radio', { name: /Không có/ }));
+    await userEvent.click(screen.getByRole('radio', { name: /^Hết/ }));
     expect(screen.getByTestId('location-search')).toHaveTextContent('?filter=none');
     expect(screen.queryByText('Giấy A4')).toBeNull();
     await userEvent.click(screen.getByRole('radio', { name: /Tất cả/ }));

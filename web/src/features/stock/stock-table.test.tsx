@@ -16,30 +16,37 @@ const rowOf = (name: string) => screen.getByText(name).closest('tr')!;
 const cells = (name: string) => within(rowOf(name)).getAllByRole('cell').map((c) => c.textContent);
 
 describe('StockTable — Tủ/Kho theo người đang chờ', () => {
-  it('cột Trong tủ · Đang giữ cho người chờ · Còn trống · Trạng thái; không còn cột "Còn nợ"', async () => {
+  it('G5: cột Trong tủ · Mức đặt lại · Tình trạng · Cần thêm; không còn Đang giữ / Còn trống / Còn nợ', async () => {
     await open();
     const headers = screen.getAllByRole('columnheader').map((h) => h.textContent);
-    expect(headers).toEqual(expect.arrayContaining(['Trong tủ', 'Đang giữ cho người chờ', 'Còn trống', 'Trạng thái']));
-    expect(headers).not.toContain('Còn nợ');
-    expect(cells('Giấy A4')).toEqual(expect.arrayContaining(['6', '4', '2', 'Sắp hết']));
+    expect(headers).toEqual(expect.arrayContaining(['Trong tủ', 'Mức đặt lại', 'Tình trạng', 'Cần thêm']));
+    for (const gone of ['Đang giữ cho người chờ', 'Còn trống', 'Còn nợ']) expect(headers).not.toContain(gone);
+    expect(cells('Giấy A4')).toEqual(expect.arrayContaining(['6', '30', 'Sắp hết']));
+    expect(within(rowOf('Ghim bấm')).getAllByRole('cell').some((c) => /^—/.test(c.textContent ?? ''))).toBe(true);
   });
 
-  it('trạng thái: Chờ hàng về 3 (hàng về chưa đủ bù) · Chờ hàng về 5 · Không có · Không theo dõi · Còn 7; không chữ "Đủ dùng"', async () => {
+  it('G5 Cần thêm = phần thiếu sau khi trừ hàng đang về: Bìa còng 3; Bút chì (về đủ bù) "—"', async () => {
     await open();
-    expect(within(rowOf('Bìa còng')).getByText('Chờ hàng về 3')).toHaveAttribute('title', 'Thiếu 3 cho người chờ');
-    expect(within(rowOf('Bút chì')).getByText('Chờ hàng về 5')).toBeInTheDocument();
-    expect(within(rowOf('Kẹp giấy')).getByText('Không có')).toBeInTheDocument();
+    expect(cells('Bìa còng')).toEqual(expect.arrayContaining(['3']));
+    expect(cells('Bút chì').at(-2)).toMatch(/^—/);
+  });
+
+  it('tình trạng: Thiếu kỳ này 3 · Thiếu kỳ này 5 (title "Hàng đang về 5") · Hết · Không theo dõi · Còn 7; không chữ "Đủ dùng"', async () => {
+    await open();
+    expect(within(rowOf('Bìa còng')).getByText('Thiếu kỳ này 3')).toHaveAttribute('title', 'Thiếu 3 cho người chờ');
+    expect(within(rowOf('Bút chì')).getByText('Thiếu kỳ này 5')).toHaveAttribute('title', 'Hàng đang về 5');
+    expect(within(rowOf('Kẹp giấy')).getByText('Hết')).toBeInTheDocument();
     expect(within(rowOf('Ghim bấm')).getByText('Không theo dõi')).toBeInTheDocument();
     expect(within(rowOf('Bút bi xanh')).getByText('Còn 7')).toBeInTheDocument();
     expect(screen.queryByText('Đủ dùng')).toBeNull();
     expect(screen.queryByText('Hết hàng')).toBeNull();
   });
 
-  it('"Chờ hàng về n" luôn đỏ, kể cả khi hàng NCC về đủ bù; tủ 0 không ai cần không đỏ', async () => {
+  it('"Thiếu kỳ này n" luôn đỏ, kể cả khi hàng NCC về đủ bù; tủ 0 không ai cần không đỏ', async () => {
     await open();
     const red = document.querySelectorAll('tbody .tag--danger');
-    expect([...red].map((t) => t.textContent)).toEqual(expect.arrayContaining(['Chờ hàng về 3', 'Chờ hàng về 5']));
-    expect([...red].every((t) => t.textContent?.startsWith('Chờ hàng về'))).toBe(true);
+    expect([...red].map((t) => t.textContent)).toEqual(expect.arrayContaining(['Thiếu kỳ này 3', 'Thiếu kỳ này 5']));
+    expect([...red].every((t) => t.textContent?.startsWith('Thiếu kỳ này'))).toBe(true);
   });
 
   it('dòng không có nút "Nhập mua"; ⋯ = Xuất lẻ · Lịch sử nhập xuất · Nhập ngoài kỳ (tự mua lẻ) (không còn Kiểm kê) và mở hộp cùng tiêu đề', async () => {
@@ -77,10 +84,10 @@ describe('StockTable — Tủ/Kho theo người đang chờ', () => {
     expect(within(rowOf('Bút xóa cũ')).queryByText('Ngừng riêng')).toBeNull();
   });
 
-  it('món tạm ngưng còn người chờ: "Chờ hàng về 2" đỏ (NCC không giao thêm) kèm nhãn trung tính "Tạm ngưng"', async () => {
+  it('món tạm ngưng còn người chờ: "Thiếu kỳ này 2" đỏ (NCC không giao thêm) kèm nhãn trung tính "Tạm ngưng"', async () => {
     await open(1280, STOCK.map((f) => (f.item_id === 'i-3' ? facts('i-3', { stock_qty: 0, free: 0, held: 2, awaiting: 2, waiting: 1, stock_state: 'incoming' }) : f)));
     const row = within(rowOf('Bút xóa cũ'));
-    expect(row.getByText('Chờ hàng về 2')).toHaveClass('tag--danger');
+    expect(row.getByText('Thiếu kỳ này 2')).toHaveClass('tag--danger');
     expect(row.getByText('Tạm ngưng')).toHaveClass('tag', 'tag--outline');
   });
 });

@@ -14,7 +14,12 @@ import { Roles } from '../auth/roles.decorator';
 import { uuidParam } from './catalog.dto';
 import { YmPipe } from '../../common/ym';
 import { PageQuery } from '../../common/page.query';
-import { IssueDto, ReceiptBody, StockChangeDto } from './stock.dto';
+import {
+  IssueDto,
+  ReceiptBody,
+  StockChangeDto,
+  StockLedgerQuery,
+} from './stock.dto';
 import { StockReceiptService } from './stock-receipt.service';
 import { StockQueryService } from './stock-query.service';
 import { StockService } from './stock.service';
@@ -62,6 +67,12 @@ export class StockController {
   @Roles('admin', 'sa')
   movements(@Param('id', uuidParam) id: string, @Query() page: PageQuery) {
     return this.query.movements(id, page.limit, page.cursor);
+  }
+
+  @Get('admin/stock/movements')
+  @Roles('admin', 'sa')
+  ledger(@Query() query: StockLedgerQuery) {
+    return this.query.ledger(query.ym, query.kind, query.limit, query.cursor);
   }
 
   @Get('admin/issues')

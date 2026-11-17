@@ -6,7 +6,8 @@ import { ItemThumb } from '@/ui/item-thumb';
 import { RowMenu, type RowMenuItem } from '@/ui/row-menu';
 import { useUnitNames } from '@/features/units/units.api';
 import type { ReactNode } from 'react';
-import { stockViewOf, type StockRow, type StockStatus } from './stock-rows';
+import { EmptyValue } from '@/ui/empty-cell';
+import { periodShortOf, stockViewOf, type StockRow, type StockStatus } from './stock-rows';
 import { useDisabledReason } from '@/ui/disabled-reason';
 
 export type StockAction = 'purchase' | 'issue' | 'ledger';
@@ -20,22 +21,22 @@ const BADGE_CLASS: Record<StockStatus, string> = {
   ok: 'tag tag--ok',
 };
 
-// "Chờ hàng về" luôn đỏ để thủ kho nhìn lướt là thấy món đang nợ người chờ; tủ 0 không ai cần chỉ xám
-export function StockBadge({ row }: { row: Pick<StockRow, 'usable' | 'stock_state' | 'short' | 'awaiting' | 'free'> }) {
+// "Thiếu kỳ này" luôn đỏ để thủ kho nhìn lướt là thấy món đang nợ người chờ; tủ 0 không ai cần chỉ xám
+export function StockBadge({ row }: { row: Pick<StockRow, 'usable' | 'stock_state' | 'short' | 'awaiting' | 'free' | 'held' | 'stock_qty'> }) {
   const { t } = useTranslation();
   const status = stockViewOf(row);
   const text: Record<StockStatus, string> = {
     paused: t('stock.state.paused'),
-    incoming: t('warn.W20pending', { n: row.short + row.awaiting }),
+    incoming: t('stock.state.short', { n: periodShortOf(row) }),
     none: t('stock.state.none'),
     low: t('stock.state.low'),
     untracked: t('stock.state.untracked'),
     ok: t('stock.state.ok', { n: row.free }),
   };
-  // Hàng NCC về không đủ bù cho người chờ: câu giải thích phần thiếu nằm trong title
-  const short = status === 'incoming' && row.short > 0;
+  // Hàng NCC về không đủ bù cho người chờ: câu giải thích phần thiếu nằm trong title; về đủ bù thì nói số đang về
+  const title = status !== 'incoming' ? undefined : row.short > 0 ? t('warn.W20short', { short: row.short }) : row.awaiting > 0 ? t('stock.state.awaiting', { n: row.awaiting }) : undefined;
   const badge = (
-    <span className={BADGE_CLASS[status]} title={short ? t('warn.W20short', { short: row.short }) : undefined}>
+    <span className={BADGE_CLASS[status]} title={title}>
       {text[status]}
     </span>
   );
@@ -97,9 +98,10 @@ function useColumns(groupName: (r: StockRow) => string, onAction: (a: StockActio
       },
       { id: 'unit', header: t('stock.page.colUnit'), meta: { width: '4.5rem' }, cell: ({ row }) => unitName(row.original.unit) },
       { id: 'stock', header: t('stock.page.colStock'), meta: { className: 'num r', width: '5rem' }, cell: ({ row }) => <b>{row.original.stock_qty}</b> },
-      { id: 'held', header: t('stock.page.colHeld'), meta: { className: 'num r', width: '6.5rem' }, cell: ({ row }) => row.original.held },
-      { id: 'free', header: t('stock.page.colFree'), meta: { className: 'num r', width: '5.5rem' }, cell: ({ row }) => row.original.free },
-      { id: 'status', header: t('stock.page.colStatus'), meta: { width: '9rem' }, cell: ({ row }) => <StockBadge row={row.original} /> },
+      { id: 'restock', header: t('stock.page.colRestock'), meta: { className: 'num r', width: '6.5rem' }, cell: ({ row }) => row.original.restock_level ?? <EmptyValue /> },
+      { id: 'status', header: t('stock.page.colStatus'), meta: { width: '10rem' }, cell: ({ row }) => <StockBadge row={row.original} /> },
+      // Cần thêm = phần còn thiếu sau khi trừ hàng NCC đang về (server short)
+      { id: 'need', header: t('stock.page.colNeed'), meta: { className: 'num r', width: '5.5rem' }, cell: ({ row }) => (row.original.short > 0 ? <b>{row.original.short}</b> : <EmptyValue />) },
       {
         id: 'actions',
         header: () => <span className="sr-only">{t('stock.page.colActions')}</span>,

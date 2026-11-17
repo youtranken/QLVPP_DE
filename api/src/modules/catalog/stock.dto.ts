@@ -17,6 +17,7 @@ import {
 } from 'class-validator';
 import { TrimToNull } from '../../common/dto-fields';
 import { YM } from '../../common/ym';
+import { PageQuery } from '../../common/page.query';
 
 const QTY_MAX = 1_000_000;
 
@@ -64,4 +65,18 @@ export class CustomReceiptBody {
   @IsInt() @Min(0) expected_received!: number;
   @TrimToNull() @IsOptional() @IsString() @MaxLength(500) note?: string | null;
   @IsOptional() @IsUUID() snapshot_id?: string | null;
+}
+
+export const LEDGER_KINDS = [
+  'purchase',
+  'delivery',
+  'issue',
+  'return',
+  'adjust',
+] as const;
+export type LedgerKind = (typeof LEDGER_KINDS)[number];
+
+export class StockLedgerQuery extends PageQuery {
+  @Matches(YM) ym!: string;
+  @IsOptional() @IsIn(LEDGER_KINDS) kind?: LedgerKind;
 }

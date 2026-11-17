@@ -52,6 +52,7 @@ export const ADMIN_ROUTE_CLASSES: Record<`${Method} ${string}`, RouteClass> = {
   'POST /api/admin/items/:id/issue': 'none',
   'GET /api/admin/items/:id/movements': 'none',
   'GET /api/admin/issues': 'none',
+  'GET /api/admin/stock/movements': 'none',
   'GET /api/admin/stock/low': 'none',
   'POST /api/admin/item-categories': 'none',
   'PATCH /api/admin/item-categories/:id': 'none',
