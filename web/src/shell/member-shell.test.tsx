@@ -51,17 +51,6 @@ describe('MemberShell', () => {
     expect(within(banner).getByRole('button', { name: /^Thông báo/ })).toBeInTheDocument();
   });
 
-  it.each([1280])('%i px: header có nút đổi ngôn ngữ VI/EN đứng trước chuông', (width) => {
-    mockViewport(width);
-    renderApp(makeMe('member'), '/');
-    const banner = screen.getByRole('banner');
-    const group = within(banner).getByRole('radiogroup', { name: 'Ngôn ngữ' });
-    expect(within(group).getByRole('radio', { name: 'VI – Tiếng Việt' })).toHaveTextContent('VI');
-    expect(within(group).getByRole('radio', { name: 'EN – English' })).toHaveTextContent('EN');
-    const bell = within(banner).getByRole('button', { name: /^Thông báo/ });
-    expect(group.compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-
   it('1280 px: banner full-bleed bọc nội dung trong .m-top__in (nền đặc nằm ở banner, nội dung giữ max 1440)', () => {
     mockViewport(1280);
     renderApp(makeMe('member'), '/');
@@ -77,7 +66,7 @@ describe('MemberShell', () => {
     expect(screen.queryByRole('link', { name: 'Tôi' })).toBeNull();
   });
 
-  it('1280 px: bấm tên ở góc phải mở hộp "Tài khoản" có "Đăng xuất"', async () => {
+  it('1280 px: bấm tên ở góc phải mở hộp "Tài khoản" có ngôn ngữ và "Đăng xuất" (NV-01)', async () => {
     mockViewport(1280);
     renderApp(makeMe('member'), '/');
     const btn = screen.getByRole('button', { name: 'Mở tài khoản của Nguyễn Văn An' });
@@ -85,11 +74,11 @@ describe('MemberShell', () => {
     await userEvent.click(btn);
     expect(btn).toHaveAttribute('aria-expanded', 'true');
     const box = screen.getByRole('dialog', { name: 'Tài khoản' });
-    expect(within(box).getByText('Phòng Công trình · Nhân viên')).toBeInTheDocument();
+    expect(within(box).getByText('Phòng Công trình')).toBeInTheDocument();
     expect(within(box).getByText('an.nguyen@pmh.com.vn')).toBeInTheDocument();
     expect(within(box).queryByText(/Tài khoản D&E/, { ignore: 'button' })).toBeNull();
     expect(within(box).getByRole('button', { name: 'Đăng xuất' })).toHaveClass('btn--danger');
-    expect(within(box).queryByRole('radiogroup')).toBeNull();
+    expect(within(box).getByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeInTheDocument();
   });
 
   it('popover: Esc đóng và trả focus về nút tên; bấm ra ngoài đóng', async () => {
@@ -133,18 +122,29 @@ describe('MemberShell', () => {
     expect(within(tabs).getByRole('link', { name: 'Lịch sử' })).not.toHaveAttribute('aria-current');
   });
 
-  it('1280 px: khối avatar hiện chữ đầu, tên và phòng; 390 px không có avatar trên thanh trên (tài khoản ở "Tôi")', () => {
+  it('1280 px: khối avatar chỉ chữ đầu + tên, không dòng phòng (NV-02); không có VI/EN trên thanh trên (NV-01); logo là ảnh', () => {
     mockViewport(1280);
     const { unmount } = renderApp(makeMe('member'), '/');
     const banner = screen.getByRole('banner');
     expect(within(banner).getByText('Nguyễn Văn An')).toBeInTheDocument();
-    expect(within(banner).getByText('Phòng Công trình')).toBeInTheDocument();
     expect(within(banner).getByText('NA')).toBeInTheDocument();
+    expect(within(banner).queryByText('Phòng Công trình')).toBeNull();
+    expect(within(banner).queryByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeNull();
+    expect(within(banner).getByRole('link', { name: 'QLVPP' }).querySelector('img')).toHaveAttribute('src', '/vpp-logo.png');
     unmount();
     mockViewport(390);
     renderApp(makeMe('member'), '/');
-    expect(within(screen.getByRole('banner')).queryByText('Phòng Công trình')).toBeNull();
     expect(within(screen.getByRole('banner')).queryByText('NA')).toBeNull();
+  });
+
+  it('1280 px: hộp tài khoản có đổi ngôn ngữ VI/EN và dòng "Phòng Công trình" không kèm "· Nhân viên" (NV-01, NV-31)', async () => {
+    mockViewport(1280);
+    renderApp(makeMe('member'), '/');
+    await userEvent.click(screen.getByRole('button', { name: /Nguyễn Văn An/ }));
+    const box = await screen.findByRole('dialog', { name: 'Tài khoản' });
+    expect(within(box).getByRole('radio', { name: 'Tiếng Việt' })).toBeInTheDocument();
+    expect(within(box).getByText('Phòng Công trình')).toBeInTheDocument();
+    expect(within(box).queryByText(/Nhân viên/)).toBeNull();
   });
 
   it('chữ đầu avatar bỏ từ không bắt đầu bằng chữ: "Nguyễn Thị Lan (demo)" → "NL" (không ra "N(")', () => {

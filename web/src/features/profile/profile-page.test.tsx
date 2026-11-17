@@ -23,7 +23,7 @@ describe('Trang Tôi', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Tôi' })).toBeInTheDocument();
     expect(screen.getByText('Nguyễn Văn An')).toBeInTheDocument();
     expect(screen.getByText('an.nguyen@pmh.com.vn')).toBeInTheDocument();
-    expect(screen.getByText('Phòng Công trình · Nhân viên')).toBeInTheDocument();
+    expect(screen.getByText('Phòng Công trình')).toBeInTheDocument();
     expect(screen.getByText('NV0231')).toBeInTheDocument();
     expect(screen.queryByText(/Tài khoản D&E/, { ignore: 'button' })).toBeNull();
     expect(screen.queryByRole('textbox')).toBeNull();

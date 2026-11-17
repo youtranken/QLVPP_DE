@@ -30,7 +30,7 @@ function Popover({ open, onOpenChange, trigger }: Extract<Props, { variant: 'pop
       })}
       {open && (
         <div ref={pop.panel} id={pop.id} role="dialog" aria-label={t('profile.menu')} className="acct-pop">
-          <AccountContent />
+          <AccountContent language />
         </div>
       )}
     </div>

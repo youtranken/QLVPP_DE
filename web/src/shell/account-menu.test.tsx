@@ -26,7 +26,7 @@ describe('AccountMenu', () => {
     const box = screen.getByRole('dialog', { name: 'Tài khoản' });
     expect(btn).toHaveAttribute('aria-controls', box.id);
     expect(within(box).getByText('Nguyễn Văn An')).toBeInTheDocument();
-    expect(within(box).getByText('Phòng Công trình · Nhân viên')).toBeInTheDocument();
+    expect(within(box).getByText('Phòng Công trình')).toBeInTheDocument();
     expect(within(box).getByText('NV0231')).toBeInTheDocument();
   });
 

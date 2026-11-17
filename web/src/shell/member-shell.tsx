@@ -7,7 +7,6 @@ import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { IconSprite } from '@/ui/icon-sprite';
 import { RouteChunk } from '@/ui/chunk-error-boundary';
 import { Loading } from '@/ui/load-state';
-import { LanguageSwitch } from '@/ui/language-switch';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { AccountMenu } from '@/shell/account-menu';
 import { BottomNav } from '@/shell/bottom-nav';
@@ -33,7 +32,6 @@ export function MemberShell() {
       <span className="m-avatar__ini" aria-hidden="true">{initials(me.fullName, me.sub)}</span>
       <span className="m-avatar__who">
         <b>{me.fullName ?? me.sub}</b>
-        {me.department && <small>{me.department}</small>}
       </span>
     </>
   );
@@ -48,7 +46,7 @@ export function MemberShell() {
       <header className="m-top">
         <div className="m-top__in">
           <Link to="/" className="m-logo">
-            <i aria-hidden="true">{t('app.logoLetter')}</i>
+            <img src="/vpp-logo.png" alt="" width={30} height={30} />
             <span className="m-logo__name">{t('app.title')}</span>
           </Link>
           {!narrow && (
@@ -60,8 +58,7 @@ export function MemberShell() {
             </nav>
           )}
           <span className="sp" />
-          {/* ≤ 900: ngôn ngữ và tài khoản nằm ở "Tôi" (thanh dưới), thanh trên chỉ còn tên app + chuông để tên app không bị cắt */}
-          {!narrow && <LanguageSwitch short className="seg--sm m-lang" />}
+          {/* Ngôn ngữ nằm trong hộp tài khoản (NV-01); ≤ 900 tài khoản ở "Tôi" (thanh dưới) */}
           <NotificationBell />
           {!narrow && (
             <AccountMenu
