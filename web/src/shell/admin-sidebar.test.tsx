@@ -86,8 +86,8 @@ describe('AdminSidebar: nhóm', () => {
   });
 });
 
-describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
-  it('đáy sidebar: thẻ kỳ, họ tên + vai, nút Đăng xuất', async () => {
+describe('AdminSidebar + thanh trên: thẻ kỳ, người dùng, ngôn ngữ', () => {
+  it('đáy sidebar: thẻ kỳ; họ tên + vai, nút Đăng xuất ở thanh trên (TC-01)', async () => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
@@ -186,7 +186,7 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
 });
 
 describe('AdminSidebar: đầu và cuối', () => {
-  it('chuông nằm cùng khối người dùng ở cuối, sau thanh điều hướng', async () => {
+  it('chuông nằm cùng khối người dùng (thanh trên), sau thanh điều hướng', async () => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
@@ -281,7 +281,7 @@ describe('AdminSidebar: tên app (Q2)', () => {
     mockViewport(1280);
     stubShellApi({});
     renderApp(makeMe('admin'), '/admin/catalog');
-    const brand = await screen.findByRole('link', { name: 'QLVPP' });
+    const brand = (await screen.findAllByRole('link', { name: 'QLVPP' })).find((l) => l.closest('.side'))!;
     expect(brand).toHaveAttribute('href', '/admin');
     expect(sideNav()).not.toContainElement(brand);
   });

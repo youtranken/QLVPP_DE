@@ -1,0 +1,27 @@
+import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { ADMIN_NAV } from '@/shell/admin-nav';
+import { AdminSidebarUser } from '@/shell/admin-sidebar-user';
+
+const PAGES = ADMIN_NAV.flatMap((g) => g.pages);
+
+// Thanh trên trắng ≥ 768 theo họ QLHS/QLTS (TC-01): đường dẫn bên trái, chuông + tài khoản bên phải
+export function AdminHeader() {
+  const { t } = useTranslation();
+  const { pathname } = useLocation();
+  const page = PAGES.filter((p) => pathname.startsWith(`/admin/${p.path}`)).sort((a, b) => b.path.length - a.path.length)[0];
+  return (
+    <header className="adm-head">
+      <nav className="adm-head__crumb" aria-label={t('nav.breadcrumb')}>
+        <Link to="/admin">{t('app.title')}</Link>
+        {page && (
+          <>
+            <span aria-hidden="true">›</span>
+            <span aria-current="page">{t(page.titleKey)}</span>
+          </>
+        )}
+      </nav>
+      <AdminSidebarUser compact inTopbar />
+    </header>
+  );
+}

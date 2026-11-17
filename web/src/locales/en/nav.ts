@@ -6,6 +6,7 @@ const nav: Messages<typeof vi> = {
     main: 'Main navigation',
     sections: 'Sections',
     adminMenu: 'Admin menu',
+    breadcrumb: 'Breadcrumb',
     userMenu: 'Account and language',
     register: 'Order',
     history: 'History',

@@ -36,15 +36,11 @@ describe('AdminTopbar 390 px', () => {
     expect(within(topbar()).queryByText('Kỳ tháng 11 đang mở')).toBeNull();
   });
 
-  it('Giao hàng: nút trái là "Mở menu quản lý", dòng phụ "Tháng 10/2026 · đã khóa"', async () => {
+  it('Giao hàng: dòng phụ giống mọi màn "Kỳ hiện tại: tháng 11 · đang mở" (AD-03), không còn "Tháng 10/2026 · đã khóa"', async () => {
     open('/admin/delivery');
     expect(within(topbar()).getByRole('button', { name: 'Mở menu quản lý' })).toBeInTheDocument();
-    expect(await within(topbar()).findByText('Tháng 10/2026 · đã khóa')).toBeInTheDocument();
-  });
-
-  it('Giao hàng với ?ym cũ trên URL → dòng phụ vẫn là kỳ khóa gần nhất "Tháng 10/2026 · đã khóa" (trang chỉ làm kỳ đó)', async () => {
-    open('/admin/delivery?ym=2026-08');
-    expect(await within(topbar()).findByText('Tháng 10/2026 · đã khóa')).toBeInTheDocument();
+    expect(await within(topbar()).findByText('Kỳ hiện tại: tháng 11 · đang mở')).toBeInTheDocument();
+    expect(within(topbar()).queryByText('Tháng 10/2026 · đã khóa')).toBeNull();
   });
 
   it('chạm avatar mở menu, chọn "Kho" → /admin/stock (2 chạm)', async () => {

@@ -1,37 +1,28 @@
 import { useId, useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { initialsOf } from '@/lib/initials';
 import { useMe } from '@/lib/me';
-import { lockedYm } from '@/lib/ym';
 import { Icon } from '@/ui/icon';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { currentPeriodQuery } from '@/features/request/request.api';
-import { ADMIN_NAV } from '@/shell/admin-nav';
 import { AdminMenuSheet } from '@/shell/admin-menu-sheet';
 
-const PAGES = ADMIN_NAV.flatMap((g) => g.pages);
 
-// Thanh trên không lặp tiêu đề trang (đã có h1): dòng phụ nói ngữ cảnh kỳ; Giao hàng chỉ làm kỳ khóa gần nhất
-function usePeriodContext(delivery: boolean): string | undefined {
+// Thanh trên không lặp tiêu đề trang (đã có h1): dòng phụ nói kỳ hiện tại, giống nhau ở mọi màn (AD-03)
+function usePeriodContext(): string | undefined {
   const { t } = useTranslation();
   const period = useQuery(currentPeriodQuery());
   if (!period.data?.ym) return undefined;
-  if (!delivery) return t('nav.mobile.currentPeriod', { month: Number(period.data.ym.slice(5, 7)) });
-  const ym = lockedYm(period.data.ym);
-  return t('nav.mobile.lockedMonth', { month: Number(ym.slice(5, 7)), year: ym.slice(0, 4) });
+  return t('nav.mobile.currentPeriod', { month: Number(period.data.ym.slice(5, 7)) });
 }
 
 export function AdminTopbar() {
   const { t } = useTranslation();
   const me = useMe();
-  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const avatarHint = useId();
-  const page = PAGES.find((p) => pathname.startsWith(`/admin/${p.path}`));
-  const delivery = page?.path === 'delivery';
-  const sub = usePeriodContext(delivery);
+  const sub = usePeriodContext();
   const name = me.fullName ?? me.sub;
   return (
     <header className="topbar">

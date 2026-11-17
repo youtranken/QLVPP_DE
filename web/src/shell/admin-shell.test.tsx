@@ -69,7 +69,7 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });
 
-  it('chuông (có số chưa đọc) nằm ở khối người dùng cuối sidebar', async () => {
+  it('chuông (có số chưa đọc) nằm ở khối người dùng trên thanh trên', async () => {
     mockViewport(1280);
     stubShellApi({
       '/api/me/notifications?unread=true&limit=1': () => jsonResponse(200, { items: [], next_cursor: null, unread_count: 2 }),

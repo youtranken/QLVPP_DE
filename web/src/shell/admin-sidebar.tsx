@@ -61,7 +61,7 @@ export function AdminSidebar({ variant = 'side', onNavigate }: { variant?: 'side
       {/* Q2: tên app ở đầu cột trái; menu điện thoại có đầu riêng (AdminMenuSheet) */}
       {variant === 'side' && (
         <Link to="/admin" className="side__brand" aria-label={t('app.title')} title={collapsed ? t('app.title') : undefined}>
-          <i aria-hidden="true">{t('app.logoLetter')}</i>
+          <img src="/vpp-logo.png" alt="" width={30} height={30} />
           {!collapsed && <span aria-hidden="true">{t('app.title')}</span>}
         </Link>
       )}
@@ -81,7 +81,7 @@ export function AdminSidebar({ variant = 'side', onNavigate }: { variant?: 'side
         })}
       </nav>
       {hasPeriod && <AdminPeriodCard period={period.data!} onNavigate={onNavigate} />}
-      <AdminSidebarUser compact={variant === 'side'} />
+      {variant === 'sheet' && <AdminSidebarUser />}
     </div>
   );
 }

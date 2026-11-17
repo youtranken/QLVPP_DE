@@ -3,6 +3,7 @@ const nav = {
     main: 'Điều hướng chính',
     sections: 'Chuyển trang',
     adminMenu: 'Menu quản lý',
+    breadcrumb: 'Đường dẫn',
     userMenu: 'Tài khoản và ngôn ngữ',
     register: 'Đăng ký',
     history: 'Lịch sử',

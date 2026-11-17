@@ -28,7 +28,7 @@ function LogoutButton({ iconOnly = false }: { iconOnly?: boolean }) {
 // Máy tính bảng: cột 72 chỉ còn avatar, bấm mới hiện đổi ngôn ngữ + đăng xuất.
 // Cột 252 (compact): một hàng để 12 mục vừa 1280×720 — đăng xuất là nút biểu tượng, ngôn ngữ sau nút "Ngôn ngữ".
 // Menu điện thoại màn thấp (≤ 700px cao): cùng một hàng tên · VI/EN · nút đăng xuất biểu tượng, chân menu thấp đi ~50px.
-export function AdminSidebarUser({ compact = false }: { compact?: boolean }) {
+export function AdminSidebarUser({ compact = false, inTopbar = false }: { compact?: boolean; inTopbar?: boolean }) {
   const { t } = useTranslation();
   const me = useMe();
   const tablet = useMediaQuery(ADMIN_TABLET_QUERY);
@@ -41,7 +41,7 @@ export function AdminSidebarUser({ compact = false }: { compact?: boolean }) {
   const popover = { ref: panel, id };
   const toggle = { ref: trigger, 'aria-expanded': open, 'aria-controls': open ? id : undefined, onClick: () => setOpen((v) => !v) };
   return (
-    <div ref={box} className="side__user" role="group" aria-label={t('nav.userMenu')} data-layout={row ? 'row' : low ? 'low' : undefined} onKeyDown={onKeyDown}>
+    <div ref={box} className="side__user" role="group" aria-label={t('nav.userMenu')} data-layout={row ? 'row' : low ? 'low' : undefined} data-place={inTopbar ? 'top' : undefined} onKeyDown={onKeyDown}>
       <div className="side__who">
         {tablet ? (
           <button type="button" className="side__avatar" title={name} aria-label={t('nav.userMenu')} {...toggle}>
