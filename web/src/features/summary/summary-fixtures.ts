@@ -46,6 +46,7 @@ export const person = (over: Partial<PersonRow>): PersonRow => ({
   cancelled_qty: 0,
   custom_pending: 0,
   over_max: false,
+  short_items: [],
   updated_at: '2026-11-05T07:20:00.000Z',
   saved_at: '2026-11-05T07:20:00.000Z',
   ...over,

@@ -6,6 +6,8 @@ import { MONTH_CHIPS, type MonthChip } from './month-chips';
 
 const isChip = (v: string | null): v is MonthChip => MONTH_CHIPS.includes(v as MonthChip);
 
+export type MonthView = 'people' | 'items';
+
 // Tham số của trang Tổng hợp cũ: lọc cũ thành chip mới, phần không còn chỗ (xem theo món, chưa đăng ký, sắp hết) thì bỏ
 const LEGACY_FILTER: Record<string, MonthChip | undefined> = {
   pending_delivery: 'undelivered',
@@ -43,7 +45,10 @@ export function useMonthParams(openYm: string | undefined, defaultYm: string | u
   // ?pending=1: link cũ của trang Món ngoài danh mục (G8) → chip "Có món chờ duyệt"
   const pendingLink = params.get('pending') === '1';
   const chip: MonthChip = isChip(rawChip) ? rawChip : pendingLink ? 'pending' : ((legacy && LEGACY_FILTER[legacy]) || (left ? 'undelivered' : 'all'));
-  const hasView = params.has('view');
+  // G1: ?view=items = chế độ Theo món; giá trị khác (link Tổng hợp cũ) bỏ
+  const view: MonthView = params.get('view') === 'items' ? 'items' : 'people';
+  const hasView = params.has('view') && view === 'people';
+  const areas = params.getAll('area');
   const hasItem = params.has('item');
 
   useEffect(() => {
@@ -67,11 +72,15 @@ export function useMonthParams(openYm: string | undefined, defaultYm: string | u
   return {
     ym,
     chip,
+    view,
+    areas,
     q: params.get('q') ?? '',
     left,
     presetReason: (left ? 'user_left' : undefined) as AdjustReason | undefined,
     setYm: (next: string) => update({ ym: next, request: null }),
     setChip: (next: MonthChip) => update({ chip: next === 'all' ? null : next, left: null }),
+    setView: (next: MonthView) => update({ view: next === 'items' ? 'items' : null }),
+    setAreas: (next: readonly string[]) => update({ area: next }),
     setQ: (next: string) => update({ q: next || null }, true),
   };
 }

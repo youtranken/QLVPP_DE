@@ -18,6 +18,7 @@ interface PersonRow {
   cancelled_qty: number;
   custom_pending: number;
   over_max: boolean;
+  short_items: string[];
   updated_at: string;
   saved_at: string;
 }
@@ -90,6 +91,8 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
       cancelled_qty: 2,
       custom_pending: 1,
       over_max: false,
+      // giao đủ món chính → không món nào thiếu tủ
+      short_items: [],
       updated_at: expect.any(String) as string,
       saved_at: expect.any(String) as string,
     });

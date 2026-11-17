@@ -1,11 +1,17 @@
-import { expect, test, type Page } from '@playwright/test';
-import { asRole, devHeaders, expectNoContrastViolations, isMobile, searchMonthPeople, settled, shot } from './helpers';
+import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { asRole, devHeaders, expectNoContrastViolations, isMobile, monthRowAction, pickOption, searchMonthPeople, settled, shot } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
 
 asRole('admin');
 
 const fitsWidth = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 const steps = (page: Page) => page.getByRole('list', { name: /^(Các bước của tháng|Steps of the month)$/ });
+
+// Chip lọc: nhóm radio ở 1280, ô chọn ở 390 (Segmented > 2 lựa chọn)
+async function pickChip(page: Page, info: TestInfo, name: string) {
+  if (isMobile(info)) await pickOption(page.getByRole('combobox', { name: 'Lọc phiếu' }), new RegExp(`^${name}`));
+  else await page.getByRole('radio', { name: new RegExp(`^${name}`) }).click();
+}
 
 async function openMonth(page: Page, ym?: string) {
   await page.goto(ym ? `/admin/month?ym=${ym}` : '/admin/month');
@@ -23,11 +29,10 @@ test.describe('Vòng3-KT Kỳ tháng', () => {
       await expect(page.getByRole('heading', { level: 1, name: `Kỳ tháng ${Number(seed.prevYm.slice(5))}` })).toBeVisible();
       const items = steps(page).getByRole('listitem');
       await expect(items).toHaveCount(4);
-      for (const [i, name] of ['Đăng ký', 'Gửi NCC', 'Nhận hàng', 'Giao'].entries()) await expect(items.nth(i)).toContainText(name);
-      await expect(page.getByRole('button', { name: /^Tất cả/ })).toBeVisible();
-      await expect(page.getByRole('button', { name: /^Có ghi chú/ })).toBeVisible();
-      await expect(page.getByRole('button', { name: /^Chưa giao xong/ })).toBeVisible();
-      await expect(page.getByRole('button', { name: /Chép/ })).toHaveCount(0);
+      for (const [i, name] of ['Đã đặt', 'Gửi NCC', 'Nhận hàng', 'Giao'].entries()) await expect(items.nth(i)).toContainText(name);
+      if (isMobile(info)) await expect(page.getByRole('combobox', { name: 'Lọc phiếu' })).toBeVisible();
+      else for (const chip of [/^Tất cả/, /^Có ghi chú/, /^Chưa giao xong/, /^Có món chờ duyệt/]) await expect(page.getByRole('radio', { name: chip })).toBeVisible();
+      await expect(page.getByRole('button', { name: /Chép tin nhắc/ })).toHaveCount(0);
       await settled(page);
       await shot(page, info, 'vong3-month');
       expect(await fitsWidth(page), 'không cuộn ngang').toBe(true);
@@ -44,19 +49,17 @@ test.describe('Vòng3-KT Kỳ tháng', () => {
       await openMonth(page, seed.prevYm);
       await searchMonthPeople(page, seed.tag);
       const row = page.getByRole('row').filter({ hasText: seed.name });
-      await expect(row.getByRole('progressbar', { name: 'đã giao 0/3 đơn vị' })).toBeVisible();
-      const undelivered = page.getByRole('button', { name: /^Chưa giao xong/ });
-      await undelivered.click();
-      await expect(undelivered).toHaveAttribute('aria-pressed', 'true');
+      await expect(row.getByText('Chưa giao', { exact: true })).toBeVisible();
+      await pickChip(page, info, 'Chưa giao xong');
       await expect(page).toHaveURL(/chip=undelivered/);
       await expect(row).toBeVisible();
-      await row.getByRole('button', { name: `Xem phiếu của ${seed.name}` }).click();
+      await monthRowAction(page, seed.name, 'Xem phiếu');
       const dialog = page.getByRole('dialog', { name: `Phiếu của ${seed.name}` });
       await expect(dialog).toBeVisible();
       await expect(dialog.getByText(seed.items[0].name)).toBeVisible();
       await page.keyboard.press('Escape');
       await expect(dialog).toBeHidden();
-      await row.getByRole('button', { name: `Điều chỉnh phiếu của ${seed.name}` }).click();
+      await monthRowAction(page, seed.name, 'Điều chỉnh phiếu');
       await expect(page).toHaveURL(/request=/);
       await expect(page.getByRole('dialog', { name: `Điều chỉnh phiếu ${seed.name}` })).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
@@ -120,7 +123,43 @@ test.describe('Vòng3-KT Kỳ tháng', () => {
     await page.addInitScript(() => localStorage.setItem('vpp_lang', 'en'));
     await page.goto('/admin/month');
     await expect(page.getByRole('heading', { level: 1, name: /^(January|February|March|April|May|June|July|August|September|October|November|December) period$/ })).toBeVisible();
-    for (const name of ['Sign-up', 'Send to supplier', 'Receiving', 'Delivery']) await expect(steps(page).getByText(name, { exact: true })).toBeVisible();
+    for (const name of ['Ordered', 'Send to supplier', 'Receiving', 'Delivery']) await expect(steps(page).getByText(name, { exact: true })).toBeVisible();
+  });
+
+  test('G1 Kỳ tháng: chỉ người đã đặt, cột Đặt hàng/Tủ, lọc khu, chế độ Theo món', async ({ page, request }, info) => {
+    test.setTimeout(90_000);
+    const seed: Seed = await seedLockedRequest(request, info, [{ stock: 5, qty: 1 }, { stock: 0, qty: 2 }]);
+    try {
+      await openMonth(page, seed.prevYm);
+      await searchMonthPeople(page, seed.tag);
+      const row = page.getByRole('row').filter({ hasText: seed.name });
+      await expect(row.getByText('2 món · 3 SL')).toBeVisible();
+      await expect(row.getByText(/^PW Phòng giao · .*lưu \d{2}\/\d{2}$/)).toBeVisible();
+      await expect(row.getByText(`Thiếu: ${seed.items[1].name}`)).toBeVisible();
+
+      await page.getByRole('button', { name: '+ Thêm khu' }).click();
+      const areas = page.getByRole('dialog', { name: 'Chọn khu' });
+      await areas.getByRole('checkbox', { name: 'PW Phòng giao' }).check();
+      await areas.getByRole('button', { name: 'Áp dụng' }).click();
+      await expect(page).toHaveURL(/area=PW\+Ph%C3%B2ng\+giao/);
+      await expect(page.getByText(/^Đang hiện \d+\/\d+ người · 1 khu$/)).toBeVisible();
+      await expect(row).toBeVisible();
+      expect(await fitsWidth(page), 'không cuộn ngang').toBe(true);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await shot(page, info, 'g1-month-people');
+
+      await page.getByRole('radio', { name: 'Theo món' }).click();
+      await expect(page).toHaveURL(/view=items/);
+      const items = page.getByRole('table', { name: 'Theo món' });
+      const short = items.getByRole('row').filter({ hasText: seed.items[1].name });
+      // Đặt 2, Tủ 0, không nợ → Cần mua 2 (số của Báo cáo)
+      await expect(short.getByRole('cell')).toHaveText([seed.items[1].name, /.+/, '1', '2', '0', '2']);
+      expect(await fitsWidth(page), 'không cuộn ngang').toBe(true);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await shot(page, info, 'g1-month-items');
+    } finally {
+      seed.cleanup();
+    }
   });
 });
 

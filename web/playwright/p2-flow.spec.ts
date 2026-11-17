@@ -1,20 +1,6 @@
 import { mkdirSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import {
-  acquireLock,
-  deleteTestUsers,
-  devHeaders,
-  expectNoContrastViolations,
-  isMobile,
-  psql,
-  removeTestItem,
-  searchMonthPeople,
-  seedActiveUser,
-  seedPwItem,
-  settled,
-  skipNewPeriodPopup,
-  pickOption,
-} from './helpers';
+import { acquireLock, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, monthRowAction, pickOption, psql, removeTestItem, searchMonthPeople, seedActiveUser, seedPwItem, settled, skipNewPeriodPopup } from './helpers';
 import { adminPage } from './sessions';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-17-shots';
@@ -54,8 +40,7 @@ async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom
 // Kỳ khóa: G8 duyệt món ngoài DM trong Xem phiếu (tick "Thêm luôn vào danh mục" → món mới), G2 từ chối dòng y bằng hộp Điều chỉnh
 async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person, custom: string, dropped: string) {
   await searchMonthPeople(admin, tag);
-  const row = admin.getByRole('row').filter({ hasText: a.name });
-  await row.getByRole('button', { name: `Xem phiếu của ${a.name}` }).click();
+  await monthRowAction(admin, a.name, 'Xem phiếu');
   const view = admin.getByRole('dialog', { name: `Phiếu của ${a.name}` });
   const line = view.getByRole('listitem').filter({ hasText: custom });
   await line.getByRole('checkbox', { name: 'Thêm luôn vào danh mục' }).check();
@@ -71,7 +56,7 @@ async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person,
   await snap(admin, info, 'admin-converted');
   await view.getByRole('button', { name: 'Đóng' }).last().click();
 
-  await row.getByRole('button', { name: /^Điều chỉnh phiếu của/ }).click();
+  await monthRowAction(admin, a.name, 'Điều chỉnh phiếu');
   const adjust = admin.getByRole('dialog', { name: `Điều chỉnh phiếu ${a.name}` });
   await adjust.getByRole('checkbox', { name: `Chọn ${dropped}` }).check();
   await adjust.getByRole('radiogroup', { name: `Cách điều chỉnh ${dropped}` }).getByRole('radio', { name: 'Từ chối' }).check();

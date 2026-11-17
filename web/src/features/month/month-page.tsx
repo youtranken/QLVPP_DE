@@ -43,7 +43,20 @@ export function MonthPage() {
       ) : p.ym === openYm ? (
         <MonthOpenView ym={p.ym} />
       ) : (
-        <MonthLockedView ym={p.ym} openYm={openYm} chip={p.chip} q={p.q} left={p.left} presetReason={p.presetReason} onChip={p.setChip} onQ={p.setQ} />
+        <MonthLockedView
+          ym={p.ym}
+          openYm={openYm}
+          chip={p.chip}
+          view={p.view}
+          areas={p.areas}
+          q={p.q}
+          left={p.left}
+          presetReason={p.presetReason}
+          onChip={p.setChip}
+          onView={p.setView}
+          onAreas={p.setAreas}
+          onQ={p.setQ}
+        />
       )}
     </div>
   );

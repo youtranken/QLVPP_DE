@@ -102,7 +102,8 @@ test.describe('Hệ điều khiển', () => {
     test.skip(!isMobile(info), 'chỉ đo ở điện thoại');
     await page.setViewportSize({ width: 320, height: 568 });
     await open(page, 'admin', '/admin/month?ym=2026-12');
-    await page.getByRole('button', { name: /^Xem phiếu của / }).first().click();
+    await page.getByRole('button', { name: /^Thao tác cho / }).first().click();
+    await page.getByRole('menuitem', { name: 'Xem phiếu' }).click();
     const sheet = page.getByRole('dialog');
     await expect(sheet).toBeVisible();
     const close = sheet.locator('.ovp-foot').getByRole('button', { name: 'Đóng' });
@@ -123,7 +124,8 @@ test.describe('Hệ điều khiển', () => {
           .map(({ b, r }) => `${b.getAttribute('aria-label') ?? b.textContent?.trim()} ${Math.round(r.width)}×${Math.round(r.height)}`),
       );
     await open(page, 'admin', '/admin/month?ym=2026-12');
-    await page.getByRole('button', { name: /^Xem phiếu của / }).first().click();
+    await page.getByRole('button', { name: /^Thao tác cho / }).first().click();
+    await page.getByRole('menuitem', { name: 'Xem phiếu' }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
     expect.soft(await small(), 'Xem phiếu').toEqual([]);
     await open(page, 'admin', '/admin/delivery');

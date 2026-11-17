@@ -42,7 +42,7 @@ export async function seedLockedRequest(request: APIRequestContext, info: TestIn
   // created_at tăng dần theo thứ tự seed: listLines xếp theo created_at, id → thứ tự dòng và ảnh chụp tất định
   const values = lines.map((l, i) => `('${items[i].id}', ${l.qty}, ${i})`).join(', ');
   const requestId = psql(`WITH r AS (
-      INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('${prevYm}-01', '${sub}', '${sub}') RETURNING id
+      INSERT INTO requests (period_ym, user_sub, department, created_by_sub) VALUES ('${prevYm}-01', '${sub}', 'PW Phòng giao', '${sub}') RETURNING id
     ), l AS (
       INSERT INTO request_lines (request_id, item_id, qty, created_at)
       SELECT r.id, x.item_id::uuid, x.qty, now() + x.pos * interval '1 second'

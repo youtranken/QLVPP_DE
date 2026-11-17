@@ -1,7 +1,8 @@
 import { useCallback, useLayoutEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-export type UrlPatch = Record<string, string | null>;
+// Mảng: khóa lặp (?area=A&area=B), mảng rỗng = bỏ khóa
+export type UrlPatch = Record<string, string | readonly string[] | null>;
 
 // Ô tìm (useUrlSearchBox) cần biết khi ai khác ghi khóa của nó ("Xóa lọc" đặt q về rỗng trong lúc chữ vừa gõ còn chờ
 // debounce): q trên URL vẫn rỗng → không đổi giá trị, ô không có cách nào khác để biết mà bỏ chữ đang chờ
@@ -28,7 +29,11 @@ export function useUrlPatch() {
       const next = new URLSearchParams(latest.current);
       for (const [k, v] of Object.entries(patch)) {
         if (v === null) next.delete(k);
-        else next.set(k, v);
+        else if (typeof v === 'string') next.set(k, v);
+        else {
+          next.delete(k);
+          for (const x of v) next.append(k, x);
+        }
       }
       latest.current = next;
       setParams(next, { replace });

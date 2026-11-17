@@ -20,9 +20,9 @@ describe('MonthPage: ?left=1 chỉ người đã nghỉ', () => {
     stubMonthApi(undefined, [...PEOPLE, lan]);
     open('/admin/month?ym=2026-10&left=1');
     const t = await table();
-    expect(await t.findByRole('button', { name: 'Xem phiếu của Võ Thị Lan' })).toBeInTheDocument();
-    expect(t.queryByRole('button', { name: 'Xem phiếu của Nhân viên A' })).toBeNull();
-    expect(t.queryByRole('button', { name: 'Xem phiếu của Nhân viên B' })).toBeNull();
+    expect(await t.findByRole('button', { name: 'Thao tác cho Võ Thị Lan' })).toBeInTheDocument();
+    expect(t.queryByRole('button', { name: 'Thao tác cho Nhân viên A' })).toBeNull();
+    expect(t.queryByRole('button', { name: 'Thao tác cho Nhân viên B' })).toBeNull();
   });
 });
 

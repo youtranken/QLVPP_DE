@@ -1,20 +1,6 @@
 import { mkdirSync, readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import {
-  acquireLock,
-  asRole,
-  deleteTestUsers,
-  devHeaders,
-  expectNoContrastViolations,
-  isMobile,
-  psql,
-  removeTestItem,
-  searchMonthPeople,
-  seedActiveUser,
-  seedPwItem,
-  settled,
-  pendingConfirm,
-} from './helpers';
+import { acquireLock, asRole, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, monthRowAction, pendingConfirm, psql, removeTestItem, searchMonthPeople, seedActiveUser, seedPwItem, settled } from './helpers';
 import { seedLockedRequest } from './locked-request';
 import { PRIVATE_YM, clearPrivateSnapshots } from './private-period';
 
@@ -83,7 +69,7 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
     try {
       await page.goto(`/admin/month?ym=${prevYm}`);
       await searchMonthPeople(page, tag);
-      await page.getByRole('row').filter({ hasText: name }).getByRole('button', { name: /^Điều chỉnh phiếu của/ }).click();
+      await monthRowAction(page, name, 'Điều chỉnh phiếu');
 
       const dialog = page.getByRole('dialog', { name: `Điều chỉnh phiếu ${name}` });
       await expect(dialog).toBeVisible();
@@ -154,7 +140,7 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
     try {
       await page.goto(`/admin/month?ym=${seed.prevYm}`);
       await searchMonthPeople(page, seed.tag);
-      await page.getByRole('row').filter({ hasText: seed.name }).getByRole('button', { name: /^Điều chỉnh phiếu của/ }).click();
+      await monthRowAction(page, seed.name, 'Điều chỉnh phiếu');
       const dialog = page.getByRole('dialog', { name: `Điều chỉnh phiếu ${seed.name}` });
       const line = dialog.getByRole('listitem').filter({ hasText: item.name });
       await expect(line).toContainText('5 cái');
@@ -187,7 +173,7 @@ test.describe('Tổng hợp — giảm sau khi đã gửi NCC (Plan v2-D, Task 1
       expect(made.status()).toBe(201);
       await page.goto(`/admin/month?ym=${PRIVATE_YM}`);
       await searchMonthPeople(page, seed.tag);
-      await page.getByRole('row').filter({ hasText: seed.name }).getByRole('button', { name: /^Điều chỉnh phiếu của/ }).click();
+      await monthRowAction(page, seed.name, 'Điều chỉnh phiếu');
       const dialog = page.getByRole('dialog', { name: `Điều chỉnh phiếu ${seed.name}` });
       const line = dialog.getByRole('listitem').filter({ hasText: item.name });
       await expect(line).toContainText('5 cái');

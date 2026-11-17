@@ -16,22 +16,31 @@ import { keepViewing } from './keep-viewing';
 import { MonthLeftReminder } from './month-left-reminder';
 import { MonthPeopleTable } from './month-people-table';
 import { MonthStrip } from './month-strip';
+import { MonthAreaFilter } from './month-area-filter';
+import { MonthItemsTable } from './month-items-table';
+import { MonthUnregisteredCopy } from './month-unregistered-copy';
+import { MonthViewBar } from './month-view-bar';
+import type { MonthView } from './use-month-params';
 import { monthSteps } from './month-steps';
 
 interface Props {
   ym: string;
   openYm: string;
   chip: MonthChip;
+  view: MonthView;
+  areas: readonly string[];
   q: string;
   left: boolean;
   presetReason: AdjustReason | undefined;
   onChip: (c: MonthChip) => void;
+  onView: (v: MonthView) => void;
+  onAreas: (a: readonly string[]) => void;
   onQ: (q: string) => void;
 }
 
 // Kỳ khóa: dải 4 bước, nhắc người đã nghỉ (chỉ kỳ khóa gần nhất), bảng người.
 // Kỳ cũ vẫn tính đủ 4 bước từ dữ liệu thật (send-state, arrivals-plan nhận mọi kỳ đã khóa): "—" đọc như chưa làm gì
-export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChip, onQ }: Props) {
+export function MonthLockedView({ ym, openYm, chip, view, areas, q, left, presetReason, onChip, onView, onAreas, onQ }: Props) {
   const { t } = useTranslation();
   const latest = ym === lockedYm(openYm);
   const summary = usePeriodSummary(ym);
@@ -42,7 +51,11 @@ export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChi
   const [viewing, setViewing] = useState<string | null>(null);
   const shown = q ? filtered : all;
   // ?left=1: chỉ người đã nghỉ (còn phần chưa nhận ở chip "Chưa giao xong")
-  const visible = useMemo(() => shown.rows.filter((r) => matchesChip(r, chip) && (!left || r.user_status !== 'active')), [shown.rows, chip, left]);
+  const noDept = t('month.table.noDepartment');
+  const areaOf = useCallback((r: PersonRow) => r.department ?? noDept, [noDept]);
+  const areaOptions = useMemo(() => [...new Set(all.rows.map(areaOf))].sort((a, b) => a.localeCompare(b, 'vi')), [all.rows, areaOf]);
+  const inAreas = useCallback((r: PersonRow) => areas.length === 0 || areas.includes(areaOf(r)), [areas, areaOf]);
+  const visible = useMemo(() => shown.rows.filter((r) => matchesChip(r, chip) && (!left || r.user_status !== 'active') && inAreas(r)), [shown.rows, chip, left, inAreas]);
   const open = useCallback((r: PersonRow) => setViewing(r.request_id), []);
   const panel = usePanelParam('request', { order: useMemo(() => visible.map((r) => r.request_id), [visible]) });
   const viewRows = useMemo(() => keepViewing(visible, shown.rows, viewing), [visible, shown.rows, viewing]);
@@ -70,22 +83,32 @@ export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChi
   return (
     <>
       <MonthStrip steps={steps} />
+      <MonthUnregisteredCopy ym={ym} />
       {latest && <MonthLeftReminder ym={ym} />}
-      <MonthChips rows={shown.rows} loading={partial(shown)} chip={chip} q={q} onChip={onChip} onQ={onQ} />
-      {shown.query.isError ? (
+      <MonthViewBar
+        view={view}
+        onView={onView}
+        filter={view === 'people' && <MonthAreaFilter options={areaOptions} value={areas} onChange={onAreas} />}
+        meta={view === 'people' && !partial(all) ? { shown: visible.length, total: all.rows.length, areas: areas.length } : null}
+      />
+      {view === 'people' && <MonthChips rows={shown.rows} loading={partial(shown)} chip={chip} q={q} onChip={onChip} onQ={onQ} />}
+      {view === 'items' ? (
+        <MonthItemsTable ym={ym} />
+      ) : shown.query.isError ? (
         <LoadError onRetry={() => void shown.query.refetch()} />
       ) : (
         <MonthPeopleTable
           rows={visible}
           loading={shown.query.isPending}
           busy={shown.query.isPlaceholderData}
-          narrowed={Boolean(q) || chip !== 'all' || left}
+          narrowed={Boolean(q) || chip !== 'all' || left || areas.length > 0}
           activeId={panel.id ?? undefined}
           onView={open}
           onAdjust={panel.open}
           onClear={() => {
             onChip('all');
             onQ('');
+            onAreas([]);
           }}
         />
       )}

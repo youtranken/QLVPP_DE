@@ -305,3 +305,9 @@ export async function pickOption(box: Locator, name: string | RegExp) {
   const id = await box.getAttribute('aria-controls');
   await box.page().locator(`[id="${id}"]`).getByRole('option', { name, exact: typeof name === 'string' }).click();
 }
+
+// G1: Kỳ tháng (kỳ khóa) gom Xem phiếu / Điều chỉnh phiếu vào nút ⋯ của hàng
+export async function monthRowAction(page: Page, person: string, action: 'Xem phiếu' | 'Điều chỉnh phiếu') {
+  await page.getByRole('row').filter({ hasText: person }).getByRole('button', { name: `Thao tác cho ${person}` }).click();
+  await page.getByRole('menuitem', { name: action }).click();
+}

@@ -39,6 +39,8 @@ export interface PersonRow {
   custom_pending: number;
   // Có dòng giữ số lớn hơn tối đa/tháng hiện tại (tối đa bị hạ sau khi lưu)
   over_max: boolean;
+  // Món còn phải giao mà tủ không đủ cho tổng còn phải giao của món trong kỳ
+  short_items: string[];
   updated_at: string;
   // Giờ nhân viên lưu phiếu ("Lưu lúc"); updated_at còn đổi theo việc Hành chính làm
   saved_at: string;

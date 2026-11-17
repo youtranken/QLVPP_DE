@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Browser, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, removeTestItem, searchMonthPeople, seedActiveUser } from './helpers';
+import { acquireLock, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, monthRowAction, removeTestItem, searchMonthPeople, seedActiveUser } from './helpers';
 import { seedLockedCustomLines } from './locked-request';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-16-shots';
@@ -37,7 +37,7 @@ async function openRequest(page: Page, prevYm: string, tag: string, person: stri
   await page.goto(`/admin/month?ym=${prevYm}&chip=pending`);
   await expect(page.getByRole('radio', { name: /^Có món chờ duyệt/ }).or(page.getByRole('combobox', { name: 'Lọc phiếu' }))).toBeVisible();
   await searchMonthPeople(page, tag);
-  await page.getByRole('row').filter({ hasText: person }).getByRole('button', { name: `Xem phiếu của ${person}` }).click();
+  await monthRowAction(page, person, 'Xem phiếu');
   return page.getByRole('dialog', { name: `Phiếu của ${person}` });
 }
 

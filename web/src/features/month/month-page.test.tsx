@@ -4,7 +4,7 @@ import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { jsonResponse } from '@/test/test-utils';
-import { LOCKED, calledUrls, stubMonthApi } from './month-fixtures';
+import { LOCKED, PEOPLE, calledUrls, stubMonthApi } from './month-fixtures';
 
 const search = () => screen.getByTestId('location-search').textContent ?? '';
 const open = (path = '/admin/month?ym=2026-10') => {
@@ -17,35 +17,31 @@ const rowOf = (name: string) => screen.getByText(name, { selector: 'tr *' }).clo
 afterEach(() => vi.unstubAllGlobals());
 
 describe('MonthPage: kỳ khóa', () => {
-  it('h1 "Kỳ tháng 10" và dải 4 bước gọn: Đăng ký 4/5 · Gửi NCC 11:50 08/11 · Nhận hàng 19/21 món · Giao 1/4 phiếu', async () => {
+  it('h1 "Kỳ tháng 10" và dải 4 bước gọn: Đã đặt 4/5 · Gửi NCC 11:50 08/11 · Nhận hàng 19/21 món · Giao 1/4 phiếu', async () => {
     stubMonthApi();
     open();
     expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 10' })).toBeInTheDocument();
     const steps = await screen.findByRole('list', { name: 'Các bước của tháng' });
     const text = within(steps).getAllByRole('listitem').map((li) => li.textContent);
-    expect(text).toEqual(['Đăng ký4/5', 'Gửi NCC11:50 08/11', 'Nhận hàng19/21 món', 'Giao1/4 phiếu']);
+    expect(text).toEqual(['Đã đặt4/5', 'Gửi NCC11:50 08/11', 'Nhận hàng19/21 món', 'Giao1/4 phiếu']);
   });
 
-  it('bảng: Người · Nhóm · Số món · Tổng · Giao · Ghi chú · Lưu lúc, nhóm theo phòng "Phòng Test · 4 người", "Chưa có phòng · 1 người" cuối', async () => {
+  it('G1: không còn hàng nhóm theo phòng (phòng nằm ở dòng phụ của Người, lọc bằng khu)', async () => {
     stubMonthApi();
     open();
     const t = await table();
-    const headers = t.getAllByRole('columnheader').map((h) => h.textContent);
-    expect(headers.slice(0, 7)).toEqual(['Người', 'Nhóm', 'Số món', 'Tổng', 'Giao', 'Ghi chú', 'Lưu lúc']);
-    const groups = t.getAllByRole('row').map((r) => r.textContent ?? '').filter((x) => /\d người/.test(x) && !x.includes('Điều chỉnh'));
-    expect(groups[0]).toContain('Phòng Test');
-    expect(groups[0]).toContain('4 người');
-    expect(groups.at(-1)).toContain('Chưa có phòng');
+    expect(t.getAllByRole('row').map((r) => r.textContent ?? '').filter((x) => /^(Phòng Test|Chưa có phòng)\d+ người/.test(x))).toEqual([]);
+    expect(t.getAllByRole('row')).toHaveLength(PEOPLE.length + 1);
   });
 
-  it('Ghi chú: "Vượt tối đa", "Adm D&E đã điều chỉnh", "Không có gì để giao", "Món ngoài danh mục"', async () => {
+  it('Ghi chú: "Vượt tối đa", "Adm D&E đã điều chỉnh", "Không có gì để giao" (món chờ duyệt đã sang cột Đặt hàng)', async () => {
     stubMonthApi();
     open();
     const t = await table();
     expect(t.getAllByText('Vượt tối đa').length).toBe(2);
     expect(t.getByText('Adm D&E đã điều chỉnh')).toBeInTheDocument();
     expect(t.getByText('Không có gì để giao')).toBeInTheDocument();
-    expect(t.getByText('Món ngoài danh mục')).toBeInTheDocument();
+    expect(t.queryByText('Món ngoài danh mục')).toBeNull();
   });
 
   it('cột Giao dùng nhãn trạng thái chung: B "Đã giao 2/6", E "Đã nhận đủ", A "Chưa giao"', async () => {
@@ -105,22 +101,24 @@ describe('MonthPage: kỳ khóa', () => {
     expect(screen.getByRole('radio', { name: /^Chưa giao xong/ })).toHaveTextContent('3');
   });
 
-  it('"Xem" mở popup phiếu (RegistrationDialog) với ‹ › theo thứ tự bảng', async () => {
+  it('⋯ → "Xem phiếu" mở popup phiếu (RegistrationDialog) với ‹ › theo thứ tự bảng', async () => {
     stubMonthApi();
     open();
     const t = await table();
-    await userEvent.click(t.getByRole('button', { name: 'Xem phiếu của Nhân viên A' }));
+    await userEvent.click(t.getByRole('button', { name: 'Thao tác cho Nhân viên A' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Xem phiếu' }));
     const dialog = await screen.findByRole('dialog', { name: 'Phiếu của Nhân viên A' });
     expect(within(dialog).queryByText(/Nhân viên còn sửa được tới/)).toBeNull();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Người sau' }));
     expect(await screen.findByRole('dialog', { name: 'Phiếu của Nhân viên B' })).toBeInTheDocument();
   });
 
-  it('"Điều chỉnh" mở AdjustDialog ?request=<id>; mở từ ?left=1 chọn sẵn Người đã nghỉ', async () => {
+  it('⋯ → "Điều chỉnh phiếu" mở AdjustDialog ?request=<id>', async () => {
     stubMonthApi();
     open();
     const t = await table();
-    await userEvent.click(t.getByRole('button', { name: 'Điều chỉnh phiếu của Nhân viên A' }));
+    await userEvent.click(t.getByRole('button', { name: 'Thao tác cho Nhân viên A' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Điều chỉnh phiếu' }));
     await waitFor(() => expect(search()).toContain('request=r-a'));
     expect(await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Nhân viên A' })).toBeInTheDocument();
   });
@@ -129,7 +127,7 @@ describe('MonthPage: kỳ khóa', () => {
     stubMonthApi();
     open();
     await table();
-    expect(screen.queryByRole('button', { name: /Chép/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Chép tin nhắc/ })).toBeNull();
     expect(screen.queryByText(/chưa đăng ký/i)).toBeNull();
     expect(screen.queryByText(/đơn vị ·|· \d+ món/)).toBeNull();
   });
@@ -138,9 +136,10 @@ describe('MonthPage: kỳ khóa', () => {
     const f = stubMonthApi();
     open();
     const t = await table();
+    expect(t.getByRole('button', { name: 'Thao tác cho Nguyễn Văn An' })).toBeInTheDocument();
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người hoặc phòng' }), 'phòng test');
     await waitFor(() => expect(calledUrls(f).some((u) => u.includes('q=ph%C3%B2ng+test'))).toBe(true));
-    await waitFor(() => expect(t.queryByRole('button', { name: 'Xem phiếu của Nguyễn Văn An' })).toBeNull());
+    await waitFor(() => expect(t.queryByRole('button', { name: 'Thao tác cho Nguyễn Văn An' })).toBeNull());
   });
 });
 
@@ -150,7 +149,7 @@ describe('MonthPage: kỳ cũ (không phải kỳ khóa gần nhất)', () => {
     open('/admin/month?ym=2026-09');
     expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 9' })).toBeInTheDocument();
     const steps = await screen.findByRole('list', { name: 'Các bước của tháng' });
-    await waitFor(() => expect(within(steps).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Đăng ký4/5', 'Gửi NCC11:50 08/11', 'Nhận hàng19/21 món', 'Giao1/4 phiếu']));
+    await waitFor(() => expect(within(steps).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Đã đặt4/5', 'Gửi NCC11:50 08/11', 'Nhận hàng19/21 món', 'Giao1/4 phiếu']));
     expect(within(steps).queryByText('—')).toBeNull();
     expect(within(steps).getByRole('link', { name: /Gửi NCC/ })).toHaveAttribute('href', '/admin/reports?ym=2026-09');
     const urls = calledUrls(f);

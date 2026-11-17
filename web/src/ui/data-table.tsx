@@ -54,6 +54,7 @@ interface DataTableProps<T> {
   groupBy?: GroupBy<T>;
   activeRowId?: string;
   density?: 'compact';
+  ariaLabel?: string;
   busy?: boolean;
   collapsed?: ReadonlySet<string>;
   onCollapsedChange?: (next: ReadonlySet<string>) => void;
@@ -80,6 +81,7 @@ export function DataTable<T>({
   groupBy,
   activeRowId,
   density,
+  ariaLabel,
   busy,
   collapsed: controlledCollapsed,
   onCollapsedChange,
@@ -163,6 +165,7 @@ export function DataTable<T>({
             .filter(Boolean)
             .join(' ')}
           data-density={density}
+          aria-label={ariaLabel}
           aria-busy={busy}
           style={fixed ? ({ '--dt-min': `${fixedMinWidth(leafColumns.map((c) => c.columnDef.meta?.width), !!selection, leafColumns.map((c) => c.columnDef.meta?.minWidth))}rem` } as CSSProperties) : undefined}
         >

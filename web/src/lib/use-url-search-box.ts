@@ -34,7 +34,8 @@ export function useUrlSearchBox(q: string, setQ: (v: string) => void, param: str
     if (param === null) return;
     return onUrlPatch((patch) => {
       if (pushing.current || !(param in patch)) return;
-      const v = patch[param] ?? '';
+      const raw = patch[param];
+      const v = typeof raw === 'string' ? raw : '';
       pushed.current = v;
       setText(v);
     });

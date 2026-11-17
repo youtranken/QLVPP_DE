@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
-import { asRole, expectNoContrastViolations, isMobile, removeTestItem, seedPwItem } from './helpers';
+import { asRole, expectNoContrastViolations, isMobile, monthRowAction, removeTestItem, seedPwItem } from './helpers';
 
 // Dữ liệu giả cho trang chỉ đọc: không tra người/phiếu/dòng có sẵn của DB dev chung
 const PW_PERSON_LINE = {
@@ -86,6 +86,7 @@ const PW_ROW = {
   cancelled_qty: 0,
   custom_pending: 0,
   over_max: false,
+  short_items: [],
   updated_at: '2000-01-05T07:20:00.000Z',
   saved_at: '2000-01-05T07:20:00.000Z',
 };
@@ -134,7 +135,8 @@ async function expectOverlay(page: Page, info: TestInfo, behind: Locator, open: 
   expect(new URL(page.url()).searchParams.has(param), `?${param}= trên URL`).toBe(true);
   expect(await pageBox(), 'lưới không bị đẩy/co').toEqual(before);
   if (isMobile(info)) {
-    await expect(panel.getByRole('button', { name: 'Đóng' })).toBeVisible();
+    // × ở đầu panel (chân panel có thể có thêm nút chữ "Đóng")
+    await expect(panel.getByRole('button', { name: 'Đóng' }).first()).toBeVisible();
     expect(Math.round((await panel.boundingBox())!.width)).toBe(390);
     const scroll = await page.evaluate(() => document.scrollingElement!.scrollWidth - document.documentElement.clientWidth);
     expect(scroll, 'không cuộn ngang').toBeLessThanOrEqual(0);
@@ -167,7 +169,7 @@ test.describe('V2D-17b panel phủ ở Giao hàng, Tổng hợp, Tủ / Kho, Nh�
     // Không ym thì trang mở kỳ đang giao (hoặc kỳ đăng ký khi kỳ giao rỗng) — ghim kỳ khóa giả để mock khớp
     await page.goto('/admin/month?ym=2000-01');
     const table = page.getByRole('table').first();
-    await expectOverlay(page, info, table, () => page.getByRole('button', { name: `Điều chỉnh phiếu của ${PW_ROW.full_name}` }).click(), page.getByRole('dialog', { name: 'Điều chỉnh phiếu' }), 'request');
+    await expectOverlay(page, info, table, () => monthRowAction(page, PW_ROW.full_name!, 'Điều chỉnh phiếu'), page.getByRole('dialog', { name: 'Điều chỉnh phiếu' }), 'request');
   });
 
   test('V2D-17b Nhân viên: bấm tên mở panel người', async ({ page }, info) => {
@@ -224,7 +226,17 @@ test.describe('Đóng panel/hộp trả focus về nút mở', () => {
   test('Kỳ tháng: Điều chỉnh phiếu', async ({ page }) => {
     await mockSummary(page);
     await page.goto('/admin/month?ym=2000-01');
-    await enterThenEsc(page, page.getByRole('button', { name: `Điều chỉnh phiếu của ${PW_ROW.full_name}` }), page.getByRole('dialog', { name: 'Điều chỉnh phiếu' }));
+    // ⋯ → Enter mở menu (focus mục đầu) → ↓ "Điều chỉnh phiếu" → Enter; Esc đóng hộp, focus về ⋯
+    const more = page.getByRole('button', { name: `Thao tác cho ${PW_ROW.full_name}` });
+    await more.focus();
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    const dialog = page.getByRole('dialog', { name: 'Điều chỉnh phiếu' });
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await expect(more).toBeFocused();
   });
 
   test('Tủ / Kho: Lịch sử nhập xuất; trang Xuất lẻ: Xuất lẻ một món', async ({ page }) => {

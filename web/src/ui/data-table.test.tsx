@@ -261,4 +261,9 @@ describe('DataTable ô trống', () => {
     expect(row).not.toContain('_getDefaultColumnDef');
     expect(table).toContain('defaultColumn: { cell: EmptyAwareCell }');
   });
+
+  it('ariaLabel → bảng có tên để đọc màn hình (và getByRole table theo tên)', () => {
+    renderWithI18n(<DataTable data={DATA} columns={COLUMNS} emptyText="—" ariaLabel="Theo món" />);
+    expect(screen.getByRole('table', { name: 'Theo món' })).toBeInTheDocument();
+  });
 });
