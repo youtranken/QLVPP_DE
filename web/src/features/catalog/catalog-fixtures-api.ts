@@ -12,16 +12,19 @@ interface Options {
   patch?: (id: string, body: ItemPayload) => Response | Promise<Response>;
   // GET admin/items/:id/pending-arrival theo id; thiếu → remaining 0 (không đang về); 'error' → 500
   pending?: Record<string, unknown>;
+  // GET admin/stock (trạng thái tủ của server, cùng nguồn với Tủ/Kho)
+  stock?: { item_id: string; stock_state: string }[];
 }
 
 // Server giả giữ trạng thái: PATCH thành công đổi món, lần tải lại trả bản mới
-export function stubCatalog({ items, categories = CATEGORIES, patch, pending = {} }: Options) {
+export function stubCatalog({ items, categories = CATEGORIES, patch, pending = {}, stock = [] }: Options) {
   let list = items.map((i) => ({ ...i }));
   let cats = categories.map((c) => ({ ...c }));
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     const path = new URL(url, 'http://x').pathname;
     if (path === '/api/admin/items' && !init?.method) return jsonResponse(200, list);
     if (path === '/api/item-categories') return jsonResponse(200, cats);
+    if (path === '/api/admin/stock') return jsonResponse(200, stock);
     const waiting = /^\/api\/admin\/items\/([^/]+)\/pending-arrival$/.exec(path);
     if (waiting && pending[waiting[1]] === 'error') return jsonResponse(500, { code: 'X' });
     if (waiting) return jsonResponse(200, pending[waiting[1]] ?? { remaining: 0 });

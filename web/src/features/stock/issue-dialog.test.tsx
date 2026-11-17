@@ -6,13 +6,13 @@ import { makeRow, mutationCall, mutationCount, stubMutation, wrap } from './stoc
 const URL = '/api/admin/items/i-1/issue';
 
 describe('IssueDialog', () => {
-  it('tiêu đề "Xuất lẻ Giấy A4"; tồn 3 gõ 3 → "Tồn sau khi lưu 0" và gửi {qty:3}', async () => {
+  it('tiêu đề "Xuất lẻ Giấy A4"; tồn 3 gõ 3 → "Tủ sau khi lưu 0" và gửi {qty:3}', async () => {
     const f = stubMutation(jsonResponse(201, { stock_qty: 0 }));
     const onClose = vi.fn();
     wrap(<IssueDialog item={makeRow(3)} onClose={onClose} />);
     expect(screen.getByRole('dialog', { name: 'Xuất lẻ Giấy A4' })).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText(/^Số lượng/), '3');
-    expect(screen.getByText('Tồn sau khi lưu 0')).toBeInTheDocument();
+    expect(screen.getByText('Tủ sau khi lưu 0')).toBeInTheDocument();
     await userEvent.click(screen.getByLabelText('Dùng chung'));
     await userEvent.type(screen.getByLabelText(/^Lý do/), 'Máy in tầng 2');
     await userEvent.click(screen.getByRole('button', { name: 'Xuất' }));
@@ -27,7 +27,7 @@ describe('IssueDialog', () => {
     const f = stubMutation(jsonResponse(201, { stock_qty: 0 }));
     wrap(<IssueDialog item={makeRow(3)} onClose={vi.fn()} />);
     await userEvent.type(screen.getByLabelText(/^Số lượng/), '4');
-    expect(screen.queryByText(/Tồn sau khi lưu/)).toBeNull();
+    expect(screen.queryByText(/Tủ sau khi lưu/)).toBeNull();
     expect(screen.getByLabelText(/^Số lượng/)).toHaveAccessibleDescription('Tủ chỉ còn 3 — nhập từ 1 đến 3');
     expect(screen.getByRole('button', { name: 'Xuất' })).toBeDisabled();
     await userEvent.clear(screen.getByLabelText(/^Số lượng/));

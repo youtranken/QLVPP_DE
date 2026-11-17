@@ -34,7 +34,7 @@ const reports = {
       colUnit: 'ĐVT',
       colRequested: 'Chưa giao kỳ này',
       colBacklog: 'Nợ kỳ trước',
-      colStock: 'Tồn',
+      colStock: 'Tủ',
       colNeed: 'Tổng cần',
       colOrder: 'Đề nghị',
       colReceived: 'Đã về',

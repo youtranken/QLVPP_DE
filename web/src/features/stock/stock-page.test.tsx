@@ -239,12 +239,12 @@ describe('StockPage', () => {
       stubStockApi(issuesApi);
       renderApp(makeMe('admin'), '/admin/stock');
       await screen.findByText('Giấy A4');
-      expect(screen.getByRole('radio', { name: 'Tồn kho' })).toBeChecked();
+      expect(screen.getByRole('radio', { name: 'Trong tủ' })).toBeChecked();
       await userEvent.click(screen.getByRole('radio', { name: 'Xuất lẻ' }));
       expect(screen.getByTestId('location-search')).toHaveTextContent('?tab=issues');
       expect(await screen.findByText('Trần Thị Bình')).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: 'Người nhận' })).toBeInTheDocument();
-      await userEvent.click(screen.getByRole('radio', { name: 'Tồn kho' }));
+      await userEvent.click(screen.getByRole('radio', { name: 'Trong tủ' }));
       expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
       expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
     });
@@ -277,7 +277,7 @@ describe('StockPage', () => {
       const list = within(dialog).getByRole('list', { name: 'Món còn trong tủ' });
       expect(within(list).queryByText('Kẹp giấy')).toBeNull();
       await userEvent.click(within(list).getByRole('button', { name: /^Giấy A4/ }));
-      expect(within(dialog).getByText('Tồn hiện tại 6 ram')).toBeInTheDocument();
+      expect(within(dialog).getByText('Tủ: 6 ram')).toBeInTheDocument();
     });
 
     it('tủ trống mọi món → "Xuất lẻ một món" khóa, lý do "Tủ đang trống"; còn 1 món có hàng → nút bật', async () => {
@@ -295,7 +295,7 @@ describe('StockPage', () => {
 
     it('tab lạ rơi về Tồn kho', async () => {
       await open('/admin/stock?tab=zzz');
-      expect(screen.getByRole('radio', { name: 'Tồn kho' })).toBeChecked();
+      expect(screen.getByRole('radio', { name: 'Trong tủ' })).toBeChecked();
     });
   });
 });

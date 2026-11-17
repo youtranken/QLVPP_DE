@@ -89,13 +89,13 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       const deliver = page.getByRole('dialog', { name: `Giao bổ sung ${a.name} cho ${seed.name}` });
       const qty = deliver.getByLabel('Số lượng giao');
       await expect(qty).toHaveValue('2');
-      await expect(deliver.getByText('Tồn sau khi giao 7')).toBeVisible();
+      await expect(deliver.getByText('Tủ sau khi giao 7')).toBeVisible();
       await expect(deliver.getByRole('button', { name: /^Thêm/ })).toBeDisabled();
       await qty.fill('3');
       await expect(qty).toHaveValue('2');
       await deliver.getByRole('button', { name: /^Bớt/ }).click();
       await expect(qty).toHaveValue('1');
-      await expect(deliver.getByText('Tồn sau khi giao 8')).toBeVisible();
+      await expect(deliver.getByText('Tủ sau khi giao 8')).toBeVisible();
       await deliver.getByRole('button', { name: 'Giao', exact: true }).click();
       await expect(deliver).toHaveCount(0);
       await expect(row.getByRole('cell').nth(4)).toHaveText('1');

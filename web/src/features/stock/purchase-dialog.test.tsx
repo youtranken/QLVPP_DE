@@ -7,14 +7,14 @@ import { makeRow, mutationCall, mutationCount, stubMutation, wrap } from './stoc
 const URL = '/api/admin/items/i-1/stock';
 
 describe('PurchaseDialog', () => {
-  it('tiêu đề "Nhập ngoài kỳ (tự mua lẻ) Giấy A4", "Tồn hiện tại 5 ram", gõ 10 → "Tồn sau khi lưu 15"', async () => {
+  it('tiêu đề "Nhập ngoài kỳ (tự mua lẻ) Giấy A4", "Tủ: 5 ram", gõ 10 → "Tủ sau khi lưu 15"', async () => {
     stubMutation(jsonResponse(201, {}));
     wrap(<PurchaseDialog item={makeRow(5)} onClose={vi.fn()} />);
     expect(screen.getByRole('dialog', { name: 'Nhập ngoài kỳ (tự mua lẻ) Giấy A4' })).toBeInTheDocument();
-    expect(screen.getByText('Tồn hiện tại 5 ram')).toBeInTheDocument();
-    expect(screen.queryByText(/Tồn sau khi lưu/)).toBeNull();
+    expect(screen.getByText('Tủ: 5 ram')).toBeInTheDocument();
+    expect(screen.queryByText(/Tủ sau khi lưu/)).toBeNull();
     await userEvent.type(screen.getByLabelText(/^Số lượng nhập/), '10');
-    expect(screen.getByText('Tồn sau khi lưu 15')).toBeInTheDocument();
+    expect(screen.getByText('Tủ sau khi lưu 15')).toBeInTheDocument();
   });
 
   it('nhập 10 kèm ghi chú → POST stock {delta: 10, reason: purchase, note} kèm CSRF, đóng, toast "Đã nhập 10 ram Giấy A4"', async () => {

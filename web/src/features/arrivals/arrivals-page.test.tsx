@@ -14,13 +14,13 @@ const loc = () => screen.getByTestId('location-search').textContent ?? '';
 const rowOf = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
 
 describe('Hàng về — bảng theo bản in', () => {
-  it('cột: Sản phẩm · Tồn kho · Đề nghị mua · Nhận đợt này · Còn thiếu · Tình trạng · Sau nhập kho; điền sẵn = phần còn lại; dòng phụ dưới tiêu đề "Theo bản gửi NCC lúc hh:mm dd/mm · Xem bản in" (chỉ "Xem bản in" là link)', async () => {
+  it('cột: Sản phẩm · Tủ · Đề nghị mua · Nhận đợt này · Còn thiếu · Tình trạng · Sau nhập kho; điền sẵn = phần còn lại; dòng phụ dưới tiêu đề "Theo bản gửi NCC lúc hh:mm dd/mm · Xem bản in" (chỉ "Xem bản in" là link)', async () => {
     stub();
     await open();
     expect(await screen.findByDisplayValue('6')).toBe(box('Bút bi'));
     expect(box('Kẹp giấy')).toHaveValue(10);
     const heads = screen.getAllByRole('columnheader').map((c) => c.textContent);
-    expect(heads).toEqual(['Món', 'Tồn kho', 'Đề nghị mua', 'Nhận đợt này', 'Còn thiếu', 'Tình trạng', 'Sau nhập kho']);
+    expect(heads).toEqual(['Món', 'Tủ', 'Đề nghị mua', 'Nhận đợt này', 'Còn thiếu', 'Tình trạng', 'Sau nhập kho']);
     expect(heads).not.toContain('Đã về các đợt trước');
     const sub = screen.getByText((_, el) => el?.classList.contains('page-head__sub') ?? false);
     expect(sub).toHaveTextContent('Theo bản gửi NCC lúc 09:05 02/11 · Xem bản in');

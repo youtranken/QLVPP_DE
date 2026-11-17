@@ -18,13 +18,13 @@ const show = (stock: number, onAction = vi.fn()) =>
   renderWithI18n(<MovementsDrawer item={makeRow(stock, 4, 2)} groupName="Giấy" onAction={onAction} onClose={vi.fn()} />);
 
 describe('MovementsDrawer — Lịch sử nhập xuất', () => {
-  it('đầu panel: "Lịch sử nhập xuất Giấy A4", "Giấy · ram", dòng tóm tắt "Tồn 7 · đang giữ 4 · còn xuất được 3"', async () => {
+  it('đầu panel: "Lịch sử nhập xuất Giấy A4", "Giấy · ram", dòng tóm tắt "Tủ 7 · đang giữ 4 · còn xuất được 3"', async () => {
     stubApi({ first: [] });
     show(7);
     expect(screen.getByText('Giấy · ram')).toBeInTheDocument();
     expect(screen.getByRole('dialog', { name: 'Lịch sử nhập xuất Giấy A4' })).toBeInTheDocument();
     const sum = document.querySelector('.sk-balance')!;
-    expect(sum.textContent).toContain('Tồn 7·đang giữ 4·còn xuất được 3');
+    expect(sum.textContent).toContain('Tủ 7·đang giữ 4·còn xuất được 3');
     expect(await screen.findByText('Chưa có lần nhập xuất nào.')).toBeInTheDocument();
   });
 

@@ -111,7 +111,7 @@ describe('AuditPage B11', () => {
     expect(r).toHaveAttribute('aria-controls', detailCell.firstElementChild!.id);
     expect(detailCell).toHaveAttribute('colspan', '5');
     const diff = within(within(detailCell).getByRole('table'));
-    expect(diff.getByRole('rowheader', { name: 'Tồn kho' })).toBeInTheDocument();
+    expect(diff.getByRole('rowheader', { name: 'Tủ' })).toBeInTheDocument();
     expect(diff.queryByRole('rowheader', { name: 'odd_key' })).toBeNull();
     expect(diff.queryByRole('rowheader', { name: 'Số lượng' })).toBeNull();
     expect(diff.getByText('3')).toBeInTheDocument();
@@ -206,7 +206,7 @@ describe('AuditPage B11', () => {
     expect(screen.getByText('Phiên đăng nhập')).toBeInTheDocument();
     expect(screen.queryByText(/1e004b5e/)).toBeNull();
     await userEvent.click(item);
-    expect(screen.getByRole('rowheader', { name: 'Tồn kho' })).toBeInTheDocument();
+    expect(screen.getByRole('rowheader', { name: 'Tủ' })).toBeInTheDocument();
     expect(screen.queryByText(/Mã đối tượng|c419efd8/)).toBeNull();
   });
 

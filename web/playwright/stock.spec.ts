@@ -73,7 +73,7 @@ test.describe('E1-S4 Tủ / Kho: nhập, xuất lẻ, lịch sử nhập xuất 
       await issue.getByRole('searchbox', { name: 'Tìm người nhận' }).fill(RECIPIENT.name);
       await issue.getByRole('button', { name: new RegExp(RECIPIENT.name) }).click();
       await issue.getByLabel('Lý do').fill('Người mới vào giữa kỳ');
-      await expect(issue.getByText('Tồn sau khi lưu 7')).toBeVisible();
+      await expect(issue.getByText('Tủ sau khi lưu 7')).toBeVisible();
       await shot(page, info, 'stock-issue-dialog', false);
       await issue.getByRole('button', { name: 'Xuất', exact: true }).click();
       await expect(issue).toBeHidden();
@@ -127,7 +127,7 @@ test.describe('E9-S5 Tủ / Kho M1 (dev-identity admin)', () => {
       await openPurchase(page, row);
       const purchase = page.getByRole('dialog', { name: `Nhập ngoài kỳ (tự mua lẻ) ${itemName}` });
       await purchase.getByLabel('Số lượng nhập').fill('10');
-      await expect(purchase.getByText('Tồn sau khi lưu 10')).toBeVisible();
+      await expect(purchase.getByText('Tủ sau khi lưu 10')).toBeVisible();
       await purchase.getByRole('button', { name: 'Lưu nhập mua' }).click();
       await expect(purchase).toBeHidden();
       await expectStockCell(row, 10);

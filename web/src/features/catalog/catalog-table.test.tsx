@@ -153,3 +153,19 @@ describe('Sản phẩm bảng — nút Tạm ngưng / Dùng lại (Nhóm 1 · m�
     expect(await screen.findByRole('dialog', { name: 'Sửa món Bút bi xanh' })).toBeInTheDocument();
   });
 });
+
+describe('Danh mục — trạng thái tủ theo server (cùng Tủ/Kho)', () => {
+  it('stock_state low → "Sắp hết", none → "Hết" ở cột Tồn; ok → chỉ số', async () => {
+    await openCatalog({
+      items: ITEMS,
+      stock: [
+        { item_id: 'i-paper', stock_state: 'low' },
+        { item_id: 'i-pen', stock_state: 'none' },
+        { item_id: 'i-old', stock_state: 'ok' },
+      ],
+    });
+    expect(await inRow('Giấy A4').findByText('Sắp hết')).toBeInTheDocument();
+    expect(inRow('Bút bi xanh').getByText('Hết')).toBeInTheDocument();
+    expect(inRow('Bút xóa cũ').queryByText(/Sắp hết|^Hết$/)).toBeNull();
+  });
+});

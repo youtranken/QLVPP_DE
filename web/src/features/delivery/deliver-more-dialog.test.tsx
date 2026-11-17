@@ -52,16 +52,16 @@ describe('DeliverMoreDialog — giao bổ sung một dòng còn nợ', () => {
     expect(plus()).toBeDisabled();
   });
 
-  it('biên số lượng: 1 và 2 gửi được; gõ 3 (max+1) vẫn kẹp ở 2; "−" vô hiệu ở 1; "Tồn sau khi giao" = tồn − số giao', async () => {
+  it('biên số lượng: 1 và 2 gửi được; gõ 3 (max+1) vẫn kẹp ở 2; "−" vô hiệu ở 1; "Tủ sau khi giao" = tồn − số giao', async () => {
     const f = stub();
     const { onDone } = renderDialog();
-    expect(screen.getByText('Tồn sau khi giao 0')).toBeInTheDocument();
+    expect(screen.getByText('Tủ sau khi giao 0')).toBeInTheDocument();
     fireEvent.change(qtyBox(), { target: { value: '3' } });
     expect(qtyBox()).toHaveValue(2);
     await userEvent.click(minus());
     expect(qtyBox()).toHaveValue(1);
     expect(minus()).toBeDisabled();
-    expect(screen.getByText('Tồn sau khi giao 1')).toBeInTheDocument();
+    expect(screen.getByText('Tủ sau khi giao 1')).toBeInTheDocument();
     await userEvent.click(giao());
     await waitFor(() => expect(onDone).toHaveBeenCalledOnce());
     expect(JSON.parse(String(posts(f)[0][1].body))).toEqual({ qty: 1, expected_delivered_qty: 0 });
@@ -76,19 +76,19 @@ describe('DeliverMoreDialog — giao bổ sung một dòng còn nợ', () => {
     expect((posts(f)[0][1].headers as Record<string, string>)['X-CSRF-Token']).toBe('csrf-1');
   });
 
-  it('còn nợ 3 < tồn 10 → max 3 (còn nợ chặn), "Tồn sau khi giao 7"', () => {
+  it('còn nợ 3 < tồn 10 → max 3 (còn nợ chặn), "Tủ sau khi giao 7"', () => {
     stub();
     renderDialog(backlogLine());
     expect(qtyBox()).toHaveValue(3);
     expect(plus()).toBeDisabled();
-    expect(screen.getByText('Tồn sau khi giao 7')).toBeInTheDocument();
+    expect(screen.getByText('Tủ sau khi giao 7')).toBeInTheDocument();
   });
 
-  it('dòng ngoài danh mục: không tồn → "Tháng 10/2026 · Còn nợ 3 cây", không "Tồn sau khi giao"', () => {
+  it('dòng ngoài danh mục: không tồn → "Tháng 10/2026 · Còn nợ 3 cây", không "Tủ sau khi giao"', () => {
     stub();
     renderDialog(backlogLine({ item_id: null, stock_qty: null }));
     expect(screen.getByText('Tháng 10 · Còn nợ 3 cây')).toBeInTheDocument();
-    expect(screen.queryByText(/^Tồn sau khi giao/)).toBeNull();
+    expect(screen.queryByText(/^Tủ sau khi giao/)).toBeNull();
     expect(qtyBox()).toHaveValue(3);
   });
 

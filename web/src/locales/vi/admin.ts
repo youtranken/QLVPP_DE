@@ -265,7 +265,7 @@ const admin = {
       skipped: 'Bỏ qua',
       snapshot_id: 'Bản chốt',
       sort_order: 'Thứ tự',
-      stock_qty: 'Tồn kho',
+      stock_qty: 'Tủ',
       stock_state: 'Tình trạng kho',
       total: 'Tổng',
       unchanged: 'Không đổi',

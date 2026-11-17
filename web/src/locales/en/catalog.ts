@@ -27,6 +27,8 @@ const catalog: Messages<typeof vi> = {
       colNameEn: 'English name',
       colItem: 'Item',
       colStock: 'Stock',
+      stockLow: 'Low',
+      stockOut: 'Out',
       colActive: 'Actions',
       groupItems: '{{n}} items',
       addToGroup: 'Add item to {{name}}',

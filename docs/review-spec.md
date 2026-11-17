@@ -158,4 +158,5 @@ Mockup: canvas https://claude.ai/artifact/Jow9EJotq5TXajAxVfqizq (bảng "Thang 
 - Khung popup chung: tiêu đề + dòng phụ, thân cuộn, chân đứng yên (nút chính bên phải); ≤ 640px thành sheet nền đặc.
 - Nút đóng biểu tượng "Đóng" / "Close"; hủy thao tác "Hủy" / "Cancel"; hộp xác nhận lưu phiếu "Quay lại sửa" + "Lưu phiếu". Không dùng "Quay lại" / "← Đóng" làm nút đóng popup.
 - Nút bị khóa luôn hiện lý do, nối bằng `aria-describedby`.
+- Chủ dự án chốt 17/11/2026 (sau review Phase 2): Sản phẩm hiện nhãn "Sắp hết"/"Hết" của server (`stock_state`, cùng luật Tủ/Kho — trống ≤ 20% mức đặt lại), không thêm luật ở web; một chữ "Tủ" cho số đang có trong tủ ("Tủ: 20", tab "Trong tủ"); giữ hộp xác nhận Nhận hàng và "NCC hết hàng" (đảo quyết định 9/11 "lưu ngay không hỏi"); phiếu đã lưu vẫn sửa thẳng trên thẻ món (không khóa tới khi bấm Sửa phiếu). H13: trần Nhập mua là 1.000.000 (= StockChangeDto), 99.999 là trần dòng Nhận hàng.
 - Tên app "QLVPP" ở mọi chỗ (Q2). H9: "Thay thế bản Excel gửi NCC lúc …" / "Thay thế bản in gửi NCC lúc …" (Q3).

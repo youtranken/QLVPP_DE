@@ -4,7 +4,7 @@ const arrivals = {
     table: {
       label: 'Hàng về theo món',
       item: 'Món',
-      stock: 'Tồn kho',
+      stock: 'Tủ',
       ordered: 'Đề nghị mua',
       qty: 'Nhận đợt này',
       short: 'Còn thiếu',

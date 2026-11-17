@@ -84,7 +84,7 @@ const delivery = {
         meta: 'Tháng {{month}} · Còn nợ {{r}} {{unit}}',
         metaStock: 'Tháng {{month}} · Còn nợ {{r}} {{unit}} · Tồn {{s}} {{unit}}',
         qty: 'Số lượng giao',
-        after: 'Tồn sau khi giao {{n}}',
+        after: 'Tủ sau khi giao {{n}}',
         hint: 'Giao được tối đa {{max}} {{unit}} (ít hơn giữa số còn nợ và tồn kho).',
         submit: 'Giao',
         done: 'Đã giao bổ sung {{qty}} {{unit}} {{name}} cho {{person}}',

@@ -2,7 +2,7 @@ const stock = {
   stock: {
     page: {
       title: 'Tủ / Kho',
-      description: 'Tồn kho từng món và mọi lần nhập, xuất lẻ. Giao hàng tự trừ tồn.',
+      description: 'Số trong tủ từng món và mọi lần nhập, xuất lẻ. Giao hàng tự trừ khỏi tủ.',
       catalogLink: 'Sản phẩm',
       search: 'Tìm theo tên món',
       emptyTitle: 'Không có món nào khớp',
@@ -29,7 +29,7 @@ const stock = {
     },
     issues: {
       tabs: 'Chế độ xem Kho',
-      tabStock: 'Tồn kho',
+      tabStock: 'Trong tủ',
       tabIssues: 'Xuất lẻ',
       colDate: 'Ngày',
       colItem: 'Món',
@@ -76,8 +76,8 @@ const stock = {
       qtyError: { overStock: 'Tủ chỉ còn {{max}} — nhập từ 1 đến {{max}}', minRange: 'Nhập từ 1 đến {{max}}', min: 'Nhập từ 1', decimal: 'Nhập số nguyên', max: 'Tối đa {{max}}' },
       pickPlaceholder: 'Chọn món còn trong tủ',
       issueTitle: 'Xuất lẻ',
-      current: 'Tồn hiện tại {{qty}} {{unit}}',
-      after: 'Tồn sau khi lưu {{qty}}',
+      current: 'Tủ: {{qty}} {{unit}}',
+      after: 'Tủ sau khi lưu {{qty}}',
       purchaseQty: 'Số lượng nhập',
       issueQty: 'Số lượng',
       note: 'Ghi chú',
@@ -103,7 +103,7 @@ const stock = {
       next: 'Món sau',
       eyebrow: '{{group}} · {{unit}}',
       title: 'Lịch sử nhập xuất',
-      sumStock: 'Tồn',
+      sumStock: 'Tủ',
       sumHeld: 'đang giữ',
       sumFree: 'còn xuất được',
       empty: 'Chưa có lần nhập xuất nào.',
