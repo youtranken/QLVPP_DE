@@ -31,14 +31,24 @@ const PAIRS: [fg: string, bg: string][] = [
   ['--c-on-dark', '--c-acc'], ['--c-warn', '--c-cart'], ['--c-cart-ink', '--c-cart'], ['--c-cart-ink', '--c-surface'], ['--c-warn', '--c-surface'], ['--c-ok', '--c-surface'], ['--c-danger', '--c-danger-tint'], ['--c-on-dark', '--c-dark'],
   ['--c-on-dark', '--c-pick'], ['--c-acc', '--c-panel-b'], ['--c-acc', '--c-panel-a'], ['--c-acc', '--c-acc-soft'],
   ['--c-on-dark-2', '--c-owed-bg'], ['--c-on-dark', '--c-owed-bg'],
+  ['--c-muted', '--c-surface-2'], ['--c-acc-ink', '--c-acc-soft'], ['--c-on-dark', '--c-rail'], ['--c-count-ink', '--c-count'],
+  ['--c-on-dark-2', '--c-rail'], ['--c-warn', '--c-warn-soft'],
 ];
 
 // Thành phần phi văn bản (chấm kỳ ở cột 72, icon nhắc nợ) cần ≥ 3:1 trên nền của nó
 const DOTS: [fg: string, bg: string][] = [['--c-bar-fill', '--c-shell-b'], ['--c-warn-fill', '--c-shell-b'], ['--c-owed-ic', '--c-owed-ic-bg']];
 
-describe('tương phản token bảng màu v2', () => {
-  it('bảng màu mang tiêu đề v2', () => {
-    expect(css).toContain('BẢNG MÀU v2 "Teal kính"');
+describe('tương phản token bảng màu v3', () => {
+  it('bảng màu mang tiêu đề v3 họ QLHS/QLTS', () => {
+    expect(css).toContain('BẢNG MÀU v3 "Họ QLHS/QLTS"');
+  });
+  it('chữ trên rail (trắng 76%) trên navy ≥ 4.5', () => {
+    // rgb(255 255 255 / .76) trên #0F1F3D trộn ra màu đặc rồi đo
+    const over = (bg: number) => Math.round(255 * 0.76 + bg * 0.24);
+    const [r, g, b] = [0x0f, 0x1f, 0x3d].map(over);
+    const hex = '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
+    expect(css).toMatch(/--c-rail-ink:\s*rgb\(255 255 255 \/ \.76\)/);
+    expect(contrast(hex, tok('--c-rail'))).toBeGreaterThanOrEqual(4.5);
   });
   it.each(PAIRS)('%s trên %s ≥ 4.5', (fg, bg) => {
     expect(contrast(tok(fg), tok(bg))).toBeGreaterThanOrEqual(4.5);

@@ -4,12 +4,13 @@
 @font-face { font-family: 'Be Vietnam Pro Fallback'; src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans'), local('Helvetica'); font-weight: 100 600; size-adjust: 107.9%; ascent-override: 92.7%; descent-override: 25%; line-gap-override: 0%; }
 @font-face { font-family: 'Be Vietnam Pro Fallback'; src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold'), local('Helvetica Bold'); font-weight: 700 900; size-adjust: 104%; ascent-override: 96.2%; descent-override: 26%; line-gap-override: 0%; }
 :root {
-  /* --brand* cũ (xanh ngọc lục) trỏ sang token teal v2 — màn đăng nhập, khung nhân viên cũ dùng chung một màu nhấn */
+  /* --brand* cũ trỏ sang token v3 — màn đăng nhập, khung nhân viên cũ dùng chung một màu nhấn */
   --brand: var(--c-acc); --brand-deep: var(--c-acc); --brand-soft: var(--c-acc-soft); --brand-ink: var(--c-acc-hover); --brand-line: var(--c-line-strong);
-  --bg: #f4f7f5; --card: #ffffff; --card-2: #f7faf8; --ink: #14231c; --ink-2: #51645b; --ink-3: #667a70; --line: #dfe7e2; --line-2: #c9d5ce;
-  --ok: #047857; --ok-soft: #d1fae5; --warn: #b45309; --warn-soft: #fef3c7; --danger: #b91c1c; --danger-soft: #fee2e2; --info: #1d4ed8; --info-soft: #dbeafe;
+  /* tên cũ trỏ vào bảng màu v3 (tokens-m1.css), không giữ mã màu riêng */
+  --bg: var(--c-page); --card: var(--c-surface); --card-2: var(--c-surface-2); --ink: var(--c-ink); --ink-2: var(--c-ink-2); --ink-3: var(--c-muted); --line: var(--c-line); --line-2: var(--c-line-strong);
+  --ok: var(--c-ok); --ok-soft: var(--c-ok-soft); --warn: var(--c-warn); --warn-soft: var(--c-warn-soft); --danger: var(--c-danger); --danger-soft: var(--c-danger-soft); --info: var(--c-info); --info-soft: var(--c-info-soft);
   --t1: #e0f2fe; --t1-ink: #0369a1; --t2: #fef3c7; --t2-ink: #b45309; --t3: #d1fae5; --t3-ink: #047857; --t4: #ede9fe; --t4-ink: #6d28d9;
-  --side: #0f2a21; --side-ink: #b7cfc4;
+  --side: var(--c-rail); --side-ink: var(--c-rail-ink);
   --font-app: 'Be Vietnam Pro', 'Be Vietnam Pro Fallback', system-ui, -apple-system, "Segoe UI", sans-serif;
   --ring: var(--focus); /* Nút, chip, link dùng chung vòng --focus của bảng màu v2 */
 }

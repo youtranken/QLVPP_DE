@@ -8,6 +8,16 @@ const ruleBody = (css: string, selector: string) => {
   return at < 0 ? '' : css.slice(at, css.indexOf('}', at));
 };
 
+describe('màu chính họ QLHS/QLTS (TC-00)', () => {
+  it('--c-acc = #1D4ED8, sidebar navy #0F1F3D, vạch đang chọn #60A5FA', () => {
+    const block = read('css/tokens-m1.css').split('HẾT BẢNG MÀU')[0];
+    expect(block).toMatch(/--c-acc:\s*#1D4ED8\b/i);
+    expect(block).toMatch(/--c-rail:\s*#0F1F3D\b/i);
+    expect(block).toMatch(/--c-rail-bar:\s*#60A5FA\b/i);
+    expect(block).toMatch(/--c-page:\s*#F3F6FB\b/i);
+  });
+});
+
 describe('một màu nút chính (giao diện A)', () => {
   it.each([
     ['css/m1/member-page.css', "[data-shell='member'] .m-panel .btn--primary"],

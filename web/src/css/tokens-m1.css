@@ -1,27 +1,31 @@
-/* ===== BẢNG MÀU v2 "Teal kính" — thay cả khối khi đổi bảng màu ===== */
+/* ===== BẢNG MÀU v3 "Họ QLHS/QLTS" — cùng token QLHS/QLTS (chủ dự án chốt 18/11/2026); thay cả khối khi đổi bảng màu ===== */
 :root {
-  /* nền & mặt: cát ấm */
-  --c-page: #D7EAEF;  --c-surface: #FFFFFF;  --c-canvas: #F4FAFB;  --c-surface-2: #EEF5F7;  --c-surface-hover: #F2F8FA;  --c-surface-sunk: #DCEAEE;
+  /* nền & mặt */
+  --c-page: #F3F6FB;  --c-surface: #FFFFFF;  --c-canvas: #F7F9FC;  --c-surface-2: #F7F9FC;  --c-surface-hover: #F2F5FA;  --c-surface-sunk: #EEF2F8;
   /* mực (chữ) */
-  --c-ink: #0E2A33;  --c-ink-2: #2F4A52;  --c-muted: #47636C;  --c-faint: #9FBAC2; /* faint: chỉ icon trang trí, KHÔNG cho chữ */
+  --c-ink: #111A2C;  --c-ink-2: #364258;  --c-muted: #5A6680;  --c-faint: #A3ACBD; /* faint: chỉ icon trang trí, KHÔNG cho chữ */
   /* mảng đậm: chip/nav đang chọn, stepper card, thanh hàng loạt, toast, ô hạn ngày cuối */
-  --c-dark: #0E2A33;  --c-on-dark: #FFFFFF;  --c-on-dark-2: #C9DEE4;  --c-bar-fill: #9FE3F0;  --c-device: #08303B;
+  --c-dark: #0F1F3D;  --c-on-dark: #FFFFFF;  --c-on-dark-2: #C3CEE3;  --c-bar-fill: #60A5FA;  --c-device: #0B1730;
+  /* rail navy: sidebar Adm D&E, thanh trên + thanh dưới nhân viên. Đang chọn kiểu A = nền trắng 10% + vạch 3px --c-rail-bar */
+  --c-rail: #0F1F3D;  --c-rail-ink: rgb(255 255 255 / .76);  --c-rail-on: rgb(255 255 255 / .1);  --c-rail-hover: rgb(255 255 255 / .08);  --c-rail-bar: #60A5FA;  --c-rail-line: rgb(255 255 255 / .08);
+  /* số đếm việc đang chờ (sidebar, tab) */
+  --c-count: #FDB022;  --c-count-ink: #3B2500;
   /* viền */
-  --c-line: #D6E6EB;  --c-line-strong: #B5CFD7;  --c-line-input: #7F9AA3; /* viền ô nhập/checkbox ≥ 3:1 */
-  /* nhấn duy nhất: navy */
-  --c-acc: #0E6A7B;  --c-acc-hover: #0A5868;  --c-acc-press: #08434F;  --c-acc-soft: #DDF1F5;  --c-acc-tint: #EEF8FA;  --c-on-acc: #FFFFFF;
-  /* hero kỳ: cát → xanh xám */
-  --c-hero-a: #DDF1F5;  --c-hero-b: #EEF6F8;  --c-hero-c: #CBE4EB;  --c-hero-ink: #0E2A33;  --c-blob: rgb(255 255 255 / .55);
+  --c-line: #DDE3EE;  --c-line-strong: #C6CFDF;  --c-line-input: #7D879B; /* viền ô nhập/checkbox ≥ 3:1 */
+  /* nhấn duy nhất: xanh dương họ QLHS/QLTS. Đang chọn kiểu B = nền --c-acc-soft + viền --c-acc-line + chữ --c-acc-ink; kiểu C = nền --c-acc */
+  --c-acc: #1D4ED8;  --c-acc-hover: #1E40AF;  --c-acc-press: #1E3A8A;  --c-acc-soft: #EFF4FF;  --c-acc-tint: #F5F8FF;  --c-on-acc: #FFFFFF;  --c-acc-ink: #1E3A8A;  --c-acc-line: #C7D7FE;
+  /* hero kỳ */
+  --c-hero-a: #EFF4FF;  --c-hero-b: #F7F9FC;  --c-hero-c: #DCE6FA;  --c-hero-ink: #111A2C;  --c-blob: rgb(255 255 255 / .55);
   /* ngữ nghĩa: chữ / nền nhạt / vạch (fill chỉ cho thanh, chấm — không cho chữ) */
-  --c-ok: #0D5E46;     --c-ok-soft: #E3F5EE;     --c-ok-fill: #11795A;
-  --c-warn: #8A3F06;   --c-warn-soft: #FFF1E3;   --c-warn-fill: #E39A52;
-  --c-danger: #A32C1E; --c-danger-soft: #FBE4E1; --c-danger-line: #EDB8B0; --c-danger-tint: #FDF3F1;
+  --c-ok: #067647;     --c-ok-soft: #ECFDF3;     --c-ok-fill: #17B26A;   --c-ok-line: #ABEFC6;
+  --c-warn: #B54708;   --c-warn-soft: #FFFAEB;   --c-warn-fill: #F79009; --c-warn-line: #FEDF89;
+  --c-danger: #B42318; --c-danger-soft: #FEF3F2; --c-danger-line: #FECDCA; --c-danger-tint: #FFFBFA;
   /* nút: nền hover/nhấn của biến thể; đỏ nhạt cách nhau ≥ 1.15, chữ lúc nhấn đậm hơn để giữ ≥ 4.5 */
-  --c-danger-hover: #F7CDC7;  --c-danger-press: #F0B7AE;  --c-danger-ink-press: #8A2418;  --c-danger-solid-hover: #8A2418;  --c-danger-solid-press: #71200F;
+  --c-danger-hover: #FDDCD8;  --c-danger-press: #FBC2BB;  --c-danger-ink-press: #912018;  --c-danger-solid-hover: #912018;  --c-danger-solid-press: #7A271A;
   --c-sel: var(--c-dark);  --c-on-sel: var(--c-on-dark);  --c-sel-count: var(--c-on-dark-2);
-  --c-dark-press: #0A1F26;  --c-cta-hover: #C4EEF6;  --c-cta-press: #8AD6E5;
-  --c-info: #0A5868;   --c-info-soft: #DDF1F5;
-  --c-dot: #CF4340;   /* chấm chưa đọc trên chuông */
+  --c-dark-press: #0A1530;  --c-cta-hover: #DBE6FE;  --c-cta-press: #BFD2FD;
+  --c-info: #0E7490;   --c-info-soft: #ECFEFF;
+  --c-dot: #D92D20;   /* chấm chưa đọc trên chuông */
   /* tờ in (bản in A4): đen trắng tuyệt đối */
   --c-print-ink: #000000;  --c-print-paper: #FFFFFF;  --c-print-muted: #333333;
   /* tông nhóm: nền / nền đậm (hover, viền) / chữ trên nền. Thang sáng L* ≈ 96·93·90·87·84 để phân biệt cả khi mù màu */
@@ -43,7 +47,7 @@
   --g6-bg: color-mix(in srgb, var(--g6) 50%, #FFFFFF);
   --g7-bg: color-mix(in srgb, var(--g7) 50%, #FFFFFF);
   /* bóng & phủ (bộ ba RGB để dùng trong rgb(… / α)) */
-  --c-shimmer: rgb(255 255 255 / .6);  --sh-ink: 8 48 59;  --sh-acc: 15 110 128;  --c-scrim: rgb(8 48 59 / .6);
+  --c-shimmer: rgb(255 255 255 / .6);  --sh-ink: 16 24 40;  --sh-acc: 29 78 216;  --c-scrim: rgb(16 24 40 / .45);
   /* minh họa: nét, giấy, kim loại… + màu từng loại món (xem illustrations.html) */
   --ill-line: #1A2233; --ill-paper: #FFFFFF; --ill-rule: #ABA79F; --ill-metal: #E2E8F0; --ill-metal-2: #CBD5E1;
   --ill-graphite: #334155; --ill-wood: #F2D3A2; --ill-pink: #F472B6; --ill-shine: #FFFFFF;
@@ -54,14 +58,14 @@
   --k-tape-a: #FFD66B; --k-tape-b: #C27A0E;  --k-binder-a: #4C7BFF; --k-binder-b: #23409B;  --k-box-a: #E2B27A; --k-box-b: #A9773B;
   --k-sleeve-a: #9AD8FF; --k-sleeve-b: #2A8AD0;  --k-cutter-a: #FFB020; --k-cutter-b: #4A5268;  --k-clip-a: #7A6BE0; --k-clip-b: #3B2D9E;
   --k-misc-a: #FF9DB8; --k-misc-b: #C2416E;
-  /* khung v2: vỏ teal, mặt kính, giỏ hàng */
-  --c-shell-a: #08303B;  --c-shell-b: #0E4757;  --c-shell-c: #12596A;  --c-panel-a: #E3F1F5;  --c-panel-b: #CBE4EB;
-  --c-glass: rgb(255 255 255 / .06);  --c-glass-line: rgb(255 255 255 / .12);  --c-cart: #FFF4E8;  --c-cart-line: #F7D9B5;  --c-cart-ink: #7A4A1E;  --c-cart-dash: #F0C89A; /* chữ phụ + viền đứt trên phiếu cam */
-  --c-tile-chip: rgb(255 255 255 / .92);  --c-pick: #B4540A; /* badge số món đã chọn, chữ trắng ≥ 4.5:1 */
+  /* khung: vỏ = rail navy (thanh trên nhân viên), mặt = nền trang; giỏ hàng cam nhạt */
+  --c-shell-a: #0F1F3D;  --c-shell-b: #0F1F3D;  --c-shell-c: #1A2B4C;  --c-panel-a: #F3F6FB;  --c-panel-b: #F3F6FB;
+  --c-glass: rgb(255 255 255 / .06);  --c-glass-line: rgb(255 255 255 / .12);  --c-cart: #FFF6E5;  --c-cart-line: #FDB022;  --c-cart-ink: #7A2E0E;  --c-cart-dash: #F7B955; /* chữ phụ + viền đứt trên phiếu cam */
+  --c-tile-chip: rgb(255 255 255 / .92);  --c-pick: #B54708; /* badge số món đã chọn, chữ trắng ≥ 4.5:1 */
   --c-on-dark-hover: rgb(255 255 255 / .1);  --c-on-dark-current: rgb(255 255 255 / .12);  --c-veil: rgb(255 255 255 / .6);  --c-veil-hi: rgb(255 255 255 / .9);
-  --c-warn-halo: rgb(227 154 82 / .3); /* quầng chấm "chưa lưu" */
-  /* nhắc nợ trên nền teal: nền đặc (cam .14 trộn trên --c-shell-b) để kiểm được tương phản */
-  --c-owed-bg: #2F5658;  --c-owed-line: #6B725D;  --c-owed-ic-bg: #F4ECE1;  --c-owed-ic: #6B4A2E;
+  --c-warn-halo: rgb(247 144 9 / .3); /* quầng chấm "chưa lưu" */
+  /* nhắc nợ trên nền navy: nền đặc (cam .14 trộn trên --c-shell-b) để kiểm được tương phản */
+  --c-owed-bg: #302F36;  --c-owed-line: #6B5E4A;  --c-owed-ic-bg: #FEF0C7;  --c-owed-ic: #93370D;
 }
 /* ===== HẾT BẢNG MÀU ===== */
 
@@ -96,6 +100,6 @@
   --focus-field-halo: 0 0 0 3px var(--c-acc-soft);
   --focus-field: inset 0 0 0 2px var(--c-acc), var(--focus-field-halo);
   --focus-field-bordered: inset 0 0 0 1px var(--c-acc), var(--focus-field-halo);
-  --c-logo-bg: #E7F6F9;  --c-on-dark-fill: rgb(255 255 255 / .14);  --c-on-tone: rgb(255 255 255 / .65);
+  --c-logo-bg: #EFF4FF;  --c-on-dark-fill: rgb(255 255 255 / .14);  --c-on-tone: rgb(255 255 255 / .65);
   --hit: 44px;
 }
