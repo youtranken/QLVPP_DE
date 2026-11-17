@@ -209,6 +209,7 @@ const catalog = {
     errors: {
       NAME_REQUIRED: 'Nhập tên món.',
       MAX_REQUIRED: 'Nhập tối đa từ 1 đến 999.',
+      MAX_RANGE: 'Nhập số nguyên từ 1 đến 999',
       IMAGE_REQUIRED: 'Món phải có ảnh — chọn hoặc chụp một ảnh.',
       IMAGE_UNSUPPORTED: 'Chọn ảnh JPG, PNG hoặc WebP',
       FILE_TYPE_INVALID: 'Chọn ảnh JPG, PNG hoặc WebP',

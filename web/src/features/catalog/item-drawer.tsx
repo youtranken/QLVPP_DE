@@ -10,6 +10,7 @@ import { ItemFacts } from './item-facts';
 import { ItemFields } from './item-fields';
 import { ItemPanelHead } from './item-panel-head';
 import { useItemActive } from './use-item-active';
+import { useDisabledReason } from '@/ui/disabled-reason';
 import { useItemForm, type ItemForm } from './use-item-form';
 
 interface Props {
@@ -68,6 +69,7 @@ function ActiveToggle({ item, groupActive, saving, notify }: { item: AdminItem; 
 
 function Footer({ f, item, groupActive, formId }: { f: ItemForm; item: AdminItem | null; groupActive: boolean; formId: string }) {
   const { t } = useTranslation();
+  const fix = useDisabledReason(f.invalid ? t('common.disabledReason.fixErrors') : null);
   return (
     <>
       {item && (
@@ -84,9 +86,10 @@ function Footer({ f, item, groupActive, formId }: { f: ItemForm; item: AdminItem
           {t('common.cancel')}
         </button>
       </DialogClose>
-      <button type="submit" form={formId} className="btn btn--primary" disabled={f.uploading || f.saving}>
+      <button type="submit" form={formId} className="btn btn--primary" disabled={f.uploading || f.saving || f.invalid} aria-describedby={fix.describedBy}>
         {f.saving ? t('catalog.form.saving') : t(item ? 'catalog.form.submitEdit' : 'catalog.form.submitAdd')}
       </button>
+      {fix.node}
     </>
   );
 }

@@ -212,6 +212,7 @@ const catalog: Messages<typeof vi> = {
     errors: {
       NAME_REQUIRED: 'Enter the item name.',
       MAX_REQUIRED: 'Enter a max from 1 to 999.',
+      MAX_RANGE: 'Enter a whole number from 1 to 999',
       IMAGE_REQUIRED: 'The item needs a photo — choose or take one.',
       IMAGE_UNSUPPORTED: 'Choose a JPG, PNG or WebP photo',
       FILE_TYPE_INVALID: 'Choose a JPG, PNG or WebP photo',

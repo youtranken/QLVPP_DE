@@ -216,9 +216,35 @@ describe('Ngăn kéo Sửa món', () => {
     expect(max).toHaveAttribute('min', '1');
     expect(max).toHaveAttribute('max', '999');
     await userEvent.clear(max);
-    await userEvent.type(max, '1000');
+    // số hợp lệ ở trình duyệt mà server vẫn từ chối → lỗi server gắn đúng ô
+    await userEvent.type(max, '500');
     await userEvent.click(screen.getByRole('button', { name: 'Lưu' }));
     await vi.waitFor(() => expect(max).toHaveAccessibleDescription('Kiểm tra lại giá trị này.'));
+  });
+
+  it('Tối đa mỗi tháng 0 / 1000 / 2.5 → báo ngay tại ô "Nhập số nguyên từ 1 đến 999", Lưu khóa có lý do, không PATCH; 1 và 999 lưu được', async () => {
+    const f = stubDrawerApi();
+    renderDrawer({ item: PEN });
+    const max = screen.getByLabelText(/^Tối đa mỗi tháng/);
+    const save = screen.getByRole('button', { name: 'Lưu' });
+    for (const bad of ['0', '1000', '2.5']) {
+      await userEvent.clear(max);
+      await userEvent.type(max, bad);
+      expect(max).toHaveAttribute('aria-invalid', 'true');
+      expect(max).toHaveAccessibleDescription('Nhập số nguyên từ 1 đến 999');
+      expect(save).toBeDisabled();
+      expect(save).toHaveAccessibleDescription('Sửa ô đang báo lỗi trước khi lưu');
+    }
+    expect(callsTo(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toHaveLength(0);
+    for (const ok of ['1', '999']) {
+      await userEvent.clear(max);
+      await userEvent.type(max, ok);
+      expect(max).not.toHaveAttribute('aria-invalid');
+      expect(save).toBeEnabled();
+    }
+    await userEvent.click(save);
+    await vi.waitFor(() => expect(callsTo(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toHaveLength(1));
+    expect(bodyOf(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toEqual({ max_qty: 999 });
   });
 
   it('CATEGORY_NOT_FOUND → lỗi gắn ô Nhóm; ITEM_NOT_FOUND → khối đầu thân', async () => {

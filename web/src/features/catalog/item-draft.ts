@@ -47,6 +47,8 @@ export function draftFrom(item: AdminItem | null, defaultMaxQty: number): ItemDr
   };
 }
 
+export const validMaxQty = (raw: string) => /^\d+$/.test(raw.trim()) && Number(raw) >= 1 && Number(raw) <= 999;
+
 const textOrNull = (v: string) => (v.trim() === '' ? null : v.trim());
 // Ô số để trống gửi null để server báo VALIDATION đúng ô, không ngầm thành 0
 const intOrNull = (v: string) => (v.trim() === '' ? null : Number(v));

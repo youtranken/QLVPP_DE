@@ -7,7 +7,7 @@ import { TOAST_MS } from '@/ui/toast-provider';
 import { useToast } from '@/ui/toast-context';
 import { createItem, deleteItem, patchItem, useRefreshCatalog, type AdminItem } from './catalog.api';
 import { catalogErrorKey, fieldErrors, type FieldErrors } from './catalog-errors';
-import { ITEM_ERROR_FIELD, ITEM_FIELDS, draftFrom, itemPayload, missingFields, type ItemDraft, type RequiredField } from './item-draft';
+import { ITEM_ERROR_FIELD, ITEM_FIELDS, draftFrom, itemPayload, missingFields, validMaxQty, type ItemDraft, type RequiredField } from './item-draft';
 
 const REQUIRED_ERROR: Record<RequiredField, string> = {
   image_file_id: 'catalog.errors.IMAGE_REQUIRED',
@@ -46,7 +46,10 @@ function useItemDraft(item: AdminItem | null, defaultCategoryId: string | null |
     setAttempt((n) => n + 1);
   };
   const changes = ITEM_FIELDS.filter((k) => draft[k] !== initial[k]).length;
-  return { draft, initial, errors, missing, attempt, changes, set, fail };
+  // Cùng biên DTO (@Min(1) @Max(999), số nguyên): báo ngay khi gõ, để trống thì để lượt Lưu báo "bắt buộc"
+  const maxInvalid = draft.max_qty.trim() !== '' && !validMaxQty(draft.max_qty);
+  const shown = maxInvalid && !errors.max_qty ? { ...errors, max_qty: 'catalog.errors.MAX_RANGE' } : errors;
+  return { draft, initial, errors: shown, invalid: maxInvalid, missing, attempt, changes, set, fail };
 }
 
 // Sửa món: lưu xong panel ở lại món đó; thêm món và xóa món thì đóng panel

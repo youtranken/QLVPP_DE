@@ -7,6 +7,7 @@ import { FormField } from '@/ui/form-field';
 import { Icon } from '@/ui/icon';
 import { categoryLabel, type Category } from './catalog.api';
 import { indexCategories } from './catalog-rows';
+import { validMaxQty } from './item-draft';
 
 const MAX_QTY_MIN = 1;
 const MAX_QTY_MAX = 999;
@@ -52,7 +53,6 @@ function BulkDialog({ title, submitLabel, pending, onSubmit, onClose, children }
 }
 
 // Chỉ đỡ người dùng gõ nhầm; server vẫn kiểm 1–999 cho từng món (VALIDATION → câu lỗi ở hàng)
-const validMaxQty = (raw: string) => /^\d+$/.test(raw.trim()) && Number(raw) >= MAX_QTY_MIN && Number(raw) <= MAX_QTY_MAX;
 
 export function BulkMaxDialog({ count, onSubmit, onClose }: { count: number; onSubmit: (n: number) => Promise<void>; onClose: () => void }) {
   const { t } = useTranslation();
