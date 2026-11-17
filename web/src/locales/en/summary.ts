@@ -3,6 +3,20 @@ import type { Messages } from '@/locales/messages';
 
 const summary: Messages<typeof vi> = {
   summary: {
+    history: {
+      title: 'Order history · {{name}}',
+      open: 'Order history',
+      prevYear: 'Previous year',
+      nextYear: 'Next year',
+      months: 'Months of {{year}}',
+      tab: 'M{{month}}, {{status}}',
+      short: 'M{{month}}',
+      noOrder: 'No order',
+      none: 'No order this month',
+      lines: 'Items in the request',
+      reduced: 'D&E Admin reduced {{before}} → {{after}} · {{reason}}',
+      removed: 'D&E Admin removed from request · {{reason}}',
+    },
     page: {
       noMatch: 'No requests match',
       empty: 'No requests in this period yet.',

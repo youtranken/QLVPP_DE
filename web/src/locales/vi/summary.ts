@@ -1,5 +1,19 @@
 const summary = {
   summary: {
+    history: {
+      title: 'Lịch sử đặt hàng · {{name}}',
+      open: 'Lịch sử đặt hàng',
+      prevYear: 'Năm trước',
+      nextYear: 'Năm sau',
+      months: 'Tháng trong năm {{year}}',
+      tab: 'T{{month}}, {{status}}',
+      short: 'T{{month}}',
+      noOrder: 'Không đặt',
+      none: 'Không đặt tháng này',
+      lines: 'Các món trong phiếu',
+      reduced: 'Adm D&E giảm {{before}} → {{after}} · {{reason}}',
+      removed: 'Adm D&E bỏ khỏi phiếu · {{reason}}',
+    },
     page: {
       noMatch: 'Không có phiếu nào khớp',
       empty: 'Chưa có phiếu nào trong kỳ này.',

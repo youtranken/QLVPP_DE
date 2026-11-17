@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { OrderHistoryDialog } from '@/features/summary/order-history-dialog';
 import { DialogClose } from '@/ui/dialog';
 import { OverlayPanel, type PanelNav } from '@/ui/overlay-panel';
 import { LastLogin, StatusBadge, UserAvatar, type UserRow } from './users-table';
@@ -15,6 +17,7 @@ interface Props {
 export function UserDrawer({ user, nav, onClose }: Props) {
   const { t } = useTranslation();
   const empty = t('common.empty');
+  const [history, setHistory] = useState(false);
   const facts: [string, ReactNode][] = [
     [t('users.drawer.email'), user.email ?? empty],
     [t('users.drawer.code'), user.employeeCode ?? empty],
@@ -63,9 +66,15 @@ export function UserDrawer({ user, nav, onClose }: Props) {
         ))}
       </dl>
       <p className="dr-muted">{t('users.drawer.readonly')}</p>
-      <Link className="btn btn--sm dr-audit-link" to={`/admin/audit?actor=${encodeURIComponent(user.sub)}`}>
-        {t('users.drawer.audit')}
-      </Link>
+      <div className="dr-links">
+        <button type="button" className="btn btn--sm" onClick={() => setHistory(true)}>
+          {t('summary.history.open')}
+        </button>
+        <Link className="btn btn--sm dr-audit-link" to={`/admin/audit?actor=${encodeURIComponent(user.sub)}`}>
+          {t('users.drawer.audit')}
+        </Link>
+      </div>
+      {history && <OrderHistoryDialog sub={user.sub} name={nameOf(user)} onClose={() => setHistory(false)} />}
     </OverlayPanel>
   );
 }

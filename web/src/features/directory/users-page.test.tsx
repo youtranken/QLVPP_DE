@@ -319,3 +319,18 @@ describe('UsersPage B10', () => {
     expect(within(screen.getByText('Lê Thị Bình').closest('tr')!).getByText('Chưa đăng nhập')).toBeInTheDocument();
   });
 });
+
+describe('Danh bạ: Lịch sử đặt hàng (G3)', () => {
+  it('ngăn người dùng có nút "Lịch sử đặt hàng" → mở hộp lịch sử của đúng người', async () => {
+    stubUsers([AN, BINH]);
+    const base = globalThis.fetch;
+    const history = { sub: 'u-an', full_name: 'Phạm Minh Đức', year: 2026, items: [] };
+    vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => (String(url).startsWith('/api/admin/users/u-an/requests') ? Promise.resolve(jsonResponse(200, history)) : base(url, init))));
+    await openUsers('/admin/users?status=all');
+    await userEvent.click(screen.getByRole('button', { name: 'Phạm Minh Đức' }));
+    const drawer = await screen.findByRole('dialog', { name: 'Người dùng' });
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Lịch sử đặt hàng' }));
+    expect(await screen.findByRole('dialog', { name: 'Lịch sử đặt hàng · Phạm Minh Đức' })).toBeInTheDocument();
+  });
+});
+

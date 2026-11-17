@@ -78,12 +78,22 @@ describe('G1 Kỳ tháng — theo người', () => {
     open();
     await userEvent.click(within(await rowOf('Nhân viên A')).getByRole('button', { name: 'Thao tác cho Nhân viên A' }));
     const menu = screen.getByRole('menu');
-    expect(within(menu).getAllByRole('menuitem').map((m) => m.textContent)).toEqual(['Xem phiếu', 'Điều chỉnh phiếu']);
+    expect(within(menu).getAllByRole('menuitem').map((m) => m.textContent)).toEqual(['Xem phiếu', 'Điều chỉnh phiếu', 'Lịch sử đặt hàng']);
     await userEvent.click(within(menu).getByRole('menuitem', { name: 'Điều chỉnh phiếu' }));
     await waitFor(() => expect(search()).toContain('request=r-a'));
     await userEvent.keyboard('{Escape}');
     await userEvent.click(within(await rowOf('Nhân viên B')).getByText('6 món · 6 SL'));
     expect(await screen.findByRole('dialog', { name: 'Phiếu của Nhân viên B' })).toBeInTheDocument();
+  });
+});
+
+describe('G3 Kỳ tháng — Lịch sử đặt hàng', () => {
+  it('⋯ → "Lịch sử đặt hàng" mở hộp lịch sử của người đó', async () => {
+    stubMonthApi();
+    open();
+    await userEvent.click(within(await rowOf('Nhân viên A')).getByRole('button', { name: 'Thao tác cho Nhân viên A' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Lịch sử đặt hàng' }));
+    expect(await screen.findByRole('dialog', { name: 'Lịch sử đặt hàng · Nhân viên A' })).toBeInTheDocument();
   });
 });
 

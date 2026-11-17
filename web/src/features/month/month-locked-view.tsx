@@ -7,6 +7,7 @@ import { LoadError, Loading } from '@/ui/load-state';
 import { arrivalsPlanQuery } from '@/features/arrivals/arrivals.api';
 import { useSendState } from '@/features/send-adm/use-send-state';
 import { AdjustDialog } from '@/features/summary/adjust-dialog';
+import { OrderHistoryDialog } from '@/features/summary/order-history-dialog';
 import { RegistrationDialog } from '@/features/summary/registration-dialog';
 import { usePeriodSummary, type AdjustReason, type PersonRow } from '@/features/summary/summary.api';
 import { usePersonTableRows } from '@/features/summary/use-person-table-rows';
@@ -57,6 +58,7 @@ export function MonthLockedView({ ym, openYm, chip, view, areas, q, left, preset
   const inAreas = useCallback((r: PersonRow) => areas.length === 0 || areas.includes(areaOf(r)), [areas, areaOf]);
   const visible = useMemo(() => shown.rows.filter((r) => matchesChip(r, chip) && (!left || r.user_status !== 'active') && inAreas(r)), [shown.rows, chip, left, inAreas]);
   const open = useCallback((r: PersonRow) => setViewing(r.request_id), []);
+  const [history, setHistory] = useState<PersonRow | null>(null);
   const panel = usePanelParam('request', { order: useMemo(() => visible.map((r) => r.request_id), [visible]) });
   const viewRows = useMemo(() => keepViewing(visible, shown.rows, viewing), [visible, shown.rows, viewing]);
 
@@ -105,6 +107,7 @@ export function MonthLockedView({ ym, openYm, chip, view, areas, q, left, preset
           activeId={panel.id ?? undefined}
           onView={open}
           onAdjust={panel.open}
+          onHistory={setHistory}
           onClear={() => {
             onChip('all');
             onQ('');
@@ -113,6 +116,7 @@ export function MonthLockedView({ ym, openYm, chip, view, areas, q, left, preset
         />
       )}
       {index >= 0 && <RegistrationDialog ym={ym} deadline={null} rows={viewRows} index={index} onIndex={(i) => setViewing(viewRows[i]!.request_id)} onClose={() => setViewing(null)} />}
+      {history && <OrderHistoryDialog sub={history.user_sub} name={history.full_name ?? history.email ?? history.user_sub} onClose={() => setHistory(null)} />}
       {panel.id && <AdjustDialog requestId={panel.id} presetReason={presetReason} onClose={panel.close} nav={{ index: panel.index, total: panel.total, onStep: panel.step }} />}
     </>
   );

@@ -1,3 +1,4 @@
+import { AdminUserHistoryController } from './admin-user-history.controller';
 import { Module, OnModuleInit } from '@nestjs/common';
 import { AdminRequestService } from './admin-request.service';
 import { AdminRequestsController } from './admin-requests.controller';
@@ -47,6 +48,7 @@ import { SummaryService } from './summary.service';
     AdminSummaryController,
     AdminRequestsController,
     ReviewController,
+    AdminUserHistoryController,
   ],
   providers: [
     AdminRequestService,

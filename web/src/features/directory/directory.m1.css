@@ -23,7 +23,7 @@
 [data-shell='admin'] .dr-facts > div { display: grid; grid-template-columns: 120px 1fr; gap: var(--s-2); padding: 12px 0; border-bottom: 1px solid var(--c-line); }
 [data-shell='admin'] .dr-facts dt { color: var(--c-muted); font: var(--t-sm); font-weight: 600; }
 [data-shell='admin'] .dr-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
-[data-shell='admin'] .dr-audit-link { justify-self: start; }
+[data-shell='admin'] .dr-links { display: flex; flex-wrap: wrap; gap: var(--s-2); }
 [data-shell='admin'] .dr-auto { color: var(--c-muted); font: var(--t-sm); white-space: nowrap; }
 [data-shell='admin'] .dr-auto--status { white-space: normal; }
 [data-shell='admin'] .dr-auto--status[data-failed] { color: var(--c-danger, var(--c-muted)); }

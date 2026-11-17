@@ -65,21 +65,7 @@ const catalog = (expr: SQL) =>
 const count = (status: string) =>
   sql`count(*) FILTER (WHERE l.review_status = ${status})::int`;
 
-@Injectable()
-export class HistoryService {
-  constructor(@Inject(DRIZZLE_DB) private readonly db: Database) {}
-
-  // Mỗi người một phiếu/kỳ → period_ym đủ làm khóa keyset, mới nhất trước
-  async list(
-    userSub: string,
-    limit: number,
-    cursor?: string,
-  ): Promise<{ items: HistoryItem[]; next_cursor: string | null }> {
-    const after = cursor ? parseCursor(cursor) : null;
-    const { rows } = await this.db.execute<
-      HistoryRow & Record<string, unknown>
-    >(sql`
-      SELECT to_char(r.period_ym, 'YYYY-MM') AS period_ym,
+const HISTORY_COLUMNS = sql`to_char(r.period_ym, 'YYYY-MM') AS period_ym,
              count(l.id)::int AS line_count,
              ${effective(sql`l.qty`)} AS total_qty,
              ${effective(sql`l.delivered_qty`)} AS delivered_qty,
@@ -95,7 +81,23 @@ export class HistoryService {
              ${catalog(sql`l.qty`)} AS cat_qty,
              ${catalog(sql`l.delivered_qty`)} AS cat_delivered_qty,
              ${catalog(REMAINING_QTY)} AS cat_remaining_qty,
-             count(l.id) FILTER (WHERE ${CATALOG_LINE} AND ${REMAINING_QTY} > 0)::int AS cat_owed_line_count
+             count(l.id) FILTER (WHERE ${CATALOG_LINE} AND ${REMAINING_QTY} > 0)::int AS cat_owed_line_count`;
+
+@Injectable()
+export class HistoryService {
+  constructor(@Inject(DRIZZLE_DB) private readonly db: Database) {}
+
+  // Mỗi người một phiếu/kỳ → period_ym đủ làm khóa keyset, mới nhất trước
+  async list(
+    userSub: string,
+    limit: number,
+    cursor?: string,
+  ): Promise<{ items: HistoryItem[]; next_cursor: string | null }> {
+    const after = cursor ? parseCursor(cursor) : null;
+    const { rows } = await this.db.execute<
+      HistoryRow & Record<string, unknown>
+    >(sql`
+      SELECT ${HISTORY_COLUMNS}
       FROM requests r LEFT JOIN request_lines l ON l.request_id = r.id
       WHERE r.user_sub = ${userSub}
         AND (${after === null} OR r.period_ym < ${after ? ymToDate(after) : null}::date)
@@ -111,6 +113,25 @@ export class HistoryService {
           ? encodeCursor([page[page.length - 1].period_ym])
           : null,
     };
+  }
+
+  // G3: Adm D&E xem phiếu từng tháng của một người trong một năm; request_id để mở chi tiết phiếu
+  async forYear(
+    userSub: string,
+    year: number,
+  ): Promise<(HistoryItem & { request_id: string })[]> {
+    const { rows } = await this.db.execute<
+      HistoryRow & { request_id: string } & Record<string, unknown>
+    >(sql`
+      SELECT r.id AS request_id, ${HISTORY_COLUMNS}
+      FROM requests r LEFT JOIN request_lines l ON l.request_id = r.id
+      WHERE r.user_sub = ${userSub}
+        AND r.period_ym >= make_date(${year}::int, 1, 1)
+        AND r.period_ym < make_date(${year}::int + 1, 1, 1)
+      GROUP BY r.id, r.period_ym
+      ORDER BY r.period_ym DESC
+    `);
+    return rows.map((row) => ({ ...toItem(row), request_id: row.request_id }));
   }
 }
 

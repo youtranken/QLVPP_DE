@@ -201,3 +201,19 @@ export function useRegistration(ym: string, id: string | undefined) {
     queryFn: () => apiFetch<RegistrationView>(`${base(ym)}/registrations/${id}`),
   });
 }
+
+export interface UserHistoryItem {
+  period_ym: string;
+  request_id: string;
+  total_qty: number;
+  delivered_qty: number;
+  cancelled_qty: number;
+}
+
+// G3: phiếu từng tháng của một người trong một năm (Adm D&E, chỉ đọc)
+export function useUserHistory(sub: string, year: number) {
+  return useQuery({
+    queryKey: ['admin-user-history', sub, year],
+    queryFn: () => apiFetch<{ sub: string; full_name: string | null; year: number; items: UserHistoryItem[] }>(`/api/admin/users/${encodeURIComponent(sub)}/requests?year=${year}`),
+  });
+}

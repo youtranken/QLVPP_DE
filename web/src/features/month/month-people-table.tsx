@@ -16,6 +16,7 @@ interface Props {
   activeId?: string;
   onView: (row: PersonRow) => void;
   onAdjust: (requestId: string) => void;
+  onHistory: (row: PersonRow) => void;
   // Lọc/tìm không ra: nút Xóa lọc trong khung trống đưa về chip Tất cả, ô tìm rỗng, mọi khu
   onClear?: () => void;
 }
@@ -80,7 +81,7 @@ function StatusCell({ row }: { row: PersonRow }) {
   return <span className="sm-muted">{requestStatusText(t, status)}</span>;
 }
 
-function useColumns(busy: boolean, onView: Props['onView'], onAdjust: Props['onAdjust']) {
+function useColumns(busy: boolean, onView: Props['onView'], onAdjust: Props['onAdjust'], onHistory: Props['onHistory']) {
   const { t } = useTranslation();
   return useMemo<ColumnDef<PersonRow, unknown>[]>(() => {
     const columns: ColumnDef<PersonRow, unknown>[] = [
@@ -101,6 +102,7 @@ function useColumns(busy: boolean, onView: Props['onView'], onAdjust: Props['onA
                 items={[
                   { label: t('month.table.view'), onSelect: () => onView(r) },
                   { label: t('month.table.adjust'), onSelect: () => onAdjust(r.request_id) },
+                  { label: t('summary.history.open'), onSelect: () => onHistory(r) },
                 ]}
               />
             </span>
@@ -108,12 +110,12 @@ function useColumns(busy: boolean, onView: Props['onView'], onAdjust: Props['onA
       },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
-  }, [t, busy, onView, onAdjust]);
+  }, [t, busy, onView, onAdjust, onHistory]);
 }
 
-export function MonthPeopleTable({ rows, loading, busy, narrowed, activeId, onView, onAdjust, onClear }: Props) {
+export function MonthPeopleTable({ rows, loading, busy, narrowed, activeId, onView, onAdjust, onHistory, onClear }: Props) {
   const { t } = useTranslation();
-  const columns = useColumns(busy, onView, onAdjust);
+  const columns = useColumns(busy, onView, onAdjust, onHistory);
   const data = useMemo(() => rows.map((r) => ({ ...r, id: r.request_id })), [rows]);
   return (
     <DataTable
