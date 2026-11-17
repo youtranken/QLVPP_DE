@@ -14,7 +14,7 @@
 }
 [data-shell='admin'] .table tr.clickable { cursor: pointer; }
 [data-shell='admin'] .table tr.clickable:hover td { background: var(--c-surface-hover); }
-[data-shell='admin'] .table tr[aria-current='true'] td { background: var(--c-acc-tint); }
+[data-shell='admin'] .table tr[aria-current='true'] td { background: var(--c-acc-soft); }
 [data-shell='admin'] .table tr[aria-current='true'] td:first-child { box-shadow: inset 3px 0 0 var(--c-acc); }
 [data-shell='admin'] .table tr.is-inactive td { color: var(--c-muted); }
 [data-shell='admin'] .table .th-sort { display: inline-flex; align-items: center; gap: var(--s-1); border: 0; background: none; padding: 0; color: inherit; font: inherit; cursor: pointer; }

@@ -7,7 +7,7 @@ export function LanguageSwitch({ className = '', short = false }: { className?: 
   const { t, i18n } = useTranslation();
   const current = i18n.language === 'en' ? 'en' : 'vi';
   return (
-    <div role="radiogroup" aria-label={t('common.languages.label')} className={`seg ${className}`}>
+    <div role="radiogroup" aria-label={t('common.languages.label')} className={`seg seg--value ${className}`}>
       {LANGS.map((lang) => (
         <button
           key={lang}

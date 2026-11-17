@@ -107,8 +107,8 @@ describe('Thanh lọc Sản phẩm (góp ý vòng 2, ảnh 6)', () => {
     expect(css()).not.toMatch(/\.ct-gchips[^{]*\{[^}]*flex-wrap: wrap/);
   });
 
-  it('CSS: trạng thái đang chọn là ô trắng nổi trong rãnh; chip nhóm đang chọn tô đặc (hai cách chọn khác nhau)', () => {
-    expect(rule(".ct-seg__opt[aria-pressed='true']")).toContain('background: var(--c-surface)');
-    expect(rule(".ct-gchip[aria-pressed='true']")).toContain('background: var(--c-sel)');
+  it('CSS: Tất cả/Đang dùng và chip nhóm đang chọn cùng một kiểu B (nền xanh nhạt, TC-03)', () => {
+    expect(rule(".ct-seg__opt[aria-pressed='true']")).toContain('background: var(--c-acc-soft)');
+    expect(rule(".ct-gchip[aria-pressed='true']")).toContain('background: var(--c-acc-soft)');
   });
 });

@@ -1,7 +1,7 @@
 [data-shell='admin'] .ct-page { --ct-thumb: 36px; }
 [data-shell='admin'] .ct-chips { display: flex; flex-wrap: wrap; gap: var(--s-2); }
 [data-shell='admin'] .ct-chip { display: inline-flex; align-items: center; gap: var(--s-2); height: 36px; padding: 0 16px; border: 0; border-radius: var(--r-sm); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-ink); font: var(--t-label); cursor: pointer; white-space: nowrap; }
-[data-shell='admin'] .ct-chip[aria-pressed='true'], [data-shell='admin'] .ct-chip[aria-checked='true'] { background: var(--c-sel); color: var(--c-on-sel); box-shadow: none; }
+[data-shell='admin'] .ct-chip[aria-pressed='true'], [data-shell='admin'] .ct-chip[aria-checked='true'] { background: var(--c-acc-soft); color: var(--c-acc-ink); box-shadow: inset 0 0 0 1px var(--c-acc-line); }
 [data-shell='admin'] .ct-chip:hover:not([aria-pressed='true']):not([aria-checked='true']) { background: var(--c-surface-hover); box-shadow: inset 0 0 0 1px var(--c-line-strong); }
 [data-shell='admin'] .ct-chip:focus-visible { box-shadow: var(--focus); outline: none; }
 [data-shell='admin'] .ct-chip__n { color: var(--c-muted); font: var(--t-cap); }

@@ -53,12 +53,8 @@ describe('tương phản token bảng màu v3', () => {
   it.each(PAIRS)('%s trên %s ≥ 4.5', (fg, bg) => {
     expect(contrast(tok(fg), tok(bg))).toBeGreaterThanOrEqual(4.5);
   });
-  it('--c-on-sel trên --c-sel đạt 4.5:1', () => {
-    expect(contrast(tok('--c-on-dark'), tok('--c-dark'))).toBeGreaterThanOrEqual(4.5);
-    expect(css).toMatch(/--c-sel:\s*var\(--c-dark\)/);
-    expect(css).toMatch(/--c-on-sel:\s*var\(--c-on-dark\)/);
-    expect(css).toMatch(/--c-sel-count:\s*var\(--c-on-dark-2\)/);
-    expect(contrast(tok('--c-on-dark-2'), tok('--c-dark'))).toBeGreaterThanOrEqual(4.5);
+  it('không còn token đang chọn nền tối --c-sel (TC-03)', () => {
+    expect(css).not.toMatch(/--c-(sel|on-sel|sel-count):/);
   });
   it.each(DOTS)('chấm kỳ %s trên %s ≥ 3', (fg, bg) => {
     expect(contrast(tok(fg), tok(bg))).toBeGreaterThanOrEqual(3);

@@ -19,11 +19,11 @@
 [data-shell='member'] .m-tabs { display: flex; flex: none; margin-left: 0; gap: 4px; padding: 4px; border-radius: var(--r-sm); background: var(--c-glass); border: 1px solid var(--c-glass-line); }
 [data-shell='member'] .m-tabs a { display: inline-flex; align-items: center; white-space: nowrap; min-height: 44px; padding: 0 var(--s-4); border-radius: var(--r-sm); text-decoration: none; color: var(--c-on-dark-2); font-size: 14px; font-weight: 600; }
 [data-shell='member'] .m-tabs a:hover { background: var(--c-on-dark-hover); color: var(--c-on-dark); }
-[data-shell='member'] .m-tabs a[aria-current='page'] { background: var(--c-surface); color: var(--c-ink); }
+[data-shell='member'] .m-tabs a[aria-current='page'] { background: var(--c-rail-on); color: var(--c-on-dark); box-shadow: inset 0 -2px 0 var(--c-rail-bar); }
 
 [data-shell='member'] .m-top .m-lang { background: var(--c-glass); border: 1px solid var(--c-glass-line); }
 [data-shell='member'] .m-top .m-lang button { min-height: 44px; min-width: 44px; color: var(--c-on-dark-2); box-shadow: none; }
-[data-shell='member'] .m-top .m-lang button[aria-checked='true'] { background: var(--c-surface); color: var(--c-ink); }
+[data-shell='member'] .m-top .m-lang button[aria-checked='true'] { background: var(--c-acc); color: var(--c-on-acc); }
 [data-shell='member'] .m-top .m-lang button:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
 
 [data-shell='member'] .m-top .notif-btn { width: 44px; height: 44px; border-radius: var(--r-sm); border: 1px solid var(--c-glass-line); background: var(--c-on-dark-fill); color: var(--c-on-dark-2); }
@@ -48,8 +48,8 @@
 
 [data-shell='member'] .bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(3, 1fr); padding-bottom: env(safe-area-inset-bottom); height: calc(58px + env(safe-area-inset-bottom)); background: var(--c-shell-a); border-top: 1px solid var(--c-glass-line); }
 [data-shell='member'] .bottom-nav a, [data-shell='member'] .bottom-nav button { display: grid; justify-items: center; align-content: center; gap: 2px; text-decoration: none; min-height: 44px; margin: var(--s-1) var(--s-2); border: 0; background: transparent; cursor: pointer; font-family: inherit; border-radius: var(--r-md); color: var(--c-on-dark-2); font-size: 14px; font-weight: 600; }
-[data-shell='member'] .bottom-nav a[aria-current='page'] { background: var(--c-on-dark-current); color: var(--c-on-dark); }
-[data-shell='member'] .bottom-nav button[aria-expanded='true'], [data-shell='member'] .bottom-nav button[aria-current='page'] { background: var(--c-on-dark-current); color: var(--c-on-dark); }
+[data-shell='member'] .bottom-nav a[aria-current='page'] { background: var(--c-rail-on); color: var(--c-on-dark); box-shadow: inset 0 3px 0 var(--c-rail-bar); }
+[data-shell='member'] .bottom-nav button[aria-expanded='true'], [data-shell='member'] .bottom-nav button[aria-current='page'] { background: var(--c-rail-on); color: var(--c-on-dark); box-shadow: inset 0 3px 0 var(--c-rail-bar); }
 [data-shell='member'] .bottom-nav button:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
 [data-shell='member'] .bottom-nav a svg, [data-shell='member'] .bottom-nav button svg { width: 24px; height: 24px; }
 /* Nút trên nền tối đều có hover */
