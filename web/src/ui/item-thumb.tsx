@@ -1,6 +1,9 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import type { Tone } from '@/lib/group-tone';
-import { Icon } from './icon';
+import { categoryIcon, type CategoryIcon } from '@/lib/category-icon';
+import { Icon, type IconName } from './icon';
+
+const ICON_OF: Record<CategoryIcon, IconName> = { pen: 'pen', paper: 'paper', clip: 'clip', folder: 'folder', box: 'pkg' };
 
 export type ThumbSize = 34 | 36 | 40 | 42 | 48 | 56 | 96 | 120 | 'card' | 'tile';
 
@@ -13,7 +16,8 @@ const FLUID = {
 // Ảnh có thể dính 429/lỗi mạng thoáng qua → thử lại tối đa 2 lần (500 ms, 1500 ms), tham số ?r=n chỉ thêm khi thử lại
 const RETRY_DELAYS_MS = [500, 1500];
 
-export function ItemThumb({ fileId, alt, tone, size }: { fileId: string | null; alt: string; tone: Tone; size: ThumbSize }) {
+// G9: chưa có ảnh → biểu tượng theo nhóm (category = tên nhóm) trên nền tông nhóm; món ngoài danh mục → ô "?" viền đứt
+export function ItemThumb({ fileId, alt, tone, size, category, custom = false }: { fileId: string | null; alt: string; tone: Tone; size: ThumbSize; category?: string | null; custom?: boolean }) {
   const [failedId, setFailedId] = useState<string | null>(null);
   const [retry, setRetry] = useState({ id: fileId, n: 0, waiting: false });
   const attempt = retry.id === fileId ? retry.n : 0;
@@ -55,9 +59,18 @@ export function ItemThumb({ fileId, alt, tone, size }: { fileId: string | null; 
       </span>
     );
   }
+  const iconSize = px ? Math.round(px * 0.45) : 40;
+  if (custom) {
+    return (
+      <span data-thumb="custom" aria-hidden="true" style={{ ...box, background: 'var(--c-surface)', border: '1.5px dashed var(--c-line-input)', color: 'var(--c-muted)', font: 'var(--t-label)', fontSize: iconSize }}>
+        ?
+      </span>
+    );
+  }
+  const icon = categoryIcon(category);
   return (
-    <span data-thumb="placeholder" style={{ ...box, color: 'var(--c-faint)' }}>
-      <Icon name="image" size={px ? Math.round(px * 0.4) : 40} />
+    <span data-thumb="placeholder" data-icon={icon} style={{ ...box, color: 'var(--c-ink-2)' }}>
+      <Icon name={ICON_OF[icon]} size={iconSize} />
     </span>
   );
 }

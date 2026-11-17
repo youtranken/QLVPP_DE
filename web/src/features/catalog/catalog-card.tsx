@@ -57,7 +57,7 @@ export function CatalogCard({ row, groupName, groupActive, open = false, onEdit 
   return (
     <article className={['ct-card', row.usable ? '' : 'is-inactive', open ? 'is-open' : ''].filter(Boolean).join(' ')}>
       <div className="ct-card__tile">
-        <ItemThumb fileId={row.image_file_id} alt={name} tone={row.tone} size="card" />
+        <ItemThumb fileId={row.image_file_id} alt={name} tone={row.tone} size="card" category={groupName} />
         <span className="ct-card__group">{groupName}</span>
         {!row.usable && <PausedStamp />}
         {row.image_file_id === null && (

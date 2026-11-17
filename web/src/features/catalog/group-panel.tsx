@@ -99,7 +99,7 @@ export function GroupPanel({ group, tone, items, loading, loadError, onRetry, bu
               const name = categoryLabel(item, i18n.language);
               return (
                 <li key={item.id} className="gp-row">
-                  <ItemThumb fileId={item.image_file_id} alt={name} tone={tone} size={40} />
+                  <ItemThumb fileId={item.image_file_id} alt={name} tone={tone} size={40} category={group.name} />
                   <span className="gp-row__text">
                     <span className="gp-row__name">{name}</span>
                     <small className="gp-row__unit">{unitName(item.unit)}</small>

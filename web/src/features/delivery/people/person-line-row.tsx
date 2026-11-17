@@ -54,7 +54,7 @@ export function PersonLineRow({ line, value, max, taken, notReceived, waiting, s
   return (
     <li className="pp-row">
       <div className="pp-row__main">
-        <ItemThumb fileId={line.image_file_id} alt="" tone="g0" size={48} />
+        <ItemThumb fileId={line.image_file_id} alt="" tone="g0" size={48} category={line.category?.name} custom={!line.item_id} />
         <div className="pp-row__text">
           <b className="pp-row__name">{fmt.name(line)}</b>
           <small>

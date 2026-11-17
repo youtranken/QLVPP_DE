@@ -1,4 +1,4 @@
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ItemThumb } from './item-thumb';
 
@@ -21,10 +21,10 @@ describe('ItemThumb', () => {
     expect(container.querySelector('img')).toBeNull();
     expect(container.querySelector('[data-thumb="placeholder"]')).not.toBeNull();
   });
-  it('fileId null → placeholder, không img', () => {
+  it('fileId null, không biết nhóm → placeholder biểu tượng hộp chung (G9), không img', () => {
     const { container } = render(<ItemThumb fileId={null} alt="" tone="g0" size={34} />);
     expect(container.querySelector('img')).toBeNull();
-    expect(container.querySelector('[data-thumb="placeholder"] use')!.getAttribute('href')).toBe('#u-image');
+    expect(container.querySelector('[data-thumb="placeholder"] use')!.getAttribute('href')).toBe('#u-pkg');
   });
   it('placeholder lấy tông nhóm của món (không luôn g0)', () => {
     const { container } = render(<ItemThumb fileId={null} alt="" tone="g3" size="card" />);
@@ -84,4 +84,32 @@ describe('ItemThumb', () => {
       expect((img.parentElement as HTMLElement).style.aspectRatio).toBe('1 / 1');
     }
   });
+
+  describe('G9 ảnh tạm', () => {
+    it('không ảnh, nhóm "Bút & viết" → biểu tượng pen, aria-hidden, nền tông nhóm', () => {
+      const { container } = render(<ItemThumb fileId={null} alt="" tone="g3" size={40} category="Bút & viết" />);
+      const box = container.querySelector('[data-thumb="placeholder"]') as HTMLElement;
+      expect(box).toHaveAttribute('data-icon', 'pen');
+      expect(box.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+      expect(box.style.background).toBe('var(--g3)');
+    });
+
+    it('nhóm lạ → box', () => {
+      const { container } = render(<ItemThumb fileId={null} alt="" tone="g0" size={40} category="Pin & điện" />);
+      expect(container.querySelector('[data-thumb="placeholder"]')).toHaveAttribute('data-icon', 'box');
+    });
+
+    it('món ngoài danh mục không ảnh → ô "?" viền đứt', () => {
+      const { container } = render(<ItemThumb fileId={null} alt="" tone="g0" size={40} custom />);
+      const box = container.querySelector('[data-thumb="custom"]') as HTMLElement;
+      expect(box).toHaveTextContent('?');
+      expect(box.style.border).toContain('dashed');
+    });
+
+    it('có ảnh → img như cũ dù có nhóm', () => {
+      render(<ItemThumb fileId="f-1" alt="Bút" tone="g0" size={40} category="Bút & viết" />);
+      expect(screen.getByRole('img', { name: 'Bút' })).toHaveAttribute('src', '/api/files/f-1');
+    });
+  });
 });
+

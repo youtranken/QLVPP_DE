@@ -84,7 +84,7 @@ function useColumns(groupName: (r: StockRow) => string, onAction: (a: StockActio
         header: t('stock.page.colItem'),
         cell: ({ row: { original: r } }) => (
           <span className="sk-item">
-            <ItemThumb fileId={r.image_file_id} alt="" tone={r.tone} size={36} />
+            <ItemThumb fileId={r.image_file_id} alt="" tone={r.tone} size={36} category={groupName(r)} />
             <span className="sk-item__text">
               <button type="button" className="sk-item__name" aria-label={t('stock.page.openLedger', { name: r.name })} onClick={() => onAction('ledger', r)}>
                 {r.name}

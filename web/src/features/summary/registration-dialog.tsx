@@ -31,7 +31,7 @@ function Line({ line, review }: { line: LineView; review?: { updatedAt: string; 
   const unit = fmt.unit(line.item?.unit ?? line.custom_unit);
   return (
     <li className="rg-line">
-      <ItemThumb fileId={line.item?.image_file_id ?? line.image_file_id} alt="" tone="g0" size={40} />
+      <ItemThumb fileId={line.item?.image_file_id ?? line.image_file_id} alt="" tone="g0" size={40} custom={!line.item} />
       <span className="rg-line__main">
         <b className={paused ? 'rg-line__name is-paused' : 'rg-line__name'}>{name}</b>
         {paused && <small className="rg-line__paused">{t('common.paused')}</small>}

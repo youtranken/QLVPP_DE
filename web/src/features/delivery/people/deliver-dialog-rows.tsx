@@ -67,7 +67,7 @@ function LineRow({ row, limit, disabled, waiting, shortage, showLeft, onChange }
   return (
     <tr className={notReceived ? 'dd-row--off' : undefined}>
       <td className="dd-item">
-        <ItemThumb fileId={l.image_file_id} alt="" tone="g0" size={42} />
+        <ItemThumb fileId={l.image_file_id} alt="" tone="g0" size={42} category={l.category?.name} custom={!l.item_id} />
         <span className="dd-item__text">
           <b>{name}</b>
           {l.is_debt && <span className="dd-debt">{t('delivery.confirm.debtTag', { month: monthOf(l.period_ym) })}</span>}

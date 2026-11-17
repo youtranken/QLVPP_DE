@@ -18,7 +18,7 @@ export function ItemPanelHead({ item, groupName, position, tone }: Props) {
   const meta = [item.code, groupName, position ? `${at}/${position.total}` : null].filter(Boolean).join(' · ');
   return (
     <div className="ct-panel-head">
-      <ItemThumb fileId={item.image_file_id} alt="" tone={tone} size={56} />
+      <ItemThumb fileId={item.image_file_id} alt="" tone={tone} size={56} category={groupName} />
       <div className="ct-panel-head__text">
         <small className="ct-panel-meta">{meta}</small>
         <DialogTitle className="ct-panel-name" aria-label={t('catalog.panel.edit', { name: item.name })}>

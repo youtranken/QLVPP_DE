@@ -43,7 +43,7 @@ export function ItemCard({
   return (
     <article className={`rq-card${qty > 0 ? ' is-picked' : ''}${paused ? ' is-paused' : ''}`}>
       <div className="rq-card-tile">
-        <ItemThumb fileId={item.image_file_id} alt="" tone={tone} size="tile" />
+        <ItemThumb fileId={item.image_file_id} alt="" tone={tone} size="tile" category={groupLabel} />
         {paused && <PausedStamp />}
         {groupLabel && <span className="rq-card-group">{groupLabel}</span>}
         {qty > 0 && (

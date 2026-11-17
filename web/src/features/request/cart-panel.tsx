@@ -52,7 +52,7 @@ function CartRow({
   const alert = lowered || !!line.stopped;
   return (
     <li className={`rq-line${error ? ' is-error' : alert ? ' is-alert' : ''}`} data-line-key={line.key} tabIndex={-1}>
-      <ItemThumb fileId={line.label.image_file_id} alt="" tone={tone} size={42} />
+      <ItemThumb fileId={line.label.image_file_id} alt="" tone={tone} size={42} custom={!line.item_id} />
       <div className="rq-line-main">
         {!line.item_id && !line.readonly && !view ? (
           <button type="button" className="rq-line-name rq-line-link" aria-label={t('request.cart.edit', { name })} title={name} onClick={onEdit}>
