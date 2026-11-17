@@ -57,18 +57,11 @@ describe('DataTable — nhóm dính', () => {
     expect(heads).toEqual([expect.stringContaining('Bút & viết · 2 món'), expect.stringContaining('Giấy & sổ · 1 món')]);
   });
 
-  it('bấm chevron → aria-expanded="false" và ẩn hàng của nhóm, nhóm khác giữ nguyên', async () => {
+  it('không truyền onCollapsedChange: dòng nhóm không có nút thu/mở, mọi hàng luôn hiện (TN-11)', () => {
     renderWithI18n(<DataTable data={ITEMS} columns={COLUMNS} emptyText="Trống" groupBy={GROUP_BY} />);
-    const chevron = screen.getByRole('button', { name: 'Thu/mở nhóm Bút & viết · 2 món' });
-    expect(chevron).toHaveAttribute('aria-expanded', 'true');
-    await userEvent.click(chevron);
-    expect(chevron).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByText('Bút bi xanh')).not.toBeInTheDocument();
-    expect(screen.queryByText('Bút chì 2B')).not.toBeInTheDocument();
-    expect(screen.getByText('Giấy A4')).toBeInTheDocument();
-    await userEvent.click(chevron);
-    expect(chevron).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.queryByRole('button', { name: /Thu\/mở nhóm/ })).not.toBeInTheDocument();
     expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
+    expect(screen.getByText('Giấy A4')).toBeInTheDocument();
   });
 
   it('chọn 1/2 hàng của nhóm → checkbox nhóm lửng; chọn đủ 2/2 → checked', async () => {

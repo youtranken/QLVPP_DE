@@ -89,9 +89,9 @@ export function DataTable<T>({
   rowProps,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
-  const [internalCollapsed, setInternalCollapsed] = useState<ReadonlySet<string>>(new Set());
-  const collapsed = controlledCollapsed ?? internalCollapsed;
-  const setCollapsed = onCollapsedChange ?? setInternalCollapsed;
+  // Thu/mở nhóm chỉ có khi trang tự quản (Sản phẩm thu sẵn nhóm tạm ngưng); bảng khác không có nút thu/mở (TN-11)
+  const collapsed = controlledCollapsed ?? NONE;
+  const setCollapsed = onCollapsedChange;
   const [internalSort, setInternalSort] = useState<SortingState>(initialSort);
   const [globalFilter, setGlobalFilter] = useState('');
   const sorting = controlledSorting ?? internalSort;
@@ -131,7 +131,7 @@ export function DataTable<T>({
     const next = new Set(collapsed);
     if (next.has(key)) next.delete(key);
     else next.add(key);
-    setCollapsed(next);
+    setCollapsed?.(next);
   };
   const bodyRow = (row: Row<T>) => {
     const extra = expandedRow?.(row.original);
@@ -242,7 +242,7 @@ export function DataTable<T>({
                     groupBy={groupBy}
                     colSpan={colSpan}
                     expanded={!collapsed.has(g.key)}
-                    onToggleExpanded={() => toggleGroup(g.key)}
+                    onToggleExpanded={setCollapsed ? () => toggleGroup(g.key) : undefined}
                     selection={selection}
                   />
                   {!collapsed.has(g.key) && g.rows.map(bodyRow)}
@@ -257,6 +257,8 @@ export function DataTable<T>({
     </>
   );
 }
+
+const NONE: ReadonlySet<string> = new Set();
 
 function groupRows<T>(rows: Row<T>[], keyOf: (row: T) => string): RowGroup<T>[] {
   const groups = new Map<string, Row<T>[]>();

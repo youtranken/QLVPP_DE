@@ -2,7 +2,7 @@
 [data-shell='admin'] .table-wrap { position: relative; overflow-x: auto; border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); }
 [data-shell='admin'] .table-wrap:has(.dt-group) { overflow: clip; }
 [data-shell='admin'] .table { width: 100%; border-collapse: separate; border-spacing: 0; color: var(--c-ink); font: var(--t-sm); }
-[data-shell='admin'] .table th { position: sticky; top: 0; z-index: 2; height: 36px; padding: 0 12px; border-bottom: 1px solid var(--c-line); background: var(--c-surface); color: var(--c-muted); font: var(--t-cap); text-align: left; text-transform: none; white-space: nowrap; }
+[data-shell='admin'] .table th { position: sticky; top: 0; z-index: 2; height: 36px; padding: 0 12px; border-bottom: 1px solid var(--c-line); background: var(--c-surface-2); color: var(--c-muted); font: var(--t-cap); text-align: left; text-transform: none; white-space: nowrap; }
 [data-shell='admin'] .table td { height: 52px; padding: 8px 12px; border-bottom: 1px solid var(--c-line); vertical-align: middle; }
 [data-shell='admin'] .table[data-density='compact'] td { height: 44px; padding-block: 4px; }
 [data-shell='admin'] .table tbody tr:last-child td { border-bottom: 0; }
@@ -134,3 +134,8 @@
   /* Ô dính nào cũng là một lớp riêng: ô đang mở menu ⋯ phải nổi trên ô dính của dòng dưới và tiêu đề */
   [data-shell='admin'] :where(.table-wrap) td.col-actions:has([aria-expanded='true']) { z-index: 4; }
 }
+/* Dòng cần chú ý (TC-08): vạch trái 3px vẽ bằng bóng trong (không xô cột) + nền nhạt cùng tông. Cam = người đã nghỉ, đỏ = quá hạn / chờ duyệt lâu */
+[data-shell='admin'] .table tr.row--attn-warn td { background: var(--c-warn-soft); }
+[data-shell='admin'] .table tr.row--attn-warn td:first-child { box-shadow: inset 3px 0 0 var(--c-warn-fill); }
+[data-shell='admin'] .table tr.row--attn-danger td { background: var(--c-danger-tint); }
+[data-shell='admin'] .table tr.row--attn-danger td:first-child { box-shadow: inset 3px 0 0 var(--c-danger); }

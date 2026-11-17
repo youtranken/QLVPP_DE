@@ -6,14 +6,6 @@
 [data-shell='admin'] .bc-item__note { font: var(--t-sm); color: var(--c-muted); }
 [data-shell='admin'] .bc-empty { margin: 0; padding: var(--s-4); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); font: var(--t-body); color: var(--c-muted); }
 [data-shell='admin'] .bc-group__meta { margin-left: var(--s-3); font: var(--t-sm); font-weight: 600; }
-[data-shell='admin'] .table .dt-group:has(.bc-group[data-tone='g0']) th { background: var(--g0); color: var(--g0-ink); }
-[data-shell='admin'] .table .dt-group:has(.bc-group[data-tone='g1']) th { background: var(--g1); color: var(--g1-ink); }
-[data-shell='admin'] .table .dt-group:has(.bc-group[data-tone='g2']) th { background: var(--g2); color: var(--g2-ink); }
-[data-shell='admin'] .table .dt-group:has(.bc-group[data-tone='g3']) th { background: var(--g3); color: var(--g3-ink); }
-[data-shell='admin'] .table .dt-group:has(.bc-group[data-tone='g4']) th { background: var(--g4); color: var(--g4-ink); }
-[data-shell='admin'] .table .dt-group:has(.bc-group[data-tone='g5']) th { background: var(--g5); color: var(--g5-ink); }
-[data-shell='admin'] .table .dt-group:has(.bc-group[data-tone='g6']) th { background: var(--g6); color: var(--g6-ink); }
-[data-shell='admin'] .table .dt-group:has(.bc-group[data-tone='g7']) th { background: var(--g7); color: var(--g7-ink); }
 [data-shell='admin'] .bc-table td.bc-order-col { padding-top: 8px; padding-bottom: 8px; }
 /* Dòng lỗi lấy chỗ của phần đệm ô (2 + 14 ≤ 16): báo lỗi không làm dòng cao lên, bảng không nhảy khi gõ */
 [data-shell='admin'] .bc-table td.bc-order-col:has(.bc-order__error) { padding-top: 0; padding-bottom: 0; }

@@ -28,7 +28,7 @@ export function GroupHeaderRow<T>({
   groupBy: GroupBy<T>;
   colSpan: number;
   expanded: boolean;
-  onToggleExpanded: () => void;
+  onToggleExpanded?: () => void;
   selection?: { selected: Set<string>; onToggleAll: (ids: string[], checked: boolean) => void };
 }) {
   const { t } = useTranslation();
@@ -58,17 +58,19 @@ export function GroupHeaderRow<T>({
             {groupBy.header(group.key, group.rows.map((r) => r.original))}
           </span>
           {groupBy.aside?.(group.key, group.rows.map((r) => r.original))}
-          <button
-            type="button"
-            id={`${id}-btn`}
-            className="dt-group__toggle"
-            aria-expanded={expanded}
-            aria-labelledby={toggleLabelIds}
-            onClick={onToggleExpanded}
-          >
-            <span className="sr-only">{t('common.table.toggleGroup')}</span>
-            <Icon name={expanded ? 'chevup' : 'chev'} size={18} />
-          </button>
+          {onToggleExpanded && (
+            <button
+              type="button"
+              id={`${id}-btn`}
+              className="dt-group__toggle"
+              aria-expanded={expanded}
+              aria-labelledby={toggleLabelIds}
+              onClick={onToggleExpanded}
+            >
+              <span className="sr-only">{t('common.table.toggleGroup')}</span>
+              <Icon name={expanded ? 'chevup' : 'chev'} size={18} />
+            </button>
+          )}
         </div>
       </th>
     </tr>

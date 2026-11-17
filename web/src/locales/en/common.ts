@@ -73,6 +73,8 @@ const common: Messages<typeof vi> = {
       hint: 'Filter',
       active: 'Filtering: {{label}} · {{count}}',
       clear: 'Clear filters',
+      activeLabel: 'Filtering',
+      removeOne: 'Remove filter {{label}}',
     },
     errors: {
       PENDING_CUSTOM: 'The list of items awaiting review just changed. Check it and confirm again.',

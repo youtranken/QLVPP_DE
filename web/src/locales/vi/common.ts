@@ -70,6 +70,8 @@ const common = {
       hint: 'Lọc',
       active: 'Đang lọc: {{label}} · {{count}}',
       clear: 'Xóa lọc',
+      activeLabel: 'Đang lọc',
+      removeOne: 'Bỏ lọc {{label}}',
     },
     errors: {
       PENDING_CUSTOM: 'Danh sách món chờ duyệt vừa thay đổi, xem lại rồi xác nhận.',
