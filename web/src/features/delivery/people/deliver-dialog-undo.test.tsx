@@ -1,4 +1,5 @@
 import { MemoryRouter } from 'react-router-dom';
+import { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, jsonResponse, renderWithI18n, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { MeContext } from '@/lib/me';
@@ -39,7 +40,10 @@ const confirm = () => within(screen.getByRole('dialog')).getByRole('button', { n
 // Hộp vẫn mở trong test (onDone giả) nên vùng toast bị che khỏi cây a11y
 const undoButton = () => screen.queryByRole('button', { name: 'Hoàn tác', hidden: true });
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 describe('Giao cho một người — Hoàn tác 5 giây (TC-18)', () => {
   it('giao hai dòng → toast có Hoàn tác; bấm thì POST undo/delivery với cả hai id', async () => {
@@ -62,6 +66,31 @@ describe('Giao cho một người — Hoàn tác 5 giây (TC-18)', () => {
     await userEvent.click(confirm());
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(await screen.findByText('Đã giao cho Nguyễn Văn An')).toBeInTheDocument();
+    expect(undoButton()).not.toBeInTheDocument();
+  });
+
+  it('3 dòng, mỗi dòng server trả sau 1 s → nút Hoàn tác tính từ lúc gửi dòng đầu: còn ở +4 999 ms, mất ở +5 000 ms', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        const u = String(url);
+        const body = u.endsWith('/deliver') ? { request_complete: false, undo_id: `u-${u.split('/')[4]}` } : {};
+        return new Promise((r) => setTimeout(() => r(jsonResponse(200, body)), u.endsWith('/deliver') ? 1000 : 0));
+      }),
+    );
+    const three = person({
+      lines: [pLine({ line_id: 'la' }), pLine({ line_id: 'lb', item_id: 'i-clip', name: 'Kẹp giấy' }), pLine({ line_id: 'lc', item_id: 'i-tape', name: 'Băng keo' })],
+    });
+    open(three);
+    const t0 = Date.now();
+    fireEvent.click(confirm());
+    const at = (ms: number) => act(() => vi.advanceTimersByTimeAsync(t0 + ms - Date.now()));
+    await at(3000);
+    expect(undoButton()).toHaveTextContent('Hoàn tác (2)');
+    await at(4999);
+    expect(undoButton()).toBeInTheDocument();
+    await at(5000);
     expect(undoButton()).not.toBeInTheDocument();
   });
 });

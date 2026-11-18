@@ -16,6 +16,7 @@ const UNDO_ERROR_KEY: Record<string, string> = {
 export function ToastProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const [toast, setToast] = useState<ToastSpec | null>(null);
+  const [undoUntil, setUndoUntil] = useState(0);
   const [seq, setSeq] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -29,10 +30,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
   const pause = useCallback(() => clearTimeout(timer.current), []);
   const show = useCallback(
-    (next: ToastSpec) => {
+    (spec: ToastSpec) => {
+      const now = Date.now();
+      const undoMs = spec.undo ? UNDO_MS - (now - (spec.undoSince ?? now)) : 0;
+      const next = spec.undo && undoMs <= 0 ? { ...spec, undo: undefined } : spec;
       setToast(next);
+      setUndoUntil(now + undoMs);
       setSeq((n) => n + 1);
-      if (next.undo) startTimer(UNDO_MS);
+      if (next.undo) startTimer(undoMs);
       else if (next.persist) clearTimeout(timer.current);
       else startTimer();
     },
@@ -64,6 +69,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             key={seq}
             toast={toast}
             undoLabel={t('common.undo.label')}
+            undoUntil={undoUntil}
             onPause={hold ? pause : undefined}
             onResume={hold ? (toast.persist ? pause : () => startTimer()) : undefined}
             onUndo={toast.undo ? () => runUndo(toast.undo!) : undefined}

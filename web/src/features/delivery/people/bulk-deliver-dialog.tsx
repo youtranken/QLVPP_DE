@@ -46,20 +46,25 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
     flight.run(async () => {
       if (delivered.current) return;
       setError(null);
+      const sentAt = Date.now();
       const { sent, error: e, undoIds } = await sendBulk(plan, csrfToken);
       if (e && isSessionExpired(e) && sent.every((s) => s.result.ok === false && s.result.code === NOT_SENT)) {
         setError(t('delivery.confirm.sessionExpired'));
         return;
       }
-      await refresh();
-      if (e) setError(t(isSessionExpired(e) ? 'delivery.confirm.sessionExpired' : 'delivery.bulk.interrupted'));
       const rows = byPerson(sent, plan.owners);
       if (!e && rows.every((r) => r.ok)) {
         delivered.current = true;
+        // Nhiều lô thì lô đầu hết hạn trước: đếm từ giờ gửi lô đầu, toast hiện ngay, tải lại chạy sau
         const undo = undoIds ? () => undoActions('delivery', undoIds, csrfToken).then(refresh) : undefined;
-        toast.show({ text: t('delivery.bulk.done', { count }), undo });
+        toast.show({ text: t('delivery.bulk.done', { count }), undo, undoSince: sentAt });
         onDone();
-      } else setResults(rows);
+        await refresh();
+        return;
+      }
+      await refresh();
+      if (e) setError(t(isSessionExpired(e) ? 'delivery.confirm.sessionExpired' : 'delivery.bulk.interrupted'));
+      setResults(rows);
     });
   // Còn món ngoài danh mục chờ duyệt: hỏi lại trước, rồi gửi kèm reject_line_ids như hộp giao từng người
   const ask = useAskThenSubmit(plan.pending, t('delivery.bulk.title', { count }), () => void submit());

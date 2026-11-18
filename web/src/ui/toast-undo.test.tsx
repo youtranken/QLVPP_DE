@@ -97,6 +97,28 @@ describe('Toast có Hoàn tác 5 giây (TC-18)', () => {
     expect(status()).toHaveTextContent('Không hoàn tác được — dữ liệu vừa đổi, tải lại để xem.');
   });
 
+  it('undoSince 3 giây trước → nút "Hoàn tác (2)"; còn ở mốc+4 999 ms, mất ở mốc+5 000 ms (không muộn hơn server)', () => {
+    mount();
+    const t0 = Date.now();
+    tick(3000);
+    act(() => show({ text: 'Đã giao cho An', undo: vi.fn(), undoSince: t0 }));
+    expect(undoButton()).toHaveTextContent('Hoàn tác (2)');
+    tick(1999);
+    expect(undoButton()).toBeInTheDocument();
+    tick(1);
+    expect(undoButton()).not.toBeInTheDocument();
+    expect(status()).toBeEmptyDOMElement();
+  });
+
+  it('undoSince đã quá 5 000 ms → vẫn báo kết quả nhưng không có nút Hoàn tác', () => {
+    mount();
+    const t0 = Date.now();
+    tick(5000);
+    act(() => show({ text: 'Đã giao cho An', undo: vi.fn(), undoSince: t0 }));
+    expect(status()).toHaveTextContent('Đã giao cho An');
+    expect(undoButton()).not.toBeInTheDocument();
+  });
+
   it('toast có cả nút hành động khác lẫn Hoàn tác: hiện đủ hai nút', () => {
     mount();
     act(() => show({ text: 'Đã giao cho An', action: { label: 'Người tiếp', onClick: vi.fn() }, undo: vi.fn() }));
