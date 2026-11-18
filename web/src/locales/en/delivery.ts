@@ -268,6 +268,7 @@ const delivery: Messages<typeof vi> = {
       done_other: 'Cancelled {{name}}’s request ({{count}} undelivered items).',
       stale: 'The request just changed elsewhere — the new numbers are loaded, review them and press Cancel request again.',
       failed: 'Could not cancel the request — try again.',
+      already: 'This request was already cancelled.',
     },
   },
 };

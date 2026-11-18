@@ -41,6 +41,7 @@ export function deliverMax(remaining: number, stock: number | null, cap?: number
 export interface CancelRequestResult {
   user_sub: string;
   cancelled_now: number;
+  lines: { id: string; cancelled_now: number }[];
   undo_id: string | null;
 }
 

@@ -68,14 +68,14 @@ describe('Hủy phiếu người đã nghỉ — nút ở hộp Giao', () => {
 });
 
 describe('Hộp xác nhận Hủy phiếu', () => {
-  function stub(fail?: string) {
+  function stub(fail?: string, ok: object = { cancelled_now: 9, lines: [{ id: 'l1' }, { id: 'l2' }], undo_id: 'undo-u-n' }) {
     let failures = fail ? 1 : 0;
     const f = vi.fn((url: string, _init?: RequestInit) => {
       const u = String(url);
       if (u.endsWith('/undo/cancel')) return Promise.resolve(jsonResponse(200, { undone: 3 }));
       if (u.includes('/cancel-remaining')) {
         if (failures-- > 0) return Promise.resolve(jsonResponse(409, { code: fail, message: 'x' }));
-        return Promise.resolve(jsonResponse(200, { cancelled_now: 9, undo_id: 'undo-u-n' }));
+        return Promise.resolve(jsonResponse(200, ok));
       }
       return Promise.resolve(jsonResponse(200, {}));
     });
@@ -104,7 +104,7 @@ describe('Hộp xác nhận Hủy phiếu', () => {
     expect(within(dlg).getByText(/giữ nguyên trong lịch sử/)).toBeInTheDocument();
   });
 
-  it('bấm Hủy phiếu → MỘT POST theo người gồm mọi phiếu (tháng này + nợ cũ) với số đang hiện; toast "(3 món chưa giao)" có Hoàn tác gọi undo/cancel', async () => {
+  it('bấm Hủy phiếu → MỘT POST theo người gồm mọi phiếu (tháng này + nợ cũ) với số đang hiện; toast lấy số món từ kết quả server "(2 món chưa giao)" có Hoàn tác gọi undo/cancel', async () => {
     const f = stub();
     const onDone = show();
     await userEvent.click(screen.getByRole('button', { name: 'Hủy phiếu' }));
@@ -115,7 +115,7 @@ describe('Hộp xác nhận Hủy phiếu', () => {
         { expected_lines: [{ line_id: 'l1', remaining: 6 }, { line_id: 'l2', remaining: 2 }, { line_id: 'l3', remaining: 1 }] },
       ],
     ]);
-    expect(await screen.findByText('Đã hủy phiếu của Trần Văn Nam (3 món chưa giao).')).toBeInTheDocument();
+    expect(await screen.findByText('Đã hủy phiếu của Trần Văn Nam (2 món chưa giao).')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Hoàn tác/, hidden: true }));
     await waitFor(() => expect(f.mock.calls.some(([u]) => String(u).endsWith('/undo/cancel'))).toBe(true));
     const undo = f.mock.calls.find(([u]) => String(u).endsWith('/undo/cancel'))!;
@@ -137,5 +137,28 @@ describe('Hộp xác nhận Hủy phiếu', () => {
     await userEvent.click(confirm);
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(posts(f)[1][1].expected_lines[0]).toEqual({ line_id: 'l1', remaining: 5 });
+  });
+
+  it('server trả cancelled_now 0 (đã hủy ở nơi khác) → "Phiếu này đã được hủy trước đó.", không Hoàn tác', async () => {
+    stub(undefined, { cancelled_now: 0, lines: [], undo_id: null });
+    const onDone = show();
+    await userEvent.click(screen.getByRole('button', { name: 'Hủy phiếu' }));
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect(await screen.findByText('Phiếu này đã được hủy trước đó.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Hoàn tác/, hidden: true })).toBeNull();
+  });
+
+  it('sau STALE chỉ chụp lại một lần: dữ liệu đổi tiếp lần nữa không thay danh sách đang hiện', async () => {
+    stub('STALE_UPDATE');
+    const onDone = show();
+    await userEvent.click(screen.getByRole('button', { name: 'Hủy phiếu' }));
+    await screen.findByRole('alert');
+    const at = (n: number) => ({ ...LEFT, lines: LEFT.lines.map((l) => (l.line_id === 'l1' ? { ...l, remaining_qty: n } : l)) });
+    onDone.reload(at(5));
+    const dlg = screen.getByRole('dialog');
+    expect(await within(dlg).findByText(/^5 /)).toBeInTheDocument();
+    onDone.reload(at(4));
+    expect(within(dlg).getByText(/^5 /)).toBeInTheDocument();
+    expect(within(dlg).queryByText(/^4 /)).toBeNull();
   });
 });

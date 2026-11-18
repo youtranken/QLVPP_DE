@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/lib/api-client';
 import { useMe } from '@/lib/me';
@@ -7,7 +7,7 @@ import { useSingleFlight } from '@/lib/use-single-flight';
 import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { useToast } from '@/ui/toast-context';
 import { useRequestFormat } from '@/features/request/request-format';
-import { cancelUserRequests } from '../delivery.api';
+import { cancelUserRequests, type CancelRequestResult } from '../delivery.api';
 import type { DeliveryPerson } from './delivery-people.api';
 import { useRefreshAfterLineChange } from './use-refresh-after-flow';
 import { cancellableLines } from './cancel-request-lines';
@@ -25,8 +25,12 @@ export function CancelRequestDialog({ person, onClose, onDone }: { person: Deliv
   // Chụp lúc mở: số gửi đi là số đang hiện; sau STALE_UPDATE chụp lại từ dữ liệu vừa tải
   const [lines, setLines] = useState(() => cancellableLines(person));
   const [reloading, setReloading] = useState(false);
+  const sentFrom = useRef(person);
   useEffect(() => {
-    if (reloading) setLines(cancellableLines(person));
+    // Chờ bản person mới hơn bản lúc gửi (refetch xong) rồi chụp đúng một lần
+    if (!reloading || person === sentFrom.current) return;
+    setLines(cancellableLines(person));
+    setReloading(false);
   }, [person, reloading]);
   const delivered = person.lines.filter((l) => l.delivered_qty > 0);
   const name = person.full_name ?? person.user_sub;
@@ -35,19 +39,21 @@ export function CancelRequestDialog({ person, onClose, onDone }: { person: Deliv
     flight.run(async () => {
       setError(null);
       setReloading(false);
+      sentFrom.current = person;
       const sentAt = Date.now();
-      let undoId: string | null;
+      let res: CancelRequestResult;
       try {
         const expected = lines.map((l) => ({ line_id: l.line_id, remaining: l.remaining_qty }));
-        undoId = (await cancelUserRequests(person.user_sub, expected, csrfToken)).undo_id;
+        res = await cancelUserRequests(person.user_sub, expected, csrfToken);
       } catch (e) {
         const stale = isStale(e);
         await refresh();
         setReloading(stale);
         return setError(t(stale ? 'delivery.cancelRequest.stale' : 'delivery.cancelRequest.failed'));
       }
+      const undoId = res.undo_id;
       toast.show({
-        text: t('delivery.cancelRequest.done', { name, count: lines.length }),
+        text: res.cancelled_now === 0 ? t('delivery.cancelRequest.already') : t('delivery.cancelRequest.done', { name, count: res.lines.length }),
         undo: undoId ? () => undoActions('cancel', [undoId], csrfToken).then(refresh) : undefined,
         undoSince: sentAt,
       });
