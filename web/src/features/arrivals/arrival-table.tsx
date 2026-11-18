@@ -11,9 +11,9 @@ interface Props {
   onToggleAdm: (r: ArrivalRow) => void;
 }
 
-const NUMERIC = new Set<string>(['ordered', 'stock', 'short', 'after']);
-// Cột luôn đủ và bề rộng cố định: gõ số, bấm NCC hết hàng hay đổi chữ nút nhóm không làm cột nhảy chỗ
-const COLUMNS = ['item', 'stock', 'ordered', 'qty', 'short', 'status', 'after'] as const;
+const NUMERIC = new Set<string>(['ordered', 'stock', 'after']);
+// Cột luôn đủ và bề rộng cố định: gõ số hay bấm NCC hết hàng không làm cột nhảy chỗ; số thiếu đọc ở Tình trạng
+const COLUMNS = ['item', 'stock', 'ordered', 'qty', 'status', 'after'] as const;
 
 export function ArrivalTable({ sections, draft, admBusy, pickOf, onToggleAdm }: Props) {
   const { t } = useTranslation();

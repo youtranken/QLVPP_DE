@@ -5,7 +5,7 @@ import type { Tone } from '@/lib/group-tone';
 import { ItemThumb } from '@/ui/item-thumb';
 import { useRequestFormat } from '@/features/request/request-format';
 import { isReceivable, isReceivedFull, type ArrivalRow, type ArrivalSection } from './arrival-rows';
-import { groupCounts, partialReceive, shortOf, statusCell, type ArrivalState, type ArrivalStatus } from './arrival-status';
+import { groupCounts, statusCell, type ArrivalState, type ArrivalStatus } from './arrival-status';
 import type { ArrivalsDraft } from './use-arrivals-draft';
 
 const THUMB_TONE: Tone = 'g0';
@@ -66,7 +66,6 @@ function ArrivalRowView({ r, draft, busy, onToggleAdm }: RowProps) {
   const name = fmt.name(r);
   const error = draft.errorOf(r);
   const qty = draft.qtyOf(r);
-  const short = shortOf(r, qty);
   const errId = `ar-err-${r.item_id}`;
   // Đã nhận đủ: khóa ô ở UI, sai thì chỉnh ở Tủ / Kho
   const locked = isReceivedFull(r);
@@ -124,9 +123,6 @@ function ArrivalRowView({ r, draft, busy, onToggleAdm }: RowProps) {
           </small>
         )}
       </td>
-      <td className="n" data-label={t('arrivals.table.short')}>
-        {short > 0 ? n(short) : '—'}
-      </td>
       <td data-label={t('arrivals.table.status')}>
         <StatusTag r={r} qty={qty} />
       </td>
@@ -135,12 +131,10 @@ function ArrivalRowView({ r, draft, busy, onToggleAdm }: RowProps) {
   );
 }
 
+// Nhận theo nhóm chỉ qua ô tick + nút trên thanh (một lối cho một việc)
 export interface GroupPick {
   picked: boolean;
-  // Có lỗi ô số hoặc không còn dòng nào > 0 hay đang lưu: nút nhóm tắt
-  canReceive: boolean;
   onPick: (on: boolean) => void;
-  onReceive: () => void;
 }
 
 interface Props {
@@ -155,7 +149,6 @@ interface Props {
 export function ArrivalsGroup({ section, draft, admBusy, columns, pick, onToggleAdm }: Props) {
   const { t } = useTranslation();
   const { done, total } = groupCounts(section.all);
-  const partial = partialReceive(section.all, draft.qtyOf);
   // Mọi dòng đã nhận đủ hoặc ADM hết hàng: không còn gì để nhận
   const open = section.all.some(isReceivable);
   return (
@@ -173,17 +166,6 @@ export function ArrivalsGroup({ section, draft, admBusy, columns, pick, onToggle
             />
             <b>{section.label}</b>
             <span>· {t('arrivals.group.done', { a: done, b: total })}</span>
-            {open && (
-              <button
-                type="button"
-                className="btn btn--sm ar-ghead__btn"
-                aria-label={t(partial ? 'arrivals.group.receiveFor' : 'arrivals.group.receiveFullFor', { name: section.label })}
-                disabled={!pick.canReceive}
-                onClick={pick.onReceive}
-              >
-                {t(partial ? 'arrivals.group.receive' : 'arrivals.group.receiveFull')}
-              </button>
-            )}
           </div>
         </th>
       </tr>

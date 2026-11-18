@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ArrivalRow } from './arrival-rows';
-import { groupCounts, partialReceive, savedState, shortOf, statusCell } from './arrival-status';
+import { groupCounts, partialReceive, savedState, statusCell } from './arrival-status';
 
 const row = (over: Partial<ArrivalRow> = {}): ArrivalRow => ({
   item_id: 'a',
@@ -87,13 +87,5 @@ describe('groupCounts', () => {
 
   it('NCC hết hàng tính là xong', () => {
     expect(groupCounts([row({ adm_out: true })])).toEqual({ done: 1, total: 1 });
-  });
-});
-
-describe('cột Còn thiếu', () => {
-  it('NCC hết hàng không tính thiếu; shortOf = phần còn thiếu sau nhập', () => {
-    expect(shortOf(row({ ordered: 10, received: 4 }), 2)).toBe(4);
-    expect(shortOf(row({ ordered: 10, received: 4 }), 9)).toBe(0);
-    expect(shortOf(row({ adm_out: true }), 0)).toBe(0);
   });
 });
