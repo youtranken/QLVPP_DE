@@ -70,7 +70,7 @@ describe('GET admin/issues: biên tháng theo giờ Asia/Ho_Chi_Minh', () => {
     expect(await notes('2031-04')).toEqual(['đầu tháng 4']);
   });
 
-  it('mỗi dòng có actor_name = tên người xuất trong danh bạ (cột "Người xuất"); không có trong danh bạ → null', async () => {
+  it('mỗi dòng có actor_name = tên người xuất trong danh bạ (cột "Người xuất"); không có trong danh bạ (SA local) → sub, không null (AD-40)', async () => {
     await pool.query(
       `INSERT INTO users (sub, full_name, status) VALUES ($1, 'Lê Hành Chính', 'active') ON CONFLICT (sub) DO NOTHING`,
       [`e2e-isu-actor-${RUN}`],
@@ -87,7 +87,7 @@ describe('GET admin/issues: biên tháng theo giờ Asia/Ho_Chi_Minh', () => {
     const named = rows.find((r) => r.note === `${RUN} có người xuất`);
     const unknown = rows.find((r) => r.note === `${RUN} đầu tháng 3`);
     expect(named?.actor_name).toBe('Lê Hành Chính');
-    expect(unknown).toHaveProperty('actor_name', null);
+    expect(unknown).toHaveProperty('actor_name', 'admin');
     await pool.query('DELETE FROM stock_movements WHERE note = $1', [
       `${RUN} có người xuất`,
     ]);

@@ -69,7 +69,8 @@ export class StockQueryService {
       AND (${kind ?? null}::text IS NULL OR m.reason = ${kind ?? null})`;
     const page = await this.page(
       sql`SELECT m.id, m.item_id, i.name AS item_name, i.name_en AS item_name_en, i.unit,
-                 m.delta, m.reason, m.note, m.actor_sub, a.full_name AS actor_name,
+                 m.delta, m.reason, m.note, m.actor_sub,
+                 coalesce(a.full_name, m.actor_sub) AS actor_name,
                  coalesce(m.recipient_sub, rq.user_sub) AS recipient_sub,
                  coalesce(u.full_name, o.full_name) AS recipient_name,
                  to_char(m.receipt_ym, 'YYYY-MM') AS receipt_ym,
@@ -111,7 +112,7 @@ export class StockQueryService {
       SELECT m.id, m.item_id, i.name AS item_name, i.name_en AS item_name_en,
              i.unit, -m.delta AS qty,
              m.recipient_sub, u.full_name AS recipient_name, m.note, m.actor_sub,
-             a.full_name AS actor_name, m.created_at
+             coalesce(a.full_name, m.actor_sub) AS actor_name, m.created_at
       FROM stock_movements m
       JOIN items i ON i.id = m.item_id
       LEFT JOIN users u ON u.sub = m.recipient_sub
