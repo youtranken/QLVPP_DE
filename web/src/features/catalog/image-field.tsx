@@ -1,7 +1,8 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { compressImage } from '@/lib/image-compress';
+import { ACCEPT_ATTR, fileFromClipboard, isAcceptedImage } from '@/lib/image-input';
 import type { Tone } from '@/lib/group-tone';
 import { useMe } from '@/lib/me';
 import { Icon } from '@/ui/icon';
@@ -9,11 +10,16 @@ import { fileUrl, uploadItemImage } from '@/features/catalog/catalog.api';
 import { catalogErrorKey } from '@/features/catalog/catalog-errors';
 import '@/features/catalog/catalog.m1.css';
 
+export type PrepareImage = (file: File) => Promise<File | null>;
+
+const asIs: PrepareImage = async (file) => file;
+
 export function ImageField({
   fileId,
   error,
   required = false,
   tone = 'g0',
+  prepare = asIs,
   onChange,
   onBusyChange,
 }: {
@@ -21,6 +27,7 @@ export function ImageField({
   error?: string;
   required?: boolean;
   tone?: Tone;
+  prepare?: PrepareImage;
   onChange: (fileId: string | null) => void;
   onBusyChange: (busy: boolean) => void;
 }) {
@@ -38,10 +45,16 @@ export function ImageField({
 
   const pick = async (file: File | undefined) => {
     if (!file) return;
+    if (!isAcceptedImage(file)) {
+      setLocalError(t('catalog.errors.IMAGE_TYPE'));
+      return;
+    }
     setLocalError(null);
     setBusyBoth(true);
     try {
-      const out = await compressImage(file);
+      const ready = await prepare(file);
+      if (!ready) return;
+      const out = await compressImage(ready);
       if ('error' in out) {
         setLocalError(t('catalog.errors.IMAGE_UNSUPPORTED'));
         return;
@@ -56,11 +69,28 @@ export function ImageField({
     }
   };
 
+  const pickRef = useRef(pick);
+  const busyRef = useRef(busy);
+  useEffect(() => {
+    pickRef.current = pick;
+    busyRef.current = busy;
+  });
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const file = fileFromClipboard(e.clipboardData);
+      if (!file || busyRef.current) return;
+      e.preventDefault();
+      void pickRef.current(file);
+    };
+    document.addEventListener('paste', onPaste);
+    return () => document.removeEventListener('paste', onPaste);
+  }, []);
+
   const fileInput = (label: string) => (
     <input
       type="file"
       className="sr-only"
-      accept="image/*"
+      accept={ACCEPT_ATTR}
       aria-label={label}
       aria-invalid={shownError ? true : undefined}
       aria-describedby={noteId}
@@ -112,6 +142,11 @@ export function ImageField({
       ) : (
         <p key="hint" id={noteId} className="ff-hint">
           {t('catalog.form.imageHint')}
+        </p>
+      )}
+      {!busy && (
+        <p className="ff-hint">
+          {t('catalog.form.imagePasteHint')}
         </p>
       )}
     </fieldset>

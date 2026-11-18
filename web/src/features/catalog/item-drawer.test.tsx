@@ -59,13 +59,15 @@ describe('Ngăn kéo Thêm sản phẩm', () => {
     expect(screen.queryByRole('button', { name: 'Xóa ảnh' })).toBeNull();
   });
 
-  it('chọn ảnh HEIC → "Chọn ảnh JPG, PNG hoặc WebP" tại ô ảnh, không tải lên', async () => {
+  it('chọn ảnh HEIC (bỏ qua bộ lọc accept) → "Chỉ nhận ảnh JPG, PNG hoặc WEBP" tại ô ảnh, không tải lên', async () => {
     const actual = await vi.importActual<typeof import('@/lib/image-compress')>('@/lib/image-compress');
     vi.mocked(compressImage).mockImplementation(actual.compressImage);
     const f = stubDrawerApi();
     renderDrawer();
-    await userEvent.upload(screen.getByLabelText(PICK), new File([new Uint8Array([0])], 'IMG.HEIC', { type: 'image/heic' }));
-    expect(await screen.findByText('Chọn ảnh JPG, PNG hoặc WebP')).toBeInTheDocument();
+    await userEvent.upload(screen.getByLabelText(PICK), new File([new Uint8Array([0])], 'IMG.HEIC', { type: 'image/heic' }), {
+      applyAccept: false,
+    });
+    expect(await screen.findByText('Chỉ nhận ảnh JPG, PNG hoặc WEBP')).toBeInTheDocument();
     expect(f).not.toHaveBeenCalledWith('/api/files', expect.anything());
   });
 
