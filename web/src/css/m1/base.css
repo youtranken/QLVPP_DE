@@ -41,7 +41,8 @@
   [data-shell='admin'] .stat-row[data-count='3'] > :last-child,
   [data-shell='admin'] .stat-row[data-count='5'] > :last-child { grid-column: 1 / -1; }
 }
-[data-shell='admin'] .stat-card { all: unset; box-sizing: border-box; position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 12px 16px; border-radius: var(--r-lg); background: var(--c-surface); box-shadow: inset 0 0 0 2px transparent, var(--e-1); color: var(--c-ink); font-family: var(--font); }
+/* Ba hàng nhãn / số / dòng phụ dùng chung với các thẻ cùng hàng (subgrid): nhãn hai dòng ở một thẻ không đẩy lệch số */
+[data-shell='admin'] .stat-card { all: unset; box-sizing: border-box; position: relative; display: grid; grid-template-rows: subgrid; grid-row: span 3; align-content: start; gap: 2px; min-width: 0; padding: 12px 16px; border-radius: var(--r-lg); background: var(--c-surface); box-shadow: inset 0 0 0 2px transparent, var(--e-1); color: var(--c-ink); font-family: var(--font); }
 [data-shell='admin'] button.stat-card { cursor: pointer; transition: box-shadow var(--d-1) var(--ease-out); }
 [data-shell='admin'] button.stat-card:hover { box-shadow: inset 0 0 0 2px var(--c-line-strong); }
 [data-shell='admin'] button.stat-card[aria-pressed='true'],
@@ -60,10 +61,13 @@
 [data-shell='admin'] .stat-card[data-tone='dark'] { background: var(--c-dark); color: var(--c-on-dark); }
 [data-shell='admin'] .stat-card[data-tone='dark'] .stat-card__k,
 [data-shell='admin'] .stat-card[data-tone='dark'] small { color: var(--c-on-dark-2); }
-[data-shell='admin'] .stat-card__k { display: flex; align-items: center; gap: 8px; font: var(--t-cap); color: var(--c-muted); }
+[data-shell='admin'] .stat-card__k { display: flex; align-self: start; align-items: center; gap: 8px; font: var(--t-cap); color: var(--c-muted); }
 [data-shell='admin'] .stat-card__v { font: var(--t-stat); letter-spacing: -0.02em; }
 [data-shell='admin'] .stat-card__v small { margin-left: 4px; font: var(--t-sm); font-weight: 600; color: var(--c-muted); }
-[data-shell='admin'] .stat-card__sub { overflow: hidden; font: var(--t-sm); color: var(--c-muted); white-space: nowrap; text-overflow: ellipsis; }
+[data-shell='admin'] .stat-card__foot { display: flex; flex-direction: column; min-width: 0; }
+[data-shell='admin'] .stat-card__sub { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font: var(--t-sm); color: var(--c-muted); white-space: normal; overflow-wrap: anywhere; }
+/* Dưới 1024 thẻ chỉ 90–130px: dòng phụ (hạn khóa, "tủ đủ cả phiếu") cần dòng thứ ba */
+@media (max-width: 1023px) { [data-shell='admin'] .stat-card__sub { -webkit-line-clamp: 3; } }
 [data-shell='admin'] .stat-card__meter { display: block; height: 6px; margin-top: var(--s-2); border-radius: var(--r-pill); background: rgb(var(--sh-ink) / .08); overflow: hidden; }
 [data-shell='admin'] .stat-card__meter > span { display: block; height: 100%; border-radius: inherit; background: var(--c-acc); }
 [data-shell='admin'] .stat-card__hint { position: absolute; top: 12px; right: 12px; font: var(--t-micro); color: var(--c-acc); opacity: 0; transition: opacity var(--d-1) var(--ease-out); }

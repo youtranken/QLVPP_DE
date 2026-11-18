@@ -40,7 +40,7 @@ function TileView({ tile, source }: { tile: Tile; source: SourceState }) {
       <span className="stat-card__k">{label}</span>
       <span className="stat-card__v num">{tile.value ?? '…'}</span>
       {tile.hint && (
-        <span className="stat-card__sub" data-ok={tile.tone === 'ok' || undefined}>
+        <span className="stat-card__sub" data-ok={tile.tone === 'ok' || undefined} title={text(tile.hint)}>
           {text(tile.hint)}
         </span>
       )}

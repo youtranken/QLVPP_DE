@@ -38,14 +38,18 @@ export function StatCard({ label, icon, value, unit, sub, tone = 'neutral', pres
         {value}
         {unit && <small>{unit}</small>}
       </span>
-      {sub && (
-        <span className="stat-card__sub" title={sub}>
-          {sub}
-        </span>
-      )}
-      {fill !== undefined && (
-        <span className="stat-card__meter" data-meter aria-hidden="true">
-          <span style={{ width: `${fill}%` }} />
+      {(sub || fill !== undefined) && (
+        <span className="stat-card__foot">
+          {sub && (
+            <span className="stat-card__sub" title={sub}>
+              {sub}
+            </span>
+          )}
+          {fill !== undefined && (
+            <span className="stat-card__meter" data-meter aria-hidden="true">
+              <span style={{ width: `${fill}%` }} />
+            </span>
+          )}
         </span>
       )}
       {onClick && <span className="stat-card__hint" aria-hidden="true">{t('common.filter.hint')}</span>}

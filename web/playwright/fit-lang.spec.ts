@@ -102,4 +102,40 @@ test.describe('Vừa ô, vi + en', () => {
       expect.soft(scroll.page, 'trang 1024 không cuộn ngang').toBeLessThanOrEqual(0);
     });
   }
+
+  // Thẻ số: dòng phụ tối đa 2 dòng không bị cắt, nhãn không cắt, số các thẻ cùng hàng lệch ≤ 2px
+  function statCards(page: Page) {
+    return page.evaluate(() => {
+      const cut: string[] = [];
+      for (const el of document.querySelectorAll<HTMLElement>('main .stat-card__sub, main .stat-card__k')) {
+        if (el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1) cut.push(`${(el.textContent ?? '').trim().slice(0, 40)} ${el.scrollWidth}x${el.scrollHeight}>${el.clientWidth}x${el.clientHeight}`);
+      }
+      const rows = new Map<number, number[]>();
+      for (const card of document.querySelectorAll<HTMLElement>('main .stat-card')) {
+        const v = card.querySelector('.stat-card__v');
+        if (!v) continue;
+        const top = Math.round(card.getBoundingClientRect().top);
+        rows.set(top, [...(rows.get(top) ?? []), v.getBoundingClientRect().top]);
+      }
+      const skew = Math.max(0, ...[...rows.values()].map((tops) => Math.max(...tops) - Math.min(...tops)));
+      return { cut, skew: Math.round(skew), cards: document.querySelectorAll('main .stat-card').length };
+    });
+  }
+
+  for (const lang of LANGS) {
+    for (const width of [390, 768, 1024, 1280]) {
+      test(`${lang} ${width}: thẻ số Hôm nay, Giao hàng — chữ không bị cắt, số cùng hàng thẳng nhau`, async ({ page }, info) => {
+        test.skip(isMobile(info), 'đặt bề rộng trong test');
+        await page.setViewportSize({ width, height: 900 });
+        await as(page, lang);
+        for (const path of ['/admin/today', '/admin/delivery']) {
+          await go(page, path);
+          const m = await statCards(page);
+          expect(m.cards, `${path} có thẻ số`).toBeGreaterThan(0);
+          expect.soft(m.cut, `${path} ${lang} @${width} chữ bị cắt`).toEqual([]);
+          expect.soft(m.skew, `${path} ${lang} @${width} số lệch`).toBeLessThanOrEqual(2);
+        }
+      });
+    }
+  }
 });

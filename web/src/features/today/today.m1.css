@@ -7,7 +7,7 @@
 [data-shell='admin'] a.td-tile:focus-visible { box-shadow: var(--focus); }
 [data-shell='admin'] a.td-tile[data-tone='danger'] .stat-card__v { color: var(--c-danger); }
 [data-shell='admin'] .td-tile .stat-card__sub[data-ok] { color: var(--c-ok); }
-[data-shell='admin'] .td-tile .btn { align-self: flex-start; margin-top: var(--s-1); }
+[data-shell='admin'] .td-tile .btn { justify-self: start; align-self: start; margin-top: var(--s-1); }
 [data-shell='admin'] .td-tile__err { font: var(--t-sm); color: var(--c-danger); }
 
 [data-shell='admin'] .td-panel { overflow: hidden; border: 1px solid var(--c-line); border-radius: var(--r-md); background: var(--c-surface); }
