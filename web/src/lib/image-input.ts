@@ -6,12 +6,13 @@ export function isAcceptedImage(file: Blob): boolean {
 }
 
 interface ClipboardLike {
-  items?: ArrayLike<{ kind: string; getAsFile(): File | null }>;
+  items?: ArrayLike<{ kind: string; type: string; getAsFile(): File | null }>;
 }
 
 export function fileFromClipboard(data: ClipboardLike | null | undefined): File | null {
   for (const item of Array.from(data?.items ?? [])) {
-    if (item.kind !== 'file') continue;
+    // Tệp khác (PDF…) để trình duyệt xử lý như thường; ảnh gif vẫn nhận để báo đúng câu lỗi loại ảnh
+    if (item.kind !== 'file' || !item.type.startsWith('image/')) continue;
     const file = item.getAsFile();
     if (file) return file;
   }

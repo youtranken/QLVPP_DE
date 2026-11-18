@@ -97,6 +97,15 @@ describe('ImageField — dán ảnh Ctrl+V', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('dán tệp không phải ảnh (PDF) vào ô khác → không chặn, không lỗi, không mở màn cắt', () => {
+    const { fetchMock } = setup();
+    const ev = pasteEvent(screen.getByLabelText('Tên món'), [{ file: new File(['x'], 'a.pdf', { type: 'application/pdf' }) }]);
+    expect(ev.defaultPrevented).toBe(false);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('Hủy ở màn cắt → không tải lên, không đổi ảnh', async () => {
     const { onChange, fetchMock } = setup();
     pasteEvent(document.body, [{ file: new File(['x'], 'p.png', { type: 'image/png' }) }]);
