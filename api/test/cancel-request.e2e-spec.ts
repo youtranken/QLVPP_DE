@@ -1,8 +1,8 @@
 import { AFTER_DEADLINE, BEFORE_DEADLINE } from './me-request.fixture';
-import { deliveryFixture } from './delivery.fixture';
+import { DEBT_AT, deliveryFixture } from './delivery.fixture';
 
 interface RequestCancelBody {
-  request_id: string;
+  user_sub: string;
   cancelled_now: number;
   lines: {
     id: string;
@@ -18,7 +18,7 @@ interface RequestCancelBody {
 const T = Date.parse(AFTER_DEADLINE);
 const plus = (ms: number) => new Date(T + ms).toISOString();
 
-describe('POST admin/requests/:id/cancel-remaining: hủy phiếu người đã nghỉ', () => {
+describe('POST admin/users/:sub/cancel-remaining: hủy mọi phiếu còn nợ của người đã nghỉ', () => {
   const f = deliveryFixture('cnlreq');
   const { A, ADMIN, as, at, auditOf, deliver, freeze, http, pool, seed } = f;
 
@@ -33,9 +33,9 @@ describe('POST admin/requests/:id/cancel-remaining: hủy phiếu người đã 
 
   const setStatus = (status: string) =>
     pool().query('UPDATE users SET status = $2 WHERE sub = $1', [A, status]);
-  const cancelReq = (id: string, body: object, role = 'admin', sub = ADMIN) =>
+  const cancelReq = (owner: string, body: object, role = 'admin', sub = ADMIN) =>
     as(
-      http().post(`/api/admin/requests/${id}/cancel-remaining`),
+      http().post(`/api/admin/users/${owner}/cancel-remaining`),
       sub,
       role,
     ).send(body);
@@ -60,6 +60,11 @@ describe('POST admin/requests/:id/cancel-remaining: hủy phiếu người đã 
     );
     return { request, i1, i2, l1, l2 };
   };
+  // audit_log chỉ ghi thêm, cùng chủ A qua nhiều test → lọc theo dòng của test
+  const userAudits = async (lineId: string) =>
+    (await auditOf('user.cancel_remaining', A)).filter((d) =>
+      JSON.stringify(d).includes(lineId),
+    );
   const expectedOf = (lines: { id: string }[], remaining: number[]) => ({
     expected_lines: lines.map((l, k) => ({
       line_id: l.id,
@@ -69,7 +74,7 @@ describe('POST admin/requests/:id/cancel-remaining: hủy phiếu người đã 
 
   it('chủ phiếu đang làm (active) → 409 USER_NOT_LEFT, không dòng nào bị hủy', async () => {
     const { request, l1, l2 } = await twoLines();
-    const res = await cancelReq(request.id, expectedOf([l1, l2], [3, 4]));
+    const res = await cancelReq(A, expectedOf([l1, l2], [3, 4]));
     expect(res.status).toBe(409);
     expect(res.body.code).toBe('USER_NOT_LEFT');
     expect((await f.lineRow(l1.id)).cancelled_qty).toBe(0);
@@ -84,7 +89,7 @@ describe('POST admin/requests/:id/cancel-remaining: hủy phiếu người đã 
       const freeBefore = [await freeOf(i1), await freeOf(i2)];
       await setStatus(status);
       const res = await cancelReq(
-        request.id,
+        A,
         expectedOf([l1, l2], [2, 4]),
       ).expect(200);
       const body = res.body as RequestCancelBody;
@@ -116,9 +121,10 @@ describe('POST admin/requests/:id/cancel-remaining: hủy phiếu người đã 
   it('audit một bản ghi cha request.cancel_remaining + line.cancel_remaining từng dòng có before/after', async () => {
     const { request, l1, l2 } = await twoLines();
     await setStatus('locked');
-    await cancelReq(request.id, expectedOf([l1, l2], [3, 4])).expect(200);
-    const [parent] = await auditOf('request.cancel_remaining', request.id);
+    await cancelReq(A, expectedOf([l1, l2], [3, 4])).expect(200);
+    const [parent] = await userAudits(l1.id);
     expect(parent).toMatchObject({
+      requests: [{ request_id: request.id, ym: '2026-11' }],
       reason_code: 'user_left',
       lines: expect.arrayContaining([
         {
@@ -141,23 +147,21 @@ describe('POST admin/requests/:id/cancel-remaining: hủy phiếu người đã 
     const { request, l1, l2 } = await twoLines();
     await setStatus('locked');
     const body = expectedOf([l1, l2], [3, 4]);
-    await cancelReq(request.id, body).expect(200);
-    const again = await cancelReq(request.id, body).expect(200);
+    await cancelReq(A, body).expect(200);
+    const again = await cancelReq(A, body).expect(200);
     expect(again.body).toMatchObject({
       cancelled_now: 0,
       undo_id: null,
       lines: [],
     });
-    expect(await auditOf('request.cancel_remaining', request.id)).toHaveLength(
-      1,
-    );
+    expect(await userAudits(l1.id)).toHaveLength(1);
   });
 
   it('expected lệch (remaining 3 trong khi DB còn 2) → 409 STALE_UPDATE kèm số hiện tại, không hủy', async () => {
     const { request, l1, l2 } = await twoLines();
     await deliver(l1.id, { qty: 1, expected_delivered_qty: 0 }).expect(200);
     await setStatus('locked');
-    const res = await cancelReq(request.id, expectedOf([l1, l2], [3, 4]));
+    const res = await cancelReq(A, expectedOf([l1, l2], [3, 4]));
     expect(res.status).toBe(409);
     expect(res.body.code).toBe('STALE_UPDATE');
     expect(res.body.lines).toEqual(
@@ -169,23 +173,20 @@ describe('POST admin/requests/:id/cancel-remaining: hủy phiếu người đã 
   it('expected thiếu một dòng còn nợ → 409 STALE_UPDATE', async () => {
     const { request, l1 } = await twoLines();
     await setStatus('locked');
-    const res = await cancelReq(request.id, expectedOf([l1], [3]));
+    const res = await cancelReq(A, expectedOf([l1], [3]));
     expect(res.status).toBe(409);
     expect(res.body.code).toBe('STALE_UPDATE');
   });
 
-  it('vai nhân viên → 403; phiếu không có → 404 REQUEST_NOT_FOUND; expected_lines sai dạng → 400 VALIDATION', async () => {
+  it('vai nhân viên → 403; người không có → 404 USER_NOT_FOUND; expected_lines sai dạng → 400 VALIDATION', async () => {
     const { request, l1, l2 } = await twoLines();
     await setStatus('locked');
     const body = expectedOf([l1, l2], [3, 4]);
-    await cancelReq(request.id, body, 'member', A).expect(403);
-    const missing = await cancelReq(
-      '00000000-0000-4000-8000-000000000000',
-      body,
-    );
+    await cancelReq(A, body, 'member', A).expect(403);
+    const missing = await cancelReq(`e2e-req-none-${f.SUFFIX}`, body);
     expect(missing.status).toBe(404);
-    expect(missing.body.code).toBe('REQUEST_NOT_FOUND');
-    const bad = await cancelReq(request.id, {
+    expect(missing.body.code).toBe('USER_NOT_FOUND');
+    const bad = await cancelReq(A, {
       expected_lines: [{ line_id: l1.id, remaining: 0 }],
     });
     expect(bad.status).toBe(400);
@@ -197,11 +198,11 @@ describe('POST admin/requests/:id/cancel-remaining: hủy phiếu người đã 
     await setStatus('locked');
     const body = expectedOf([l1, l2], [3, 4]);
     freeze('2026-11-10T16:59:59.999Z');
-    const early = await cancelReq(request.id, body);
+    const early = await cancelReq(A, body);
     expect(early.status).toBe(409);
     expect(early.body.code).toBe('PERIOD_NOT_LOCKED');
     freeze('2026-11-10T17:00:00.000Z');
-    await cancelReq(request.id, body).expect(200);
+    await cancelReq(A, body).expect(200);
   });
 
   it('hoàn tác bằng undo/cancel trong 4 999 ms → mọi dòng về như trước; 5 000 ms → UNDO_EXPIRED', async () => {
@@ -209,7 +210,7 @@ describe('POST admin/requests/:id/cancel-remaining: hủy phiếu người đã 
     await setStatus('locked');
     freeze(plus(0));
     const body = expectedOf([l1, l2], [3, 4]);
-    const res = await cancelReq(request.id, body).expect(200);
+    const res = await cancelReq(A, body).expect(200);
     const undoId = (res.body as RequestCancelBody).undo_id!;
     freeze(plus(4999));
     expect((await undo([undoId]).expect(200)).body).toEqual({ undone: 2 });
@@ -218,10 +219,61 @@ describe('POST admin/requests/:id/cancel-remaining: hủy phiếu người đã 
       expect([row.cancelled_qty, row.cancel_note]).toEqual([0, null]);
     }
     freeze(plus(10000));
-    const second = await cancelReq(request.id, body).expect(200);
+    const second = await cancelReq(A, body).expect(200);
     freeze(plus(15000));
     const late = await undo([(second.body as RequestCancelBody).undo_id!]);
     expect(late.status).toBe(409);
     expect(late.body.code).toBe('UNDO_EXPIRED');
+  });
+
+  describe('người có phiếu nợ tháng 11 và phiếu tháng 12 đang giao', () => {
+    const twoRequests = async () => {
+      const i1 = await f.stockItem(10);
+      const i2 = await f.stockItem(10);
+      at(BEFORE_DEADLINE);
+      const nov = await seed([{ item_id: i1, qty: 3 }]);
+      // Phiếu tháng 12 ghi thẳng: đường lưu của nhân viên chỉ ghi kỳ đang mở theo đồng hồ của fixture
+      freeze(DEBT_AT);
+      const dec = await pool().query<{ id: string }>(
+        `WITH r AS (INSERT INTO requests (period_ym, user_sub, created_by_sub)
+           VALUES ('2026-12-01', $1, $1) RETURNING id)
+         INSERT INTO request_lines (request_id, item_id, qty)
+         SELECT r.id, $2, 4 FROM r RETURNING id`,
+        [A, i2],
+      );
+      return { nov: nov.lines[0], dec: dec.rows[0] };
+    };
+
+    it('một lần gọi hủy cả hai phiếu: một audit cha, một undo_id hoàn tác cả hai', async () => {
+      const { nov, dec } = await twoRequests();
+      await setStatus('locked');
+      const res = await cancelReq(A, expectedOf([nov, dec], [3, 4])).expect(200);
+      const body = res.body as RequestCancelBody;
+      expect([body.user_sub, body.cancelled_now]).toEqual([A, 7]);
+      expect((await f.lineRow(nov.id)).cancelled_qty).toBe(3);
+      expect((await f.lineRow(dec.id)).cancelled_qty).toBe(4);
+      const [parent] = await userAudits(nov.id);
+      expect((parent as { requests: unknown[] }).requests).toHaveLength(2);
+      await undo([body.undo_id!]).expect(200);
+      expect((await f.lineRow(nov.id)).cancelled_qty).toBe(0);
+      expect((await f.lineRow(dec.id)).cancelled_qty).toBe(0);
+    });
+
+    it('dòng phiếu tháng 12 lệch (expected 3, còn 4) → 409 STALE_UPDATE, phiếu tháng 11 cũng không bị hủy', async () => {
+      const { nov, dec } = await twoRequests();
+      await setStatus('locked');
+      const res = await cancelReq(A, expectedOf([nov, dec], [3, 3]));
+      expect(res.status).toBe(409);
+      expect(res.body.code).toBe('STALE_UPDATE');
+      expect(res.body.lines).toEqual(
+        expect.arrayContaining([
+          { line_id: nov.id, remaining: 3 },
+          { line_id: dec.id, remaining: 4 },
+        ]),
+      );
+      expect((await f.lineRow(nov.id)).cancelled_qty).toBe(0);
+      expect((await f.lineRow(dec.id)).cancelled_qty).toBe(0);
+      expect(await userAudits(nov.id)).toEqual([]);
+    });
   });
 });

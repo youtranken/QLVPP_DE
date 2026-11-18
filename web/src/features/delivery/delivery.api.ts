@@ -39,14 +39,14 @@ export function deliverMax(remaining: number, stock: number | null, cap?: number
 }
 
 export interface CancelRequestResult {
-  request_id: string;
+  user_sub: string;
   cancelled_now: number;
   undo_id: string | null;
 }
 
-// Hủy cả phiếu người đã nghỉ: gửi đúng phần còn lại đang hiện; server lệch → STALE_UPDATE
-export const cancelRequest = (requestId: string, expected: { line_id: string; remaining: number }[], csrfToken: string | null) =>
-  apiFetch<CancelRequestResult>(`/api/admin/requests/${requestId}/cancel-remaining`, {
+// Hủy mọi phiếu người đã nghỉ trong một lần gọi: gửi đúng phần còn lại đang hiện; server lệch một dòng → STALE_UPDATE, không phiếu nào bị hủy
+export const cancelUserRequests = (userSub: string, expected: { line_id: string; remaining: number }[], csrfToken: string | null) =>
+  apiFetch<CancelRequestResult>(`/api/admin/users/${encodeURIComponent(userSub)}/cancel-remaining`, {
     method: 'POST',
     body: JSON.stringify({ expected_lines: expected }),
     csrfToken,

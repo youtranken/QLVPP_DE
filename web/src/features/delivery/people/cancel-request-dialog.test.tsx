@@ -26,14 +26,14 @@ const LEFT = person({
 const ACTIVE = person({ user_sub: 'u-a', full_name: 'Nguyễn Văn An' });
 const LEFT_DONE = person({ user_sub: 'u-d', full_name: 'Lê Thị Xong', user_status: 'locked', status: 'done', lines: [pLine({ remaining_qty: 0, delivered_qty: 3 })] });
 
-const wrap = (node: React.ReactNode) =>
-  renderWithI18n(
-    <MeContext.Provider value={makeMe('admin')}>
-      <MemoryRouter>
-        <ToastProvider>{node}</ToastProvider>
-      </MemoryRouter>
-    </MeContext.Provider>,
-  );
+const shell = (node: React.ReactNode) => (
+  <MeContext.Provider value={makeMe('admin')}>
+    <MemoryRouter>
+      <ToastProvider>{node}</ToastProvider>
+    </MemoryRouter>
+  </MeContext.Provider>
+);
+const wrap = (node: React.ReactNode) => renderWithI18n(shell(node));
 
 function table(rows: DeliveryPerson[]) {
   const onCancelRequest = vi.fn();
@@ -69,12 +69,13 @@ describe('Hủy phiếu người đã nghỉ — nút ở hộp Giao', () => {
 
 describe('Hộp xác nhận Hủy phiếu', () => {
   function stub(fail?: string) {
+    let failures = fail ? 1 : 0;
     const f = vi.fn((url: string, _init?: RequestInit) => {
       const u = String(url);
       if (u.endsWith('/undo/cancel')) return Promise.resolve(jsonResponse(200, { undone: 3 }));
       if (u.includes('/cancel-remaining')) {
-        if (fail) return Promise.resolve(jsonResponse(409, { code: fail, message: 'x' }));
-        return Promise.resolve(jsonResponse(200, { cancelled_now: 1, undo_id: `undo-${u.split('/')[4]}` }));
+        if (failures-- > 0) return Promise.resolve(jsonResponse(409, { code: fail, message: 'x' }));
+        return Promise.resolve(jsonResponse(200, { cancelled_now: 9, undo_id: 'undo-u-n' }));
       }
       return Promise.resolve(jsonResponse(200, {}));
     });
@@ -83,8 +84,9 @@ describe('Hộp xác nhận Hủy phiếu', () => {
   }
   const show = () => {
     const onDone = vi.fn();
-    wrap(<CancelRequestDialog person={LEFT} onClose={vi.fn()} onDone={onDone} />);
-    return onDone;
+    const view = wrap(<CancelRequestDialog person={LEFT} onClose={vi.fn()} onDone={onDone} />);
+    const reload = (p: DeliveryPerson) => view.rerender(shell(<CancelRequestDialog person={p} onClose={vi.fn()} onDone={onDone} />));
+    return Object.assign(onDone, { reload });
   };
   const posts = (f: ReturnType<typeof stub>) =>
     f.mock.calls.filter(([u]) => String(u).includes('/cancel-remaining')).map(([u, init]) => [String(u), JSON.parse(String(init?.body))]);
@@ -102,28 +104,38 @@ describe('Hộp xác nhận Hủy phiếu', () => {
     expect(within(dlg).getByText(/giữ nguyên trong lịch sử/)).toBeInTheDocument();
   });
 
-  it('bấm Hủy phiếu → mỗi phiếu một POST với expected_lines đang hiện; toast "(3 món chưa giao)" có Hoàn tác gọi undo/cancel', async () => {
+  it('bấm Hủy phiếu → MỘT POST theo người gồm mọi phiếu (tháng này + nợ cũ) với số đang hiện; toast "(3 món chưa giao)" có Hoàn tác gọi undo/cancel', async () => {
     const f = stub();
     const onDone = show();
     await userEvent.click(screen.getByRole('button', { name: 'Hủy phiếu' }));
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(posts(f)).toEqual([
-      ['/api/admin/requests/r-cur/cancel-remaining', { expected_lines: [{ line_id: 'l1', remaining: 6 }, { line_id: 'l2', remaining: 2 }] }],
-      ['/api/admin/requests/r-old/cancel-remaining', { expected_lines: [{ line_id: 'l3', remaining: 1 }] }],
+      [
+        '/api/admin/users/u-n/cancel-remaining',
+        { expected_lines: [{ line_id: 'l1', remaining: 6 }, { line_id: 'l2', remaining: 2 }, { line_id: 'l3', remaining: 1 }] },
+      ],
     ]);
     expect(await screen.findByText('Đã hủy phiếu của Trần Văn Nam (3 món chưa giao).')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Hoàn tác/, hidden: true }));
     await waitFor(() => expect(f.mock.calls.some(([u]) => String(u).endsWith('/undo/cancel'))).toBe(true));
     const undo = f.mock.calls.find(([u]) => String(u).endsWith('/undo/cancel'))!;
-    expect(JSON.parse(String(undo[1]?.body))).toEqual({ ids: ['undo-r-cur', 'undo-r-old'] });
+    expect(JSON.parse(String(undo[1]?.body))).toEqual({ ids: ['undo-u-n'] });
   });
 
-  it('STALE_UPDATE → báo phiếu vừa đổi ngay trong hộp, nút Hủy phiếu khóa, không đóng hộp', async () => {
-    stub('STALE_UPDATE');
+  it('STALE_UPDATE → báo phiếu vừa đổi, nạp lại món theo dữ liệu mới, mở lại nút; bấm lại gửi số mới', async () => {
+    const f = stub('STALE_UPDATE');
     const onDone = show();
     await userEvent.click(screen.getByRole('button', { name: 'Hủy phiếu' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Phiếu vừa đổi ở nơi khác');
-    expect(screen.getByRole('button', { name: 'Hủy phiếu' })).toBeDisabled();
+    expect(await screen.findByRole('alert')).toHaveTextContent('Phiếu vừa đổi ở nơi khác — đã tải lại số mới, xem lại rồi bấm Hủy phiếu.');
     expect(onDone).not.toHaveBeenCalled();
+    onDone.reload({ ...LEFT, lines: LEFT.lines.map((l) => (l.line_id === 'l1' ? { ...l, delivered_qty: 5, remaining_qty: 5 } : l)) });
+    const dlg = screen.getByRole('dialog');
+    expect(await within(dlg).findByText(/^5 /)).toBeInTheDocument();
+    expect(within(dlg).queryByText(/^6 /)).toBeNull();
+    const confirm = screen.getByRole('button', { name: 'Hủy phiếu' });
+    expect(confirm).toBeEnabled();
+    await userEvent.click(confirm);
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect(posts(f)[1][1].expected_lines[0]).toEqual({ line_id: 'l1', remaining: 5 });
   });
 });

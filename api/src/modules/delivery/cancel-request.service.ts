@@ -4,11 +4,12 @@ import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
+import { lockState } from '../periods/period-lock';
 import { PeriodsService } from '../periods/periods.service';
 import { LineDeliveryStore } from '../requests/line-delivery.store';
 import type { OpenLine, RequestHead } from '../requests/line-delivery.store';
 import { LineNotifier } from '../requests/line-notifier';
-import { requestNotFound } from '../requests/request-errors';
+import { userNotFound } from '../requests/request-errors';
 import { UndoLedgerService } from '../undo/undo-ledger.service';
 import { cancelNoteOf } from './cancel-reason';
 import type { CancelPayload } from './cancel-undo.service';
@@ -25,6 +26,12 @@ interface CancelledEntry {
   line: OpenLine;
   payload: CancelPayload;
   result: CancelRequestResult['lines'][number];
+}
+
+interface Actor {
+  actor: string;
+  now: Date;
+  note: string;
 }
 
 function assertExpected(open: OpenLine[], expected: ExpectedRemaining[]) {
@@ -50,9 +57,10 @@ export class CancelRequestService {
     private readonly undo: UndoLedgerService,
   ) {}
 
-  // Không chuông: người đã nghỉ không đọc được; phiếu không còn nợ → 200 cancelled_now 0 (gửi lại an toàn)
-  async cancelRequest(
-    requestId: string,
+  // Mọi phiếu còn nợ của người trong một tx: lệch một dòng thì không phiếu nào bị hủy.
+  // Không chuông: người đã nghỉ không đọc được; không còn nợ → 200 cancelled_now 0 (gửi lại an toàn)
+  async cancelUser(
+    userSub: string,
     body: CancelRequestBody,
     actor: string,
   ): Promise<CancelRequestResult> {
@@ -63,18 +71,44 @@ export class CancelRequestService {
     });
     const now = this.clock.now();
     return this.db.transaction(async (tx) => {
-      const locked = await this.lines.lockRequestOpenLines(tx, requestId);
-      if (!locked) throw requestNotFound('Không tìm thấy phiếu.');
-      const { head } = locked;
-      await this.periods.assertLocked(head.period_ym, now, tx);
-      if (await this.notifier.ownerActive(head.user_sub)) throw userNotLeft();
-      const open = locked.lines.filter((l) => l.remaining > 0);
-      const nothing = { request_id: head.id, cancelled_now: 0, lines: [] };
-      if (open.length === 0) return { ...nothing, undo_id: null };
+      const status = await this.notifier.ownerStatus(userSub);
+      if (status === null) throw userNotFound();
+      const { heads, lines } = await this.lines.lockUserOpenLines(tx, userSub);
+      const locked = await this.lockedRequests(tx, heads, lines, body, now);
+      if (status === 'active') throw userNotLeft();
+      const open = lines.filter(
+        (l) => l.remaining > 0 && locked.has(l.request_id),
+      );
+      if (open.length === 0)
+        return { user_sub: userSub, cancelled_now: 0, lines: [], undo_id: null };
       assertExpected(open, body.expected_lines);
       const done = await this.cancelAll(tx, open, note, now);
-      return this.afterCancel(tx, head, done, { actor, now, note });
+      const touched = heads.filter((h) =>
+        done.some((d) => d.line.request_id === h.id),
+      );
+      return this.afterCancel(tx, userSub, touched, done, { actor, now, note });
     });
+  }
+
+  // Phiếu kỳ còn mở không bị hủy; gửi dòng của kỳ đó lên → PERIOD_NOT_LOCKED như các route theo kỳ
+  private async lockedRequests(
+    tx: Tx,
+    heads: RequestHead[],
+    lines: OpenLine[],
+    body: CancelRequestBody,
+    now: Date,
+  ): Promise<Set<string>> {
+    const openYm = (await this.periods.openPeriod(tx, now)).ym;
+    const locked = new Set(
+      heads
+        .filter((h) => lockState(h.period_ym, openYm) === 'locked')
+        .map((h) => h.id),
+    );
+    const sent = new Set(body.expected_lines.map((e) => e.line_id));
+    for (const l of lines)
+      if (sent.has(l.id) && !locked.has(l.request_id))
+        await this.periods.assertLocked(l.period_ym, now, tx);
+    return locked;
   }
 
   private async cancelAll(
@@ -106,20 +140,21 @@ export class CancelRequestService {
 
   private async afterCancel(
     tx: Tx,
-    head: RequestHead,
+    userSub: string,
+    heads: RequestHead[],
     done: CancelledEntry[],
-    by: { actor: string; now: Date; note: string },
+    by: Actor,
   ): Promise<CancelRequestResult> {
-    const { actor, now, note } = by;
+    const { actor, now } = by;
     const parentId = await this.audit.appendWithin(tx, {
       actor,
-      action: 'request.cancel_remaining',
-      objectType: 'request',
-      objectId: head.id,
+      action: 'user.cancel_remaining',
+      objectType: 'user',
+      objectId: userSub,
       detail: {
-        ym: head.period_ym,
-        owner_sub: head.user_sub,
-        reason: note,
+        owner_sub: userSub,
+        requests: heads.map((h) => ({ request_id: h.id, ym: h.period_ym })),
+        reason: by.note,
         reason_code: USER_LEFT,
         lines: done.map((d) => ({
           line_id: d.line.id,
@@ -129,6 +164,26 @@ export class CancelRequestService {
       },
       at: now,
     });
+    await this.auditLines(tx, done, parentId, by);
+    for (const h of heads) await this.lines.touchRequest(tx, h.id, now);
+    const undoId = await this.undo.record(tx, {
+      id: randomUUID(),
+      kind: 'cancel',
+      actor,
+      now,
+      payload: { owner_sub: userSub, lines: done.map((d) => d.payload) },
+    });
+    const lines = done.map((d) => d.result);
+    const total = lines.reduce((n, l) => n + l.cancelled_now, 0);
+    return { user_sub: userSub, cancelled_now: total, lines, undo_id: undoId };
+  }
+
+  private async auditLines(
+    tx: Tx,
+    done: CancelledEntry[],
+    parentId: Awaited<ReturnType<AuditWriterService['appendWithin']>>,
+    { actor, now, note }: Actor,
+  ): Promise<void> {
     for (const d of done) {
       await this.audit.appendWithin(tx, {
         actor,
@@ -136,7 +191,7 @@ export class CancelRequestService {
         objectType: 'request_line',
         objectId: d.line.id,
         detail: {
-          request_id: head.id,
+          request_id: d.line.request_id,
           before: { cancelled_qty: d.payload.before.cancelled_qty },
           after: d.payload.after,
           reason: note,
@@ -146,21 +201,5 @@ export class CancelRequestService {
         at: now,
       });
     }
-    await this.lines.touchRequest(tx, head.id, now);
-    const undoId = await this.undo.record(tx, {
-      id: randomUUID(),
-      kind: 'cancel',
-      actor,
-      now,
-      payload: { request_id: head.id, lines: done.map((d) => d.payload) },
-    });
-    const lines = done.map((d) => d.result);
-    const total = lines.reduce((n, l) => n + l.cancelled_now, 0);
-    return {
-      request_id: head.id,
-      cancelled_now: total,
-      lines,
-      undo_id: undoId,
-    };
   }
 }

@@ -10,8 +10,8 @@ import {
 } from 'class-validator';
 import type { CancelledLine } from '../requests/line-delivery.store';
 
-// Phiếu tối đa 200 dòng (request.dto)
-const REQUEST_LINES_MAX = 200;
+// Một người: phiếu tháng đang giao + nợ cũ, mỗi phiếu tối đa 200 dòng
+const USER_LINES_MAX = 1000;
 
 export class ExpectedRemaining {
   @IsUUID() line_id!: string;
@@ -20,7 +20,7 @@ export class ExpectedRemaining {
 
 export class CancelRequestBody {
   @IsArray()
-  @ArrayMaxSize(REQUEST_LINES_MAX)
+  @ArrayMaxSize(USER_LINES_MAX)
   @ArrayUnique((e: ExpectedRemaining) => e?.line_id)
   @ValidateNested({ each: true })
   @Type(() => ExpectedRemaining)
@@ -28,7 +28,7 @@ export class CancelRequestBody {
 }
 
 export interface CancelRequestResult {
-  request_id: string;
+  user_sub: string;
   cancelled_now: number;
   lines: (CancelledLine & { cancelled_now: number })[];
   undo_id: string | null;

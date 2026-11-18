@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/lib/api-client';
 import { useMe } from '@/lib/me';
@@ -7,17 +7,10 @@ import { useSingleFlight } from '@/lib/use-single-flight';
 import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { useToast } from '@/ui/toast-context';
 import { useRequestFormat } from '@/features/request/request-format';
-import { cancelRequest } from '../delivery.api';
-import type { DeliveryPerson, DeliveryPersonLine } from './delivery-people.api';
+import { cancelUserRequests } from '../delivery.api';
+import type { DeliveryPerson } from './delivery-people.api';
 import { useRefreshAfterLineChange } from './use-refresh-after-flow';
 import { cancellableLines } from './cancel-request-lines';
-
-// Một người có thể có phiếu tháng đang giao và phiếu nợ tháng trước: mỗi phiếu một lần gọi
-function byRequest(lines: DeliveryPersonLine[]) {
-  const groups = new Map<string, { line_id: string; remaining: number }[]>();
-  for (const l of lines) groups.set(l.request_id, [...(groups.get(l.request_id) ?? []), { line_id: l.line_id, remaining: l.remaining_qty }]);
-  return [...groups];
-}
 
 const isStale = (e: unknown) => e instanceof ApiError && (e.body as { code?: string } | null)?.code === 'STALE_UPDATE';
 
@@ -29,28 +22,33 @@ export function CancelRequestDialog({ person, onClose, onDone }: { person: Deliv
   const refresh = useRefreshAfterLineChange([['admin-request']]);
   const flight = useSingleFlight();
   const [error, setError] = useState<string | null>(null);
-  // Chụp lúc mở: số gửi đi là số đang hiện
-  const [lines] = useState(() => cancellableLines(person));
+  // Chụp lúc mở: số gửi đi là số đang hiện; sau STALE_UPDATE chụp lại từ dữ liệu vừa tải
+  const [lines, setLines] = useState(() => cancellableLines(person));
+  const [reloading, setReloading] = useState(false);
+  useEffect(() => {
+    if (reloading) setLines(cancellableLines(person));
+  }, [person, reloading]);
   const delivered = person.lines.filter((l) => l.delivered_qty > 0);
   const name = person.full_name ?? person.user_sub;
 
   const submit = () =>
     flight.run(async () => {
       setError(null);
+      setReloading(false);
       const sentAt = Date.now();
-      const undoIds: string[] = [];
+      let undoId: string | null;
       try {
-        for (const [requestId, expected] of byRequest(lines)) {
-          const res = await cancelRequest(requestId, expected, csrfToken);
-          if (res.undo_id) undoIds.push(res.undo_id);
-        }
+        const expected = lines.map((l) => ({ line_id: l.line_id, remaining: l.remaining_qty }));
+        undoId = (await cancelUserRequests(person.user_sub, expected, csrfToken)).undo_id;
       } catch (e) {
+        const stale = isStale(e);
         await refresh();
-        return setError(t(isStale(e) ? 'delivery.cancelRequest.stale' : 'delivery.cancelRequest.failed'));
+        setReloading(stale);
+        return setError(t(stale ? 'delivery.cancelRequest.stale' : 'delivery.cancelRequest.failed'));
       }
       toast.show({
         text: t('delivery.cancelRequest.done', { name, count: lines.length }),
-        undo: undoIds.length > 0 ? () => undoActions('cancel', undoIds, csrfToken).then(refresh) : undefined,
+        undo: undoId ? () => undoActions('cancel', [undoId], csrfToken).then(refresh) : undefined,
         undoSince: sentAt,
       });
       onDone();
@@ -91,7 +89,7 @@ export function CancelRequestDialog({ person, onClose, onDone }: { person: Deliv
             {t('delivery.cancelRequest.back')}
           </button>
         </DialogClose>
-        <button type="button" className="btn btn--danger" disabled={flight.pending || !!error} aria-busy={flight.pending} onClick={() => void submit()}>
+        <button type="button" className="btn btn--danger" disabled={flight.pending || lines.length === 0} aria-busy={flight.pending} onClick={() => void submit()}>
           {flight.pending ? t('delivery.cancelRequest.sending') : t('delivery.cancelRequest.confirm')}
         </button>
       </div>

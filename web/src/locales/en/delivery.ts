@@ -266,7 +266,7 @@ const delivery: Messages<typeof vi> = {
       sending: 'Cancelling…',
       done_one: 'Cancelled {{name}}’s request ({{count}} undelivered item).',
       done_other: 'Cancelled {{name}}’s request ({{count}} undelivered items).',
-      stale: 'The request just changed elsewhere — reloaded, review it and cancel again.',
+      stale: 'The request just changed elsewhere — the new numbers are loaded, review them and press Cancel request again.',
       failed: 'Could not cancel the request — try again.',
     },
   },

@@ -56,14 +56,14 @@ export class DeliveryController {
     return this.cancelService.cancelRemaining(id, body, admin.sub);
   }
 
-  @Post('requests/:id/cancel-remaining')
+  @Post('users/:sub/cancel-remaining')
   @HttpCode(200)
-  cancelRequest(
+  cancelUser(
     @CurrentIdentity() admin: RequestIdentity,
-    @Param('id', uuidParam) id: string,
+    @Param('sub') sub: string,
     @Body() body: CancelRequestBody,
   ) {
-    return this.cancelRequestService.cancelRequest(id, body, admin.sub);
+    return this.cancelRequestService.cancelUser(sub, body, admin.sub);
   }
 
   @Post('undo/delivery')

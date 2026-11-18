@@ -129,24 +129,25 @@ export class LineDeliveryStore {
     return rows;
   }
 
-  // Hủy cả phiếu: khóa phiếu rồi mọi dòng theo id; `remaining` chỉ > 0 ở dòng hiệu lực còn nợ
-  async lockRequestOpenLines(
+  // Hủy mọi phiếu của một người: khóa mọi phiếu theo id rồi mọi dòng theo id; `remaining` chỉ > 0 ở dòng hiệu lực còn nợ
+  async lockUserOpenLines(
     tx: Tx,
-    requestId: string,
-  ): Promise<{ head: RequestHead; lines: OpenLine[] } | null> {
-    const head = await tx.execute<RequestHead & Record<string, unknown>>(sql`
+    userSub: string,
+  ): Promise<{ heads: RequestHead[]; lines: OpenLine[] }> {
+    const heads = await tx.execute<RequestHead & Record<string, unknown>>(sql`
       SELECT r.id, to_char(r.period_ym, 'YYYY-MM') AS period_ym, r.user_sub
-      FROM requests r WHERE r.id = ${requestId} FOR UPDATE
+      FROM requests r WHERE r.user_sub = ${userSub}
+      ORDER BY r.id FOR UPDATE
     `);
-    if (head.rows.length === 0) return null;
+    if (heads.rows.length === 0) return { heads: [], lines: [] };
     const { rows } = await tx.execute<OpenLine & Record<string, unknown>>(sql`
       SELECT ${LINE_COLUMNS},
         CASE WHEN ${UNDELIVERED_LINE} THEN ${REMAINING_QTY} ELSE 0 END AS remaining
       FROM request_lines l JOIN requests r ON r.id = l.request_id
-      WHERE l.request_id = ${requestId}
+      WHERE r.user_sub = ${userSub}
       ORDER BY l.id FOR UPDATE OF l
     `);
-    return { head: head.rows[0], lines: rows };
+    return { heads: heads.rows, lines: rows };
   }
 
   async addDelivered(

@@ -264,7 +264,7 @@ const delivery = {
       sending: 'Đang hủy…',
       done_one: 'Đã hủy phiếu của {{name}} ({{count}} món chưa giao).',
       done_other: 'Đã hủy phiếu của {{name}} ({{count}} món chưa giao).',
-      stale: 'Phiếu vừa đổi ở nơi khác — đã tải lại, xem lại rồi hủy.',
+      stale: 'Phiếu vừa đổi ở nơi khác — đã tải lại số mới, xem lại rồi bấm Hủy phiếu.',
       failed: 'Không hủy được phiếu — thử lại.',
     },
   },

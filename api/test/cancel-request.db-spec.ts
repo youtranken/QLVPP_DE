@@ -15,9 +15,10 @@ const OWNER = `db-cnlreq-owner-${SUFFIX}`;
 const ADMIN = `db-cnlreq-admin-${SUFFIX}`;
 // Kỳ quá khứ đã khóa theo đồng hồ thật → không cần đứng đồng hồ
 const YM = '2024-07-01';
+const YM2 = '2024-08-01';
 const ROUNDS = 5;
 
-describe('Hủy phiếu người đã nghỉ song song (Postgres thật, hai request HTTP thật)', () => {
+describe('Hủy mọi phiếu người đã nghỉ song song (Postgres thật, hai request HTTP thật)', () => {
   let app: INestApplication<App>;
   let pool: Pool;
   let items: string[];
@@ -45,23 +46,26 @@ describe('Hủy phiếu người đã nghỉ song song (Postgres thật, hai req
       items,
     ]);
   };
+  // Hai phiếu hai kỳ, mỗi phiếu một dòng (3 và 4): hủy theo người phải nguyên tử trên cả hai
   const seedRequest = async () => {
-    const req = await pool.query<{ id: string }>(
-      `INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ($1, $2, $2) RETURNING id`,
-      [YM, OWNER],
+    const reqs = await pool.query<{ id: string }>(
+      `INSERT INTO requests (period_ym, user_sub, created_by_sub)
+       VALUES ($1, $3, $3), ($2, $3, $3) RETURNING id`,
+      [YM, YM2, OWNER],
     );
+    const ids = reqs.rows.map((r) => r.id);
     const lines = await pool.query<{ id: string }>(
       `INSERT INTO request_lines (request_id, item_id, qty)
-       SELECT $1, unnest($2::uuid[]), unnest(ARRAY[3, 4]) RETURNING id`,
-      [req.rows[0].id, items],
+       SELECT unnest($1::uuid[]), unnest($2::uuid[]), unnest(ARRAY[3, 4]) RETURNING id`,
+      [ids, items],
     );
-    return { requestId: req.rows[0].id, lineIds: lines.rows.map((r) => r.id) };
+    return { requestIds: ids, lineIds: lines.rows.map((r) => r.id) };
   };
-  const linesOf = async (requestId: string) =>
+  const linesOf = async (requestIds: string[]) =>
     (
       await pool.query<{ d: number; c: number; qty: number }>(
-        'SELECT qty, delivered_qty AS d, cancelled_qty AS c FROM request_lines WHERE request_id = $1 ORDER BY qty',
-        [requestId],
+        'SELECT qty, delivered_qty AS d, cancelled_qty AS c FROM request_lines WHERE request_id = ANY($1) ORDER BY qty',
+        [requestIds],
       )
     ).rows;
 
@@ -73,11 +77,12 @@ describe('Hủy phiếu người đã nghỉ song song (Postgres thật, hai req
     createdPeriod =
       (
         await pool.query(
-          `INSERT INTO periods (ym, deadline) VALUES ($1, '2024-07-10T17:00:00Z')
+          `INSERT INTO periods (ym, deadline)
+           VALUES ($1, '2024-07-10T17:00:00Z'), ($2, '2024-08-10T17:00:00Z')
            ON CONFLICT (ym) DO NOTHING`,
-          [YM],
+          [YM, YM2],
         )
-      ).rowCount === 1;
+      ).rowCount! > 0;
     await pool.query(
       "INSERT INTO users (sub, status) VALUES ($1, 'locked'), ($2, 'active')",
       [OWNER, ADMIN],
@@ -102,8 +107,8 @@ describe('Hủy phiếu người đã nghỉ song song (Postgres thật, hai req
     if (createdPeriod) {
       await pool
         .query(
-          'DELETE FROM periods WHERE ym = $1 AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = $1)',
-          [YM],
+          'DELETE FROM periods p WHERE p.ym = ANY($1::date[]) AND NOT EXISTS (SELECT 1 FROM requests r WHERE r.period_ym = p.ym)',
+          [[YM, YM2]],
         )
         .catch(() => undefined);
     }
@@ -111,17 +116,17 @@ describe('Hủy phiếu người đã nghỉ song song (Postgres thật, hai req
     delete process.env.AUTH_DEV_MODE;
   });
 
-  it(`${ROUNDS} vòng hai POST hủy cả phiếu cùng lúc → đúng một lần hủy 7, lần kia 200 cancelled_now 0; cancelled = qty, một audit cha`, async () => {
+  it(`${ROUNDS} vòng hai POST hủy theo người (hai phiếu hai kỳ) cùng lúc → đúng một lần hủy 7, lần kia 200 cancelled_now 0; cancelled = qty, một audit cha`, async () => {
     for (let round = 0; round < ROUNDS; round++) {
       await reset();
-      const { requestId, lineIds } = await seedRequest();
+      const { requestIds, lineIds } = await seedRequest();
       const body = {
         expected_lines: lineIds.map((id, k) => ({
           line_id: id,
           remaining: k === 0 ? 3 : 4,
         })),
       };
-      const path = `/api/admin/requests/${requestId}/cancel-remaining`;
+      const path = `/api/admin/users/${OWNER}/cancel-remaining`;
       const results = await Promise.all([post(path, body), post(path, body)]);
       expect(results.map(outcome)).toEqual(['200', '200']);
       expect(
@@ -129,28 +134,28 @@ describe('Hủy phiếu người đã nghỉ song song (Postgres thật, hai req
           .map((r) => (r.body as { cancelled_now: number }).cancelled_now)
           .sort(),
       ).toEqual([0, 7]);
-      expect(await linesOf(requestId)).toEqual([
+      expect(await linesOf(requestIds)).toEqual([
         { qty: 3, d: 0, c: 3 },
         { qty: 4, d: 0, c: 4 },
       ]);
       const audits = await pool.query(
-        "SELECT 1 FROM audit_log WHERE action = 'request.cancel_remaining' AND object_id = $1",
-        [requestId],
+        "SELECT 1 FROM audit_log WHERE action = 'user.cancel_remaining' AND detail::text LIKE '%' || $1 || '%'",
+        [lineIds[0]],
       );
       expect(audits.rows).toHaveLength(1);
     }
   });
 
-  it(`${ROUNDS} vòng hủy cả phiếu song song với giao 2 dòng đầu → một bên thắng, bên kia 409 STALE_UPDATE hoặc 400 DELIVER_EXCEEDS_QTY; không dòng nào delivered + cancelled > qty`, async () => {
+  it(`${ROUNDS} vòng hủy theo người song song với giao 2 dòng phiếu kỳ sau → một bên thắng, bên kia 409 STALE_UPDATE hoặc 400 DELIVER_EXCEEDS_QTY; không dòng nào delivered + cancelled > qty`, async () => {
     for (let round = 0; round < ROUNDS; round++) {
       await reset();
-      const { requestId, lineIds } = await seedRequest();
+      const { requestIds, lineIds } = await seedRequest();
       const [delivered, cancelled] = await Promise.all([
-        post(`/api/admin/lines/${lineIds[0]}/deliver`, {
+        post(`/api/admin/lines/${lineIds[1]}/deliver`, {
           qty: 2,
           expected_delivered_qty: 0,
         }),
-        post(`/api/admin/requests/${requestId}/cancel-remaining`, {
+        post(`/api/admin/users/${OWNER}/cancel-remaining`, {
           expected_lines: lineIds.map((id, k) => ({
             line_id: id,
             remaining: k === 0 ? 3 : 4,
@@ -158,12 +163,12 @@ describe('Hủy phiếu người đã nghỉ song song (Postgres thật, hai req
         }),
       ]);
       const pair = `${outcome(delivered)} | ${outcome(cancelled)}`;
-      const rows = await linesOf(requestId);
+      const rows = await linesOf(requestIds);
       if (delivered.status === 200) {
         expect(pair).toBe('200 | 409 STALE_UPDATE');
         expect(rows).toEqual([
-          { qty: 3, d: 2, c: 0 },
-          { qty: 4, d: 0, c: 0 },
+          { qty: 3, d: 0, c: 0 },
+          { qty: 4, d: 2, c: 0 },
         ]);
       } else {
         expect(pair).toBe('400 DELIVER_EXCEEDS_QTY | 200');
