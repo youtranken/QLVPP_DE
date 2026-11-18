@@ -177,9 +177,9 @@ describe('Bố cục theo route', () => {
   });
 
   // dải chấm nối là tiến trình nên giữ một hàng cả ở 390 (hai hàng thì đường nối gãy)
-  it('Kỳ tháng: dải 4 bước một hàng bốn cột ở mọi bề rộng; bảng dùng hết bề ngang', () => {
+  it('Kỳ tháng: dải 4 bước một hàng ở mọi bề rộng, bước cuối vừa nội dung để dải chạm hai mép (A3); bảng dùng hết bề ngang', () => {
     const css = readFileSync(join(SRC, 'features/month/month.m1.css'), 'utf8');
-    expect(css).toMatch(/\.mk-strip \{[^}]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
+    expect(css).toMatch(/\.mk-strip \{[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\) auto/);
     expect(css).not.toMatch(/\.mk-strip \{[^}]*grid-template-columns: repeat\(2,/);
   });
 

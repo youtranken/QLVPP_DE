@@ -116,7 +116,7 @@ function useColumns(groupName: (r: StockRow) => string, onAction: (a: StockActio
       },
       { id: 'unit', header: t('stock.page.colUnit'), meta: { width: '4.5rem' }, cell: ({ row }) => unitName(row.original.unit) },
       { id: 'stock', header: t('stock.page.colStock'), meta: { className: 'num r', width: '5rem' }, cell: ({ row }) => <b>{row.original.stock_qty}</b> },
-      { id: 'restock', header: () => <RestockHeader />, meta: { className: 'num r', width: '6.5rem' }, cell: ({ row }) => row.original.restock_level ?? <EmptyValue /> },
+      { id: 'restock', header: () => <RestockHeader />, meta: { className: 'num r', width: '6.5rem', label: t('stock.page.colRestock') }, cell: ({ row }) => row.original.restock_level ?? <EmptyValue /> },
       { id: 'status', header: t('stock.page.colStatus'), meta: { width: '10rem' }, cell: ({ row }) => <StatusCell row={row.original} /> },
       // Cần thêm = phần còn thiếu sau khi trừ hàng NCC đang về (server short)
       { id: 'need', header: t('stock.page.colNeed'), meta: { className: 'num r', width: '5.5rem' }, cell: ({ row }) => (row.original.short > 0 ? <b>{row.original.short}</b> : <EmptyValue />) },
