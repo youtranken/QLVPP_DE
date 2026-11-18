@@ -134,3 +134,4 @@
 [data-shell='admin'] .pt-progress { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
 [data-shell='admin'] .pt-progress .progress { flex: 1; min-width: 0; }
 [data-shell='admin'] .pt-short { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+[data-shell='admin'] .dd-cancel-request { margin-right: auto; }

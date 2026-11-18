@@ -252,6 +252,21 @@ const delivery = {
         next: 'Người tiếp theo',
       },
     },
+    cancelRequest: {
+      action: 'Hủy phiếu',
+      actionFor: 'Hủy phiếu, {{name}}',
+      title: 'Hủy phiếu của {{name}}?',
+      lead: 'Các món sau sẽ không giao nữa:',
+      qty: '{{qty}} {{unit}}',
+      kept: 'Phần đã giao ({{list}}) giữ nguyên trong lịch sử.',
+      back: 'Đóng',
+      confirm: 'Hủy phiếu',
+      sending: 'Đang hủy…',
+      done_one: 'Đã hủy phiếu của {{name}} ({{count}} món chưa giao).',
+      done_other: 'Đã hủy phiếu của {{name}} ({{count}} món chưa giao).',
+      stale: 'Phiếu vừa đổi ở nơi khác — đã tải lại, xem lại rồi hủy.',
+      failed: 'Không hủy được phiếu — thử lại.',
+    },
   },
 };
 

@@ -22,13 +22,13 @@ Chủ dự án chốt 18/11/2026. Nhánh `feat/gop-y-1811` từ `main`. TDD theo
 
 ## Phase B — Hủy phiếu người đã nghỉ
 
-- Đã có: `POST /api/admin/lines/:id/cancel-remaining` (lý do `user_left`), hủy phần còn nợ; phần giữ chỗ được trả lại nên Tủ có lại hàng.
+- Đã có: `POST /api/admin/lines/:id/cancel-remaining` (lý do `user_left`), hủy phần còn nợ; người đã nghỉ vốn không giữ hàng (`heldSql`), nên hủy không đổi tồn trống.
 - **B1 API** `POST /api/admin/requests/:id/cancel-remaining` body `{expected_lines: [{line_id, remaining}]}`:
   - chỉ khi chủ phiếu đã nghỉ (bị khóa / thu hồi quyền ở Tài khoản D&E), ngược lại `USER_NOT_LEFT` (mã mới, thêm §7);
   - một transaction, khóa theo thứ tự requests → request_lines → items; hủy mọi dòng còn nợ với `user_left`; số lệch `expected` → `STALE_DATA` (dùng mã sẵn có nếu đã có tên tương đương);
   - audit một bản ghi cha + before/after từng dòng; không gửi chuông; có undo như hủy từng dòng.
   - Test: db-spec hai request song song → một thành công, một `STALE`/0 dòng; e2e: người đang làm → `USER_NOT_LEFT`, người đã nghỉ → 200 và tồn trống tăng đúng; vai nhân viên → 403; phiếu không còn nợ → idempotent 200 `cancelled_now: 0`.
-- **B2 Web** — hộp Giao của người đã nghỉ có nút "Hủy phiếu" (danger) cạnh "Giao". Bấm → hộp xác nhận liệt kê món + số sẽ trả về Tủ, nút "Hủy phiếu"; xong → toast có Hoàn tác. Người đang làm: không có nút (component test cả hai phía).
+- **B2 Web** — hộp Giao của người đã nghỉ có nút "Hủy phiếu" (danger) cạnh "Giao". Bấm → hộp xác nhận "Các món sau sẽ không giao nữa:" + món kèm số còn nợ, ghi chú phần đã giao giữ nguyên, nút "Đóng" / "Hủy phiếu"; xong → toast "Đã hủy phiếu của {tên} ({n} món chưa giao)." có Hoàn tác (chủ dự án chốt 18/11: bỏ ý "trả về Tủ", giữ "Đóng"). Người đang làm: không có nút (component test cả hai phía).
 - Mockup hộp xác nhận cho chủ dự án duyệt trước khi code B2.
 - Playwright `E2-… Hủy phiếu người đã nghỉ` ở 1280 + 390.
 

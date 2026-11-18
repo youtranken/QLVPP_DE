@@ -7,6 +7,8 @@ import { BulkDeliveryService } from './bulk-delivery.service';
 import { BulkDeliverBody } from './bulk-delivery.dto';
 import { UndoBody } from '../undo/undo.dto';
 import { CancelRemainingService } from './cancel-remaining.service';
+import { CancelRequestBody } from './cancel-request.dto';
+import { CancelRequestService } from './cancel-request.service';
 import { CancelUndoService } from './cancel-undo.service';
 import { CancelBody, DeliverBody } from './delivery.dto';
 import { DeliveryService } from './delivery.service';
@@ -21,6 +23,7 @@ export class DeliveryController {
     private readonly bulk: BulkDeliveryService,
     private readonly deliveryUndo: DeliveryUndoService,
     private readonly cancelUndo: CancelUndoService,
+    private readonly cancelRequestService: CancelRequestService,
   ) {}
 
   // Cập nhật dòng có sẵn → 200 thay vì 201 mặc định của POST
@@ -51,6 +54,16 @@ export class DeliveryController {
     @Body() body: CancelBody,
   ) {
     return this.cancelService.cancelRemaining(id, body, admin.sub);
+  }
+
+  @Post('requests/:id/cancel-remaining')
+  @HttpCode(200)
+  cancelRequest(
+    @CurrentIdentity() admin: RequestIdentity,
+    @Param('id', uuidParam) id: string,
+    @Body() body: CancelRequestBody,
+  ) {
+    return this.cancelRequestService.cancelRequest(id, body, admin.sub);
   }
 
   @Post('undo/delivery')

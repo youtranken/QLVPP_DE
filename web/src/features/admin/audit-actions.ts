@@ -39,6 +39,7 @@ export const AUDIT_ACTIONS: readonly string[] = [
   'period.no_order',
   'period.no_order_cleared',
   'report.snapshot_created',
+  'request.cancel_remaining',
   'request.created',
   'request.deleted',
   'request.updated',

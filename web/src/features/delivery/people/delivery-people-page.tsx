@@ -22,6 +22,7 @@ import { stockShortages } from './deliver-plan';
 import { bulkPlan, type BulkPlan } from './bulk-plan';
 import { BulkDeliverDialog } from './bulk-deliver-dialog';
 import { DeliverDialog } from './deliver-dialog';
+import { CancelRequestDialog } from './cancel-request-dialog';
 import { PeopleTable } from './people-table';
 import { PersonPanel } from './person-panel';
 import { useQuickDeliver } from './use-quick-deliver';
@@ -63,6 +64,7 @@ function PeopleBoard({ ym }: { ym: string }) {
   const open = (sub: string) => panel.open(sub);
   const quick = useQuickDeliver(people);
   const [confirmFor, setConfirmFor] = useState<string | null>(null);
+  const [cancelFor, setCancelFor] = useState<string | null>(null);
   const [historyOf, setHistoryOf] = useState<DeliveryPerson | null>(null);
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set());
   // Kế hoạch chụp lúc bấm: làm mới danh sách giữa chừng không đổi số đang gửi
@@ -89,6 +91,7 @@ function PeopleBoard({ ym }: { ym: string }) {
     return true;
   };
   const confirming = people.find((p) => p.user_sub === confirmFor);
+  const cancelling = people.find((p) => p.user_sub === cancelFor);
 
   if (query.isError) {
     if (apiErrorCode(query.error) !== 'PERIOD_NOT_LOCKED') return <LoadError onRetry={() => void query.refetch()} />;
@@ -170,6 +173,7 @@ function PeopleBoard({ ym }: { ym: string }) {
           onToggleAll={toggleAll}
           onView={open}
           onDeliver={setConfirmFor}
+          onCancelRequest={setCancelFor}
           onHistory={(sub) => setHistoryOf(people.find((p) => p.user_sub === sub) ?? null)}
         />
       )}
@@ -200,8 +204,13 @@ function PeopleBoard({ ym }: { ym: string }) {
             open(confirming.user_sub);
           }}
           focusAfter={focusSearch}
+          onCancelRequest={() => {
+            setConfirmFor(null);
+            setCancelFor(confirming.user_sub);
+          }}
         />
       )}
+      {cancelling && <CancelRequestDialog key={cancelling.user_sub} person={cancelling} onClose={() => setCancelFor(null)} onDone={() => setCancelFor(null)} />}
     </>
   );
 }
