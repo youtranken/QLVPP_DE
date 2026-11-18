@@ -8,6 +8,8 @@ export interface ToastSpec {
   persist?: boolean;
   // Hoàn tác 5 giây (TC-18): nút "Hoàn tác (n)" đếm ngược, không dừng khi rê chuột vì cửa sổ do server tính
   undo?: () => Promise<unknown>;
+  // Mốc (Date.now) server bắt đầu tính 5 giây; thao tác nhiều bước truyền giờ gửi bước đầu để nút tắt không muộn hơn server
+  undoSince?: number;
 }
 
 export interface ToastApi {

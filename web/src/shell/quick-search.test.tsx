@@ -102,6 +102,27 @@ describe('Tìm nhanh Ctrl K (TC-17)', () => {
     await waitFor(() => expect(location()).toBe('/admin/users'));
   });
 
+  it('kỳ: gõ "thang 11" thấy nhóm Kỳ "Kỳ tháng 11/2026" (kỳ đang mở), bấm thì mở Kỳ tháng đúng kỳ', async () => {
+    open();
+    await openWithKeys();
+    await userEvent.type(box(), 'thang 11');
+    const periods = await screen.findByRole('group', { name: 'Kỳ' });
+    expect(within(periods).getAllByRole('option').map((o) => o.textContent)).toEqual(['Kỳ tháng 11/2026', 'Kỳ tháng 11/2025']);
+    await userEvent.click(within(periods).getByRole('option', { name: 'Kỳ tháng 11/2026' }));
+    await waitFor(() => expect(location()).toBe('/admin/month?ym=2026-11'));
+  });
+
+  it('kỳ: gõ "2026-10" ra "Kỳ tháng 10/2026"; kỳ 12 tháng trước (11/2025) có, 13 tháng trước (10/2025) không', async () => {
+    open();
+    await openWithKeys();
+    await userEvent.type(box(), '2026-10');
+    expect(await within(await screen.findByRole('group', { name: 'Kỳ' })).findByRole('option', { name: 'Kỳ tháng 10/2026' })).toBeInTheDocument();
+    await userEvent.clear(box());
+    await userEvent.type(box(), '2025');
+    const periods = await screen.findByRole('group', { name: 'Kỳ' });
+    expect(within(periods).getAllByRole('option').map((o) => o.textContent)).toEqual(['Kỳ tháng 12/2025', 'Kỳ tháng 11/2025']);
+  });
+
   it('không khớp gì: nói rõ không thấy', async () => {
     open();
     await openWithKeys();

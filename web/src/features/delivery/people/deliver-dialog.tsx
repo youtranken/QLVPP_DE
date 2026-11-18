@@ -111,17 +111,23 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
 
   const submit = () =>
     flight.run(async () => {
+      // Mỗi dòng một undo_id, cửa sổ 5 giây của dòng đầu hết trước: giờ gửi dòng đầu là cận dưới an toàn
+      const sentAt = Date.now();
       const sent = await sendSteps(stepsOf(snap.rows, limits), csrfToken, pending);
-      await refresh();
-      if (sent.expired || sent.lines.some((s) => !s.outcome.ok)) return setResult(sent);
+      if (sent.expired || sent.lines.some((s) => !s.outcome.ok)) {
+        await refresh();
+        return setResult(sent);
+      }
       succeeded.current = true;
       const undoIds = sent.undoIds;
       toast.show({
         text: t('delivery.people.panel.delivered', { name }),
         undo: undoIds ? () => undoActions('delivery', undoIds, csrfToken).then(refresh) : undefined,
+        undoSince: sentAt,
         action: next && onNext ? { label: t('delivery.people.panel.next'), onClick: () => onNext(next.user_sub) } : undefined,
       });
       onDone();
+      await refresh();
     });
   const ask = useAskThenSubmit(pending, t('delivery.confirm.title', { name }), () => void submit());
 

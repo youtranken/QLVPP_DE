@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { act, useState } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, renderWithI18n, screen, userEvent, waitFor } from '@/test/test-utils';
+import { fireEvent, jsonResponse, renderWithI18n, screen, userEvent, waitFor } from '@/test/test-utils';
 import { MeContext } from '@/lib/me';
 import { makeMe } from '@/test/fixtures-me';
 import { ToastProvider } from '@/ui/toast-provider';
@@ -45,7 +45,10 @@ function open() {
   );
 }
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 describe('Giao n phiếu — Hoàn tác 5 giây (TC-18)', () => {
   it('giao xong có undo_id → toast "Đã giao 2 phiếu" kèm Hoàn tác (5); bấm thì POST undo/delivery đúng id rồi báo đã hoàn tác', async () => {
@@ -66,6 +69,22 @@ describe('Giao n phiếu — Hoàn tác 5 giây (TC-18)', () => {
     open();
     await userEvent.click(await screen.findByRole('button', { name: 'Xác nhận giao' }));
     expect(await screen.findByText('Đã giao 2 phiếu')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Hoàn tác' })).not.toBeInTheDocument();
+  });
+
+  it('server trả lô sau 1 s → Hoàn tác đếm từ lúc gửi lô: "(4)" khi toast hiện, còn ở +4 999 ms, mất ở +5 000 ms', async () => {
+    vi.useFakeTimers();
+    const f = stub('u-1');
+    vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => new Promise((r) => setTimeout(() => r(f(url, init)), String(url) === BULK ? 1000 : 0))));
+    open();
+    const t0 = Date.now();
+    fireEvent.click(screen.getByRole('button', { name: 'Xác nhận giao' }));
+    const at = (ms: number) => act(() => vi.advanceTimersByTimeAsync(t0 + ms - Date.now()));
+    await at(1000);
+    expect(screen.getByRole('button', { name: 'Hoàn tác' })).toHaveTextContent('Hoàn tác (4)');
+    await at(4999);
+    expect(screen.getByRole('button', { name: 'Hoàn tác' })).toBeInTheDocument();
+    await at(5000);
     expect(screen.queryByRole('button', { name: 'Hoàn tác' })).not.toBeInTheDocument();
   });
 });
