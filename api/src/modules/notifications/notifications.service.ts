@@ -118,6 +118,19 @@ export class NotificationsService {
     }
   }
 
+  async markReadByEvent(
+    sub: string,
+    eventId: string,
+    tx: Tx,
+    now: Date,
+  ): Promise<number> {
+    const result = await tx.execute(sql`
+      UPDATE in_app_notifications SET read_at = ${now.toISOString()}::timestamptz
+      WHERE user_sub = ${sub} AND event_id = ${eventId} AND read_at IS NULL
+    `);
+    return result.rowCount ?? 0;
+  }
+
   async adminRecipients(ex?: Executor): Promise<string[]> {
     return this.users.activeAdminSubs(ex);
   }
