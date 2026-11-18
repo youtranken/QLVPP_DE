@@ -10,7 +10,8 @@ import { endLogout, forgetAuth } from '@/lib/session-relogin';
 
 vi.mock('@/lib/navigate', () => ({ navigateTo: vi.fn(), submitForm: vi.fn() }));
 
-const rows = (n: number) => ({ items: Array.from({ length: n }, (_, i) => ({ id: `l${i}` })) });
+// n người, mỗi người một món chờ duyệt ở kỳ 9
+const rows = (n: number) => ({ items: Array.from({ length: n }, (_, i) => ({ line_id: `l${i}`, period_ym: '2026-09', user_sub: `u${i}` })) });
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
 // Tên đọc = nhãn mục (+ ", n …" khi có số); title chỉ ở cột thu gọn hoặc khi nhãn bị cắt
 const byLabel = (label: string) => (name: string) => name === label || name.startsWith(`${label},`);
@@ -25,7 +26,7 @@ afterEach(() => {
 });
 
 describe('AdminSidebar: đếm', () => {
-  it('review trả 3 dòng → "Kỳ tháng" hiện 3 (G8); giao 6 người giao được ngay (1 người chưa nhận nhưng tủ trống không tính), Tủ/Kho 4 món thiếu cho người chờ kèm nhãn đọc màn hình', async () => {
+  it('3 người có món chờ duyệt → "Kỳ tháng" hiện 3; Giao hàng 7 = số thẻ "Chưa nhận" (kể cả người tủ trống); Tủ/Kho 4 món thiếu cho người chờ kèm nhãn đọc màn hình', async () => {
     mockViewport(1280);
     stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(200, rows(3)),
@@ -34,15 +35,15 @@ describe('AdminSidebar: đếm', () => {
     });
     renderApp(makeMe('admin'), '/admin/catalog');
     await waitFor(() => expect(navLink('Kỳ tháng')).toHaveTextContent('3'));
-    expect(navLink('Kỳ tháng')).toHaveAccessibleName('Kỳ tháng, 3 món ngoài danh mục chờ duyệt');
-    await waitFor(() => expect(navLink('Giao hàng')).toHaveAccessibleName('Giao hàng, 6 người chưa nhận'));
+    expect(navLink('Kỳ tháng')).toHaveAccessibleName('Kỳ tháng, 3 người có món ngoài danh mục chờ duyệt');
+    await waitFor(() => expect(navLink('Giao hàng')).toHaveAccessibleName('Giao hàng, 7 người chưa nhận'));
     await waitFor(() => expect(navLink('Tủ / Kho')).toHaveAccessibleName('Tủ / Kho, 4 món thiếu cho người chờ'));
   });
 
   it.each([
     [0, false],
     [1, true],
-  ])('biên 0/1: review trả %i dòng → hiện đếm: %s', async (n, shown) => {
+  ])('biên 0/1: %i người có món chờ duyệt → có số và link mở kỳ có món: %s', async (n, shown) => {
     mockViewport(1280);
     stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(200, rows(n)),
@@ -51,8 +52,9 @@ describe('AdminSidebar: đếm', () => {
     renderApp(makeMe('admin'), '/admin/catalog');
     // Đếm giao hàng phụ thuộc kỳ hiện tại → khi nó hiện thì đếm review (độc lập) cũng đã về
     await waitFor(() => expect(navLink('Giao hàng')).toHaveTextContent('2'));
-    if (shown) expect(navLink('Kỳ tháng')).toHaveAccessibleName('Kỳ tháng, 1 món ngoài danh mục chờ duyệt');
+    if (shown) expect(navLink('Kỳ tháng')).toHaveAccessibleName('Kỳ tháng, 1 người có món ngoài danh mục chờ duyệt');
     else expect(navLink('Kỳ tháng')).toHaveAccessibleName('Kỳ tháng');
+    expect(navLink('Kỳ tháng')).toHaveAttribute('href', shown ? '/admin/month?ym=2026-09&chip=pending' : '/admin/month');
     expect(navLink('Kỳ tháng')).toHaveTextContent(shown ? /1/ : /^Kỳ tháng$/);
   });
 
