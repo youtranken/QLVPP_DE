@@ -54,8 +54,8 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
     try {
       await page.goto('/');
       const grid = page.getByRole('region', { name: 'Danh mục món' });
-      const addOther = grid.getByRole('button', { name: '+ Thêm món khác' });
-      await expect(addOther).toBeInViewport();
+      const addOther = grid.getByRole('button', { name: /Không thấy món cần\?/ });
+      await addOther.scrollIntoViewIfNeeded();
       await addOther.click();
       const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
       await dialog.getByLabel('Tên món').fill(name);

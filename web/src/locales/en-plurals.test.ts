@@ -36,7 +36,6 @@ describe('EN: một từ "items", số nhiều theo i18next', () => {
     ['request.cart.barDirty', 1, '1 unsaved change', '2 unsaved changes'],
     ['request.leave.body', 1, 'Your order has 1 unsaved change — leaving discards it.', 'Your order has 2 unsaved changes — leaving discards them.'],
     ['request.unavailable', 1, '1 item can no longer be ordered and was left out.', '2 items can no longer be ordered and were left out.'],
-    ['request.grid.countAll', 1, '1 item in catalog', '2 items in catalog'],
     ['request.grid.countMatch', 1, '1 item matches', '2 items match'],
     ['request.cart.viewCart', 1, 'View order (1 item)', 'View order (2 items)'],
     ['request.history.delivery.owed', 1, '1 item still waiting', '2 items still waiting'],

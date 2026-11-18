@@ -11,7 +11,7 @@ const GROUPS = [
   { id: 'g2', label: 'Giấy', n: 2 },
 ];
 
-function Harness({ shown = 6, copy, start = DEFAULT_FILTER, picked = 3 }: { shown?: number; copy?: ReactNode; start?: FilterState; picked?: number }) {
+function Harness({ shown = 6, copy, start = DEFAULT_FILTER }: { shown?: number; copy?: ReactNode; start?: FilterState }) {
   const [f, setF] = useState<FilterState>(start);
   return (
     <FilterBar
@@ -19,24 +19,14 @@ function Harness({ shown = 6, copy, start = DEFAULT_FILTER, picked = 3 }: { show
       groups={GROUPS}
       total={6}
       shown={shown}
-      pickedCount={picked}
       copy={copy}
       onChange={(p) => setF({ ...f, ...p })}
       onClear={() => setF(DEFAULT_FILTER)}
-      onAddCustom={() => undefined}
     />
   );
 }
 
 describe('FilterBar', () => {
-  it('"Đã chọn 3" là nút bật tắt có aria-pressed', async () => {
-    render(<Harness />);
-    const btn = screen.getByRole('button', { name: 'Đã chọn 3' });
-    expect(btn).toHaveAttribute('aria-pressed', 'false');
-    await userEvent.click(btn);
-    expect(btn).toHaveAttribute('aria-pressed', 'true');
-  });
-
   it('chip nhóm có số và aria-pressed; "Tất cả" đang bật mặc định', async () => {
     render(<Harness />);
     expect(screen.getByRole('button', { name: 'Tất cả 6' })).toHaveAttribute('aria-pressed', 'true');
@@ -44,43 +34,41 @@ describe('FilterBar', () => {
     await userEvent.click(g1);
     expect(g1).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Tất cả 6' })).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.getByText('6 món khớp bộ lọc')).toBeInTheDocument();
+  });
+
+  it('không có ô sắp xếp, không có nút "Đã chọn", không có "+ Thêm món khác" trên thanh lọc', () => {
+    render(<Harness />);
+    expect(screen.getByRole('searchbox', { name: 'Tìm món' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Sắp xếp' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Đã chọn/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Thêm món khác/ })).toBeNull();
+  });
+
+  it('"n món khớp" chỉ hiện khi ô tìm có chữ; lọc nhóm không có chữ thì không hiện; không còn "món trong danh mục"', async () => {
+    const { unmount } = render(<Harness shown={6} />);
+    expect(screen.queryByText(/món khớp/)).toBeNull();
+    expect(screen.queryByText(/món trong danh mục/)).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Bút 4' }));
+    expect(screen.queryByText(/món khớp/)).toBeNull();
+    unmount();
+    render(<Harness shown={1} start={{ ...DEFAULT_FILTER, q: 'g' }} />);
+    expect(screen.getByText('1 món khớp')).toBeInTheDocument();
   });
 
   it('rỗng: thông báo + "Xóa lọc" trả về mặc định', async () => {
-    render(<Harness shown={0} />);
+    render(<Harness shown={0} start={{ ...DEFAULT_FILTER, q: 'zzz' }} />);
     await userEvent.click(screen.getByRole('button', { name: 'Giấy 2' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Đã chọn 3' }));
     expect(screen.getByText('Không có món phù hợp')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
     expect(screen.getByRole('button', { name: 'Tất cả 6' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'Đã chọn 3' })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('lọc "Đã chọn" mà chưa chọn món nào → "Bạn chưa chọn món nào", không "Thử từ khóa khác"', () => {
-    render(<Harness shown={0} picked={0} start={{ ...DEFAULT_FILTER, onlyPicked: true }} />);
-    expect(screen.getByText('Bạn chưa chọn món nào')).toBeInTheDocument();
-    expect(screen.queryByText(/Thử từ khóa khác/)).toBeNull();
-  });
-
-  it('có ô tìm và ô sắp xếp có tên', () => {
-    render(<Harness />);
-    expect(screen.getByRole('searchbox', { name: 'Tìm món' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Sắp xếp' })).toHaveTextContent('Theo nhóm');
-  });
-
-  it.each([
-    [1024, 'cuối hàng chip'],
-    [1280, 'hàng trên'],
-  ])('%i px: nút "Chép lại" nằm ở %s; "+ Thêm món khác" luôn ở hàng trên; chip nằm trong khung cuộn', (width) => {
+  it.each([1024, 1280, 390])('%i px: nút "Chép lại" nằm ở hàng ô tìm; chip nằm trong khung cuộn', (width) => {
     mockViewport(width);
     render(<Harness copy={<button type="button">Chép lại danh sách tháng 12</button>} />);
     const copy = screen.getByRole('button', { name: 'Chép lại danh sách tháng 12' });
-    const add = screen.getByRole('button', { name: '+ Thêm món khác' });
     const chips = screen.getByRole('group', { name: 'Nhóm món' });
-    expect(add.closest('.rq-f-row')).not.toBeNull();
+    expect(copy.closest('.rq-f-row')).toContainElement(screen.getByRole('searchbox', { name: 'Tìm món' }));
     expect(chips.parentElement).toHaveClass('rq-f-scroll');
-    if (width === 1024) expect(copy.closest('.rq-f-chiprow')).not.toBeNull();
-    else expect(copy.closest('.rq-f-row')).not.toBeNull();
   });
 });

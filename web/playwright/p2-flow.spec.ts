@@ -25,7 +25,7 @@ async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom
     await grid.getByRole('searchbox', { name: 'Tìm món' }).fill(item.name);
     await grid.getByRole('button', { name: `Thêm vào phiếu: ${item.name}`, exact: true }).click();
   }
-  await grid.getByRole('button', { name: '+ Thêm món khác' }).click();
+  await grid.getByRole('button', { name: /Không thấy món cần\?/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
   await dialog.getByLabel('Tên món').fill(custom);
   await pickOption(dialog.getByRole('combobox', { name: 'Đơn vị tính' }), 'cái');

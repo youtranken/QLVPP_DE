@@ -85,14 +85,4 @@ describe('RequestPage — focus sau lưu / chép / lỗi dòng (≤ 900)', () =>
     await screen.findByRole('button', { name: 'Xem phiếu (2 món)' });
     expect(screen.queryByRole('dialog', { name: 'Phiếu tháng 11' })).toBeNull();
   });
-
-  it('?picked=1: bấm − về 0 làm thẻ biến khỏi lưới → focus sang ô "Tìm món" (không rơi về body)', async () => {
-    mockViewport(1280);
-    stubRequestApi({ request: view({ lines: [lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 1 })] }) });
-    renderApp(makeMe('member'), '/?picked=1');
-    await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Bút bi xanh');
-    await userEvent.click(within(grid()).getByRole('button', { name: 'Bớt Bút bi xanh' }));
-    await waitFor(() => expect(within(grid()).queryByText('Bút bi xanh')).toBeNull());
-    await waitFor(() => expect(screen.getByRole('searchbox', { name: 'Tìm món' })).toHaveFocus());
-  });
 });

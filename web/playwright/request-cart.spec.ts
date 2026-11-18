@@ -47,7 +47,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await shotTo(page, info, 'empty', 'task-C5');
 
       const grid = page.getByRole('region', { name: 'Danh mục món' });
-      await grid.getByRole('button', { name: '+ Thêm món khác' }).click();
+      await grid.getByRole('button', { name: /Không thấy món cần\?/ }).click();
       const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
       await dialog.getByLabel('Tên món').fill(`PW món lạ ${Date.now()}`);
       await pickOption(dialog.getByRole('combobox', { name: 'Đơn vị tính' }), 'hộp');

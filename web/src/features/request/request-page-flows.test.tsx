@@ -34,7 +34,7 @@ describe('RequestPage — món ngoài danh mục', () => {
     });
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Bút bi xanh');
-    await userEvent.click(within(grid()).getByRole('button', { name: '+ Thêm món khác' }));
+    await userEvent.click(within(grid()).getByRole('button', { name: /Không thấy món cần\?/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Thêm món khác' });
     await userEvent.type(within(dialog).getByLabelText('Tên món'), 'Bìa còng 7cm');
     await pickOption(within(dialog).getByLabelText('Đơn vị tính'), 'cái');

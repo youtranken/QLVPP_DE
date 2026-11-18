@@ -170,8 +170,9 @@
 [data-shell='member'] .rq-custom-intro { color: var(--c-ink-2); font-weight: 600; }
 [data-shell='member'] .rq-custom-row { display: grid; grid-template-columns: 1fr auto; gap: var(--s-3); align-items: end; }
 [data-shell='member'] .rq-custom-qty { display: grid; gap: var(--s-2); }
-[data-shell='member'] .rq-custom-form textarea { min-height: 88px; padding: var(--s-3) var(--s-4); resize: vertical; }
-[data-shell='member'] .rq-custom-input { box-sizing: border-box; width: 100%; min-height: 44px; border-radius: var(--r-md); font-size: 16px; }
+[data-shell='member'] .rq-custom-input { box-sizing: border-box; width: 100%; min-height: var(--hit); padding: 0 var(--s-4); border: 1px solid var(--c-line-input); border-radius: var(--r-sm); background: var(--c-surface); color: var(--c-ink); font-family: inherit; font-size: 16px; }
+[data-shell='member'] .lb.rq-custom-input { padding: 0; border: 0; background: none; }
+[data-shell='member'] .rq-custom-form textarea { min-height: 88px; padding: var(--s-3) var(--s-4); border: 1px solid var(--c-line-input); resize: vertical; }
 [data-shell='member'] .rq-custom-atmax { margin: calc(var(--s-2) * -1) 0 0; color: var(--c-danger); font: var(--t-label); }
 [data-shell='member'] .rq-custom-atmax:empty { display: none; }
 [data-shell='member'] .rq-custom-footer { flex-wrap: wrap; }

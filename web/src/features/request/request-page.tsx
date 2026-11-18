@@ -114,14 +114,7 @@ function RequestEditor({
     if (!narrow) setSheetOpen(false);
   }, [narrow]);
 
-  const visible = items;
   const lineByKey = useMemo(() => new Map(cart.lines.map((l) => [l.key, l])), [cart.lines]);
-  // "Hay dùng trước" = món có trong phiếu kỳ trước (GET, không phải chép lại); không có kỳ trước thì thành thứ tự nhóm
-  const previousRequest = useMyRequest(period.previous?.ym);
-  const favIds = useMemo(
-    () => new Set((previousRequest.data?.lines ?? []).flatMap((l) => (l.item_id ? [l.item_id] : []))),
-    [previousRequest.data],
-  );
   const editingLine = editing?.key ? lineByKey.get(editing.key) : undefined;
   const dirty = cart.dirtyCount > 0;
   // Sửa phiếu chỉ có hiệu lực tới lần lưu kế tiếp (savedSeq đổi thì phiếu về chế độ xem)
@@ -181,10 +174,9 @@ function RequestEditor({
       <div className="rq-frame">
         <div className="m-panel rq-panel">
           <ItemGrid
-            items={visible}
+            items={items}
             categories={categories}
             lineByKey={lineByKey}
-            favIds={favIds}
             copy={copy.fromYm && <CopyPreviousButton fromYm={copy.fromYm} busy={copy.busy} onClick={() => void copy.run()} />}
             onQty={setQty}
             onAddCustom={addCustom}
