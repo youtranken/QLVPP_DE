@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiErrorCode, apiErrorString } from '@/lib/api-error';
@@ -10,33 +10,30 @@ import { OverlayPanel } from '@/ui/overlay-panel';
 import { SearchField } from '@/ui/toolbar';
 import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
-import { Segmented } from '@/ui/segmented';
-import { ScrollFade } from '@/ui/filter/scroll-fade';
 import { SelectBox } from '@/ui/data-table-row';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
 import { usePeriodSummary } from '@/features/summary/summary.api';
 import { OrderHistoryDialog } from '@/features/summary/order-history-dialog';
 import { useDeliveryPeople, type DeliveryPerson } from './delivery-people.api';
-import { filterPeople, overlapCount, tabCounts, type PeopleTab } from './people-filter';
+import { listPeople, parsePeopleTab, peopleTabs } from './people-tabs';
+import { PeopleStats } from './people-stats';
 import { stockShortages } from './deliver-plan';
 import { bulkPlan, type BulkPlan } from './bulk-plan';
 import { BulkDeliverDialog } from './bulk-deliver-dialog';
 import { DeliverDialog } from './deliver-dialog';
-import { PeopleTable, PersonAvatar } from './people-table';
+import { PeopleTable } from './people-table';
 import { PersonPanel } from './person-panel';
 import { useQuickDeliver } from './use-quick-deliver';
 import './delivery-people.m1.css';
 import { EmptyFrame } from '@/ui/empty-frame';
 
 const NO_PEOPLE: DeliveryPerson[] = [];
-const TABS: PeopleTab[] = ['pending', 'debt', 'done', 'all'];
 
 function PanelHead({ person }: { person: DeliveryPerson }) {
   const { t } = useTranslation();
   return (
     <header className="pp-head">
-      <PersonAvatar name={person.full_name ?? person.user_sub} large />
       <small>{person.department ?? t('delivery.people.card.noDepartment')}</small>
     </header>
   );
@@ -49,10 +46,10 @@ function PeopleBoard({ ym }: { ym: string }) {
   const summary = usePeriodSummary(ym);
   const month = monthOf(ym);
   const people = query.data?.people ?? NO_PEOPLE;
-  const asked = params.get('tab');
-  const tab: PeopleTab = TABS.find((x) => x === asked) ?? 'pending';
+  const tab = parsePeopleTab(params.get('tab'));
   const q = params.get('q') ?? '';
-  const listed = filterPeople(people, tab, q);
+  const tabs = useMemo(() => peopleTabs(people), [people]);
+  const listed = listPeople(people, tabs, tab, q);
   const panel = usePanelParam('person', {
     order: listed.map((p) => p.user_sub),
     known: (sub) => (query.data ? people.some((p) => p.user_sub === sub) : undefined),
@@ -83,12 +80,6 @@ function PeopleBoard({ ym }: { ym: string }) {
     [listed, selectable],
   );
   const searchRef = useRef<HTMLInputElement>(null);
-  const tabsRef = useRef<HTMLDivElement>(null);
-  const loaded = !!query.data;
-  // Tab đang chọn khuất bên phải (điện thoại, mở bằng link ?tab=) thì tự cuộn vào tầm nhìn
-  useEffect(() => {
-    tabsRef.current?.querySelector('[aria-checked="true"]')?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
-  }, [tab, loaded]);
   // Giao xong: về ô tìm, chọn sẵn chữ để gõ ngay người kế
   const focusSearch = () => {
     const input = searchRef.current;
@@ -107,8 +98,6 @@ function PeopleBoard({ ym }: { ym: string }) {
   if (!query.data) return <Loading />;
   if (people.length === 0) return <EmptyState title={t('delivery.people.emptyAll', { month })} />;
 
-  const counts = tabCounts(people);
-  const both = overlapCount(people);
   const pickable = listed.filter(selectable);
   const allPicked = pickable.length > 0 && pickable.every((p) => picked.has(p.user_sub));
   const shortages = stockShortages(people);
@@ -138,6 +127,7 @@ function PeopleBoard({ ym }: { ym: string }) {
   );
   return (
     <>
+      <PeopleStats tabs={tabs} value={tab} onSelect={(v) => update({ tab: v === 'pending' ? null : v })} />
       <div className="toolbar dp-toolbar">
         <SearchField
           inputRef={searchRef}
@@ -147,17 +137,6 @@ function PeopleBoard({ ym }: { ym: string }) {
           value={q}
           onChange={(v) => update({ q: v || null }, true)}
         />
-        <div className="pp-tabs" ref={tabsRef}>
-          <ScrollFade className="pp-tabs__scroll">
-            <Segmented
-              label={t('delivery.people.filter')}
-              value={tab}
-              options={TABS.map((x) => ({ value: x, label: t(`delivery.people.tabs.${x}`), count: counts[x], urgent: x === 'pending' || x === 'debt' }))}
-              onChange={(v) => update({ tab: v === 'pending' ? null : v })}
-            />
-          </ScrollFade>
-          {both > 0 && <small className="pp-tabs__note">{t('delivery.people.overlap', { n: both })}</small>}
-        </div>
         {pickable.length > 0 && (
           <label className="pt-pickall">
             <SelectBox checked={allPicked} indeterminate={chosen.length > 0 && !allPicked} label={t('delivery.bulk.pickAllPhone')} onChange={toggleAll} />

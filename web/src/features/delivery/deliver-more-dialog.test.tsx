@@ -42,14 +42,25 @@ const minus = () => screen.getByRole('button', { name: /^Bớt/ });
 afterEach(() => vi.unstubAllGlobals());
 
 describe('DeliverMoreDialog — giao bổ sung một dòng còn nợ', () => {
-  it('còn 4, tồn 2 → mặc định 2, "+" vô hiệu ở 2; mô tả và gợi ý nêu min(nợ, tồn)', () => {
+  it('còn 4, tủ 2 → mặc định 2, "+" vô hiệu ở 2; mô tả "Tủ 2 cây", không còn chữ "tồn kho"', () => {
     stub();
     renderDialog();
     expect(screen.getByRole('dialog', { name: 'Giao bổ sung Bút bi xanh cho Phạm Văn Đức' })).toBeInTheDocument();
-    expect(screen.getByText('Tháng 10 · Còn nợ 4 cây · Tồn 2 cây')).toBeInTheDocument();
-    expect(screen.getByText('Giao được tối đa 2 cây (ít hơn giữa số còn nợ và tồn kho).')).toBeInTheDocument();
+    expect(screen.getByText('Tháng 10 · Còn nợ 4 cây · Tủ 2 cây')).toBeInTheDocument();
+    expect(screen.queryByText(/tồn kho|Tồn/)).toBeNull();
     expect(qtyBox()).toHaveValue(2);
     expect(plus()).toBeDisabled();
+  });
+
+  it.each([
+    ['nợ 6 < tủ 7 → tối đa 6 (số còn nợ)', 6, 7, 6],
+    ['nợ 6 = tủ 6 → tối đa 6', 6, 6, 6],
+    ['tủ 5 < nợ 6 → tối đa 5 (số trong tủ)', 6, 5, 5],
+  ])('câu tối đa = min(nợ, tủ): %s', (_n, owed, stock, max) => {
+    stub();
+    renderDialog(backlogLine({ qty: owed, delivered_qty: 0, remaining_qty: owed, stock_qty: stock }));
+    expect(screen.getByText(`Giao được tối đa ${max} cây — bằng số còn nợ hoặc số trong tủ, lấy số nhỏ hơn`)).toBeInTheDocument();
+    expect(qtyBox()).toHaveValue(max);
   });
 
   it('biên số lượng: 1 và 2 gửi được; gõ 3 (max+1) vẫn kẹp ở 2; "−" vô hiệu ở 1; "Tủ sau khi giao" = tồn − số giao', async () => {
@@ -88,6 +99,7 @@ describe('DeliverMoreDialog — giao bổ sung một dòng còn nợ', () => {
     stub();
     renderDialog(backlogLine({ item_id: null, stock_qty: null }));
     expect(screen.getByText('Tháng 10 · Còn nợ 3 cây')).toBeInTheDocument();
+    expect(screen.getByText('Giao được tối đa 3 cây — bằng số còn nợ')).toBeInTheDocument();
     expect(screen.queryByText(/^Tủ sau khi giao/)).toBeNull();
     expect(qtyBox()).toHaveValue(3);
   });

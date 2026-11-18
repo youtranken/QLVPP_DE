@@ -63,12 +63,12 @@ describe('BacklogPage — đầu trang gọn', () => {
 });
 
 describe('BacklogPage — nhóm tháng → người → món', () => {
-  it('bảng kẻ ô: cột Món · ĐVT · Đăng ký · Đã giao · Còn nợ · Tủ còn · Thao tác; hàng nhóm "Tháng 9/2026 · 1 người · 3 đơn vị" trước "Tháng 10/2026 · 2 người · 4 đơn vị"', async () => {
+  it('bảng kẻ ô: cột Món · ĐVT · Đăng ký · Đã giao · Còn nợ · Tủ · Thao tác; hàng nhóm "Tháng 9/2026 · 1 người · 3 đơn vị" trước "Tháng 10/2026 · 2 người · 4 đơn vị"', async () => {
     stubBacklog([PEN_DUC, PEN_LAN, SEP]);
     openPage();
     await screen.findAllByText('Bút bi xanh', { selector: '.bl-item b' });
     expect(screen.getByRole('table')).toHaveClass('grid-table');
-    expect(screen.getAllByRole('columnheader').map((c) => c.textContent)).toEqual(['Món', 'ĐVT', 'Đăng ký', 'Đã giao', 'Còn nợ', 'Tủ còn', 'Thao tác']);
+    expect(screen.getAllByRole('columnheader').map((c) => c.textContent)).toEqual(['Món', 'ĐVT', 'Đăng ký', 'Đã giao', 'Còn nợ', 'Tủ', 'Thao tác']);
     expect(monthHeads().map((r) => r.textContent)).toEqual(['Tháng 9/2026 · 1 người · 3 đơn vị', 'Tháng 10/2026 · 2 người · 4 đơn vị']);
     // Nhiều tháng: thanh công cụ tóm tắt cả hai, người nợ ở hai tháng chỉ đếm một lần
     expect(summary()).toHaveTextContent('2 tháng · 2 người · 7 đơn vị');
@@ -94,6 +94,7 @@ describe('BacklogPage — nhóm tháng → người → món', () => {
     expect(personRows().find((r) => r.textContent?.includes('Phạm Văn Đức'))).not.toHaveTextContent('Người đã nghỉ');
     const cells = within(rowOf('Phạm Văn Đức')).getAllByRole('cell').map((c) => c.textContent);
     expect(cells.slice(0, 6)).toEqual(['Bút bi xanh', 'cây', '5', '2', '3', '10']);
+    expect(personRows().map((r) => r.querySelector('.bl-head')?.firstElementChild?.tagName)).toEqual(['B', 'B']);
   });
 
   it('chọn tháng → ?ym=, chỉ còn tháng đó; "Tất cả tháng" bỏ lọc', async () => {

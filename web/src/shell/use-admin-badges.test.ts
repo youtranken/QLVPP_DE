@@ -12,8 +12,10 @@ type Route = () => Response;
 function stubApi(over: Record<string, Route> = {}) {
   const routes: Record<string, Route> = {
     '/api/periods/current': () => jsonResponse(200, PERIOD),
-    '/api/admin/review?status=pending': () => jsonResponse(200, { items: [{ id: 'l1' }, { id: 'l2' }, { id: 'l3' }] }),
-    // 6 người chưa nhận nhưng chỉ 4 giao được ngay; người nợ có hàng cũng giao được ngay
+    // Kỳ 9: An 2 món + Bình 1 món chờ duyệt; kỳ 10: Chi 1 món → số 2 (người có món chờ ở kỳ cũ nhất), link kỳ 9
+    '/api/admin/review?status=pending': () =>
+      jsonResponse(200, { items: [{ line_id: 'l1', period_ym: '2026-09', user_sub: 'an' }, { line_id: 'l2', period_ym: '2026-09', user_sub: 'an' }, { line_id: 'l3', period_ym: '2026-09', user_sub: 'binh' }, { line_id: 'l4', period_ym: '2026-10', user_sub: 'chi' }] }),
+    // Thẻ "Chưa nhận" của trang Giao hàng: 6 người chưa nhận + 1 người chỉ còn nợ = 7; người đã nhận đủ không tính
     '/api/admin/periods/2026-10/delivery-people': () =>
       jsonResponse(200, {
         ym: '2026-10',
@@ -55,37 +57,46 @@ afterEach(() => {
 });
 
 describe('useAdminBadges', () => {
-  it('đếm review = số dòng chờ, giao hàng = số người giao được ngay (deliverable_now) của kỳ khóa gần nhất, Tủ/Kho = số món thiếu cho người chờ (short > 0)', async () => {
+  it('Kỳ tháng = số người có món chờ duyệt ở kỳ cũ nhất (= chip "Có món chờ duyệt" của kỳ đó), link mở kỳ đó với chip bật; Giao hàng = số "Chưa nhận" trên trang; Tủ/Kho = số món thiếu', async () => {
     const f = stubApi();
     const { result } = renderHook(() => useAdminBadges(), { wrapper: wrapper() });
-    await waitFor(() => expect(result.current).toEqual({ review: 3, delivery: 4, stock: 2 }));
+    await waitFor(() => expect(result.current).toEqual({ review: 2, delivery: 7, stock: 2, links: { review: '/admin/month?ym=2026-09&chip=pending' } }));
     expect(calls(f, '/api/admin/periods/2026-10/delivery-people')).toBe(1);
   });
 
   it('API trả 0 dòng → đếm 0 (nơi hiển thị ẩn)', async () => {
     stubApi({
       '/api/admin/review?status=pending': () => jsonResponse(200, { items: [] }),
-      '/api/admin/periods/2026-10/delivery-people': () => jsonResponse(200, { ym: '2026-10', people: [{ user_sub: 'a', status: 'debt' }] }),
+      '/api/admin/periods/2026-10/delivery-people': () => jsonResponse(200, { ym: '2026-10', people: [{ user_sub: 'a', status: 'done' }] }),
       '/api/admin/stock': () => jsonResponse(200, [{ item_id: 'i1', short: 0, stock_state: 'incoming' }]),
     });
     const { result } = renderHook(() => useAdminBadges(), { wrapper: wrapper() });
-    await waitFor(() => expect(result.current).toEqual({ review: 0, delivery: 0, stock: 0 }));
+    await waitFor(() => expect(result.current).toEqual({ review: 0, delivery: 0, stock: 0, links: {} }));
   });
 
-  it('ngay sau khóa sổ, tủ trống cho mọi món của 3 người chưa nhận → giao hàng 0 (không đếm theo Chưa nhận)', async () => {
-    stubApi({
-      '/api/admin/periods/2026-10/delivery-people': () =>
-        jsonResponse(200, { ym: '2026-10', people: ['a', 'b', 'c'].map((s) => ({ user_sub: s, status: 'pending', has_pending: true, deliverable_now: false })) }),
-    });
+  it.each([
+    ['1 người chưa nhận', [{ user_sub: 'a', status: 'pending' }, { user_sub: 'b', status: 'done' }], 1],
+    ['0 người (mọi người đã nhận đủ)', [{ user_sub: 'b', status: 'done' }], 0],
+  ])('biên Giao hàng: %s — cùng số thẻ Chưa nhận, kể cả khi tủ trống', async (_n, people, n) => {
+    stubApi({ '/api/admin/periods/2026-10/delivery-people': () => jsonResponse(200, { ym: '2026-10', people: people.map((p) => ({ ...p, deliverable_now: false })) }) });
     const { result } = renderHook(() => useAdminBadges(), { wrapper: wrapper() });
-    await waitFor(() => expect(result.current.review).toBe(3));
-    await waitFor(() => expect(result.current.delivery).toBe(0));
+    await waitFor(() => expect(result.current.delivery).toBe(n));
+  });
+
+  it.each([
+    ['0 món chờ → 0, link thường', [], 0, undefined],
+    ['1 món chờ → 1, link kỳ có món', [{ line_id: 'l1', period_ym: '2026-09', user_sub: 'an' }], 1, '/admin/month?ym=2026-09&chip=pending'],
+  ])('biên Kỳ tháng: %s', async (_n, items, n, link) => {
+    stubApi({ '/api/admin/review?status=pending': () => jsonResponse(200, { items }) });
+    const { result } = renderHook(() => useAdminBadges(), { wrapper: wrapper() });
+    await waitFor(() => expect(result.current.review).toBe(n));
+    expect(result.current.links.review).toBe(link);
   });
 
   it('kỳ chưa khóa (409 PERIOD_NOT_LOCKED) → delivery undefined, không ném', async () => {
     stubApi({ '/api/admin/periods/2026-10/delivery-people': () => jsonResponse(409, { code: 'PERIOD_NOT_LOCKED' }) });
     const { result } = renderHook(() => useAdminBadges(), { wrapper: wrapper() });
-    await waitFor(() => expect(result.current.review).toBe(3));
+    await waitFor(() => expect(result.current.review).toBe(2));
     await waitFor(() => expect(result.current.delivery).toBeUndefined());
   });
 
@@ -97,14 +108,14 @@ describe('useAdminBadges', () => {
     });
     const { result } = renderHook(() => useAdminBadges(), { wrapper: wrapper() });
     await waitFor(() => expect(calls(f, '/api/admin/stock')).toBe(1));
-    await waitFor(() => expect(result.current).toEqual({ review: undefined, delivery: undefined, stock: undefined }));
+    await waitFor(() => expect(result.current).toEqual({ review: undefined, delivery: undefined, stock: undefined, links: {} }));
   });
 
   it('staleTime 60 s: focus lúc 59 999 ms không tải lại, lúc 60 000 ms tải lại', async () => {
     vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-11-03T08:00:00.000Z') });
     const f = stubApi();
     const { result } = renderHook(() => useAdminBadges(), { wrapper: wrapper() });
-    await waitFor(() => expect(result.current.review).toBe(3));
+    await waitFor(() => expect(result.current.review).toBe(2));
     const t0 = Date.now();
     const focus = () =>
       act(() => {

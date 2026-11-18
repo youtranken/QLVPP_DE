@@ -157,13 +157,13 @@ async function expectOverlay(page: Page, info: TestInfo, behind: Locator, open: 
 test.describe('V2D-17b panel phủ ở Giao hàng, Tổng hợp, Tủ / Kho, Nhân viên, Còn nợ', () => {
   asRole('admin');
 
-  test('V2D-17b Giao hàng: ⋯ → "Xem chi tiết" mở panel người ở mọi bề rộng, không còn cột bên', async ({ page }, info) => {
+  test('V2D-17b Giao hàng: ⋯ → "Xem phiếu" mở panel người ở mọi bề rộng, không còn cột bên', async ({ page }, info) => {
     await mockDelivery(page);
     await page.goto('/admin/delivery');
     const grid = page.getByRole('table').first();
     await expectOverlay(page, info, grid, async () => {
       await grid.getByRole('button', { name: `Thao tác cho ${PW_PERSON.full_name}` }).click();
-      await page.getByRole('menuitem', { name: 'Xem chi tiết' }).click();
+      await page.getByRole('menuitem', { name: 'Xem phiếu' }).click();
     }, page.getByRole('dialog', { name: PW_PERSON.full_name }), 'person');
   });
 

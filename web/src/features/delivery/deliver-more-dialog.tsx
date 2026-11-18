@@ -91,7 +91,7 @@ export function DeliverMoreDialog({ line, onDone, onStale, onClose }: Props) {
               onChange={setAsked}
             />
             {stock !== null && <small className="bl-after num">{t('delivery.backlog.deliver.after', { n: stock - qty })}</small>}
-            <p className="ff-hint">{t('delivery.backlog.deliver.hint', { max, unit })}</p>
+            <p className="ff-hint">{t(line.stock_qty === null ? 'delivery.backlog.deliver.hintNoStock' : 'delivery.backlog.deliver.hint', { max, unit })}</p>
             {error && (
               <p id={errorId} role="alert" className="ff-error">
                 {error}

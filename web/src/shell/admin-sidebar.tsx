@@ -19,14 +19,14 @@ function titleIfTruncated(e: MouseEvent<HTMLAnchorElement>, label: string): void
   else e.currentTarget.removeAttribute('title');
 }
 
-function SideLink({ page, count, collapsed, onNavigate }: { page: AdminPage; count?: number; collapsed: boolean; onNavigate?: () => void }) {
+function SideLink({ page, count, link, collapsed, onNavigate }: { page: AdminPage; count?: number; link?: string; collapsed: boolean; onNavigate?: () => void }) {
   const { t } = useTranslation();
   const label = t(page.titleKey);
   // Mục là tiền tố của mục khác thì chỉ khớp đúng đường dẫn để hai mục không sáng chung
   const end = ALL_PATHS.some((p) => p.startsWith(`${page.path}/`));
   return (
     <NavLink
-      to={`/admin/${page.path}`}
+      to={count && link ? link : `/admin/${page.path}`}
       end={end}
       // Cột thu gọn ẩn chữ → luôn có title
       title={collapsed ? label : undefined}
@@ -68,7 +68,7 @@ export function AdminSidebar({ variant = 'side', onNavigate }: { variant?: 'side
       <nav className="side__nav" aria-label={t('nav.adminMenu')}>
         {ADMIN_NAV.map((g) => {
           const links = g.pages.map((p) => (
-            <SideLink key={p.path} page={p} count={p.badge ? badges[p.badge] : undefined} collapsed={collapsed} onNavigate={onNavigate} />
+            <SideLink key={p.path} page={p} count={p.badge ? badges[p.badge] : undefined} link={p.badge ? badges.links[p.badge] : undefined} collapsed={collapsed} onNavigate={onNavigate} />
           ));
           return (
             <div key={g.labelKey} className="side__group" role="group" aria-label={t(g.labelKey)}>

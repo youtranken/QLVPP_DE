@@ -25,14 +25,6 @@
 [data-shell='admin'] .dv-req .progress { margin-top: 4px; }
 [data-shell='admin'] .dv-more { justify-self: center; }
 
-[data-shell='admin'] .dv-avatar { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: var(--r-pill); background: var(--c-acc-soft); color: var(--c-acc); font: var(--t-cap); font-weight: 800; }
-[data-shell='admin'] .dv-avatar--lg { width: 44px; height: 44px; }
-[data-shell='admin'] .dv-req.is-done .dv-avatar { background: var(--c-ok-fill); color: var(--c-on-acc); animation: dv-done var(--d-3, 420ms) var(--ease-spring) both; }
-@keyframes dv-done { from { transform: scale(.6); box-shadow: 0 0 0 0 var(--c-ok-soft); } to { transform: scale(1); box-shadow: 0 0 0 6px var(--c-ok-soft); } }
-@media (prefers-reduced-motion: reduce) {
-  [data-shell='admin'] .dv-req.is-done .dv-avatar { animation: none; }
-}
-
 [data-shell='admin'] .dv-detail { display: grid; gap: var(--s-3); padding: var(--s-4); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); }
 [data-shell='admin'] .dv-detail__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); }
 [data-shell='admin'] .dv-detail__who { flex: 1; min-width: 0; }

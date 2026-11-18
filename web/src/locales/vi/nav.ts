@@ -33,7 +33,7 @@ const nav = {
     reports: 'Báo cáo & gửi NCC',
     categoriesUnits: 'Danh mục',
     badge: {
-      review: '{{n}} món ngoài danh mục chờ duyệt',
+      review: '{{n}} người có món ngoài danh mục chờ duyệt',
       delivery: '{{n}} người chưa nhận',
       stock: '{{n}} món thiếu cho người chờ',
     },

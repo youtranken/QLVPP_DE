@@ -21,29 +21,59 @@ describe('DeliveryPeoplePage — đầu trang và tab', () => {
     expect(screen.queryByText(/đang mở, xem được từ/)).toBeNull();
   });
 
-  it('số trên tab đúng (B ở cả hai tab): Chưa nhận 2, Còn nợ 2, Đã nhận 1, Tất cả 4; mặc định tab Chưa nhận chỉ có A và B', async () => {
+  const statTab = (label: string) => screen.getByRole('tab', { name: new RegExp(`^${label}`) });
+  const value = (label: string) => statTab(label).querySelector('.stat-card__v')?.textContent;
+
+  it('TC-04 năm thẻ số là bộ lọc: Chưa nhận 3 · Giao được ngay 2 · Giao một phần 1 · Đã nhận đủ 1 · Người đã nghỉ 0; mặc định Chưa nhận có A, B, C', async () => {
     stub();
     open();
     await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
-    for (const name of ['Chưa nhận, 2', 'Còn nợ, 2', 'Đã nhận, 1', 'Tất cả, 4']) expect(screen.getByRole('radio', { name })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: 'Chưa nhận, 2' })).toBeChecked();
-    expect(names()).toEqual(['Nguyễn Văn An', 'Lê Thị Bình']);
+    expect(within(screen.getByRole('tablist', { name: 'Lọc theo trạng thái' })).getAllByRole('tab')).toHaveLength(5);
+    expect(['Chưa nhận', 'Giao được ngay', 'Giao một phần', 'Đã nhận đủ', 'Người đã nghỉ'].map(value)).toEqual(['3', '2', '1', '1', '0']);
+    expect(statTab('Chưa nhận')).toHaveAttribute('aria-selected', 'true');
+    expect(statTab('Chưa nhận')).toHaveTextContent('trong đó 2 giao được ngay');
+    expect(names()).toEqual(['Nguyễn Văn An', 'Lê Thị Bình', 'Trần Minh Khoa']);
+    expect(screen.queryByRole('radio')).toBeNull();
   });
 
-  it('người chỉ có nợ (không phiếu kỳ này) có ở tab Còn nợ, cột Còn nợ "1 món · T9"; đổi tab ghi ?tab=debt', async () => {
+  it('bấm thẻ Giao một phần → ?tab=partial, bảng chỉ B (số dòng = số trên thẻ); bấm Chưa nhận → bỏ ?tab', async () => {
     stub();
     open();
-    await userEvent.click(await screen.findByRole('radio', { name: 'Còn nợ, 2' }));
-    expect(search()).toContain('tab=debt');
-    expect(names()).toEqual(['Lê Thị Bình', 'Trần Minh Khoa']);
-    expect(within(card('Trần Minh Khoa')).getByText('1 món · T9')).toBeInTheDocument();
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
+    await userEvent.click(statTab('Giao một phần'));
+    expect(search()).toContain('tab=partial');
+    expect(names()).toEqual(['Lê Thị Bình']);
+    expect(statTab('Giao một phần')).toHaveAttribute('aria-selected', 'true');
+    await userEvent.click(statTab('Chưa nhận'));
+    expect(search()).not.toContain('tab=');
   });
 
-  it('?tab=done mở thẳng tab Đã nhận; nút thẻ đã nhận là "Đã giao" và vô hiệu', async () => {
+  it('người đã nghỉ còn phần: thẻ Người đã nghỉ 1 nền đỏ nhạt, bấm → chỉ người đó', async () => {
+    stub({ people: [A, person({ user_sub: 'u-x', full_name: 'Đặng Thị Mỹ Duyên', user_status: 'locked', request_id: 'r-x', lines: [pLine({ line_id: 'lx', request_id: 'r-x' })] })] });
+    open();
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
+    expect(value('Người đã nghỉ')).toBe('1');
+    expect(statTab('Người đã nghỉ')).toHaveClass('stat-card--danger');
+    await userEvent.click(statTab('Người đã nghỉ'));
+    expect(names()).toEqual(['Đặng Thị Mỹ Duyên']);
+  });
+
+  it('?tab=done mở thẳng thẻ Đã nhận đủ; nút vẫn ghi "Giao…" ở trạng thái tắt, lý do "Đã giao" qua aria-describedby (AD-28)', async () => {
     stub();
     open('/admin/delivery?tab=done');
     expect(await screen.findByText('Đỗ Mai Linh', { selector: '.pt-person b' })).toBeInTheDocument();
-    expect(within(card('Đỗ Mai Linh')).getByRole('button', { name: /^Đã giao/ })).toBeDisabled();
+    const btn = within(card('Đỗ Mai Linh')).getByRole('button', { name: 'Giao…, Đỗ Mai Linh' });
+    expect(btn).toBeDisabled();
+    expect(btn).toHaveTextContent(/^Giao…$/);
+    expect(btn).toHaveAccessibleDescription('Đã giao');
+    expect(btn).toHaveAttribute('title', 'Đã giao');
+  });
+
+  it('?tab=debt / ?tab=all cũ → thẻ Chưa nhận', async () => {
+    stub();
+    open('/admin/delivery?tab=debt');
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
+    expect(statTab('Chưa nhận')).toHaveAttribute('aria-selected', 'true');
   });
 
   it('từ khóa bỏ dấu "binh" tìm trên mọi tab và ghi ?q=; xóa từ khóa trả về tab', async () => {
@@ -68,12 +98,12 @@ describe('DeliveryPeoplePage — đầu trang và tab', () => {
     expect(acts?.lastElementChild).toHaveAccessibleName('Thao tác cho Nguyễn Văn An');
   });
 
-  it('tìm "zzzz" không ai khớp → "Không có ai khớp" + nút "Xóa lọc" (bỏ ?q=, hiện lại danh sách); số trên tab giữ theo tab', async () => {
+  it('tìm "zzzz" không ai khớp → "Không có ai khớp" + nút "Xóa lọc" (bỏ ?q=, hiện lại danh sách); thẻ đang chọn giữ nguyên', async () => {
     stub();
     open('/admin/delivery?q=zzzz');
     expect(await screen.findByText('Không có ai khớp')).toBeInTheDocument();
     expect(screen.queryByText('Không có ai trong mục này.')).toBeNull();
-    expect(screen.getByRole('radio', { name: /^Chưa nhận, \d+$/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /^Chưa nhận/ })).toHaveAttribute('aria-selected', 'true');
     await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
     expect(search()).not.toContain('q=');
     expect(await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' })).toBeInTheDocument();
@@ -110,24 +140,26 @@ describe('DeliveryPeoplePage — trang Giao hàng bản cũ đã gỡ', () => {
 describe('DeliveryPeoplePage — giao thiếu và tủ trống', () => {
   const served = person({ user_sub: 'u-s1', full_name: 'Sơn Giao Thiếu', lines: [pLine({ line_id: 'ls', qty: 10, delivered_qty: 7, remaining_qty: 3, stock_qty: 9 })] });
 
-  it('người đã nhận một phần tháng đang giao vẫn ở "Chưa nhận", không ở "Còn nợ"', async () => {
+  it('người đã nhận một phần tháng đang giao vẫn ở "Chưa nhận"; tủ đủ phần còn lại → cũng ở "Giao được ngay"', async () => {
     stub({ people: [served, A] });
     open();
     await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
-    expect(screen.getByRole('radio', { name: 'Chưa nhận, 2' })).toBeChecked();
+    expect(screen.getByRole('tab', { name: /^Chưa nhận/ })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByText('Sơn Giao Thiếu', { selector: '.pt-person b' })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('radio', { name: 'Còn nợ, 0' }));
-    expect(screen.queryByText('Sơn Giao Thiếu', { selector: '.pt-person b' })).toBeNull();
+    await userEvent.click(screen.getByRole('tab', { name: /^Giao được ngay/ }));
+    expect(screen.getByText('Sơn Giao Thiếu', { selector: '.pt-person b' })).toBeInTheDocument();
   });
 
-  it('tủ 0 → nút chính vô hiệu "Tủ chưa có hàng"; tủ 0 nhưng có dòng NCC hết hàng → bật "Giao…"; tủ 1 → "Giao…"', async () => {
+  it('tủ 0 → nút "Giao…" tắt, lý do "Tủ chưa có hàng"; tủ 0 nhưng có dòng NCC hết hàng → bật "Giao…"; tủ 1 → "Giao…"', async () => {
     const none = person({ user_sub: 'u-n', full_name: 'Nam Hết Hàng', lines: [pLine({ line_id: 'ln', stock_qty: 0 })] });
     const adm = person({ user_sub: 'u-m', full_name: 'Minh NCC Hết', lines: [pLine({ line_id: 'lm', item_id: 'i-clip', stock_qty: 0, adm_out: true })] });
     const one = person({ user_sub: 'u-o', full_name: 'Oanh Còn Một', lines: [pLine({ line_id: 'lo', item_id: 'i-a4', stock_qty: 1 })] });
     stub({ people: [none, adm, one] });
     open();
     await screen.findByText('Nam Hết Hàng', { selector: '.pt-person b' });
-    expect(within(card('Nam Hết Hàng')).getByRole('button', { name: /^Tủ chưa có hàng/ })).toBeDisabled();
+    const none0 = within(card('Nam Hết Hàng')).getByRole('button', { name: /^Giao…/ });
+    expect(none0).toBeDisabled();
+    expect(none0).toHaveAccessibleDescription('Tủ chưa có hàng');
     expect(within(card('Minh NCC Hết')).getByRole('button', { name: /^Giao…/ })).toBeEnabled();
     expect(within(card('Oanh Còn Một')).getByRole('button', { name: /^Giao…/ })).toBeEnabled();
   });
@@ -138,7 +170,8 @@ describe('DeliveryPeoplePage — giao thiếu và tủ trống', () => {
     stub({ people: [wait, got] });
     open();
     await screen.findByText('Vy Chờ Hàng', { selector: '.pt-person b' });
-    expect(within(card('Vy Chờ Hàng')).getByRole('button', { name: /^Tủ chưa có hàng/ })).toBeDisabled();
+    expect(within(card('Vy Chờ Hàng')).getByRole('button', { name: /^Giao…/ })).toHaveAccessibleDescription('Tủ chưa có hàng');
+    expect(within(card('Vy Chờ Hàng')).getByRole('button', { name: /^Giao…/ })).toBeDisabled();
     expect(within(card('Giang Có Hàng')).getByRole('button', { name: /^Giao…/ })).toBeEnabled();
   });
 });
@@ -148,7 +181,7 @@ describe('DeliveryPeoplePage — tiến độ trên thẻ', () => {
     const partial = person({ user_sub: 'u-p', full_name: 'Phan Văn Phần', status: 'debt', lines: [pLine({ line_id: 'lp', qty: 10, delivered_qty: 7, remaining_qty: 3, stock_qty: 0 })] });
     const cancelled = person({ user_sub: 'u-x', full_name: 'Xuân Hủy', status: 'debt', lines: [pLine({ line_id: 'lx', qty: 10, delivered_qty: 4, cancelled_qty: 2, remaining_qty: 4, stock_qty: 9 })] });
     stub({ people: [partial, cancelled, A] });
-    open('/admin/delivery?tab=all');
+    open();
     await screen.findByText('Phan Văn Phần', { selector: '.pt-person b' });
     expect(within(card('Phan Văn Phần')).getByText('7/10')).toBeInTheDocument();
     expect(within(card('Xuân Hủy')).getByText('4/8')).toBeInTheDocument();
@@ -218,7 +251,7 @@ describe('DeliveryPeoplePage — nút chính trên thẻ mở hộp giao', () =>
 
   it('lỗi một dòng → "Mở chi tiết người" đóng hộp và mở panel người đó', async () => {
     stub({ deliver: () => jsonResponse(409, { code: 'STOCK_INSUFFICIENT', available: 0 }) });
-    open('/admin/delivery?tab=debt');
+    open();
     await screen.findByText('Trần Minh Khoa', { selector: '.pt-person b' });
     await userEvent.click(within(card('Trần Minh Khoa')).getByRole('button', { name: /^Giao…/ }));
     const dlg = await screen.findByRole('dialog');
@@ -228,10 +261,12 @@ describe('DeliveryPeoplePage — nút chính trên thẻ mở hộp giao', () =>
     expect(screen.queryByRole('dialog', { name: /^Giao cho/ })).toBeNull();
   });
 
-  it('thẻ chỉ có dòng chờ duyệt: nút vô hiệu "Chờ duyệt"', async () => {
+  it('thẻ chỉ có dòng chờ duyệt: nút "Giao…" tắt, lý do "Chờ duyệt"', async () => {
     stub({ people: [person({ lines: [pLine({ review_status: 'pending', item_id: null })] })] });
     open();
-    expect(await screen.findByRole('button', { name: /^Chờ duyệt/ })).toBeDisabled();
+    const btn = await screen.findByRole('button', { name: /^Giao…/ });
+    expect(btn).toBeDisabled();
+    expect(btn).toHaveAccessibleDescription('Chờ duyệt');
   });
 
   it('use-quick-deliver chỉ tính đề xuất: không import API ghi', () => {

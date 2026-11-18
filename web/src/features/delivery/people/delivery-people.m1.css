@@ -6,8 +6,6 @@
 [data-shell='admin'] .pp-chip--short { background: var(--c-warn-soft); color: var(--c-warn); }
 [data-shell='admin'] .pp-chip--done { background: var(--c-ok-soft); color: var(--c-ok); }
 
-[data-shell='admin'] .pp-avatar { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: var(--r-pill); background: var(--c-acc-soft); color: var(--c-acc-hover); font: var(--t-label); font-weight: 800; }
-[data-shell='admin'] .pp-avatar--lg { width: 52px; height: 52px; background: var(--c-dark); color: var(--c-on-dark); }
 [data-shell='admin'] .pp-head { display: flex; align-items: center; gap: var(--s-3); }
 [data-shell='admin'] .pp-head small { display: block; font: var(--t-sm); color: var(--c-muted); }
 
@@ -35,18 +33,7 @@
 [data-shell='admin'] .pp-deliver:disabled { cursor: default; }
 [data-shell='admin'] .pp-done { margin: 0; padding: var(--s-4); border-radius: var(--r-md); background: var(--c-ok-soft); color: var(--c-ok); font: var(--t-label); }
 [data-shell='admin'] .pp-card__progress { margin: 0; font: var(--t-sm); font-weight: 700; color: var(--c-ink-2); }
-[data-shell='admin'] .pp-tabs { min-width: 0; max-width: 100%; }
-/* Tab cuộn ngang: mờ mép còn tab khuất (ScrollFade đặt data-fade, luật chung ở ui/filter/scroll-fade.css) */
-[data-shell='admin'] .pp-tabs__scroll { min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
-[data-shell='admin'] .pp-tabs__scroll::-webkit-scrollbar { display: none; }
-@media (max-width: 767px) {
-  /* Đủ chỗ thì bốn tab chia đều cả hàng; 360 không đủ thì giữ đệm 12px và cuộn ngang (mép mờ của ScrollFade), không ép chữ chạm mép viên */
-  [data-shell='admin'] .pp-tabs .seg-m1 { display: flex; width: max-content; min-width: 100%; gap: 0; }
-  [data-shell='admin'] .pp-tabs .seg-m1 button { flex: 1 0 auto; padding: 0 var(--s-3); gap: var(--s-1); font: var(--t-cap); }
-  [data-shell='admin'] .pp-tabs .seg-m1 em { padding: 1px var(--s-2); }
-}
 [data-shell='admin'] .pp-row__main > :first-child { grid-row: span 2; align-self: start; }
-[data-shell='admin'] .pp-tabs__note { display: block; margin-top: var(--s-1); font: var(--t-cap); color: var(--c-ink-2); }
 @media (max-width: 767px) {
   [data-shell='admin'] .dp-toolbar { position: sticky; top: 0; z-index: 2; background: var(--c-page); }
 }
@@ -109,7 +96,6 @@
 [data-shell='admin'] .pt-table tr.is-picked td { background: var(--c-surface-2); }
 [data-shell='admin'] .pt-person { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
 [data-shell='admin'] .pt-person b { min-width: 0; overflow-wrap: anywhere; }
-[data-shell='admin'] .pt-person .pp-avatar { width: 28px; height: 28px; font: var(--t-micro); font-weight: 800; }
 /* "Xem" bám mép trái cột, nút giao bám mép phải: "Xem" thẳng hàng giữa các dòng dù nút sau dài ngắn khác nhau */
 [data-shell='admin'] .pt-acts__in { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s-2); }
 [data-shell='admin'] .pt-acts__in > :last-child { margin-left: auto; }

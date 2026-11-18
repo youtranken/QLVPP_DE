@@ -62,7 +62,7 @@ describe('DeliveryPeoplePage — bảng và giao nhiều phiếu', () => {
     expect(row.getAttribute('title') ?? '').not.toContain('tủ chưa có hàng');
   });
 
-  it('bảng kẻ ô (G4): ☐ · Người · Tiến độ giao · Tủ · Còn nợ · Thao tác; mỗi dòng có Giao… và ⋯; tab Chưa nhận 2 · Còn nợ 2 · Đã nhận 1 · Tất cả 4', async () => {
+  it('bảng kẻ ô (G4): ☐ · Người · Tiến độ giao · Tủ · Còn nợ · Thao tác; mỗi dòng có Giao… và ⋯', async () => {
     stub();
     open();
     await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
@@ -87,9 +87,10 @@ describe('DeliveryPeoplePage — bảng và giao nhiều phiếu', () => {
 
   it('ô ở tiêu đề chọn/bỏ mọi dòng đang lọc; dòng không có gì giao được thì ô chọn vô hiệu', async () => {
     stub();
-    open('/admin/delivery?tab=all');
-    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
+    open('/admin/delivery?tab=done');
+    await screen.findByText('Đỗ Mai Linh', { selector: '.pt-person b' });
     expect(screen.getByRole('checkbox', { name: 'Chọn Đỗ Mai Linh' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('tab', { name: /^Chưa nhận/ }));
     await userEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả' }));
     expect(screen.getByRole('button', { name: 'Giao 3 phiếu' })).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'Chọn Trần Minh Khoa' })).toBeChecked();

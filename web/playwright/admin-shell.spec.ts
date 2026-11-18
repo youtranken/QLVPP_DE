@@ -66,7 +66,7 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
 
   test('v2: số đếm trên mục đang chọn (nền trắng) vẫn đọc được, đạt axe', async ({ page }, info) => {
     test.skip(isMobile(info), 'chỉ đo ở 1280');
-    // Số đếm Giao hàng = số người giao được ngay (deliverable_now): giả 5 người cho kỳ khóa gần nhất
+    // Số đếm Giao hàng = số thẻ Chưa nhận: giả 5 người chưa nhận cho kỳ khóa gần nhất
     await page.route('**/api/admin/periods/*/delivery-people', async (route) => {
       const people = Array.from({ length: 5 }, (_, i) => ({ user_sub: `pw-badge-${i}`, full_name: `PW Badge ${i}`, department: null, user_status: 'active', request_id: null, status: 'pending', owed_lines: 0, open_lines: 1, has_pending: true, has_debt: false, deliverable_now: true, lines: [] }));
       await route.fulfill({ status: 200, json: { ym: '2000-01', people } });
@@ -84,6 +84,25 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     expect(color, 'chữ số đếm khác nền mục đang chọn').not.toBe(linkBg);
     expect(badgeBg, 'nền chấm số khác nền mục đang chọn').not.toBe(linkBg);
     await expectNoContrastViolations(page);
+  });
+
+  test('AD-01 AD-02 số sidebar trùng số ở trang đích: Giao hàng = thẻ Chưa nhận, Kỳ tháng mở đúng kỳ có món chờ duyệt', async ({ page }, info) => {
+    test.skip(isMobile(info), 'sidebar chỉ ở ≥ 768');
+    await page.route('**/api/admin/periods/*/delivery-people', async (route) => {
+      // 2 người tủ trống vẫn là "Chưa nhận": số không còn theo "giao được ngay"
+      const people = Array.from({ length: 5 }, (_, i) => ({ user_sub: `pw-ad02-${i}`, full_name: `PW AD02 ${i}`, department: null, user_status: 'active', request_id: null, status: 'pending', owed_lines: 0, open_lines: 1, has_pending: true, has_debt: false, deliverable_now: i < 3, lines: [] }));
+      await route.fulfill({ status: 200, json: { ym: '2000-01', people } });
+    });
+    await page.route('**/api/admin/review?status=pending', (route) =>
+      route.fulfill({ status: 200, json: { items: [{ line_id: 'pw-l1', period_ym: '2000-01', user_sub: 'pw-a' }, { line_id: 'pw-l2', period_ym: '2000-01', user_sub: 'pw-b' }, { line_id: 'pw-l3', period_ym: '2000-02', user_sub: 'pw-c' }] } }),
+    );
+    await page.goto('/admin/delivery');
+    const nav = page.getByRole('navigation', { name: 'Menu quản lý' });
+    await expect(nav.getByRole('link', { name: /^Giao hàng/ }).getByText('5', { exact: true })).toBeVisible();
+    await expect(page.getByRole('tab', { name: /^Chưa nhận/ })).toHaveText(/^Chưa nhận\s*5\D/);
+    const month = nav.getByRole('link', { name: /^Kỳ tháng/ });
+    await expect(month.getByText('2', { exact: true })).toBeVisible();
+    await expect(month).toHaveAttribute('href', '/admin/month?ym=2000-01&chip=pending');
   });
 
   test('v2: bảng thông báo mở vẫn đủ tương phản', async ({ page }, info) => {

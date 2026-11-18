@@ -1,5 +1,3 @@
-[data-shell='admin'] .dr-avatar { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: var(--r-pill); background: var(--c-acc-soft); color: var(--c-acc); font: var(--t-cap); font-weight: 800; }
-[data-shell='admin'] .dr-avatar--lg { width: 48px; height: 48px; font-size: 18px; }
 [data-shell='admin'] .dr-person { display: inline-flex; align-items: center; gap: 12px; min-width: 0; max-width: 100%; }
 [data-shell='admin'] .dr-person__text { display: grid; gap: 2px; min-width: 0; justify-items: start; }
 [data-shell='admin'] .dr-person__text > * { max-width: 100%; }

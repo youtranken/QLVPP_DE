@@ -55,11 +55,11 @@ describe('PeopleTable G4 — cùng kiểu bảng Kỳ tháng', () => {
     expect(within(rowOf('Không Nợ')).getByText('Đủ')).toBeInTheDocument();
   });
 
-  it('⋯ có "Xem chi tiết" và "Lịch sử đặt hàng"; nút Giao… vẫn ở hàng', async () => {
+  it('⋯ có "Xem phiếu" (AD-29) và "Lịch sử đặt hàng"; nút Giao… vẫn ở hàng', async () => {
     const props = show([P]);
     expect(within(rowOf('Phan Thị Hoa')).getByRole('button', { name: /^Giao…, Phan Thị Hoa/ })).toBeInTheDocument();
     await userEvent.click(within(rowOf('Phan Thị Hoa')).getByRole('button', { name: 'Thao tác cho Phan Thị Hoa' }));
-    expect(screen.getAllByRole('menuitem').map((m) => m.textContent)).toEqual(['Xem chi tiết', 'Lịch sử đặt hàng']);
+    expect(screen.getAllByRole('menuitem').map((m) => m.textContent)).toEqual(['Xem phiếu', 'Lịch sử đặt hàng']);
     await userEvent.click(screen.getByRole('menuitem', { name: 'Lịch sử đặt hàng' }));
     expect(props.onHistory).toHaveBeenCalledWith('u-p');
   });

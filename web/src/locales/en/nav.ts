@@ -36,8 +36,8 @@ const nav: Messages<typeof vi> = {
     reports: 'Reports & ordering',
     categoriesUnits: 'Categories',
     badge: {
-      review: '{{n}} non-catalog items awaiting review',
-      delivery: '{{n}} people waiting',
+      review: '{{n}} people with non-catalog items awaiting review',
+      delivery: '{{n}} people yet to receive',
       stock: '{{n}} items short for waiting staff',
     },
     periodCard: {

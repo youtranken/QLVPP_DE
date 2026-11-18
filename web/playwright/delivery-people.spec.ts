@@ -102,7 +102,40 @@ test.describe('Giao hàng theo người — mọi lần giao qua hộp xác nh�
       // B được giao thiếu (7/10) tháng đang giao → vẫn ở tab Chưa nhận tới khi tháng sau khóa sổ
       const stillB = cardOf(page, s.b.name);
       await expect(stillB.getByText('7/10', { exact: true })).toBeVisible();
-      await expect(stillB.getByRole('button', { name: /^Tủ chưa có hàng/ })).toBeDisabled();
+      const blockedB = stillB.getByRole('button', { name: `Giao…, ${s.b.name}` });
+      await expect(blockedB).toBeDisabled();
+      await expect(blockedB).toHaveAccessibleDescription('Tủ chưa có hàng');
+      await settled(page);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+    } finally {
+      s.cleanup();
+      release();
+    }
+  });
+
+  test('TC-04 Giao hàng: năm thẻ số là bộ lọc — Giao được ngay ra A, Giao một phần ra B, không cuộn ngang', async ({ page, request }, info) => {
+    const release = await acquireLock('prev-period');
+    const tag = `${Date.now().toString(36)}t${isMobile(info) ? 'm' : 'd'}`;
+    const period = await (await request.get('/api/periods/current', { headers: devHeaders('admin') })).json();
+    const prevYm = prevYmOf(period.ym);
+    const s = await seedStandard(tag, prevYm);
+    try {
+      // Tủ 5, A cần 3 đăng ký trước: A đủ cả phiếu, B chỉ được 2 trên 10
+      const stock = await request.post(`/api/admin/items/${s.pen.id}/stock`, { headers: devHeaders('admin'), data: { delta: 5, reason: 'purchase', note: 'PW nhập tồn' } });
+      expect(stock.ok()).toBe(true);
+      await page.goto('/admin/delivery');
+      const filters = page.getByRole('tablist', { name: 'Lọc theo trạng thái' });
+      await expect(filters.getByRole('tab')).toHaveCount(5);
+      await expect(filters.getByRole('tab', { name: /^Chưa nhận/ })).toHaveAttribute('aria-selected', 'true');
+      await expect(page.getByText(/người có cả hai/)).toHaveCount(0);
+      await filters.getByRole('tab', { name: /^Giao được ngay/ }).click();
+      await expect(page).toHaveURL(/tab=ready/);
+      await expect(cardOf(page, s.a.name)).toBeVisible();
+      await expect(cardOf(page, s.b.name)).toHaveCount(0);
+      await filters.getByRole('tab', { name: /^Giao một phần/ }).click();
+      await expect(cardOf(page, s.b.name)).toBeVisible();
+      await expect(cardOf(page, s.a.name)).toHaveCount(0);
+      expect(await fitsWidth(page), 'hàng thẻ không cuộn ngang').toBe(true);
       await settled(page);
       if (isMobile(info)) await expectNoContrastViolations(page);
     } finally {

@@ -43,14 +43,14 @@ const allOk = (body: unknown) => jsonResponse(200, { results: (body as { request
 afterEach(() => vi.unstubAllGlobals());
 
 describe('BulkDeliverDialog', () => {
-  it('liệt kê từng người, chưa gửi gì khi mở; Quay lại gọi onClose', async () => {
+  it('liệt kê từng người, chưa gửi gì khi mở; Hủy gọi onClose', async () => {
     const f = stub(allOk);
     const props = open();
     const dlg = await screen.findByRole('dialog', { name: 'Giao 2 phiếu?' });
     expect(within(dlg).getByText('Nguyễn Văn An')).toBeInTheDocument();
     expect(within(dlg).getByText('Phần thiếu 6 chờ hàng về')).toBeInTheDocument();
     expect(posts(f)).toHaveLength(0);
-    await userEvent.click(within(dlg).getAllByRole('button', { name: 'Đóng' }).at(-1)!);
+    await userEvent.click(within(dlg).getByRole('button', { name: 'Hủy' }));
     expect(props.onClose).toHaveBeenCalled();
   });
 

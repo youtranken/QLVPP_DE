@@ -7,7 +7,7 @@ import { expectFixedColumns } from '@/test/fixed-columns';
 import type { AdminUser } from './directory.api';
 import { AN, BINH, CHI, DUNG, REG_URL, openUsers, regOf, stubUsers } from './users-fixtures';
 
-const card = (name: RegExp) => screen.getByRole('button', { name });
+const card = (name: RegExp) => screen.getByRole('tab', { name });
 const bodyRows = () => within(screen.getByRole('table')).getAllByRole('row').slice(1);
 
 afterEach(() => vi.unstubAllGlobals());
@@ -26,38 +26,38 @@ describe('UsersPage B10', () => {
     expect(screen.queryByText(/Đồng bộ lần cuối/)).toBeNull();
   });
 
-  it('thẻ Đang dùng 2 · Chưa đăng ký tháng 11 · Đã khóa 1; bấm thẻ lọc đúng và FilterNotice hiện', async () => {
+  it('thẻ Đang dùng 2 · Chưa đặt phiếu tháng 11 · Đã khóa 1; bấm thẻ lọc đúng và FilterNotice hiện', async () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
     expect(card(/^Đang dùng/)).toHaveTextContent('2');
-    expect(await screen.findByRole('button', { name: /^Chưa đăng ký tháng 11/ })).toHaveTextContent('1');
+    expect(await screen.findByRole('tab', { name: /^Chưa đặt phiếu tháng 11/ })).toHaveTextContent('1');
     expect(screen.queryByRole('button', { name: /^Chưa đăng nhập lần nào/ })).toBeNull();
     expect(card(/^Đã khóa/)).toHaveTextContent('1');
     await userEvent.click(card(/^Đã khóa/));
     expect(bodyRows()).toHaveLength(1);
     expect(screen.getByText('Đang lọc: Đã khóa · 1')).toBeInTheDocument();
-    expect(screen.getByText('Đang lọc: Đã khóa · 1').closest('.list-meta')).toBe(screen.getByText(/^Đang hiện \d/).closest('.list-meta'));
-    expect(card(/^Đã khóa/)).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText('Đang lọc: Đã khóa · 1').closest('.toolbar > .list-meta')).not.toBeNull();
+    expect(screen.queryByText(/^Đang hiện/)).toBeNull();
+    expect(card(/^Đã khóa/)).toHaveAttribute('aria-selected', 'true');
     // Xóa lọc → về mặc định Đang dùng; bấm lại thẻ Đang dùng đang chọn → Mọi trạng thái
     await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
     expect(bodyRows().map((r) => within(r).getByRole('button').textContent)).toEqual(['Phạm Minh Đức', 'Trần Chi']);
-    expect(card(/^Đang dùng/)).toHaveAttribute('aria-pressed', 'true');
+    expect(card(/^Đang dùng/)).toHaveAttribute('aria-selected', 'true');
     await userEvent.click(card(/^Đang dùng/));
     expect(bodyRows()).toHaveLength(3);
     expect(screen.getByRole('combobox', { name: 'Trạng thái' })).toHaveTextContent('Mọi trạng thái');
   });
 
-  it('lọc phòng ban dẫn xuất từ danh bạ; "Hiện n / tổng người"', async () => {
+  it('lọc phòng ban dẫn xuất từ danh bạ; chưa lọc phòng/tìm thì không "Đang hiện" (AD-48), lọc phòng → "Đang hiện 1/3 người"', async () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers('/admin/users?status=all');
-    expect(screen.getByText('Đang hiện 3/3 người')).toBeInTheDocument();
-    // Dòng đếm nằm cuối hàng lọc (căn phải), không chiếm hàng riêng trên bảng
-    expect(screen.getByText('Đang hiện 3/3 người').closest('.toolbar > .list-meta')).not.toBeNull();
+    expect(screen.queryByText(/^Đang hiện/)).toBeNull();
     const select = screen.getByRole('combobox', { name: 'Phòng ban' });
     expect(await optionLabels(select)).toEqual(['Mọi phòng ban', 'Phòng Công trình', 'Phòng Kế toán']);
     await pickOption(select, 'Phòng Kế toán');
     expect(bodyRows()).toHaveLength(1);
-    expect(screen.getByText('Đang hiện 1/3 người')).toBeInTheDocument();
+    // Dòng đếm nằm cuối hàng lọc (căn phải), không chiếm hàng riêng trên bảng
+    expect(screen.getByText('Đang hiện 1/3 người').closest('.toolbar > .list-meta')).not.toBeNull();
     // Cột cố định bề rộng: đổi lọc không làm cột nhảy chỗ
     expectFixedColumns(screen.getByRole('table'));
   });
@@ -197,8 +197,10 @@ describe('UsersPage B10', () => {
     await userEvent.click(x);
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Người dùng' })).toBeNull());
     expect(screen.getByTestId('location-search')).not.toHaveTextContent('person=');
+    // Ngăn chỉ đóng bằng X ở đầu (hoặc Esc), không còn nút "Đóng" ở chân
     await userEvent.click(screen.getByRole('button', { name: 'Phạm Minh Đức' }));
-    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Người dùng' })).getAllByRole('button', { name: 'Đóng' })[1]);
+    expect(within(await screen.findByRole('dialog', { name: 'Người dùng' })).getAllByRole('button', { name: 'Đóng' })).toHaveLength(1);
+    await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Người dùng' })).toBeNull());
   });
 
@@ -262,21 +264,21 @@ describe('UsersPage B10', () => {
   describe('tiến độ đăng ký kỳ đang mở', () => {
     const EM: AdminUser = { ...CHI, sub: 'u-em', fullName: 'Võ Em', employeeCode: 'NV0300' };
 
-    it('thẻ "Chưa đăng ký tháng 11: 2 người"; bấm → ?reg=no ra đúng 2 người; cột "Tháng 11" Đã đăng ký / Chưa / — (ngoài danh sách kỳ), không số món', async () => {
+    it('thẻ "Chưa đặt phiếu tháng 11: 2 người"; bấm → ?reg=no ra đúng 2 người; cột "Phiếu tháng 11" Đã đặt / Chưa đặt / — (ngoài danh sách kỳ), không số món (AD-49)', async () => {
       stubUsers([AN, BINH, CHI, EM], undefined, regOf([CHI, EM], ['u-an']));
       await openUsers('/admin/users?status=all');
-      const reg = await screen.findByRole('button', { name: /^Chưa đăng ký tháng 11/ });
-      expect(reg).toHaveTextContent(/^Chưa đăng ký tháng 112\s*người/);
-      expect(screen.getByRole('columnheader', { name: 'Tháng 11' })).toBeInTheDocument();
+      const reg = await screen.findByRole('tab', { name: /^Chưa đặt phiếu tháng 11/ });
+      expect(reg).toHaveTextContent(/^Chưa đặt phiếu tháng 112\s*người/);
+      expect(screen.getByRole('columnheader', { name: 'Phiếu tháng 11' })).toBeInTheDocument();
       const col = (name: string) => within(screen.getByText(name).closest('tr')!).getAllByRole('cell')[3];
-      await waitFor(() => expect(col('Phạm Minh Đức')).toHaveTextContent('Đã đăng ký'));
-      expect(col('Trần Chi')).toHaveTextContent('Chưa');
+      await waitFor(() => expect(col('Phạm Minh Đức')).toHaveTextContent(/^Đã đặt$/));
+      expect(col('Trần Chi')).toHaveTextContent(/^Chưa đặt$/);
       expect(col('Lê Thị Bình')).toHaveTextContent('—');
       for (const r of bodyRows()) expect(within(r).getAllByRole('cell')[3].textContent).not.toMatch(/\d/);
       await userEvent.click(reg);
       expect(screen.getByTestId('location-search')).toHaveTextContent('status=all&reg=no');
       expect(bodyRows().map((r) => within(r).getAllByRole('button')[0].textContent)).toEqual(['Trần Chi', 'Võ Em']);
-      expect(screen.getByText('Đang lọc: Chưa đăng ký tháng 11 · 2')).toBeInTheDocument();
+      expect(screen.getByText('Đang lọc: Chưa đặt phiếu tháng 11 · 2')).toBeInTheDocument();
     });
 
     it('?reg=yes → chỉ người đã đăng ký kỳ đang mở; ?reg=lạ → không lọc', async () => {
@@ -284,7 +286,7 @@ describe('UsersPage B10', () => {
       await openUsers('/admin/users?reg=yes');
       await waitFor(() => expect(bodyRows()).toHaveLength(1));
       expect(within(bodyRows()[0]).getByText('Phạm Minh Đức')).toBeInTheDocument();
-      expect(screen.getByText('Đang lọc: Đã đăng ký tháng 11 · 1')).toBeInTheDocument();
+      expect(screen.getByText('Đang lọc: Đã đặt phiếu tháng 11 · 1')).toBeInTheDocument();
     });
 
     it('lỗi tải danh sách đăng ký → thẻ "—", báo lỗi có "Thử lại"; thử lại thành công thì có số', async () => {
@@ -292,10 +294,10 @@ describe('UsersPage B10', () => {
       stubUsers([AN, BINH, CHI], undefined, () => (fail ? jsonResponse(500, { code: 'X' }) : regOf([CHI], ['u-an'])()));
       await openUsers();
       const retry = await screen.findByRole('button', { name: 'Thử lại' });
-      expect(screen.getByRole('button', { name: /^Chưa đăng ký tháng 11/ })).toHaveTextContent('—');
+      expect(screen.getByRole('tab', { name: /^Chưa đặt phiếu tháng 11/ })).toHaveTextContent('—');
       fail = false;
       await userEvent.click(retry);
-      await waitFor(() => expect(screen.getByRole('button', { name: /^Chưa đăng ký tháng 11/ })).toHaveTextContent('1'));
+      await waitFor(() => expect(screen.getByRole('tab', { name: /^Chưa đặt phiếu tháng 11/ })).toHaveTextContent('1'));
     });
 
     it('ngăn kéo đang mở khi danh sách đăng ký mới về → vẫn mở, cột cập nhật', async () => {
@@ -309,7 +311,7 @@ describe('UsersPage B10', () => {
       expect(await screen.findByRole('dialog', { name: 'Người dùng' })).toBeInTheDocument();
       release();
       // Ngăn kéo modal ẩn phần còn lại khỏi cây trợ năng
-      await waitFor(() => expect(screen.getByRole('button', { name: /^Chưa đăng ký tháng 11/, hidden: true })).toHaveTextContent('1'));
+      await waitFor(() => expect(screen.getByRole('tab', { name: /^Chưa đặt phiếu tháng 11/, hidden: true })).toHaveTextContent('1'));
       expect(screen.getByRole('dialog', { name: 'Người dùng' })).toBeInTheDocument();
     });
   });

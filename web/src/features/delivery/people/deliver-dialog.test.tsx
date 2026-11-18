@@ -329,10 +329,11 @@ describe('DeliverDialog — gửi', () => {
     expect(posts(f)).toEqual([]);
   });
 
-  it('Quay lại → onClose, không gửi', async () => {
+  it('nút thoát ở chân hộp "Giao cho …?" ghi "Hủy" (AD-31) → onClose, không gửi', async () => {
     const f = stub();
     const props = open(person({ lines: [cur] }));
-    await userEvent.click(within(dialog()).getAllByRole('button', { name: 'Đóng' }).at(-1)!);
+    expect(within(dialog()).queryByRole('button', { name: 'Đóng' })).toBeNull();
+    await userEvent.click(within(dialog()).getByRole('button', { name: 'Hủy' }));
     expect(props.onClose).toHaveBeenCalled();
     expect(posts(f)).toEqual([]);
   });

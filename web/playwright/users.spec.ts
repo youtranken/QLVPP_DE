@@ -36,7 +36,7 @@ test.describe('E9-S6 Danh bạ M1 (dev-identity admin)', () => {
     await expect(rowOf(page, ACTIVE.name).getByText('Đang dùng', { exact: true })).toBeVisible();
     await expect(rowOf(page, LOCKED.name)).toHaveCount(0);
 
-    await page.getByRole('button', { name: /^Đã khóa/ }).click();
+    await page.getByRole('tab', { name: /^Đã khóa/ }).click();
     await expect(page.getByText(/^Đang lọc: Đã khóa/)).toBeVisible();
     await expect(rowOf(page, LOCKED.name).getByText('Đã khóa', { exact: true })).toBeVisible();
     await expect(rowOf(page, ACTIVE.name)).toHaveCount(0);
@@ -44,7 +44,7 @@ test.describe('E9-S6 Danh bạ M1 (dev-identity admin)', () => {
     await expect(rowOf(page, ACTIVE.name)).toBeVisible();
     await expect(rowOf(page, LOCKED.name)).toHaveCount(0);
     // Bấm lại thẻ Đang dùng đang chọn → Mọi trạng thái
-    await page.getByRole('button', { name: /^Đang dùng/ }).click();
+    await page.getByRole('tab', { name: /^Đang dùng/ }).click();
     await expect(page).toHaveURL(/status=all/);
     await expect(rowOf(page, LOCKED.name)).toBeVisible();
 
@@ -87,7 +87,7 @@ test.describe('E9-S6 Danh bạ M1 (dev-identity admin)', () => {
     await expect(rowOf(page, TEAM_NONE.name).getByText('Adm D&E', { exact: true })).toHaveCount(0);
     await expect(rowOf(page, NO_ACCESS.name).getByText('Mất quyền', { exact: true })).toBeVisible();
 
-    await page.getByRole('button', { name: /^Mất quyền/ }).click();
+    await page.getByRole('tab', { name: /^Mất quyền/ }).click();
     await expect(page.getByText(/^Đang lọc: Mất quyền/)).toBeVisible();
     await expect(rowOf(page, NO_ACCESS.name)).toBeVisible();
     await expect(rowOf(page, TEAM_QS.name)).toHaveCount(0);
