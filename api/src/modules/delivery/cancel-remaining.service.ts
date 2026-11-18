@@ -26,7 +26,7 @@ import {
 } from './adm-out-cancel';
 import { cancelNoteOf } from './cancel-reason';
 import { notDebtYet, staleCancel } from './delivery-errors';
-import type { CancelBody, CancelResult } from './delivery.dto';
+import type { CancelBody, CancelReason, CancelResult } from './delivery.dto';
 import { assertDeliverable } from './delivery.service';
 
 @Injectable()
@@ -55,22 +55,7 @@ export class CancelRemainingService {
         code === ADM_OUT_REASON && (await lockLineAdmOut(tx, lineId));
       const line = await this.lines.lockLine(tx, lineId);
       if (!line) throw lineNotFound();
-      await this.periods.assertLocked(line.period_ym, now, tx);
-      const current = addMonths(
-        (await this.periods.openPeriod(tx, now)).ym,
-        -1,
-      );
-      const isDebt = line.period_ym < current;
-      if (!isDebt && code !== ADM_OUT_REASON) throw notDebtYet();
-      assertDeliverable(line);
-      if (
-        line.delivered_qty !== body.expected_delivered_qty ||
-        line.qty !== body.expected_qty
-      ) {
-        throw staleCancel(line);
-      }
-      // Tháng đang giao chỉ hủy được khi khóa đang đánh ADM hết hàng (đường hộp giao); nợ tháng trước dùng mã như một lý do
-      if (!isDebt && !marked) throw itemNotAdmOut();
+      await this.assertCancellable(tx, line, body, { code, marked, now });
       const reason = marked ? ADM_OUT_NOTE : note;
       const outcome = await this.lines.cancelRemaining(tx, lineId, reason, now);
       const result = {
@@ -79,31 +64,69 @@ export class CancelRemainingService {
       };
       if (result.cancelled_now === 0) return { ...result, undo_id: null };
       if (marked) return this.afterAdmOut(tx, line, result, actor, now);
-      await this.audit.appendWithin(tx, {
-        actor,
-        action: 'line.cancel_remaining',
-        objectType: 'request_line',
-        objectId: line.id,
-        detail: {
-          request_id: line.request_id,
-          before: { cancelled_qty: line.cancelled_qty },
-          after: { cancelled_qty: result.line.cancelled_qty },
-          reason,
-          reason_code: code,
-        },
-        at: now,
-      });
-      await this.lines.touchRequest(tx, line.request_id, now);
-      const bell =
-        code !== 'user_left' && (await this.notifier.ownerActive(line.user_sub))
-          ? await this.notifyOwner(tx, line, result, reason, now)
-          : null;
-      const undoId = await this.recordUndo(tx, line, outcome, bell, {
+      return this.afterDebtCancel(tx, line, outcome, {
         actor,
         now,
+        code,
+        reason,
       });
-      return { ...result, undo_id: undoId };
     });
+  }
+
+  private async assertCancellable(
+    tx: Tx,
+    line: LockedLine,
+    body: CancelBody,
+    by: { code: CancelReason; marked: boolean; now: Date },
+  ): Promise<void> {
+    await this.periods.assertLocked(line.period_ym, by.now, tx);
+    const current = addMonths(
+      (await this.periods.openPeriod(tx, by.now)).ym,
+      -1,
+    );
+    const isDebt = line.period_ym < current;
+    if (!isDebt && by.code !== ADM_OUT_REASON) throw notDebtYet();
+    assertDeliverable(line);
+    if (
+      line.delivered_qty !== body.expected_delivered_qty ||
+      line.qty !== body.expected_qty
+    ) {
+      throw staleCancel(line);
+    }
+    // Tháng đang giao chỉ hủy được khi khóa đang đánh ADM hết hàng (đường hộp giao); nợ tháng trước dùng mã như một lý do
+    if (!isDebt && !by.marked) throw itemNotAdmOut();
+  }
+
+  private async afterDebtCancel(
+    tx: Tx,
+    line: LockedLine,
+    outcome: CancelOutcome,
+    by: { actor: string; now: Date; code: CancelReason; reason: string },
+  ): Promise<CancelResult> {
+    const { actor, now, reason } = by;
+    const result = { line: outcome.line, cancelled_now: outcome.cancelled_now };
+    await this.audit.appendWithin(tx, {
+      actor,
+      action: 'line.cancel_remaining',
+      objectType: 'request_line',
+      objectId: line.id,
+      detail: {
+        request_id: line.request_id,
+        before: { cancelled_qty: line.cancelled_qty },
+        after: { cancelled_qty: result.line.cancelled_qty },
+        reason,
+        reason_code: by.code,
+      },
+      at: now,
+    });
+    await this.lines.touchRequest(tx, line.request_id, now);
+    const bell =
+      by.code !== 'user_left' &&
+      (await this.notifier.ownerActive(line.user_sub))
+        ? await this.notifyOwner(tx, line, result, reason, now)
+        : null;
+    const undoId = await this.recordUndo(tx, line, outcome, bell, by);
+    return { ...result, undo_id: undoId };
   }
 
   private recordUndo(
