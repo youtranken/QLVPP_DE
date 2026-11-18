@@ -11,12 +11,12 @@ import { person, pLine } from './people-fixtures';
 
 const UNDO = '/api/admin/undo/delivery';
 
-function stub() {
+function stub(cancelUndoId: string | null = null) {
   const f = vi.fn((url: string, init?: RequestInit) => {
     const u = String(url);
     if (u === UNDO) return Promise.resolve(jsonResponse(200, { undone: 2 }));
     if (u.endsWith('/deliver')) return Promise.resolve(jsonResponse(200, { request_complete: false, undo_id: `u-${u.split('/')[4]}` }));
-    if (init?.method === 'POST') return Promise.resolve(jsonResponse(200, { cancelled_now: 1, undo_id: null }));
+    if (init?.method === 'POST') return Promise.resolve(jsonResponse(200, { cancelled_now: 1, undo_id: cancelUndoId }));
     return Promise.resolve(jsonResponse(200, {}));
   });
   vi.stubGlobal('fetch', f);
@@ -66,6 +66,17 @@ describe('Giao cho một người — Hoàn tác 5 giây (TC-18)', () => {
     await userEvent.click(confirm());
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(await screen.findByText('Đã giao cho Nguyễn Văn An')).toBeInTheDocument();
+    expect(undoButton()).not.toBeInTheDocument();
+  });
+
+  it('bước hủy NCC hết hàng trả undo_id kiểu hủy → không gộp vào lô undo/delivery: toast không có Hoàn tác', async () => {
+    const f = stub('u-cancel-m');
+    const mixed = person({ lines: [pLine({ line_id: 'la' }), pLine({ line_id: 'm', item_id: 'i-clip', stock_qty: 0, adm_out: true })] });
+    const onDone = open(mixed);
+    await userEvent.click(confirm());
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect(await screen.findByText('Đã giao cho Nguyễn Văn An')).toBeInTheDocument();
+    expect(f.mock.calls.some(([u]) => String(u).endsWith('/m/cancel-remaining'))).toBe(true);
     expect(undoButton()).not.toBeInTheDocument();
   });
 

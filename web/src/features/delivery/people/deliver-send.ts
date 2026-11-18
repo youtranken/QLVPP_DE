@@ -20,7 +20,7 @@ export interface SentLine {
 export interface SendResult {
   lines: SentLine[];
   expired: boolean;
-  // Id hoàn tác của các lần giao; null khi có bước thành công không hoàn tác được (hủy NCC hết hàng, ghi Không mua)
+  // Id hoàn tác của các lần giao; null khi có bước thành công không hoàn tác được cùng lô (hủy NCC hết hàng, ghi Không mua)
   undoIds?: string[] | null;
 }
 
@@ -101,7 +101,9 @@ export async function sendSteps(steps: Step[], csrfToken: string | null, rejects
     // Giao phần từ tủ lỗi thì không hủy phần còn lại: số đã giao chưa chắc
     if (step.kind === 'cancel' && failed.has(lineId)) return;
     try {
-      undoable(await runStep(step, csrfToken));
+      const undoId = await runStep(step, csrfToken);
+      // Id của bước hủy thuộc loại undo khác (undo/cancel): trộn vào lô undo/delivery thì cả lô UNDO_NOT_FOUND
+      undoable(step.kind === 'deliver' ? undoId : null);
       record([{ lineId, outcome: step.kind === 'deliver' ? { ok: true, kind: 'delivered', qty: step.qty } : { ok: true, kind: 'cancelled' } }]);
     } catch (e) {
       result.expired = isSessionExpired(e);
