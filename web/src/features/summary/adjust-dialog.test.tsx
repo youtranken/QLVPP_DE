@@ -33,6 +33,15 @@ describe('AdjustDialog — giảm / từ chối dòng, một lý do chip (G2)', 
     expect(save(dialog)).toHaveAccessibleDescription('Chọn ít nhất một dòng');
   });
 
+  it('AD-14 chân ngăn: chữ "Chọn ít nhất một dòng" đứng trước nút Hủy và nút Lưu (nút chính sát mép phải)', async () => {
+    stubAdjust({ views: [DEC], items: ADMIN_ITEMS });
+    const { dialog } = await renderAdjust();
+    const reasonEl = within(dialog).getByText('Chọn ít nhất một dòng');
+    const cancel = within(dialog).getByRole('button', { name: 'Hủy' });
+    expect(reasonEl.compareDocumentPosition(cancel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(reasonEl.compareDocumentPosition(save(dialog)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('tick dòng, chưa chọn lý do → khóa, "Chọn lý do"; chip: Hết hàng · Số lượng quá nhiều · Không mua được · Khác', async () => {
     stubAdjust({ views: [DEC] });
     const { dialog } = await renderAdjust();

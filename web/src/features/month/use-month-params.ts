@@ -39,12 +39,12 @@ export function useMonthParams(openYm: string | undefined, defaultYm: string | u
   const asked = params.get('ym');
   const ym = isAskedYm(asked, openYm) ? asked : openYm && defaultYm;
   const legacy = params.get('filter');
-  // ?left=1 từ nhắc người đã nghỉ: chỉ liệt kê người đã nghỉ; phiếu của họ chọn sẵn lý do "Người đã nghỉ"
+  // ?left=1 (chip "Người đã nghỉ"): chỉ người đã nghỉ còn phần chưa nhận; phiếu của họ chọn sẵn lý do "Người đã nghỉ"
   const left = params.get('left') === '1' || legacy === 'left';
   const rawChip = params.get('chip');
   // ?pending=1: link cũ của trang Món ngoài danh mục → chip "Có món chờ duyệt"
   const pendingLink = params.get('pending') === '1';
-  const chip: MonthChip = isChip(rawChip) ? rawChip : pendingLink ? 'pending' : ((legacy && LEGACY_FILTER[legacy]) || (left ? 'undelivered' : 'all'));
+  const chip: MonthChip = isChip(rawChip) ? rawChip : pendingLink ? 'pending' : ((legacy && LEGACY_FILTER[legacy]) || 'all');
   // ?view=items = chế độ Theo món; giá trị khác (link Tổng hợp cũ) bỏ
   const view: MonthView = params.get('view') === 'items' ? 'items' : 'people';
   const hasView = params.has('view') && view === 'people';
@@ -78,7 +78,8 @@ export function useMonthParams(openYm: string | undefined, defaultYm: string | u
     left,
     presetReason: (left ? 'user_left' : undefined) as AdjustReason | undefined,
     setYm: (next: string) => update({ ym: next, request: null }),
-    setChip: (next: MonthChip) => update({ chip: next === 'all' ? null : next, left: null }),
+    setChip: (next: MonthChip) => update({ chip: next === 'all' ? null : next }),
+    setLeft: (on: boolean) => update({ left: on ? '1' : null }),
     setView: (next: MonthView) => update({ view: next === 'items' ? 'items' : null }),
     setAreas: (next: readonly string[]) => update({ area: next }),
     setQ: (next: string) => update({ q: next || null }, true),

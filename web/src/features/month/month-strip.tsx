@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/ui/icon';
 import type { StepState } from './month-steps';
@@ -9,6 +8,7 @@ interface Props {
   onlyFirst?: boolean;
 }
 
+// Tiến trình, không phải điều hướng: bước không bấm được để khỏi giống thẻ "đang chọn"
 export function MonthStrip({ steps, onlyFirst = false }: Props) {
   const { t } = useTranslation();
   return (
@@ -16,24 +16,16 @@ export function MonthStrip({ steps, onlyFirst = false }: Props) {
       {steps.map((s, i) => {
         const muted = onlyFirst && i > 0;
         const current = s.current && !muted;
-        const body = (
-          <>
-            <span className="mk-step__name">
-              {s.done && !muted && <Icon name="check" size={16} />}
-              {t(`month.steps.${s.key}`)}
-            </span>
-            <span className="mk-step__value num">{muted ? t('month.value.none') : s.value}</span>
-          </>
-        );
+        const state = muted ? 'muted' : s.done ? 'done' : current ? 'current' : 'todo';
         return (
-          <li key={s.key} className="mk-step" data-state={muted ? 'muted' : s.done ? 'done' : current ? 'current' : 'todo'} aria-current={current ? 'step' : undefined}>
-            {muted ? (
-              <span className="mk-step__link">{body}</span>
-            ) : (
-              <Link className="mk-step__link" to={s.to}>
-                {body}
-              </Link>
-            )}
+          <li key={s.key} className="mk-step" data-state={state} aria-current={current ? 'step' : undefined}>
+            <span className="mk-step__dot" aria-hidden="true">
+              {state === 'done' && <Icon name="check" size={14} />}
+            </span>
+            <span className="mk-step__text">
+              <span className="mk-step__name">{t(`month.steps.${s.key}`)}</span>
+              <span className="mk-step__value num">{muted ? t('month.value.none') : s.value}</span>
+            </span>
           </li>
         );
       })}

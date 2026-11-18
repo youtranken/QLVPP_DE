@@ -28,7 +28,7 @@ function isTyping(el: Element | null): boolean {
   return el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName);
 }
 
-export function Toolbar({ lead, search, children }: { lead?: ReactNode; search?: SearchProps; children?: ReactNode }) {
+export function Toolbar({ lead, search, label, children }: { lead?: ReactNode; search?: SearchProps; label?: string; children?: ReactNode }) {
   const ref = useRef<HTMLInputElement>(null);
   const has = Boolean(search);
 
@@ -44,7 +44,7 @@ export function Toolbar({ lead, search, children }: { lead?: ReactNode; search?:
   }, [has]);
 
   return (
-    <div className="toolbar">
+    <div className="toolbar" role={label ? 'toolbar' : undefined} aria-label={label}>
       {lead}
       {search && <SearchField {...search} inputRef={ref} />}
       {children}

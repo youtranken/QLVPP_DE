@@ -118,7 +118,7 @@ describe('Điều chỉnh phiếu — bước ‹ › không mang nháp của ng
   });
 });
 
-describe('G1 Kỳ tháng — lọc khu', () => {
+describe('G1 Kỳ tháng — lọc phòng', () => {
   const AREA_PEOPLE = [
     person({ request_id: 'r-1', user_sub: 'u-1', full_name: 'Người A1', department: 'Phòng A' }),
     person({ request_id: 'r-2', user_sub: 'u-2', full_name: 'Người A2', department: 'Phòng A' }),
@@ -127,12 +127,12 @@ describe('G1 Kỳ tháng — lọc khu', () => {
     person({ request_id: 'r-5', user_sub: 'u-5', full_name: 'Người C2', department: 'Phòng C' }),
   ];
 
-  it('chọn 2 khu → chỉ người thuộc 2 phòng, "Đang hiện 3/5 người · 2 khu", URL area= lặp; bỏ một chip khu → còn 1 khu', async () => {
+  it('chọn 2 phòng → chỉ người thuộc 2 phòng, "Đang hiện 3/5 người", URL area= lặp; gỡ một phòng ở hàng Đang lọc → còn 1 phòng', async () => {
     stubMonthApi(undefined, AREA_PEOPLE);
     open();
     await table();
-    await userEvent.click(screen.getByRole('button', { name: '+ Thêm khu' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Chọn khu' });
+    await userEvent.click(screen.getByRole('button', { name: 'Lọc phòng' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Lọc phòng' });
     await userEvent.click(within(dialog).getByRole('checkbox', { name: 'Phòng A' }));
     await userEvent.click(within(dialog).getByRole('checkbox', { name: 'Phòng B' }));
     await userEvent.click(within(dialog).getByRole('button', { name: 'Áp dụng' }));
@@ -140,20 +140,20 @@ describe('G1 Kỳ tháng — lọc khu', () => {
     await waitFor(() => expect(t.queryByText('Người C1')).toBeNull());
     expect(t.getByText('Người A1')).toBeInTheDocument();
     expect(t.getByText('Người B1')).toBeInTheDocument();
-    expect(screen.getByText('Đang hiện 3/5 người · 2 khu')).toBeInTheDocument();
+    expect(screen.getByText('Đang hiện 3/5 người')).toBeInTheDocument();
     expect(new URLSearchParams(search()).getAll('area')).toEqual(['Phòng A', 'Phòng B']);
-    await userEvent.click(screen.getByRole('button', { name: 'Bỏ khu Phòng B' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Bỏ lọc Phòng B' }));
     await waitFor(() => expect(t.queryByText('Người B1')).toBeNull());
-    expect(screen.getByText('Đang hiện 2/5 người · 1 khu')).toBeInTheDocument();
+    expect(screen.getByText('Đang hiện 2/5 người')).toBeInTheDocument();
   });
 
-  it('"Chọn tất cả" tick mọi khu; mặc định không chọn khu nào = mọi khu, không có dòng "· khu"', async () => {
+  it('"Chọn tất cả" tick mọi phòng; mặc định không chọn phòng nào = mọi phòng, không có "Đang hiện"', async () => {
     stubMonthApi(undefined, AREA_PEOPLE);
     open();
     await table();
-    expect(screen.getByText('Đang hiện 5/5 người')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: '+ Thêm khu' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Chọn khu' });
+    expect(screen.queryByText(/^Đang hiện/)).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Lọc phòng' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Lọc phòng' });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Chọn tất cả' }));
     expect(within(dialog).getAllByRole('checkbox').every((c) => (c as HTMLInputElement).checked)).toBe(true);
   });

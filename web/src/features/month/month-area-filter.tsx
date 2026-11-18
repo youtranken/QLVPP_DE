@@ -9,7 +9,7 @@ interface Props {
   onChange: (next: string[]) => void;
 }
 
-// Lọc nhiều khu (phòng); không chọn khu nào = mọi khu
+// Ô chọn nhiều phòng; không chọn phòng nào = mọi phòng. Phòng đang lọc gỡ từng cái ở hàng "Đang lọc"
 export function MonthAreaFilter({ options, value, onChange }: Props) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState<string[] | null>(null);
@@ -19,22 +19,16 @@ export function MonthAreaFilter({ options, value, onChange }: Props) {
     setDraft(null);
   };
   return (
-    <div className="mk-areas" role="group" aria-label={t('month.area.label')}>
-      {value.map((area) => (
-        <span key={area} className="chip mk-area">
-          {area}
-          <button type="button" className="mk-area__x" aria-label={t('month.area.remove', { name: area })} onClick={() => onChange(value.filter((x) => x !== area))}>
-            <Icon name="x" size={14} />
-          </button>
-        </span>
-      ))}
-      <button type="button" className="btn btn--ghost btn--sm" onClick={() => setDraft([...value])}>
-        {t('month.area.add')}
+    <>
+      <button type="button" className="btn mk-area-btn" data-on={value.length > 0 || undefined} onClick={() => setDraft([...value])}>
+        <Icon name="filter" size={16} />
+        <span className="mk-area-btn__text">{value.length ? t('month.area.buttonWith', { names: value.join(', ') }) : t('month.area.button')}</span>
+        <Icon name="chev" size={16} />
       </button>
       {draft && (
         <Dialog open onOpenChange={(o) => !o && setDraft(null)} className="sheet" maxWidth={400}>
           <div className="sheet-header">
-            <DialogTitle className="sheet-title">{t('month.area.title')}</DialogTitle>
+            <DialogTitle className="sheet-title">{t('month.area.button')}</DialogTitle>
             <DialogCloseButton />
           </div>
           <div className="sheet-body mk-area-list">
@@ -60,6 +54,6 @@ export function MonthAreaFilter({ options, value, onChange }: Props) {
           </div>
         </Dialog>
       )}
-    </div>
+    </>
   );
 }

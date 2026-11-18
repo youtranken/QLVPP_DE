@@ -1,13 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import i18n from '@/lib/i18n';
 import { renderWithI18n, screen, userEvent, within } from '@/test/test-utils';
-import { PeriodSwitch } from './period-switch';
+import { PeriodStatus, PeriodSwitch } from './period-switch';
 import { periodFloor } from './use-month-params';
 
 const OPEN = '2027-01';
 const setup = (ym: string, earliestYm: string | null | undefined = '2026-10') => {
   const onChange = vi.fn();
-  renderWithI18n(<PeriodSwitch ym={ym} openYm={OPEN} earliestYm={earliestYm} onChange={onChange} />);
+  renderWithI18n(
+    <>
+      <PeriodStatus ym={ym} openYm={OPEN} />
+      <PeriodSwitch ym={ym} openYm={OPEN} earliestYm={earliestYm} onChange={onChange} />
+    </>,
+  );
   return onChange;
 };
 const group = () => screen.getByRole('group', { name: 'Chọn kỳ' });

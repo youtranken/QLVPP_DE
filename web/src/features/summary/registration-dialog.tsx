@@ -62,8 +62,9 @@ export function RegistrationDialog({ ym, deadline, rows, index, onIndex, onClose
     stepped.current = true;
     onIndex(next);
   };
+  // Nút ⋯ của dòng đang xem (sau ‹ › có thể là người khác người mở đầu)
   const returnToRow = () => {
-    const opener = document.querySelector<HTMLElement>(`[data-view-id="${row.request_id}"]`);
+    const opener = document.querySelector<HTMLElement>(`[data-view-id="${row.request_id}"] button`);
     opener?.focus();
     return !!opener;
   };
@@ -77,11 +78,6 @@ export function RegistrationDialog({ ym, deadline, rows, index, onIndex, onClose
       eyebrow={eyebrow}
       title={t('summary.open.dialogTitle', { name })}
       nav={{ index, total: rows.length, onStep: (dir) => step(index + dir), prevLabel: t('summary.open.prev'), nextLabel: t('summary.open.next') }}
-      footer={
-        <button type="button" className="btn" onClick={onClose}>
-          {t('common.close')}
-        </button>
-      }
     >
       <small className="rg-saved" aria-live="polite">
         {view.data ? t('summary.open.dialogSaved', { time: vnSavedStamp(row.saved_at ?? view.data.saved_at), kinds: lines.length, units }) : null}

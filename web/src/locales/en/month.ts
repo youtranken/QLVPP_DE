@@ -5,6 +5,7 @@ const month: Messages<typeof vi> = {
   month: {
     title: '{{month, MonthName}} period',
     search: 'Search people or departments',
+    toolbar: 'Period toolbar',
     period: {
       label: 'Choose period',
       month: '{{month, MonthName}} {{year}}',
@@ -34,6 +35,7 @@ const month: Messages<typeof vi> = {
       noted: 'With notes',
       undelivered: 'Not fully delivered',
       pending: 'Items awaiting review',
+      left: 'Left the company',
     },
     table: {
       noDepartment: 'No department',
@@ -51,18 +53,15 @@ const month: Messages<typeof vi> = {
       view: 'View request',
       adjust: 'Adjust request',
       meta: 'Showing {{shown}}/{{total}} people',
-      metaAreas_one: 'Showing {{shown}}/{{total}} people · {{count}} area',
-      metaAreas_other: 'Showing {{shown}}/{{total}} people · {{count}} areas',
+      saved: 'Saved',
     },
     view: { label: 'View by', people: 'By person', items: 'By item' },
     area: {
-      add: '+ Add area',
-      title: 'Choose areas',
+      button: 'Filter departments',
+      buttonWith: 'Departments: {{names}}',
       all: 'Select all',
       apply: 'Apply',
       cancel: 'Cancel',
-      remove: 'Remove area {{name}}',
-      label: 'Areas in filter',
     },
     items: {
       label: 'By item',
@@ -82,8 +81,10 @@ const month: Messages<typeof vi> = {
       custom: 'Off-catalog item',
     },
     left: {
-      action: 'Handle',
-      debt: 'See previous months owed',
+      banner_one: '{{count}} person who has left still has items to receive.',
+      banner_other: '{{count}} people who have left still have items to receive.',
+      action_one: 'Show this person',
+      action_other: 'Show these {{count}} people',
     },
   },
 };

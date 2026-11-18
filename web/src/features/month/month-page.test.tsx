@@ -144,14 +144,13 @@ describe('MonthPage: kỳ khóa', () => {
 });
 
 describe('MonthPage: kỳ cũ (không phải kỳ khóa gần nhất)', () => {
-  it('?ym=2026-09: dải vẫn đủ 4 bước từ dữ liệu thật, không bước nào "—", Gửi NCC dẫn tới báo cáo đúng tháng', async () => {
+  it('?ym=2026-09: dải vẫn đủ 4 bước từ dữ liệu thật, không bước nào "—", hỏi send-state và arrivals-plan đúng tháng', async () => {
     const f = stubMonthApi();
     open('/admin/month?ym=2026-09');
     expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 9' })).toBeInTheDocument();
     const steps = await screen.findByRole('list', { name: 'Các bước của tháng' });
     await waitFor(() => expect(within(steps).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Đã đặt4/5', 'Gửi NCC11:50 08/11', 'Nhận hàng19/21 món', 'Giao1/4 phiếu']));
     expect(within(steps).queryByText('—')).toBeNull();
-    expect(within(steps).getByRole('link', { name: /Gửi NCC/ })).toHaveAttribute('href', '/admin/reports?ym=2026-09');
     const urls = calledUrls(f);
     expect(urls).toContain('/api/admin/periods/2026-09/send-state');
     expect(urls).toContain('/api/admin/periods/2026-09/arrivals-plan');
@@ -194,7 +193,7 @@ describe('MonthPage: kỳ mặc định khi URL không có ym', () => {
 });
 
 describe('MonthPage: chuyển kỳ', () => {
-  it('› sang kỳ đang đăng ký → bảng chỉ xem (Người · Nhóm · Số món · Tổng · Lưu lúc), dải chỉ bước Đăng ký sáng, URL ?ym=2026-11', async () => {
+  it('› sang kỳ đang đăng ký → bảng chỉ xem (Người · Đặt hàng · Ghi chú · Trạng thái), dải chỉ bước Đăng ký sáng, URL ?ym=2026-11', async () => {
     stubMonthApi();
     open();
     await table();
@@ -204,7 +203,7 @@ describe('MonthPage: chuyển kỳ', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 11' })).toBeInTheDocument();
     const t = await table();
     await t.findByText('Nhân viên B');
-    expect(t.getAllByRole('columnheader').map((h) => h.textContent).slice(0, 5)).toEqual(['Người', 'Nhóm', 'Số món', 'Tổng', 'Lưu lúc']);
+    expect(t.getAllByRole('columnheader').map((h) => h.textContent).slice(0, 4)).toEqual(['Người', 'Đặt hàng', 'Ghi chú', 'Trạng thái']);
     const steps = screen.getByRole('list', { name: 'Các bước của tháng' });
     expect(within(steps).getByText('3/5')).toBeInTheDocument();
     expect(within(steps).getAllByText('—')).toHaveLength(3);
@@ -255,15 +254,15 @@ describe('MonthPage: chuyển kỳ', () => {
 });
 
 describe('MonthPage: người đã nghỉ và 390 px', () => {
-  it('người đã nghỉ còn phần chưa nhận → đúng một dòng W25 với nút Xử lý sang ?left=1', async () => {
-    const left = { ...(await import('./month-fixtures')).PEOPLE[0]!, user_status: 'locked', full_name: 'Võ Thị Lan' };
-    stubMonthApi((url) => (url.includes('filter=left') ? new Response(JSON.stringify({ items: [left], next_cursor: null }), { status: 200, headers: { 'content-type': 'application/json' } }) : undefined));
+  it('người đã nghỉ còn phần chưa nhận → đúng một băng, bấm "Lọc 1 người này" ghi ?left=1', async () => {
+    const lan = { ...PEOPLE[0]!, request_id: 'r-lan', user_sub: 'u-lan', user_status: 'locked', full_name: 'Võ Thị Lan' };
+    stubMonthApi(undefined, [...PEOPLE, lan]);
     open();
     await table();
-    const alert = await screen.findByText(/Võ Thị Lan/, { selector: '.mk-left span' });
-    expect(alert).toBeInTheDocument();
+    expect(await screen.findByText('1 người đã nghỉ còn phần chưa nhận.')).toBeInTheDocument();
     expect(document.querySelectorAll('.mk-left')).toHaveLength(1);
-    expect(screen.getByRole('link', { name: 'Xử lý' })).toHaveAttribute('href', '/admin/month?ym=2026-10&left=1');
+    await userEvent.click(screen.getByRole('button', { name: 'Lọc 1 người này' }));
+    await waitFor(() => expect(search()).toContain('left=1'));
   });
 
   it('390: bảng xếp chồng, nhóm lọc thành ô chọn, ô tìm vẫn dùng được', async () => {

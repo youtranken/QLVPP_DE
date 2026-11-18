@@ -99,7 +99,8 @@ test.describe('Vòng3-KT Kỳ tháng', () => {
     await expect(steps(page).getByText('—')).toHaveCount(3);
     await expect(page.getByRole('button', { name: /Điều chỉnh/ })).toHaveCount(0);
     if (isMobile(info)) await expectNoContrastViolations(page);
-    await page.getByRole('button', { name: 'Xem phiếu của PW Người một' }).click();
+    await expect(page.getByRole('button', { name: /^Xem phiếu của/ })).toHaveCount(0);
+    await page.getByRole('row').filter({ hasText: 'PW Người một' }).getByText('PW Người một').click();
     const dialog = page.getByRole('dialog', { name: 'Phiếu của PW Người một' });
     await expect(dialog.getByText('PW món ngoài')).toBeVisible();
     await expect(dialog.getByRole('button', { name: 'Người trước' })).toBeDisabled();
@@ -107,7 +108,7 @@ test.describe('Vòng3-KT Kỳ tháng', () => {
     const next = page.getByRole('dialog', { name: 'Phiếu của PW Người hai' });
     await expect(next.getByRole('button', { name: 'Người sau' })).toBeDisabled();
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('button', { name: 'Xem phiếu của PW Người hai' })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Thao tác cho PW Người hai' })).toBeFocused();
     await shot(page, info, 'vong3-month-open');
   });
 
@@ -137,12 +138,13 @@ test.describe('Vòng3-KT Kỳ tháng', () => {
       await expect(row.getByText(/^PW Phòng giao · .*lưu \d{2}\/\d{2}$/)).toBeVisible();
       await expect(row.getByText(`Thiếu: ${seed.items[1].name}`)).toBeVisible();
 
-      await page.getByRole('button', { name: '+ Thêm khu' }).click();
-      const areas = page.getByRole('dialog', { name: 'Chọn khu' });
+      await page.getByRole('toolbar', { name: 'Thanh công cụ Kỳ tháng' }).getByRole('button', { name: 'Lọc phòng' }).click();
+      const areas = page.getByRole('dialog', { name: 'Lọc phòng' });
       await areas.getByRole('checkbox', { name: 'PW Phòng giao' }).check();
       await areas.getByRole('button', { name: 'Áp dụng' }).click();
       await expect(page).toHaveURL(/area=PW\+Ph%C3%B2ng\+giao/);
-      await expect(page.getByText(/^Đang hiện \d+\/\d+ người · 1 khu$/)).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Lọc phòng: PW Phòng giao' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Bỏ lọc PW Phòng giao' })).toBeVisible();
       await expect(row).toBeVisible();
       expect(await fitsWidth(page), 'không cuộn ngang').toBe(true);
       if (isMobile(info)) await expectNoContrastViolations(page);
@@ -163,6 +165,32 @@ test.describe('Vòng3-KT Kỳ tháng', () => {
   });
 });
 
+
+test.describe('Kỳ tháng theo bản Sau (TC-05, TC-08, AD-04…14)', () => {
+  test('TC-08 AD-06 lọc người đã nghỉ: băng một dòng, "Lọc N người này" bật chip, bảng còn N dòng vạch cam', async ({ page }, info) => {
+    await page.goto('/admin/month?ym=2026-12');
+    const band = page.getByText(/^\d+ người đã nghỉ còn phần chưa nhận\.$/);
+    await expect(band).toBeVisible();
+    const n = Number((await band.textContent())!.match(/^\d+/)![0]);
+    await expect(page.getByRole('link', { name: 'Xem nợ tháng trước' })).toHaveCount(0);
+    await page.getByRole('button', { name: `Lọc ${n} người này` }).click();
+    await expect(page).toHaveURL(/left=1/);
+    await expect(page.getByRole('button', { name: /^Người đã nghỉ/ })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: /^Thao tác cho / })).toHaveCount(n);
+    await expect(page.getByRole('table').getByText('Người đã nghỉ', { exact: true })).toHaveCount(n);
+    await expect(page.getByText(new RegExp(`^Đang hiện ${n}/\\d+ người$`))).toBeVisible();
+    expect(await fitsWidth(page), 'không cuộn ngang').toBe(true);
+    if (isMobile(info)) await expectNoContrastViolations(page);
+    await shot(page, info, 'month-left-filter');
+  });
+
+  test('TC-05 AD-04 dải tiến trình không bấm được; bộ chọn kỳ trong thanh công cụ', async ({ page }) => {
+    await openMonth(page);
+    await expect(steps(page).getByRole('link')).toHaveCount(0);
+    await expect(steps(page).locator('[aria-current="step"]')).toHaveCount(1);
+    await expect(page.getByRole('toolbar', { name: 'Thanh công cụ Kỳ tháng' }).getByRole('group', { name: 'Chọn kỳ' })).toBeVisible();
+  });
+});
 
 test.describe('Kỳ tháng 390: việc chính thấy ngay khi mở', () => {
   test('390: dòng người đầu tiên nằm trong màn 390×844 không cần cuộn (kỳ 2026-12 có băng người đã nghỉ)', async ({ page }, info) => {

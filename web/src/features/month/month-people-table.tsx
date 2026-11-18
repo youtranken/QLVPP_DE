@@ -2,11 +2,12 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
 import { formatVnStamp } from '@/lib/format-time';
-import { requestStatus, requestStatusText } from '@/lib/request-status';
+import { requestStatus, requestStatusText, type RequestStatusKey } from '@/lib/request-status';
 import { DataTable } from '@/ui/data-table';
 import { EmptyValue } from '@/ui/empty-cell';
 import { RowMenu } from '@/ui/row-menu';
 import type { PersonRow } from '@/features/summary/summary.api';
+import { MonthPersonText } from './month-person-text';
 
 interface Props {
   rows: PersonRow[];
@@ -26,16 +27,10 @@ const nameOf = (r: PersonRow) => r.full_name ?? r.email ?? r.user_sub;
 function PersonCell({ row }: { row: PersonRow }) {
   const { t } = useTranslation();
   const saved = t('month.table.savedOn', { date: formatVnStamp(row.saved_at).split(' ')[1] });
-  const sub = [row.department, row.team, saved].filter(Boolean).join(' · ');
   return (
-    <span className="sm-person">
-      <span className="sm-avatar" aria-hidden="true">{nameOf(row).trim().charAt(0).toUpperCase()}</span>
-      <span className="mk-person__text">
-        <span className="sm-person__name">{nameOf(row)}</span>
-        {row.user_status !== 'active' && <span className="tag tag--outline">{t('summary.table.leftCompany')}</span>}
-        <small className="mk-person__sub">{sub}</small>
-      </span>
-    </span>
+    <MonthPersonText name={nameOf(row)} sub={[row.department, row.team, saved].filter(Boolean).join(' · ')}>
+      {row.user_status !== 'active' && <span className="tag tag--outline">{t('summary.table.leftCompany')}</span>}
+    </MonthPersonText>
   );
 }
 
@@ -74,11 +69,13 @@ function Notes({ row }: { row: PersonRow }) {
   );
 }
 
+const STATUS_TAG: Record<RequestStatusKey, string> = { notDelivered: 'tag', partial: 'tag tag--info', done: 'tag tag--ok', owed: 'tag tag--warn', cancelled: 'tag tag--outline' };
+
 function StatusCell({ row }: { row: PersonRow }) {
   const { t } = useTranslation();
   if (row.total_qty === 0) return <EmptyValue />;
   const status = requestStatus({ qty: row.total_qty, delivered: row.delivered_qty, cancelled: row.cancelled_qty });
-  return <span className="sm-muted">{requestStatusText(t, status)}</span>;
+  return <span className={STATUS_TAG[status.key]}>{requestStatusText(t, status)}</span>;
 }
 
 function useColumns(busy: boolean, onView: Props['onView'], onAdjust: Props['onAdjust'], onHistory: Props['onHistory']) {
@@ -96,7 +93,7 @@ function useColumns(busy: boolean, onView: Props['onView'], onAdjust: Props['onA
         meta: { className: 'r sm-acts', width: '3.5rem' },
         cell: ({ row: { original: r } }) =>
           busy ? null : (
-            <span onClick={(e) => e.stopPropagation()}>
+            <span data-view-id={r.request_id} onClick={(e) => e.stopPropagation()}>
               <RowMenu
                 label={t('month.table.more', { name: nameOf(r) })}
                 items={[
@@ -127,6 +124,7 @@ export function MonthPeopleTable({ rows, loading, busy, narrowed, activeId, onVi
       emptyText={t(narrowed ? 'summary.page.noMatch' : 'summary.page.empty')}
       empty={narrowed ? { variant: 'no-match', hint: t('summary.page.noMatchHint'), onClear } : { art: 'no-request' }}
       onRowClick={busy ? undefined : onView}
+      rowClassName={(r) => (r.user_status !== 'active' ? 'row--attn-warn' : '')}
       activeRowId={activeId}
       tableClassName={['grid-table', busy && 'is-stale'].filter(Boolean).join(' ')}
     />
