@@ -1,25 +1,19 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { compressImage } from '@/lib/image-compress';
-import { ACCEPT_ATTR, fileFromClipboard, isAcceptedImage } from '@/lib/image-input';
+import { ACCEPT_ATTR } from '@/lib/image-input';
 import type { Tone } from '@/lib/group-tone';
-import { useMe } from '@/lib/me';
 import { Icon } from '@/ui/icon';
-import { fileUrl, uploadItemImage } from '@/features/catalog/catalog.api';
-import { catalogErrorKey } from '@/features/catalog/catalog-errors';
+import { ImageCropper } from '@/ui/image-cropper';
+import { fileUrl } from '@/features/catalog/catalog.api';
+import { useItemImage } from '@/features/catalog/use-item-image';
 import '@/features/catalog/catalog.m1.css';
-
-export type PrepareImage = (file: File) => Promise<File | null>;
-
-const asIs: PrepareImage = async (file) => file;
 
 export function ImageField({
   fileId,
   error,
   required = false,
   tone = 'g0',
-  prepare = asIs,
   onChange,
   onBusyChange,
 }: {
@@ -27,64 +21,15 @@ export function ImageField({
   error?: string;
   required?: boolean;
   tone?: Tone;
-  prepare?: PrepareImage;
   onChange: (fileId: string | null) => void;
   onBusyChange: (busy: boolean) => void;
 }) {
   const { t } = useTranslation();
-  const { csrfToken } = useMe();
   const noteId = useId();
-  const [busy, setBusy] = useState(false);
-  const [localError, setLocalError] = useState<string | null>(null);
+  const img = useItemImage(onChange, onBusyChange);
+  const { busy } = img;
+  const localError = img.error;
   const shownError = localError ?? error;
-
-  const setBusyBoth = (b: boolean) => {
-    setBusy(b);
-    onBusyChange(b);
-  };
-
-  const pick = async (file: File | undefined) => {
-    if (!file) return;
-    if (!isAcceptedImage(file)) {
-      setLocalError(t('catalog.errors.IMAGE_TYPE'));
-      return;
-    }
-    setLocalError(null);
-    setBusyBoth(true);
-    try {
-      const ready = await prepare(file);
-      if (!ready) return;
-      const out = await compressImage(ready);
-      if ('error' in out) {
-        setLocalError(t('catalog.errors.IMAGE_UNSUPPORTED'));
-        return;
-      }
-      const { id } = await uploadItemImage(out.blob, out.mime, csrfToken);
-      onChange(id);
-    } catch (e) {
-      const key = catalogErrorKey(e);
-      setLocalError(t(key === 'catalog.errors.UNKNOWN' ? 'catalog.errors.UPLOAD_FAILED' : key));
-    } finally {
-      setBusyBoth(false);
-    }
-  };
-
-  const pickRef = useRef(pick);
-  const busyRef = useRef(busy);
-  useEffect(() => {
-    pickRef.current = pick;
-    busyRef.current = busy;
-  });
-  useEffect(() => {
-    const onPaste = (e: ClipboardEvent) => {
-      const file = fileFromClipboard(e.clipboardData);
-      if (!file || busyRef.current) return;
-      e.preventDefault();
-      void pickRef.current(file);
-    };
-    document.addEventListener('paste', onPaste);
-    return () => document.removeEventListener('paste', onPaste);
-  }, []);
 
   const fileInput = (label: string) => (
     <input
@@ -96,7 +41,7 @@ export function ImageField({
       aria-describedby={noteId}
       disabled={busy}
       onChange={(e: ChangeEvent<HTMLInputElement>) => {
-        void pick(e.target.files?.[0]);
+        img.pick(e.target.files?.[0]);
         e.target.value = '';
       }}
     />
@@ -118,6 +63,9 @@ export function ImageField({
               {busy ? t('catalog.form.imageUploading') : t('catalog.form.imageChange')}
               {fileInput(t('catalog.form.imageChange'))}
             </label>
+            <button type="button" className="btn btn--sm" disabled={busy} onClick={() => img.recrop(fileId)}>
+              {t('catalog.form.imageRecrop')}
+            </button>
             {/* Ảnh bắt buộc: xóa xong không lưu được nên chỉ cho đổi */}
             {!required && (
               <button type="button" className="btn btn--ghost btn--sm" disabled={busy} onClick={() => onChange(null)}>
@@ -148,6 +96,15 @@ export function ImageField({
         <p className="ff-hint">
           {t('catalog.form.imagePasteHint')}
         </p>
+      )}
+      {img.source && (
+        <ImageCropper
+          title={t('catalog.form.cropTitle')}
+          source={img.source}
+          busy={busy}
+          onConfirm={(r) => void img.confirm(r)}
+          onCancel={img.cancel}
+        />
       )}
     </fieldset>
   );

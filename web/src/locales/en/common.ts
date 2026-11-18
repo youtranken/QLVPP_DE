@@ -8,6 +8,7 @@ const common: Messages<typeof vi> = {
     adminTitle: 'VPP Admin',
   },
   common: {
+    cropper: { box: 'Crop frame', help: 'Drag an edge, a corner or the middle of the frame. Arrow keys move it, Shift + arrow resizes.', trim: 'Trim white border', full: 'Use whole photo', size: '{{w}} × {{h}} px', cancel: 'Cancel', use: 'Use photo', loading: 'Opening photo…' },
     count: {
       items_one: '{{count}} item',
       items_other: '{{count}} items',

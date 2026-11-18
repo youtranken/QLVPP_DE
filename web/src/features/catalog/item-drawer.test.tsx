@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, within, pickOption, optionLabels } from '@/test/test-utils';
 import { compressImage } from '@/lib/image-compress';
 import { PAPER, PEN, adminItem } from './catalog-fixtures';
+import { uploadCropped } from '@/test/fake-crop-source';
 import { bodyOf, callsTo, png, renderDrawer, stubDrawerApi } from './item-drawer-fixtures';
 
+vi.mock('@/lib/crop-source', async () => (await import('@/test/fake-crop-source')).cropSourceMock);
 vi.mock('@/lib/image-compress', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/image-compress')>();
   return { ...actual, compressImage: vi.fn(actual.compressImage) };
@@ -19,7 +21,7 @@ afterEach(() => vi.unstubAllGlobals());
 async function fillNew(name = 'Bút chì') {
   await userEvent.type(screen.getByLabelText(/^Tên sản phẩm/), name);
   await pickOption(screen.getByLabelText(/^Đơn vị tính/), 'cây');
-  await userEvent.upload(screen.getByLabelText(PICK), png());
+  await uploadCropped(screen.getByLabelText(PICK), png());
   await screen.findByRole('img', { name: 'Ảnh món' });
 }
 
@@ -42,7 +44,7 @@ describe('Ngăn kéo Thêm sản phẩm', () => {
     stubDrawerApi();
     renderDrawer();
     await userEvent.type(screen.getByLabelText(/^Tên sản phẩm/), 'Bút chì');
-    await userEvent.upload(screen.getByLabelText(PICK), png());
+    await uploadCropped(screen.getByLabelText(PICK), png());
     await screen.findByRole('img', { name: 'Ảnh món' });
     await submitAdd();
     expect(screen.getByRole('alert')).toHaveTextContent('Cần thêm: ĐVT.');
@@ -53,7 +55,7 @@ describe('Ngăn kéo Thêm sản phẩm', () => {
     stubDrawerApi();
     renderDrawer();
     expect(screen.getByText('JPG/PNG tới 5 MB. Nhân viên chọn món bằng ảnh nên ảnh là bắt buộc.')).toBeInTheDocument();
-    await userEvent.upload(screen.getByLabelText(PICK), png());
+    await uploadCropped(screen.getByLabelText(PICK), png());
     expect(await screen.findByRole('img', { name: 'Ảnh món' })).toHaveAttribute('src', '/api/files/f-new');
     expect(screen.getByLabelText('Đổi ảnh')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Xóa ảnh' })).toBeNull();
@@ -77,7 +79,7 @@ describe('Ngăn kéo Thêm sản phẩm', () => {
   ])('tải ảnh lỗi %s → câu lỗi ở ô ảnh, ô aria-invalid', async (code, status, text) => {
     stubDrawerApi((url) => (url === '/api/files' ? jsonResponse(status, { code, message: 'x' }) : undefined));
     renderDrawer();
-    await userEvent.upload(screen.getByLabelText(PICK), png());
+    await uploadCropped(screen.getByLabelText(PICK), png());
     expect(await screen.findByText(text)).toBeInTheDocument();
     expect(screen.getByLabelText(PICK)).toHaveAttribute('aria-invalid', 'true');
     expect(screen.getByLabelText(PICK)).toHaveAccessibleDescription(text);

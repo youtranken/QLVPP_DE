@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, renderWithI18n, screen, waitFor } from '@/test/test-utils';
+import { fireEvent, renderWithI18n, screen, userEvent, waitFor } from '@/test/test-utils';
 import { makeMe } from '@/test/fixtures-me';
 import { MeContext } from '@/lib/me';
 import { ImageField } from './image-field';
@@ -8,9 +8,19 @@ vi.mock('@/lib/image-compress', () => ({
   compressImage: vi.fn(async (f: File) => ({ blob: f, mime: 'image/webp', width: 1, height: 1 })),
 }));
 
+vi.mock('@/lib/crop-source', () => ({
+  loadCropSource: vi.fn(async () => ({
+    width: 40,
+    height: 30,
+    draw: vi.fn(),
+    pixels: () => ({ width: 40, height: 30, data: new Uint8ClampedArray(40 * 30 * 4) }),
+    crop: vi.fn(async () => new Blob(['x'], { type: 'image/webp' })),
+  })),
+}));
+
 afterEach(() => vi.unstubAllGlobals());
 
-function pasteEvent(target: EventTarget, items: { file?: File; text?: string }[]) {
+function pasteEvent(target: Element | Document, items: { file?: File; text?: string }[]) {
   const dt = {
     items: items.map((i) => ({
       kind: i.file ? 'file' : 'string',
@@ -51,9 +61,12 @@ describe('ImageField — dán ảnh Ctrl+V', () => {
     );
   });
 
-  it.each(['image/jpeg', 'image/png', 'image/webp'])('dán %s → tải lên và gán ảnh', async (type) => {
+  it.each(['image/jpeg', 'image/png', 'image/webp'])('dán %s → mở màn cắt, Dùng ảnh thì tải lên và gán ảnh', async (type) => {
     const { onChange, fetchMock } = setup();
     const ev = pasteEvent(document.body, [{ file: new File(['x'], 'p', { type }) }]);
+    expect(await screen.findByRole('dialog', { name: 'Cắt ảnh món' })).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'Dùng ảnh' }));
     await waitFor(() => expect(onChange).toHaveBeenCalledWith('f-1'));
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(ev.defaultPrevented).toBe(true);
@@ -81,5 +94,14 @@ describe('ImageField — dán ảnh Ctrl+V', () => {
     expect(ev.defaultPrevented).toBe(false);
     expect(screen.queryByRole('alert')).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('Hủy ở màn cắt → không tải lên, không đổi ảnh', async () => {
+    const { onChange, fetchMock } = setup();
+    pasteEvent(document.body, [{ file: new File(['x'], 'p.png', { type: 'image/png' }) }]);
+    await userEvent.click(await screen.findByRole('button', { name: 'Hủy' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

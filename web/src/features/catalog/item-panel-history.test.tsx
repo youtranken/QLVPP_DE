@@ -9,9 +9,11 @@ import { ConfirmProvider } from '@/ui/confirm-provider';
 import { ToastProvider } from '@/ui/toast-provider';
 import type { AdminItem } from './catalog.api';
 import { CATEGORIES, PEN } from './catalog-fixtures';
+import { uploadCropped } from '@/test/fake-crop-source';
 import { png, stubDrawerApi } from './item-drawer-fixtures';
 import { ItemDrawer } from './item-drawer';
 
+vi.mock('@/lib/crop-source', async () => (await import('@/test/fake-crop-source')).cropSourceMock);
 vi.mock('@/lib/image-compress', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/image-compress')>();
   return { ...actual, compressImage: vi.fn(async (file: File) => ({ blob: file, mime: 'image/png', width: 10, height: 10 })) };
@@ -76,7 +78,7 @@ describe('Panel món trong BrowserRouter — tự đóng không vướng chặn 
     const panel = await openPanel(null);
     await userEvent.type(within(panel).getByLabelText(/^Tên sản phẩm/), 'Bút chì');
     await pickOption(within(panel).getByLabelText(/^Đơn vị tính/), 'cây');
-    await userEvent.upload(within(panel).getByLabelText('Chụp hoặc chọn ảnh'), png());
+    await uploadCropped(within(panel).getByLabelText('Chụp hoặc chọn ảnh'), png());
     await within(panel).findByRole('img', { name: 'Ảnh món' });
     await userEvent.click(within(panel).getByRole('button', { name: 'Thêm món' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Thêm sản phẩm' })).toBeNull());

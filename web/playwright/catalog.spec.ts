@@ -67,6 +67,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await pickOption(form.getByRole('combobox', { name: 'Nhóm', exact: true }), category);
       const uploaded = page.waitForResponse((r) => r.url().endsWith('/api/files') && r.request().method() === 'POST');
       await form.getByLabel('Chụp hoặc chọn ảnh').setInputFiles('playwright/fixtures/item.png');
+      await form.page().getByRole('dialog', { name: 'Cắt ảnh món' }).getByRole('button', { name: 'Dùng ảnh' }).click();
       expect((await uploaded).status()).toBe(201);
       await expectImageServed(page, form.getByRole('img', { name: 'Ảnh món' }));
       await expect(form.getByText(/^Cần thêm/)).toHaveCount(0);
@@ -150,6 +151,7 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
       await drawer.getByLabel('Tối đa mỗi tháng').fill('5');
       const uploaded = page.waitForResponse((r) => r.url().endsWith('/api/files') && r.request().method() === 'POST');
       await drawer.getByLabel('Chụp hoặc chọn ảnh').setInputFiles('playwright/fixtures/item.png');
+      await drawer.page().getByRole('dialog', { name: 'Cắt ảnh món' }).getByRole('button', { name: 'Dùng ảnh' }).click();
       expect((await uploaded).status()).toBe(201);
       await expectImageServed(page, drawer.getByRole('img', { name: 'Ảnh món' }));
       const created = page.waitForResponse((r) => r.url().endsWith('/api/admin/items') && r.request().method() === 'POST');

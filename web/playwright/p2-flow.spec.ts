@@ -49,6 +49,7 @@ async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person,
   await convert.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio').first().click();
   // Dòng Món khác không có ảnh → món mới phải có ảnh mới chọn ở đây
   await convert.getByLabel('Chụp hoặc chọn ảnh').setInputFiles(FIXTURE);
+  await convert.page().getByRole('dialog', { name: 'Cắt ảnh món' }).getByRole('button', { name: 'Dùng ảnh' }).click();
   await expect(convert.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
   await convert.getByRole('button', { name: 'Mua và thêm vào danh mục', exact: true }).click();
   await expect(convert).toBeHidden();
