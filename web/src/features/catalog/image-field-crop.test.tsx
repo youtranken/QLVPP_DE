@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, renderWithI18n, screen, userEvent, waitFor } from '@/test/test-utils';
+import { fireEvent, renderWithI18n, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { makeMe } from '@/test/fixtures-me';
 import { MeContext } from '@/lib/me';
 import { ApiError } from '@/lib/api-client';
@@ -34,18 +34,19 @@ afterEach(() => {
   compressedSize = null;
 });
 
-function setup(fileId: string | null = null) {
+function setup(fileId: string | null = null, keep?: { unmount?: () => void }) {
   const onChange = vi.fn();
   const fetchMock = vi.fn(
     async () =>
       new Response(JSON.stringify({ id: 'f-2' }), { status: 201, headers: { 'content-type': 'application/json' } }),
   );
   vi.stubGlobal('fetch', fetchMock);
-  renderWithI18n(
+  const view = renderWithI18n(
     <MeContext.Provider value={makeMe('admin')}>
       <ImageField fileId={fileId} onChange={onChange} onBusyChange={vi.fn()} />
     </MeContext.Provider>,
   );
+  if (keep) keep.unmount = view.unmount;
   return { onChange, fetchMock };
 }
 
@@ -114,5 +115,36 @@ describe('ImageField — màn cắt', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Cắt lại' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Cắt lại' })).toBeEnabled());
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  const lastSource = async () => (await vi.mocked(loadCropSource).mock.results.at(-1)!.value) as { close: ReturnType<typeof vi.fn> };
+
+  it('đang tải lên: nút Hủy của màn cắt vô hiệu', async () => {
+    cropSize = 10;
+    const { fetchMock } = setup();
+    fetchMock.mockImplementationOnce(() => new Promise(() => {}));
+    await pickAndUse();
+    const cropper = screen.getByRole('dialog', { name: 'Cắt ảnh món' });
+    await waitFor(() => expect(within(cropper).getByRole('button', { name: 'Hủy' })).toBeDisabled());
+  });
+
+  it('bấm Hủy sau một lỗi → màn cắt đóng, lỗi được xóa, ảnh giải mã được close()', async () => {
+    cropSize = FIVE_MB + 1;
+    setup();
+    await pickAndUse();
+    await screen.findByRole('alert');
+    await userEvent.click(within(screen.getByRole('dialog', { name: 'Cắt ảnh món' })).getByRole('button', { name: 'Hủy' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.queryByText('Ảnh lớn hơn 5 MB — chọn ảnh nhỏ hơn.')).toBeNull();
+    expect((await lastSource()).close).toHaveBeenCalled();
+  });
+
+  it('gỡ ô ảnh khi màn cắt đang mở → close() ảnh giải mã', async () => {
+    const keep: { unmount?: () => void } = {};
+    setup(null, keep);
+    fireEvent.change(screen.getByLabelText('Chụp hoặc chọn ảnh'), { target: { files: [new File(['x'], 'a.png', { type: 'image/png' })] } });
+    await screen.findByRole('dialog', { name: 'Cắt ảnh món' });
+    keep.unmount!();
+    expect((await lastSource()).close).toHaveBeenCalled();
   });
 });

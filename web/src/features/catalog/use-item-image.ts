@@ -29,6 +29,7 @@ export function useItemImage(onChange: (fileId: string) => void, onBusyChange: (
   const close = () => {
     source?.close();
     setSource(null);
+    setError(null);
   };
 
   const open = async (src: Blob | string) => {
@@ -74,6 +75,12 @@ export function useItemImage(onChange: (fileId: string) => void, onBusyChange: (
       setBusyBoth(false);
     }
   };
+
+  const sourceRef = useRef(source);
+  useEffect(() => {
+    sourceRef.current = source;
+  }, [source]);
+  useEffect(() => () => sourceRef.current?.close(), []);
 
   const pickRef = useRef(pick);
   const blockedRef = useRef(false);

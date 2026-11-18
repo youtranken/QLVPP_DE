@@ -94,7 +94,7 @@ export function ImageCropper({
         )}
       </div>
       <div className="sheet-footer">
-        <button type="button" className="btn btn--ghost" onClick={onCancel}>
+        <button type="button" className="btn btn--ghost" disabled={busy} onClick={onCancel}>
           {t('common.cropper.cancel')}
         </button>
         <button type="button" className="btn btn--primary" disabled={busy} onClick={() => onConfirm(rect)}>
