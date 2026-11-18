@@ -116,6 +116,9 @@ const catalog = {
       imageChange: 'Đổi ảnh',
       imageRemove: 'Xóa ảnh',
       imageUploading: 'Đang tải ảnh…',
+      cropTitle: 'Cắt ảnh món',
+      imageRecrop: 'Cắt lại',
+      imagePasteHint: 'Ctrl+V để dán ảnh',
       imageHint: 'JPG/PNG tới 5 MB. Nhân viên chọn món bằng ảnh nên ảnh là bắt buộc.',
     },
     drawer: {
@@ -208,6 +211,7 @@ const catalog = {
       MAX_REQUIRED: 'Nhập tối đa từ 1 đến 999.',
       MAX_RANGE: 'Nhập số nguyên từ 1 đến 999',
       IMAGE_REQUIRED: 'Món phải có ảnh — chọn hoặc chụp một ảnh.',
+      IMAGE_TYPE: 'Chỉ nhận ảnh JPG, PNG hoặc WEBP',
       IMAGE_UNSUPPORTED: 'Chọn ảnh JPG, PNG hoặc WebP',
       FILE_TYPE_INVALID: 'Chọn ảnh JPG, PNG hoặc WebP',
       FILE_TOO_LARGE: 'Ảnh lớn hơn 5 MB — chọn ảnh nhỏ hơn.',

@@ -26,7 +26,7 @@ describe('ImageField — chữ dưới ô ảnh', () => {
       </MeContext.Provider>,
     );
     const input = screen.getByLabelText('Chụp hoặc chọn ảnh');
-    await userEvent.upload(input, new File(['x'], 'a.heic', { type: 'image/heic' }));
+    await userEvent.upload(input, new File(['x'], 'hong.jpg', { type: 'image/jpeg' }));
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Chọn ảnh JPG, PNG hoặc WebP');
     expect(input).toHaveAttribute('aria-describedby', alert.id);

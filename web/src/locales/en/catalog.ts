@@ -119,6 +119,9 @@ const catalog: Messages<typeof vi> = {
       imageChange: 'Change photo',
       imageRemove: 'Remove photo',
       imageUploading: 'Uploading photo…',
+      cropTitle: 'Crop item photo',
+      imageRecrop: 'Re-crop',
+      imagePasteHint: 'Ctrl+V to paste a photo',
       imageHint: 'JPG/PNG up to 5 MB. Staff pick items by photo, so a photo is required.',
     },
     drawer: {
@@ -211,6 +214,7 @@ const catalog: Messages<typeof vi> = {
       MAX_REQUIRED: 'Enter a max from 1 to 999.',
       MAX_RANGE: 'Enter a whole number from 1 to 999',
       IMAGE_REQUIRED: 'The item needs a photo — choose or take one.',
+      IMAGE_TYPE: 'Only JPG, PNG or WEBP photos',
       IMAGE_UNSUPPORTED: 'Choose a JPG, PNG or WebP photo',
       FILE_TYPE_INVALID: 'Choose a JPG, PNG or WebP photo',
       FILE_TOO_LARGE: 'The photo is over 5 MB — choose a smaller one.',

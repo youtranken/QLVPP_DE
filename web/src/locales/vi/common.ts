@@ -5,6 +5,7 @@ const common = {
     adminTitle: 'Quản lý VPP',
   },
   common: {
+    cropper: { box: 'Khung cắt', help: 'Kéo cạnh, góc hoặc giữa khung. Mũi tên dời khung, Shift + mũi tên đổi cỡ.', trim: 'Tự cắt viền trắng', full: 'Dùng cả ảnh', size: '{{w}} × {{h}} px', cancel: 'Hủy', use: 'Dùng ảnh', loading: 'Đang mở ảnh…' },
     count: {
       items_one: '{{count}} món',
       items_other: '{{count}} món',
