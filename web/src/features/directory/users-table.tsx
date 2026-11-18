@@ -132,7 +132,7 @@ export function UsersTable({
       onRowClick={onOpen}
       rowClassName={(u) => (u.status !== 'active' ? 'is-inactive' : '')}
       stackOnMobile
-      tableClassName="dr-table"
+      tableClassName="dr-table table--cards"
     />
   );
 }
