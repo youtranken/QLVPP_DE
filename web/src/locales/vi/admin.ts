@@ -121,11 +121,12 @@ const admin = {
         no_order_cleared: 'Bỏ đánh dấu không cần đề nghị NCC',
       },
       report: { snapshot_created: 'Chốt báo cáo' },
-      request: { created: 'Tạo phiếu', updated: 'Sửa phiếu', deleted: 'Xóa phiếu', cancel_remaining: 'Hủy phiếu người đã nghỉ' },
+      request: { created: 'Tạo phiếu', updated: 'Sửa phiếu', deleted: 'Xóa phiếu' },
       stock: { adjust: 'Điều chỉnh kho', issue: 'Xuất lẻ', purchase: 'Nhập kho', receipt: 'Hàng về' },
       unit: { created: 'Thêm đơn vị tính', updated: 'Sửa đơn vị tính', deleted: 'Xóa đơn vị tính' },
       users: {
         directory_sync: 'Đồng bộ danh bạ',
+        cancel_remaining: 'Hủy phiếu người đã nghỉ',
         role_changed: 'Đổi vai theo Tài khoản D&E',
         access_revoked: 'Mất quyền vào VPP',
         access_restored: 'Được cấp lại quyền vào VPP',

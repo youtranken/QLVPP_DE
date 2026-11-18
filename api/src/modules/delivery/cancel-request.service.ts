@@ -148,7 +148,7 @@ export class CancelRequestService {
     const { actor, now } = by;
     const parentId = await this.audit.appendWithin(tx, {
       actor,
-      action: 'user.cancel_remaining',
+      action: 'users.cancel_remaining',
       objectType: 'user',
       objectId: userSub,
       detail: {

@@ -62,7 +62,7 @@ describe('POST admin/users/:sub/cancel-remaining: hủy mọi phiếu còn nợ 
   };
   // audit_log chỉ ghi thêm, cùng chủ A qua nhiều test → lọc theo dòng của test
   const userAudits = async (lineId: string) =>
-    (await auditOf('user.cancel_remaining', A)).filter((d) =>
+    (await auditOf('users.cancel_remaining', A)).filter((d) =>
       JSON.stringify(d).includes(lineId),
     );
   const expectedOf = (lines: { id: string }[], remaining: number[]) => ({

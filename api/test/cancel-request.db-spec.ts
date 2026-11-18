@@ -139,7 +139,7 @@ describe('Hủy mọi phiếu người đã nghỉ song song (Postgres thật, h
         { qty: 4, d: 0, c: 4 },
       ]);
       const audits = await pool.query(
-        "SELECT 1 FROM audit_log WHERE action = 'user.cancel_remaining' AND detail::text LIKE '%' || $1 || '%'",
+        "SELECT 1 FROM audit_log WHERE action = 'users.cancel_remaining' AND detail::text LIKE '%' || $1 || '%'",
         [lineIds[0]],
       );
       expect(audits.rows).toHaveLength(1);

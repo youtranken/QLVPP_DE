@@ -123,11 +123,12 @@ const admin: Messages<typeof vi> = {
         no_order_cleared: 'No-order mark removed',
       },
       report: { snapshot_created: 'Report snapshot taken' },
-      request: { created: 'Request created', updated: 'Request edited', deleted: 'Request deleted', cancel_remaining: 'Request cancelled (person left)' },
+      request: { created: 'Request created', updated: 'Request edited', deleted: 'Request deleted' },
       stock: { adjust: 'Stock adjusted', issue: 'Ad-hoc issue', purchase: 'Stock received', receipt: 'Goods arrived' },
       unit: { created: 'Unit added', updated: 'Unit edited', deleted: 'Unit deleted' },
       users: {
         directory_sync: 'Directory synced',
+        cancel_remaining: 'Requests cancelled (person left)',
         role_changed: 'Role changed by D&E Account',
         access_revoked: 'VPP access revoked',
         access_restored: 'VPP access restored',
