@@ -23,7 +23,6 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       expect(scrolls && bounded).toBe(true);
       const save = cart.getByRole('button', { name: '16 thay đổi chưa lưu · Lưu' });
       await expect(save).toBeInViewport({ ratio: 1 });
-      await expect(cart.getByText('Phiếu chỉ được tính khi bạn bấm Lưu phiếu.')).toBeInViewport();
       expect((await save.boundingBox())!.height).toBeGreaterThanOrEqual(52 - 0.5);
       await shotTo(page, info, 'long-cart', 'task-C5');
     } finally {
@@ -43,7 +42,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
     try {
       await page.goto('/');
       const cart = page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
-      await expect(cart.getByText('Chưa lưu', { exact: true })).toBeVisible();
+      await expect(cart.getByText('Chưa lưu', { exact: true })).toHaveCount(0);
       await expect(cart.getByText('0 loại món · 0 đơn vị')).toBeVisible();
       await shotTo(page, info, 'empty', 'task-C5');
 
@@ -63,7 +62,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${shortName}`, exact: true }).click();
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${longName}`, exact: true }).click();
       await expect(cart.getByText('3 loại món · 3 đơn vị')).toBeVisible();
-      await expect(cart.getByText('Chưa lưu', { exact: true })).toBeVisible();
+      await expect(cart.getByText('Chưa lưu', { exact: true })).toHaveCount(0);
       // 3 dòng (tên đủ rộng, stepper dưới tên) → nút Lưu nằm trọn trong màn 1280×800 không cần cuộn, không dòng nào bị cắt
       await expect(cart.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu' })).toBeInViewport({ ratio: 1 });
       const rows = cart.getByRole('listitem');

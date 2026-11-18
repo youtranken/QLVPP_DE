@@ -80,7 +80,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await expect(line.getByRole('spinbutton', { name })).toHaveValue('2');
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
+      await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
 
       await page.reload();
       await openCart(page, info);
@@ -141,11 +141,8 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
     try {
       await page.goto('/');
       const strip = page.locator('.rq-recv-strip');
-      await expect(strip).toContainText(`Phiếu tháng ${prevMonth} đã chốt · đã nhận 1/2 món`);
-      await strip.getByRole('button', { name: 'Xem', exact: true }).click();
-      const receive = page.getByRole('dialog', { name: `Phiếu tháng ${prevMonth}` });
-      await expect(receive.getByRole('link', { name: 'Xem lịch sử các tháng' })).toHaveAttribute('href', `/history/${prevYm}`);
-      await receive.locator('.sheet-footer').getByRole('button', { name: 'Đóng' }).click();
+      await expect(strip).toContainText(`Phiếu tháng ${prevMonth} · còn chờ 1 món`);
+      await expect(strip.getByRole('link', { name: 'Xem', exact: true })).toHaveAttribute('href', `/history/${prevYm}`);
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'copy-hero');
 
@@ -169,7 +166,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await expect(cart.getByRole('spinbutton', { name: other.name, exact: true })).toHaveCount(0);
       await page.getByRole('button', { name: /thay đổi chưa lưu · Lưu/ }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
+      await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
       await page.reload();
       await openCart(page, info);
       await cart.getByRole('button', { name: 'Sửa phiếu' }).click();
@@ -270,7 +267,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await add.click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
+      await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
       await grid.getByRole('button', { name: `Thêm ${item.name}`, exact: true }).click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();

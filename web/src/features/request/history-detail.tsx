@@ -5,7 +5,7 @@ import { EmptyState, LoadError, Loading } from '@/ui/load-state';
 import { useCurrentPeriod, useMyRequest, type LineView, type RequestView } from './request.api';
 import { AdjustmentsBlock, RemovedAllNote } from './history-adjustments';
 import { Chip, ReviewTag } from './history-chip';
-import { ReceiveStatus } from './receive-dialog';
+import { ReceiveStatus } from './receive-status';
 import { isSuspendedLine, receiveRows, receiveSummary, type ReceiveRow } from './receive-rows';
 import { CUSTOM_STATUSES } from './history.api';
 import { useRequestFormat } from './request-format';

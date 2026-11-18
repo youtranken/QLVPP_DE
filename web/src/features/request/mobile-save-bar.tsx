@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 export function MobileSaveBar({
   count,
   units,
-  saved,
+  savedTime,
   dirtyCount,
   openRef,
   saveRef,
@@ -15,7 +15,7 @@ export function MobileSaveBar({
 }: {
   count: number;
   units: number;
-  saved: boolean;
+  savedTime: string | null;
   dirtyCount: number;
   openRef: RefObject<HTMLButtonElement | null>;
   saveRef: RefObject<HTMLButtonElement | null>;
@@ -26,12 +26,12 @@ export function MobileSaveBar({
   const { t } = useTranslation();
   const titleId = useId();
   const subId = useId();
-  const status = t(saved ? 'request.cart.statusSaved' : 'request.cart.statusDirty');
+  const unitText = t('request.unitCount', { count: units });
   return (
     <div className="rq-bar">
       <button type="button" className="rq-bar-open" ref={openRef} aria-labelledby={titleId} aria-describedby={subId} onClick={onOpen}>
         <span id={titleId} className="rq-bar-title num">{t('request.cart.viewCart', { count })}</span>
-        <span id={subId} className="rq-bar-sub num">{t('request.cart.barSub', { units: t('request.unitCount', { count: units }), status })}</span>
+        <span id={subId} className="rq-bar-sub num">{savedTime ? t('request.cart.barSaved', { units: unitText, time: savedTime }) : unitText}</span>
       </button>
       {/* aria-disabled (không disabled): lưu xong nút vẫn nhận lại focus, không rơi về body */}
       <button type="button" className="rq-bar-save" ref={saveRef} aria-disabled={!canSave} aria-describedby={canSave ? undefined : subId} onClick={() => canSave && onSave()}>

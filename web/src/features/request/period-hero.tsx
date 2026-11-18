@@ -23,7 +23,7 @@ export function PeriodHero({
   const status = dirty
     ? t('request.hero.unsaved')
     : saved
-    ? t('request.hero.saved', { time: fmt.time(saved.updated_at), date: fmt.lastDay(period.deadline) })
+    ? t('request.hero.saved', { time: fmt.time(saved.updated_at) })
     : t('request.hero.notSaved');
   const sub = !period.is_open
     ? t('request.hero.subLocked', { month: monthOf(period.ym) })

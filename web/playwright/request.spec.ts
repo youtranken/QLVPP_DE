@@ -54,11 +54,11 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await confirm.getByRole('button', { name: 'Lưu phiếu' }).click();
       await expect(confirm).toBeHidden();
       await expect(page.getByText(`Đã lưu phiếu tháng ${month}`)).toBeVisible();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp đến hết \d{2}\/\d{2}$/)).toBeVisible();
+      await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
       await snap(page, info, 'after-save');
 
       await page.reload();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
+      await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
       await openCart(page, info);
       // Phiếu đã lưu mở ở chế độ xem: chưa có ô số lượng cho tới khi bấm "Sửa phiếu"
       await expect(cart.getByRole('spinbutton')).toHaveCount(0);
@@ -82,7 +82,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       const dialog = await leave;
       expect(dialog.type()).toBe('beforeunload');
       await dialog.accept();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
+      await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
       await search.fill(`PW lưu`);
 
       // Thiết bị khác sửa phiếu → lưu từ tab này bị STALE_UPDATE
@@ -129,7 +129,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${itemName}`, exact: true }).click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
+      await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
 
       const off = await request.patch(`/api/admin/items/${itemId}`, { headers: devHeaders('admin'), data: { active: false } });
       expect(off.status()).toBe(200);

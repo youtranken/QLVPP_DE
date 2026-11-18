@@ -108,7 +108,8 @@ describe('RequestPage', () => {
       ],
     });
     expect(screen.getByText('Đã lưu phiếu tháng 11').closest('[role="status"]')).not.toBeNull();
-    expect(screen.getByText(/Đã lưu 14:20 · sửa tiếp đến hết 10\/11/)).toBeInTheDocument();
+    expect(screen.getByText('Đã lưu 14:20')).toBeInTheDocument();
+    expect(screen.queryByText(/sửa tiếp/)).toBeNull();
     expect(screen.getByRole('button', { name: 'Lưu phiếu' })).toHaveAttribute('aria-disabled', 'true');
   });
 

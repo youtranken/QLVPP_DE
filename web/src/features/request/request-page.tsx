@@ -197,7 +197,7 @@ function RequestEditor({
         <MobileSaveBar
           count={cart.lines.length}
           units={cart.lines.reduce((sum, l) => sum + l.qty, 0)}
-          saved={!!cart.saved && !dirty}
+          savedTime={cart.saved && !dirty ? fmt.time(cart.saved.updated_at) : null}
           dirtyCount={cart.dirtyCount}
           openRef={openerRef}
           saveRef={barSaveRef}

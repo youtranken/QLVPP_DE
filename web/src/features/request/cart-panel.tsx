@@ -168,7 +168,6 @@ export function CartPanel({
   const { t } = useTranslation();
   const titleId = useId();
   const units = lines.reduce((sum, l) => sum + l.qty, 0);
-  const isSaved = !!saved && !dirty;
   const viewSaved = mode === 'view' ? saved : null;
   const view = !!viewSaved;
   const mainRef = useRef<HTMLButtonElement>(null);
@@ -186,9 +185,7 @@ export function CartPanel({
           <Title id={titleId} sheet={sheet}>{t('request.cart.title', { month })}</Title>
           <Summary sheet={sheet}>{t('request.cart.summary', { count: lines.length, units: t('request.unitCount', { count: units }) })}</Summary>
         </div>
-        <span className={`rq-cart-chip${isSaved ? ' is-saved' : ''}`}>
-          {viewSaved ? t('request.cart.statusSavedAt', { time: viewSaved.time }) : t(isSaved ? 'request.cart.statusSaved' : 'request.cart.statusDirty')}
-        </span>
+        {saved && !dirty && <span className="rq-cart-chip is-saved">{t('request.cart.statusSavedAt', { time: saved.time })}</span>}
         {sheet && <DialogCloseButton />}
       </div>
       {lines.length === 0 ? (
@@ -233,13 +230,6 @@ export function CartPanel({
           {t('request.cart.cancelEdit')}
         </button>
       )}
-      <p className="rq-cart-note">
-        {viewSaved
-          ? t('request.cart.noteClosed', { date: viewSaved.lastDay })
-          : saved && !dirty
-          ? t('request.cart.noteSaved', { time: saved.time, date: saved.lastDay })
-          : t('request.cart.noteUnsaved')}
-      </p>
     </Root>
   );
 }

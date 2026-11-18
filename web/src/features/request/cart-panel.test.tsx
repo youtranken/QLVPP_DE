@@ -52,12 +52,11 @@ const show = (props: Props = {}) => {
 const aside = () => screen.getByRole('complementary', { name: 'Phiếu tháng 11' });
 
 describe('CartPanel', () => {
-  it('rỗng: khung "Chưa có món nào" nhắc chép lại tháng trước; đầu phiếu "0 loại món · 0 đơn vị" + chip Chưa lưu', () => {
+  it('rỗng: khung "Chưa có món nào" nhắc chép lại tháng trước; không chip "Chưa lưu", không ghi chú dưới nút', () => {
     show();
     expect(within(aside()).getByText(/Chưa có món nào\. Bấm “Thêm vào phiếu” ở món cần dùng, hoặc chép lại danh sách tháng 10\./)).toBeInTheDocument();
-    expect(within(aside()).getByText('0 loại món · 0 đơn vị')).toBeInTheDocument();
-    expect(within(aside()).getByText('Chưa lưu')).toBeInTheDocument();
-    expect(within(aside()).getByText('Phiếu chỉ được tính khi bạn bấm Lưu phiếu.')).toBeInTheDocument();
+    expect(within(aside()).queryByText('Chưa lưu')).toBeNull();
+    expect(within(aside()).queryByText('Phiếu chỉ được tính khi bạn bấm Lưu phiếu.')).toBeNull();
   });
 
   it('rỗng và không có tháng trước: câu nhắc không nhắc chép lại', () => {
@@ -65,16 +64,17 @@ describe('CartPanel', () => {
     expect(within(aside()).getByText('Chưa có món nào. Bấm “Thêm vào phiếu” ở món cần dùng.')).toBeInTheDocument();
   });
 
-  it('chip "Chưa lưu" khi dirty (kể cả đã có bản lưu); "Đã lưu" + ghi chú giờ khi đã lưu và không dirty', () => {
+  it('đang sửa (dirty, kể cả đã có bản lưu): không nhãn "Chưa lưu", không "Đã lưu" trên giỏ', () => {
     show({ lines: [mk(1)], dirty: true, saved: { time: '09:41', lastDay: '10/11' } });
-    expect(within(aside()).getByText('Chưa lưu')).toBeInTheDocument();
-    expect(within(aside()).queryByText('Đã lưu')).toBeNull();
+    expect(within(aside()).queryByText('Chưa lưu')).toBeNull();
+    expect(within(aside()).queryByText(/Đã lưu/)).toBeNull();
   });
 
-  it('đã lưu, không dirty: chip "Đã lưu", ghi chú "Đã lưu lúc 09:41. Bạn vẫn sửa được tới hết 10/11."', () => {
+  it('đã lưu, không dirty: nhãn "Đã lưu 09:41"; dưới nút giỏ không có ghi chú lặp hạn', () => {
     show({ lines: [mk(1), mk(2)], saved: { time: '09:41', lastDay: '10/11' } });
-    expect(within(aside()).getByText('Đã lưu')).toBeInTheDocument();
-    expect(within(aside()).getByText('Đã lưu lúc 09:41. Bạn vẫn sửa được tới hết 10/11.')).toBeInTheDocument();
+    expect(within(aside()).getByText('Đã lưu 09:41')).toBeInTheDocument();
+    expect(within(aside()).queryByText(/sửa được tới hết/)).toBeNull();
+    expect(within(aside()).queryByText(/Đã lưu lúc/)).toBeNull();
     expect(within(aside()).getByText('2 loại món · 3 đơn vị')).toBeInTheDocument();
   });
 
@@ -135,7 +135,7 @@ describe('CartPanel', () => {
       const a = screen.getByRole('complementary');
       expect(within(a).getByText('Item 1')).toBeInTheDocument();
       expect(within(a).queryByText('Món 1')).toBeNull();
-      expect(within(a).getByText('Unsaved')).toBeInTheDocument();
+      expect(within(a).queryByText('Unsaved')).toBeNull();
     } finally {
       await i18n.changeLanguage('vi');
     }
@@ -148,14 +148,13 @@ describe('CartPanel', () => {
 
   describe('mode view (phiếu đã lưu, chưa sửa)', () => {
     const SAVED = { time: '09:41', lastDay: '10/11' };
-    it('không stepper, không nút Bỏ, không "Thêm món khác"; nút chính "Sửa phiếu"; chip "Đã lưu 09:41"; ghi chú đã lưu', async () => {
+    it('không stepper, không nút Bỏ, không "Thêm món khác"; nút chính "Sửa phiếu"; chip "Đã lưu 09:41"', async () => {
       const onEditStart = vi.fn();
       show({ lines: [mk(1)], mode: 'view', saved: SAVED, onEditStart });
       expect(screen.queryByRole('spinbutton')).toBeNull();
       expect(screen.queryByRole('button', { name: /^Bỏ / })).toBeNull();
       expect(screen.queryByRole('button', { name: /Thêm món khác/ })).toBeNull();
       expect(within(aside()).getByText('Đã lưu 09:41')).toBeInTheDocument();
-      expect(within(aside()).getByText('Phiếu đã lưu. Thêm, bớt ngay trên thẻ món hoặc bấm Sửa phiếu. Sửa được tới hết 10/11.')).toBeInTheDocument();
       expect(within(aside()).queryByRole('button', { name: 'Lưu phiếu' })).toBeNull();
       await userEvent.click(screen.getByRole('button', { name: 'Sửa phiếu' }));
       expect(onEditStart).toHaveBeenCalledOnce();
@@ -187,7 +186,7 @@ describe('CartPanel', () => {
   });
 
   it('câu mới không chứa " — "', () => {
-    for (const k of ['request.cart.stopped', 'request.cart.loweredMax', 'request.cart.noteClosed', 'request.cart.editOrder', 'request.grid.paused'])
+    for (const k of ['request.cart.stopped', 'request.cart.loweredMax', 'request.cart.editOrder', 'request.grid.paused'])
       for (const lng of ['vi', 'en']) expect(i18n.t(k, { lng, max: 2, qty: 5, date: '10/11' })).not.toContain(' — ');
   });
 });

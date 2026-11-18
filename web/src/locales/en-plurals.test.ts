@@ -28,7 +28,7 @@ describe('EN: một từ "items", số nhiều theo i18next', () => {
     expect(sum('request.cart.summary', 3, 12)).toBe('3 items · 12 units');
     expect(sum('request.history.summary', 3, 12)).toBe('3 items · 12 units');
     expect(sum('request.history.masterSum', 8, 8)).toBe('8 items · 8 units');
-    expect(EN('request.cart.barSub', { units: EN('request.unitCount', { count: 1 }), status: 'Saved' })).toBe('1 unit · Saved');
+    expect(EN('request.cart.barSaved', { units: EN('request.unitCount', { count: 1 }), time: '18:32' })).toBe('1 unit · Saved 18:32');
   });
 
   it.each([
@@ -47,9 +47,9 @@ describe('EN: một từ "items", số nhiều theo i18next', () => {
     expect(EN(key, { count: 2 })).toBe(two);
   });
 
-  it('done/total: chia theo tổng — "received 0/1 item", "received 2/8 items"', () => {
-    expect(EN('request.receive.strip', { done: 0, total: 1, count: 1 })).toBe('received 0/1 item');
-    expect(EN('request.receive.strip', { done: 2, total: 8, count: 8 })).toBe('received 2/8 items');
+  it('dải nhận: "1 item still waiting", "2 items still waiting"', () => {
+    expect(EN('request.receive.stripWaiting', { count: 1 })).toBe('1 item still waiting');
+    expect(EN('request.receive.stripWaiting', { count: 2 })).toBe('2 items still waiting');
   });
 
   it('VI giữ nguyên câu cũ', () => {
@@ -57,7 +57,7 @@ describe('EN: một từ "items", số nhiều theo i18next', () => {
     expect(sum('request.cart.summary', 3, 12)).toBe('3 loại món · 12 đơn vị');
     expect(sum('request.history.masterSum', 1, 1)).toBe('1 món · 1 đơn vị');
     expect(VI('request.cart.saveDirty', { count: 1 })).toBe('1 thay đổi chưa lưu · Lưu phiếu');
-    expect(VI('request.receive.strip', { done: 0, total: 1, count: 1 })).toBe('đã nhận 0/1 món');
+    expect(VI('request.receive.stripWaiting', { count: 1 })).toBe('còn chờ 1 món');
     expect(VI('request.history.delivery.owed', { count: 3 })).toBe('Còn chờ 3 món');
     expect(VI('request.history.customCount.accepted', { count: 2 })).toBe('2 món đã chấp nhận');
   });
