@@ -197,7 +197,7 @@ const delivery = {
     people: {
       title: 'Giao hàng kỳ tháng {{month}}',
       period: 'Tháng {{month}}',
-      cols: { person: 'Người', progress: 'Tiến độ giao', stock: 'Tủ', debt: 'Còn nợ', actions: 'Thao tác' },
+      cols: { person: 'Nhân viên đặt phiếu', progress: 'Tiến độ giao', stock: 'Tủ', debt: 'Còn nợ', actions: 'Thao tác' },
       progressLabel: 'Đã giao {{done}}/{{total}}',
       stockOk: 'Đủ',
       stockShort: 'Thiếu: {{names}}',

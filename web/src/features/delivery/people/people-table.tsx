@@ -168,6 +168,7 @@ function useColumns() {
           <label className="pt-person" htmlFor={pickId(r)}>
             <span className="pt-person__text">
               <b>{nameOf(r)}</b>
+              {r.user_status !== 'active' && <small className="pt-person__left">{t('delivery.confirm.leftUser')}</small>}
               <small>{r.department ?? t('delivery.people.card.noDepartment')}</small>
             </span>
           </label>

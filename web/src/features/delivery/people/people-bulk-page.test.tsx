@@ -62,11 +62,11 @@ describe('DeliveryPeoplePage — bảng và giao nhiều phiếu', () => {
     expect(row.getAttribute('title') ?? '').not.toContain('tủ chưa có hàng');
   });
 
-  it('bảng kẻ ô (G4): ☐ · Người · Tiến độ giao · Tủ · Còn nợ · Thao tác; mỗi dòng có Giao… và ⋯', async () => {
+  it('bảng kẻ ô (G4): ☐ · Nhân viên đặt phiếu · Tiến độ giao · Tủ · Còn nợ · Thao tác; mỗi dòng có Giao… và ⋯', async () => {
     stub();
     open();
     await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
-    expect(screen.getAllByRole('columnheader').map((c) => c.textContent)).toEqual(['', 'Người', 'Tiến độ giao', 'Tủ', 'Còn nợ', 'Thao tác']);
+    expect(screen.getAllByRole('columnheader').map((c) => c.textContent)).toEqual(['', 'Nhân viên đặt phiếu', 'Tiến độ giao', 'Tủ', 'Còn nợ', 'Thao tác']);
     expect(screen.getByRole('table')).toHaveClass('grid-table');
     expect(within(card('Nguyễn Văn An')).getByText('Tổ Giám sát')).toBeInTheDocument();
     for (const n of ['Thao tác cho Nguyễn Văn An', 'Giao…, Nguyễn Văn An']) expect(screen.getByRole('button', { name: n })).toBeInTheDocument();

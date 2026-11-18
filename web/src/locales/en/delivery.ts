@@ -199,7 +199,7 @@ const delivery: Messages<typeof vi> = {
     people: {
       title: 'Deliveries · {{month, monthName}}',
       period: '{{month, MonthName}}',
-      cols: { person: 'Person', progress: 'Delivery progress', stock: 'In stock', debt: 'Outstanding', actions: 'Actions' },
+      cols: { person: 'Requested by', progress: 'Delivery progress', stock: 'In stock', debt: 'Outstanding', actions: 'Actions' },
       progressLabel: 'Delivered {{done}}/{{total}}',
       stockOk: 'Enough',
       stockShort: 'Short: {{names}}',
