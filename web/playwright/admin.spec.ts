@@ -1,5 +1,6 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
 import { acquireLock, asRole, auditRows, devHeaders, expectNoContrastViolations, isMobile, openAuditDetail, seedActiveUser, shot } from './helpers';
+import { seedLockedRequest, type Seed } from './locked-request';
 
 const ACTIVE = { sub: 'pw-dir-active', name: 'PW Danh bạ An' };
 const LOCKED = { sub: 'pw-dir-locked', name: 'PW Danh bạ Bình' };
@@ -98,5 +99,31 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
     await expect(detail.getByText('Chi tiết kỹ thuật')).toHaveCount(0);
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'admin-audit');
+  });
+});
+
+test.describe('TC-06 Việc hôm nay (dev-identity admin)', () => {
+  asRole('admin');
+
+  test('TC-06 /admin mở Việc hôm nay; bấm ô "Giao được ngay" tới Giao hàng với thẻ "Giao được ngay" đang chọn', async ({ page, request }, info) => {
+    // Phiếu tủ đủ ở tháng đang giao: Giao hàng có hàng thẻ số (kỳ đã khóa)
+    const seed: Seed = await seedLockedRequest(request, info, [{ stock: 5, qty: 1 }]);
+    try {
+      await page.goto('/admin');
+      await expect(page).toHaveURL(/\/admin\/today$/);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+      if (!isMobile(info)) await expect(page.getByRole('navigation', { name: 'Menu quản lý' }).getByRole('link').first()).toHaveAccessibleName('Việc hôm nay');
+      const tiles = page.getByRole('region', { name: 'Số việc' });
+      const ready = tiles.getByRole('link', { name: /^Giao được ngay/ });
+      await expect(ready).toBeVisible();
+      await expect(tiles.getByRole('button', { name: 'Thử lại' })).toHaveCount(0);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await shot(page, info, 'today');
+      await ready.click();
+      await expect(page).toHaveURL(/\/admin\/delivery\?tab=ready/);
+      await expect(page.getByRole('tablist', { name: 'Lọc theo trạng thái' }).getByRole('tab', { name: /^Giao được ngay/ })).toHaveAttribute('aria-selected', 'true');
+    } finally {
+      seed.cleanup();
+    }
   });
 });

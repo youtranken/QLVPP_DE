@@ -7,6 +7,7 @@ import { Icon } from '@/ui/icon';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { currentPeriodQuery } from '@/features/request/request.api';
 import { AdminMenuSheet } from '@/shell/admin-menu-sheet';
+import { QuickSearch } from '@/shell/quick-search';
 
 
 // Thanh trên không lặp tiêu đề trang (đã có h1): dòng phụ nói kỳ hiện tại, giống nhau ở mọi màn (AD-03)
@@ -33,6 +34,7 @@ export function AdminTopbar() {
         <span className="topbar__title">{t('app.title')}</span>
         {sub && <small className="topbar__sub">{sub}</small>}
       </span>
+      <QuickSearch variant="icon" />
       <NotificationBell />
       {/* Avatar cũng mở menu: mọi trang chỉ cách 2 chạm */}
       <button

@@ -8,6 +8,8 @@ export interface DeliverBody {
 
 export interface DeliverResult {
   request_complete?: boolean;
+  // Hoàn tác 5 giây (TC-18)
+  undo_id?: string;
 }
 
 export const BACKLOG_KEY = ['backlog'] as const;

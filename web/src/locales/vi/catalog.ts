@@ -133,8 +133,6 @@ const catalog = {
       openStock: 'Xem ở Tủ / Kho',
       registered: 'Kỳ {{month}}: {{people}} người đăng ký',
       delete: 'Xóa',
-      deleteTitle: 'Xóa {{name}}?',
-      deleteBody: 'Chỉ xóa được món chưa từng vào phiếu; xóa rồi không hoàn tác.',
       deleted: 'Đã xóa {{name}}',
       added: 'Đã thêm {{name}}',
       saved: 'Đã lưu {{name}}',

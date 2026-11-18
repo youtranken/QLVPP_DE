@@ -82,4 +82,5 @@ export type BulkRequestResult =
 
 export interface BulkDeliverResult {
   results: BulkRequestResult[];
+  undo_id: string | null;
 }

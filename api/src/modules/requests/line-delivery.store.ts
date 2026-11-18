@@ -33,10 +33,17 @@ export interface CancelledLine {
   cancel_note: string | null;
 }
 
-type CancelledRow = CancelledLine & { cancelled_now: number } & Record<
-    string,
-    unknown
-  >;
+type CancelledRow = CancelledLine & {
+  cancelled_now: number;
+  note_before: string | null;
+} & Record<string, unknown>;
+
+export interface CancelOutcome {
+  cancelled_now: number;
+  line: CancelledLine;
+  // cancel_note trước lần hủy này: hoàn tác trả về đúng chữ cũ
+  note_before: string | null;
+}
 
 const CANCELLED_COLUMNS = sql.raw(
   'l.id, l.qty, l.delivered_qty, l.cancelled_qty, l.cancel_note',
@@ -136,23 +143,60 @@ export class LineDeliveryStore {
     lineId: string,
     reason: string,
     now: Date,
-  ): Promise<{ cancelled_now: number; line: CancelledLine }> {
+  ): Promise<CancelOutcome> {
     const { rows } = await tx.execute<CancelledRow>(sql`
       UPDATE request_lines l
       SET cancelled_qty = l.qty - l.delivered_qty, cancel_note = ${reason},
           updated_at = ${now.toISOString()}::timestamptz
       FROM request_lines o
       WHERE l.id = ${lineId} AND o.id = l.id AND ${EFFECTIVE_LINE} AND ${REMAINING_QTY} > 0
-      RETURNING ${CANCELLED_COLUMNS}, l.cancelled_qty - o.cancelled_qty AS cancelled_now
+      RETURNING ${CANCELLED_COLUMNS}, l.cancelled_qty - o.cancelled_qty AS cancelled_now,
+        o.cancel_note AS note_before
     `);
     if (rows.length > 0) {
-      const { cancelled_now, ...line } = rows[0];
-      return { cancelled_now, line };
+      const { cancelled_now, note_before, ...line } = rows[0];
+      return { cancelled_now, line, note_before };
     }
     const current = await tx.execute<CancelledLine & Record<string, unknown>>(
       sql`SELECT ${CANCELLED_COLUMNS} FROM request_lines l WHERE l.id = ${lineId}`,
     );
-    return { cancelled_now: 0, line: current.rows[0] };
+    const line = current.rows[0];
+    return { cancelled_now: 0, line, note_before: line.cancel_note };
+  }
+
+  // Hoàn tác hủy nợ: chỉ khi số hủy vẫn đúng bằng số lần hủy đó để lại
+  async restoreCancelled(
+    tx: Tx,
+    lineId: string,
+    to: { cancelled_qty: number; cancel_note: string | null },
+    expectedCancelled: number,
+    now: Date,
+  ): Promise<boolean> {
+    const result = await tx.execute(sql`
+      UPDATE request_lines l
+      SET cancelled_qty = ${to.cancelled_qty}, cancel_note = ${to.cancel_note},
+          updated_at = ${now.toISOString()}::timestamptz
+      WHERE l.id = ${lineId} AND l.cancelled_qty = ${expectedCancelled}
+    `);
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Hoàn tác giao: lastAt = lần giao còn lại gần nhất (null nếu không còn)
+  async removeDelivered(
+    tx: Tx,
+    lineId: string,
+    qty: number,
+    lastAt: Date | null,
+    now: Date,
+  ): Promise<boolean> {
+    const result = await tx.execute(sql`
+      UPDATE request_lines l
+      SET delivered_qty = l.delivered_qty - ${qty},
+          last_delivered_at = ${lastAt?.toISOString() ?? null}::timestamptz,
+          updated_at = ${now.toISOString()}::timestamptz
+      WHERE l.id = ${lineId} AND l.delivered_qty >= ${qty}
+    `);
+    return (result.rowCount ?? 0) > 0;
   }
 
   openLineIds(tx: Tx, ym: string, key: string): Promise<string[]> {

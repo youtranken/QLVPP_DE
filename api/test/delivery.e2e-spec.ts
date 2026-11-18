@@ -30,6 +30,7 @@ describe('POST admin/lines/:id/deliver: giao một dòng', () => {
       movement_id: expect.any(String),
       stock_qty: 7,
       request_complete: false,
+      undo_id: expect.any(String),
     });
     expect(await movementsOf(line.id)).toEqual([
       { id: body.movement_id, delta: -3, reason: 'delivery' },
@@ -172,6 +173,7 @@ describe('POST admin/lines/:id/deliver: giao một dòng', () => {
       movement_id: null,
       stock_qty: null,
       request_complete: true,
+      undo_id: expect.any(String),
     });
     expect(await movementsOf(line.id)).toHaveLength(0);
     expect(await deliveriesOf(line.id)).toEqual([

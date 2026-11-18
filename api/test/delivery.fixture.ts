@@ -15,6 +15,7 @@ export interface DeliverResult {
   movement_id: string | null;
   stock_qty: number | null;
   request_complete: boolean;
+  undo_id: string;
 }
 
 export interface BacklogLine {

@@ -84,4 +84,4 @@ export function useLineDeliveries(lineId: string) {
 }
 
 export const cancelRemaining = (lineId: string, body: CancelBody, csrfToken: string | null) =>
-  apiFetch<{ cancelled_now: number }>(`/api/admin/lines/${lineId}/cancel-remaining`, { method: 'POST', body: JSON.stringify(body), csrfToken });
+  apiFetch<{ cancelled_now: number; undo_id?: string | null }>(`/api/admin/lines/${lineId}/cancel-remaining`, { method: 'POST', body: JSON.stringify(body), csrfToken });

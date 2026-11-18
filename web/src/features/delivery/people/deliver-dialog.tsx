@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
+import { undoActions } from '@/lib/undo.api';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { useToast } from '@/ui/toast-context';
@@ -114,8 +115,10 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
       await refresh();
       if (sent.expired || sent.lines.some((s) => !s.outcome.ok)) return setResult(sent);
       succeeded.current = true;
+      const undoIds = sent.undoIds;
       toast.show({
         text: t('delivery.people.panel.delivered', { name }),
+        undo: undoIds ? () => undoActions('delivery', undoIds, csrfToken).then(refresh) : undefined,
         action: next && onNext ? { label: t('delivery.people.panel.next'), onClick: () => onNext(next.user_sub) } : undefined,
       });
       onDone();

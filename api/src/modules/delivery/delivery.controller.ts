@@ -5,9 +5,12 @@ import { Roles } from '../auth/roles.decorator';
 import { uuidParam } from '../catalog/catalog.dto';
 import { BulkDeliveryService } from './bulk-delivery.service';
 import { BulkDeliverBody } from './bulk-delivery.dto';
+import { UndoBody } from '../undo/undo.dto';
 import { CancelRemainingService } from './cancel-remaining.service';
+import { CancelUndoService } from './cancel-undo.service';
 import { CancelBody, DeliverBody } from './delivery.dto';
 import { DeliveryService } from './delivery.service';
+import { DeliveryUndoService } from './delivery-undo.service';
 
 @Controller('admin')
 @Roles('admin', 'sa')
@@ -16,6 +19,8 @@ export class DeliveryController {
     private readonly service: DeliveryService,
     private readonly cancelService: CancelRemainingService,
     private readonly bulk: BulkDeliveryService,
+    private readonly deliveryUndo: DeliveryUndoService,
+    private readonly cancelUndo: CancelUndoService,
   ) {}
 
   // Cập nhật dòng có sẵn → 200 thay vì 201 mặc định của POST
@@ -46,5 +51,23 @@ export class DeliveryController {
     @Body() body: CancelBody,
   ) {
     return this.cancelService.cancelRemaining(id, body, admin.sub);
+  }
+
+  @Post('undo/delivery')
+  @HttpCode(200)
+  undoDelivery(
+    @CurrentIdentity() admin: RequestIdentity,
+    @Body() body: UndoBody,
+  ) {
+    return this.deliveryUndo.undoDeliveries(body.ids, admin.sub);
+  }
+
+  @Post('undo/cancel')
+  @HttpCode(200)
+  undoCancel(
+    @CurrentIdentity() admin: RequestIdentity,
+    @Body() body: UndoBody,
+  ) {
+    return this.cancelUndo.undoCancels(body.ids, admin.sub);
   }
 }

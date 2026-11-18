@@ -5,8 +5,8 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const MONTHLY = ['Kỳ tháng', 'Báo cáo & gửi NCC', 'Nhận hàng', 'Giao hàng', 'Còn nợ'];
-const MONTHLY_PATHS = ['/admin/month', '/admin/reports', '/admin/arrivals', '/admin/delivery', '/admin/backlog'];
+const MONTHLY = ['Việc hôm nay', 'Kỳ tháng', 'Báo cáo & gửi NCC', 'Nhận hàng', 'Giao hàng', 'Còn nợ'];
+const MONTHLY_PATHS = ['/admin/today', '/admin/month', '/admin/reports', '/admin/arrivals', '/admin/delivery', '/admin/backlog'];
 
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
 
@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 describe('Menu theo luồng chuẩn', () => {
-  it.each([1280, 390])('%ipx: nhóm "Hằng tháng" đúng 5 mục theo thứ tự, luôn mở; không còn nhóm "Xem lại sau"', async (width) => {
+  it.each([1280, 390])('%ipx: nhóm "Hằng tháng" đúng 6 mục theo thứ tự (Việc hôm nay đầu tiên), luôn mở; không còn nhóm "Xem lại sau"', async (width) => {
     mockViewport(width);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');

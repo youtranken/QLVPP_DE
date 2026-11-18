@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
-import { useConfirm } from '@/ui/confirm-context';
+import { undoActions } from '@/lib/undo.api';
 import { usePanelToast } from '@/ui/panel-toast';
 import { TOAST_MS } from '@/ui/toast-provider';
 import { useToast } from '@/ui/toast-context';
@@ -60,20 +60,19 @@ export function useItemForm({ item, defaultCategoryId, onClose }: { item: AdminI
   const toast = useToast();
   // Lưu xong panel còn mở: toast phải nằm trong panel, toast chung ngoài hộp bị ẩn khỏi trình đọc màn hình
   const panelToast = usePanelToast(TOAST_MS);
-  const confirm = useConfirm();
   const d = useItemDraft(item, defaultCategoryId);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [closing, setClosing] = useState(false);
   const inFlight = useRef(false);
 
-  const finish = (text: string, close: boolean) => {
+  const finish = (text: string, close: boolean, undo?: () => Promise<unknown>) => {
     void refresh();
     if (!close) {
       panelToast.show({ text, tone: 'ok' });
       return setSaving(false);
     }
-    toast.show({ text, tone: 'ok' });
+    toast.show({ text, tone: 'ok', undo });
     // Đã lưu/xóa xong: nháp không còn là "chưa lưu", đóng không hỏi và không chặn rời trang
     setClosing(true);
     onClose();
@@ -98,15 +97,14 @@ export function useItemForm({ item, defaultCategoryId, onClose }: { item: AdminI
     }
   };
 
+  // TC-18: xóa làm lại được trong 5 giây nên không hỏi "Bạn chắc chưa?"
   const remove = async () => {
-    if (!item) return;
-    const ok = await confirm({ title: t('catalog.drawer.deleteTitle', { name: item.name }), message: t('catalog.drawer.deleteBody'), confirmLabel: t('catalog.drawer.delete'), danger: true });
-    if (!ok || inFlight.current) return;
+    if (!item || inFlight.current) return;
     inFlight.current = true;
     setSaving(true);
     try {
-      await deleteItem(item.id, csrfToken);
-      finish(t('catalog.drawer.deleted', { name: item.name }), true);
+      const { undo_id } = await deleteItem(item.id, csrfToken);
+      finish(t('catalog.drawer.deleted', { name: item.name }), true, () => undoActions('item-delete', [undo_id], csrfToken).then(refresh));
     } catch (error) {
       d.fail({ form: catalogErrorKey(error) });
       setSaving(false);

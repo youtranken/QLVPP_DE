@@ -10,6 +10,7 @@ import '@/css/admin.css';
 import '@/features/notifications/notifications.css';
 import '@/css/m1/base.css';
 import '@/css/m1/shell.css';
+import '@/css/m1/quick-search.css';
 import '@/css/m1/states.css';
 import '@/css/m1/table.css';
 import '@/css/grid-table.m1.css';
@@ -51,6 +52,7 @@ import '@/features/arrivals/arrivals.m1.css';
 import '@/features/delivery/people/delivery-people.m1.css';
 import '@/features/delivery/delivery.m1.css';
 import '@/features/delivery/backlog.m1.css';
+import '@/features/today/today.m1.css';
 import '@/features/send-adm/send-adm.m1.css';
 import '@/features/reports/reports.m1.css';
 // Trình nghe popstate chung của panel phải đăng ký trước khi BrowserRouter mount (màn dùng nó nằm ở chunk lười)

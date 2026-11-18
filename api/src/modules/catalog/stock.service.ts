@@ -204,6 +204,28 @@ export class StockService {
     return { stock_qty: updated.stock_qty, movement_id: movement.id };
   }
 
+  // Hoàn tác giao: sổ cái chỉ thêm nên ghi movement `return` trỏ về movement giao; audit ở line.delivery_undone
+  async returnForUndoWithin(
+    tx: Tx,
+    back: DeliveryTake & { refMovementId: string },
+  ): Promise<StockResult> {
+    const updated = (
+      await tx.execute<{ stock_qty: number }>(sql`
+        UPDATE items SET stock_qty = stock_qty + ${back.qty},
+          updated_at = ${back.now.toISOString()}::timestamptz
+        WHERE id = ${back.itemId} RETURNING stock_qty
+      `)
+    ).rows[0];
+    if (!updated) throw itemNotFound();
+    const { rows } = await tx.execute<{ id: string }>(sql`
+      INSERT INTO stock_movements (item_id, delta, reason, ref_movement_id, ref_line_id, actor_sub, created_at)
+      VALUES (${back.itemId}, ${back.qty}, 'return', ${back.refMovementId}, ${back.lineId},
+              ${back.actor}, ${back.now.toISOString()}::timestamptz)
+      RETURNING id
+    `);
+    return { stock_qty: updated.stock_qty, movement_id: rows[0].id };
+  }
+
   // Sắp hết theo trạng thái Tủ tính trước câu lệnh (cùng nguồn Danh mục/Home); chỉ cờ đã báo được đọc lại khi chờ khóa.
   // Khóa theo id tăng như giao hàng (UPDATE trơn khóa theo thứ tự quét → deadlock với nhập hàng nhiều món); bên sau thấy đã báo
   async claimLowStockWithin(tx: Tx, now: Date): Promise<LowStockClaim[]> {

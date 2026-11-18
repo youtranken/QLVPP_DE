@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
+import { fireEvent, jsonResponse, screen, userEvent } from '@/test/test-utils';
 import { PEN, PENCIL } from './catalog-fixtures';
-import { callsTo, renderDrawer, stubDrawerApi } from './item-drawer-fixtures';
+import { bodyOf, callsTo, renderDrawer, stubDrawerApi } from './item-drawer-fixtures';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -77,24 +77,27 @@ describe('Ngăn kéo món — đầu, chuyển món, thông tin kho', () => {
   });
 });
 
-describe('Ngăn kéo món — xóa món', () => {
-  it('"Xóa" hỏi xác nhận rồi DELETE → đóng, toast "Đã xóa {tên}"', async () => {
-    const f = stubDrawerApi((_url, init) => (init.method === 'DELETE' ? jsonResponse(204, null) : undefined));
+describe('Ngăn kéo món — xóa món (TC-18: không hỏi lại, có Hoàn tác 5 giây)', () => {
+  it('"Xóa" DELETE ngay, không hộp "Xóa …?" → đóng, toast "Đã xóa {tên}" kèm Hoàn tác; bấm thì POST undo/item-delete đúng id', async () => {
+    const f = stubDrawerApi((url, init) => {
+      if (init.method === 'DELETE') return jsonResponse(200, { undo_id: 'u-it' });
+      if (url === '/api/admin/undo/item-delete') return jsonResponse(200, { undone: 1 });
+      return undefined;
+    });
     const { onClose } = renderDrawer({ item: PEN });
     await userEvent.click(screen.getByRole('button', { name: 'Xóa' }));
-    const confirm = await screen.findByRole('dialog', { name: 'Xóa Bút bi xanh?' });
-    await userEvent.click(within(confirm).getByRole('button', { name: 'Xóa' }));
+    expect(screen.queryByRole('dialog', { name: 'Xóa Bút bi xanh?' })).toBeNull();
     await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(callsTo(f, `/api/admin/items/${PEN.id}`, 'DELETE')).toHaveLength(1);
     expect(await screen.findByText('Đã xóa Bút bi xanh')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Hoàn tác', hidden: true }));
+    await vi.waitFor(() => expect(bodyOf(f, '/api/admin/undo/item-delete', 'POST')).toEqual({ ids: ['u-it'] }));
   });
 
   it('ITEM_IN_USE → "Món này đã được dùng — chỉ ngừng được, không xóa." trong ngăn kéo, không đóng', async () => {
     stubDrawerApi((_url, init) => (init.method === 'DELETE' ? jsonResponse(409, { code: 'ITEM_IN_USE', message: 'x' }) : undefined));
     const { onClose } = renderDrawer({ item: PEN });
     await userEvent.click(screen.getByRole('button', { name: 'Xóa' }));
-    const confirm = await screen.findByRole('dialog', { name: 'Xóa Bút bi xanh?' });
-    await userEvent.click(within(confirm).getByRole('button', { name: 'Xóa' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Món này đã được dùng — chỉ ngừng được, không xóa.');
     expect(onClose).not.toHaveBeenCalled();
   });

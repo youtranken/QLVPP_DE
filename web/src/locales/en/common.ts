@@ -121,6 +121,13 @@ const common: Messages<typeof vi> = {
       admin: 'D&E Admin',
       sa: 'Technical admin',
     },
+    undo: {
+      label: 'Undo',
+      done: 'Undone.',
+      expired: 'More than 5 seconds have passed — it can no longer be undone.',
+      alreadyDone: 'This action has already been undone.',
+      failed: 'Could not undo — the data just changed, reload to check.',
+    },
     languages: {
       label: 'Language',
       short: 'EN',

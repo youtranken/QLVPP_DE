@@ -46,6 +46,7 @@ export class BacklogQuery {
 export interface CancelResult {
   line: CancelledLine;
   cancelled_now: number;
+  undo_id: string | null;
 }
 
 export interface BacklogLine {
@@ -105,6 +106,7 @@ export interface DeliverResult {
   movement_id: string | null;
   stock_qty: number | null;
   request_complete: boolean;
+  undo_id: string;
 }
 
 export type DeliveryPersonStatus = 'pending' | 'debt' | 'done';

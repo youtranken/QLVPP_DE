@@ -92,7 +92,7 @@ export function StockLedgerPage() {
         <LoadError onRetry={() => void q.refetch()} />
       ) : (
         <>
-          <DataTable data={rows} columns={columns} stackOnMobile loading={q.isPending} emptyText={t('stock.book.empty')} tableClassName="grid-table" ariaLabel={t('stock.ledger.title')} />
+          <DataTable data={rows} columns={columns} stackOnMobile loading={q.isPending} emptyText={t('stock.book.empty')} tableClassName="grid-table table--cards" ariaLabel={t('stock.ledger.title')} />
           {q.hasNextPage && (
             <button type="button" className="btn sk-more" disabled={q.isFetchingNextPage} onClick={() => void q.fetchNextPage()}>
               {t('stock.ledger.more')}
