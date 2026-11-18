@@ -134,6 +134,7 @@ export function StockTable({ rows, activeRowId, loading, groupName, onAction, em
       data={rows}
       columns={columns}
       stackOnMobile
+      tableClassName="table--cards"
       loading={loading}
       activeRowId={activeRowId}
       emptyText={empty.title}

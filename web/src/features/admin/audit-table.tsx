@@ -156,7 +156,7 @@ export function AuditTable({ rows, loading, empty }: { rows: AuditEntry[]; loadi
         groupBy={groupBy}
         expandedRow={(e) => (open.has(e.id) && canOpen(e) ? <AuditDetail entry={e} id={detailId(e.id)} /> : null)}
         rowProps={rowProps}
-        tableClassName="au-table"
+        tableClassName="au-table table--cards"
         stackOnMobile
       />
     </>

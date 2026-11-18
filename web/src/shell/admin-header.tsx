@@ -2,10 +2,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ADMIN_NAV } from '@/shell/admin-nav';
 import { AdminSidebarUser } from '@/shell/admin-sidebar-user';
+import { QuickSearch } from '@/shell/quick-search';
 
 const PAGES = ADMIN_NAV.flatMap((g) => g.pages);
 
-// Thanh trên trắng ≥ 768 theo họ QLHS/QLTS (TC-01): đường dẫn bên trái, chuông + tài khoản bên phải
+// Thanh trên trắng ≥ 768 theo họ QLHS/QLTS (TC-01): đường dẫn bên trái, Tìm nhanh, chuông + tài khoản bên phải
 export function AdminHeader() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
@@ -21,6 +22,7 @@ export function AdminHeader() {
           </>
         )}
       </nav>
+      <QuickSearch variant="field" />
       <AdminSidebarUser compact inTopbar />
     </header>
   );

@@ -142,3 +142,90 @@ test.describe('E9-S7 Adm D&E 390 px (dev-identity admin)', () => {
     await expectNoContrastViolations(page);
   });
 });
+
+const CARD_TABLES = [
+  ['users', 'Danh bạ'],
+  ['audit', 'Nhật ký'],
+  ['stock', 'Tủ / Kho'],
+  ['stock?tab=history', 'Tủ / Kho'],
+] as const;
+
+// Dòng dữ liệu đầu của bảng chính: grid = thẻ; nhãn ô lấy từ data-label và hiện qua ::before
+const firstRowShape = (page: Page) =>
+  page.getByRole('main').getByRole('table').first().evaluate((table) => {
+    const tr = table.querySelector('tbody tr:not(.dt-group):not(.dt-expanded)');
+    if (!tr) return null;
+    const labeled = [...tr.querySelectorAll('td[data-label]')].find((td) => td.getAttribute('data-label'));
+    return {
+      display: getComputedStyle(tr).display,
+      label: labeled?.getAttribute('data-label') ?? '',
+      before: labeled ? getComputedStyle(labeled, '::before').content.replace(/^"|"$/g, '') : '',
+    };
+  });
+const wrapOverflow = (page: Page) => page.getByRole('main').getByRole('table').first().evaluate((table) => getComputedStyle(table.parentElement!).overflowX);
+
+test.describe('TC-16 bảng thành thẻ ở 390 (dev-identity admin)', () => {
+  asRole('admin');
+  test.skip(({ isMobile: phone }) => !phone, 'Dạng thẻ chỉ kiểm ở điện thoại');
+
+  test('TC-16 Danh bạ, Nhật ký, Tủ/Kho 390: không cuộn ngang, mỗi dòng là thẻ có nhãn', async ({ page }) => {
+    for (const [path, title] of CARD_TABLES) {
+      await openPage(page, path, title);
+      await expectNoHorizontalScroll(page, path);
+      const shape = await firstRowShape(page);
+      expect(shape, `bảng ${path} trên dev không có dòng nào`).not.toBeNull();
+      expect(shape!.display, `dòng ở ${path} không phải thẻ`).toBe('grid');
+      expect(shape!.label, `ô ở ${path} không có nhãn`).not.toBe('');
+      expect(shape!.before, `nhãn ở ${path} không hiện`).toBe(shape!.label);
+    }
+  });
+
+  test('TC-16 mốc 680/681: 680 px khung bảng không cuộn (thẻ), 681 px trở lại khung cuộn của bảng xếp chồng', async ({ page }) => {
+    await openPage(page, 'users', 'Danh bạ');
+    await page.setViewportSize({ width: 680, height: 844 });
+    await expect.poll(() => wrapOverflow(page)).toBe('visible');
+    await expect.poll(async () => (await firstRowShape(page))?.display).toBe('grid');
+    await page.setViewportSize({ width: 681, height: 844 });
+    await expect.poll(() => wrapOverflow(page)).toBe('auto');
+  });
+});
+
+test.describe('TC-17 Tìm nhanh (dev-identity admin)', () => {
+  asRole('admin');
+
+  test('TC-17 390: nút icon Tìm nhanh trên thanh trên → 1 ký tự nhắc, "danh ba" → Danh bạ', async ({ page, isMobile: phone }) => {
+    test.skip(!phone, 'Nút icon chỉ có ở điện thoại');
+    await openPage(page, 'month', 'Kỳ tháng');
+    await page.getByRole('banner').getByRole('button', { name: 'Tìm nhanh' }).tap();
+    const dialog = page.getByRole('dialog', { name: 'Tìm nhanh' });
+    const box = dialog.getByRole('combobox', { name: 'Tìm nhanh' });
+    await expect(box).toBeFocused();
+    await box.fill('d');
+    await expect(dialog.getByText('Gõ ít nhất 2 ký tự để tìm món, người hoặc trang.')).toBeVisible();
+    await expect(dialog.getByRole('option')).toHaveCount(0);
+    await box.fill('danh ba');
+    await dialog.getByRole('group', { name: 'Đi tới' }).getByRole('option', { name: /^Danh bạ/ }).tap();
+    await expect(page).toHaveURL(/\/admin\/users$/);
+    await expect(heading(page, 'Danh bạ')).toBeVisible();
+    await expectNoHorizontalScroll(page, 'users sau Tìm nhanh');
+  });
+
+  test('TC-17 1280: ô Tìm nhanh trên thanh trên, Ctrl K mở, Esc đóng, Enter điều hướng mục đang trỏ', async ({ page, isMobile: phone }) => {
+    test.skip(phone, 'Ô Tìm nhanh trên thanh trên trắng chỉ có ≥ 768');
+    await openPage(page, 'month', 'Kỳ tháng');
+    await expect(page.getByRole('banner').getByRole('button', { name: 'Tìm nhanh' })).toContainText('Ctrl K');
+    await page.keyboard.press('Control+K');
+    const dialog = page.getByRole('dialog', { name: 'Tìm nhanh' });
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await page.keyboard.press('Control+K');
+    await page.keyboard.type('nhat ky');
+    const first = dialog.getByRole('option').first();
+    await expect(first).toHaveAttribute('aria-selected', 'true');
+    await expect(dialog.getByRole('combobox', { name: 'Tìm nhanh' })).toHaveAttribute('aria-activedescendant', (await first.getAttribute('id'))!);
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/\/admin\/audit$/);
+    await expect(dialog).toHaveCount(0);
+  });
+});
