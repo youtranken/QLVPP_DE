@@ -37,6 +37,10 @@ export const ADMIN_ROUTE_CLASSES: Record<`${Method} ${string}`, RouteClass> = {
   'GET /api/admin/lines/:id/deliveries': 'by-id',
   // Khóa kỳ kiểm theo từng phiếu trong thân yêu cầu: kỳ mở → kết quả PERIOD_NOT_LOCKED của phiếu đó (200), không 409 cả lô
   'POST /api/admin/deliveries/bulk': 'none',
+  // Hoàn tác 5 giây chỉ đảo thao tác vừa làm (đã qua guard kỳ lúc làm); không theo kỳ hay id trên đường dẫn
+  'POST /api/admin/undo/delivery': 'none',
+  'POST /api/admin/undo/cancel': 'none',
+  'POST /api/admin/undo/item-delete': 'none',
   'GET /api/admin/review': 'sql-filter',
   'GET /api/admin/items/:id/pending-arrival': 'sql-filter',
   'GET /api/admin/backlog': 'sql-filter',

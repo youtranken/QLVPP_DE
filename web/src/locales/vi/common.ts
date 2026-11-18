@@ -118,6 +118,13 @@ const common = {
       admin: 'Adm D&E',
       sa: 'Quản trị kỹ thuật',
     },
+    undo: {
+      label: 'Hoàn tác',
+      done: 'Đã hoàn tác.',
+      expired: 'Đã quá 5 giây, không hoàn tác được nữa.',
+      alreadyDone: 'Thao tác này đã được hoàn tác.',
+      failed: 'Không hoàn tác được — dữ liệu vừa đổi, tải lại để xem.',
+    },
     languages: {
       label: 'Ngôn ngữ',
       short: 'VI',

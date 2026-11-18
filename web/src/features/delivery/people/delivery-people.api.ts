@@ -74,4 +74,4 @@ export const BULK_MAX_REQUESTS = 100;
 
 // Mỗi phiếu một transaction ở server: HTTP 200 kể cả khi có phiếu lỗi, kết quả theo thứ tự body
 export const deliverBulk = (body: BulkDeliverBody, csrfToken: string | null) =>
-  apiFetch<{ results: BulkRequestResult[] }>('/api/admin/deliveries/bulk', { method: 'POST', body: JSON.stringify(body), csrfToken });
+  apiFetch<{ results: BulkRequestResult[]; undo_id?: string | null }>('/api/admin/deliveries/bulk', { method: 'POST', body: JSON.stringify(body), csrfToken });

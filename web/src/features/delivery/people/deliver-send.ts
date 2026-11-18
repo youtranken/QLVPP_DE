@@ -20,15 +20,17 @@ export interface SentLine {
 export interface SendResult {
   lines: SentLine[];
   expired: boolean;
+  // Id hoàn tác của các lần giao; null khi có bước thành công không hoàn tác được (hủy NCC hết hàng, ghi Không mua)
+  undoIds?: string[] | null;
 }
 
 export const NOT_SENT = 'NOT_SENT';
 export const NETWORK = 'NETWORK';
 
-function runStep(step: Step, csrfToken: string | null): Promise<unknown> {
+async function runStep(step: Step, csrfToken: string | null): Promise<string | null> {
   const id = step.line.line_id;
-  if (step.kind === 'deliver') return deliverLine(id, { qty: step.qty, expected_delivered_qty: step.line.delivered_qty }, csrfToken);
-  return cancelRemaining(id, { reason_code: 'adm_out_of_stock', expected_delivered_qty: step.expectedDelivered, expected_qty: step.line.qty }, csrfToken);
+  if (step.kind === 'deliver') return (await deliverLine(id, { qty: step.qty, expected_delivered_qty: step.line.delivered_qty }, csrfToken)).undo_id ?? null;
+  return (await cancelRemaining(id, { reason_code: 'adm_out_of_stock', expected_delivered_qty: step.expectedDelivered, expected_qty: step.line.qty }, csrfToken)).undo_id ?? null;
 }
 
 const failure = (e: unknown, expired: boolean): LineOutcome => ({
@@ -81,8 +83,11 @@ interface Group {
 // trừ khi phiên đã hết. rejects: món chờ duyệt hộp đã hỏi lại — đi cùng các dòng giao của chính phiếu đó (một transaction);
 // người này đã có món giao lỗi thì không ghi Không mua
 export async function sendSteps(steps: Step[], csrfToken: string | null, rejects: DeliveryPersonLine[] = []): Promise<SendResult> {
-  const result: SendResult = { lines: [], expired: false };
+  const result: SendResult = { lines: [], expired: false, undoIds: [] };
   const failed = new Set<string>();
+  const undoable = (id: string | null) => {
+    result.undoIds = id && result.undoIds ? [...result.undoIds, id] : null;
+  };
   const record = (lines: SentLine[]) => {
     for (const s of lines) {
       result.lines.push(s);
@@ -96,7 +101,7 @@ export async function sendSteps(steps: Step[], csrfToken: string | null, rejects
     // Giao phần từ tủ lỗi thì không hủy phần còn lại: số đã giao chưa chắc
     if (step.kind === 'cancel' && failed.has(lineId)) return;
     try {
-      await runStep(step, csrfToken);
+      undoable(await runStep(step, csrfToken));
       record([{ lineId, outcome: step.kind === 'deliver' ? { ok: true, kind: 'delivered', qty: step.qty } : { ok: true, kind: 'cancelled' } }]);
     } catch (e) {
       result.expired = isSessionExpired(e);
@@ -123,10 +128,12 @@ export async function sendSteps(steps: Step[], csrfToken: string | null, rejects
       notSent(mine, REJECT_SKIPPED);
     } else {
       const sent = await sendWithRejects(g.request_id, g.steps, mine, csrfToken);
+      if (sent.lines.some((l) => l.outcome.ok)) undoable(null);
       result.expired = sent.expired;
       record(sent.lines);
     }
   }
   for (const step of steps) if (step.kind === 'cancel') await runSingle(step);
+  if (result.undoIds?.length === 0) result.undoIds = null;
   return result;
 }

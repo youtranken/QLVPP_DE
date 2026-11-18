@@ -131,6 +131,14 @@ export class NotificationsService {
     return result.rowCount ?? 0;
   }
 
+  // Hoàn tác trong 5 giây: chuông của chính thao tác vừa đảo không còn đúng
+  async removeByEvent(sub: string, eventId: string, tx: Tx): Promise<number> {
+    const result = await tx.execute(sql`
+      DELETE FROM in_app_notifications WHERE user_sub = ${sub} AND event_id = ${eventId}
+    `);
+    return result.rowCount ?? 0;
+  }
+
   async adminRecipients(ex?: Executor): Promise<string[]> {
     return this.users.activeAdminSubs(ex);
   }

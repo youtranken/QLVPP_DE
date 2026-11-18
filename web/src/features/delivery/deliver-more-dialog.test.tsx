@@ -157,4 +157,15 @@ describe('DeliverMoreDialog — giao bổ sung một dòng còn nợ', () => {
     expect(giao()).toBeDisabled();
     await act(async () => release(jsonResponse(200, {})));
   });
+
+  it('giao xong có undo_id → toast kèm Hoàn tác; bấm thì POST undo/delivery với id đó (TC-18)', async () => {
+    const f = stub(() => jsonResponse(200, { request_complete: false, undo_id: 'u-pen' }));
+    const { onDone } = renderDialog();
+    await userEvent.click(giao());
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole('button', { name: 'Hoàn tác', hidden: true }));
+    await waitFor(() => expect(f.mock.calls.some((c) => c[0] === '/api/admin/undo/delivery')).toBe(true));
+    const call = f.mock.calls.find((c) => c[0] === '/api/admin/undo/delivery')!;
+    expect(JSON.parse(String(call[1]?.body))).toEqual({ ids: ['u-pen'] });
+  });
 });

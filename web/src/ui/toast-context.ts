@@ -6,6 +6,8 @@ export interface ToastSpec {
   action?: { label: string; onClick: () => void };
   // Ở lại tới khi chủ toast gỡ (dismiss) hoặc người dùng bấm nút: dùng khi nút là lối duy nhất để làm tiếp
   persist?: boolean;
+  // Hoàn tác 5 giây (TC-18): nút "Hoàn tác (n)" đếm ngược, không dừng khi rê chuột vì cửa sổ do server tính
+  undo?: () => Promise<unknown>;
 }
 
 export interface ToastApi {

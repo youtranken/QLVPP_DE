@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { DRIZZLE_DB } from '../../database/database.module';
@@ -8,6 +9,8 @@ import type { RequestIdentity } from '../auth/identity.types';
 import { SystemConfigService } from '../config/system-config.service';
 import { FilesService } from '../files/files.service';
 import { UnitsService } from '../units/units.service';
+import { UndoLedgerService } from '../undo/undo-ledger.service';
+import { ClockService } from '../../common/clock.service';
 import type { CreateItemDto, UpdateItemDto } from './catalog.dto';
 import { definedEntries, pick, setClause } from '../../common/sql-patch';
 import {
@@ -68,6 +71,8 @@ export class CatalogService {
     private readonly units: UnitsService,
     @Inject(ITEM_USAGE_HOOK) private readonly usage: ItemUsageHook,
     private readonly periods: PeriodsService,
+    private readonly clock: ClockService,
+    private readonly undo: UndoLedgerService,
   ) {}
 
   // Trạng thái kho theo Tủ (đang giữ, hàng đang về); một món thì chỉ tính món đó
@@ -261,16 +266,20 @@ export class CatalogService {
     );
   }
 
-  async remove(id: string, actor: string): Promise<void> {
-    await this.mapConstraints(() =>
+  // Chụp nguyên dòng (to_jsonb) để hoàn tác 5 giây chèn lại đúng mọi cột, kể cả cột không có trong ITEM_COLUMNS
+  async remove(id: string, actor: string): Promise<{ undo_id: string }> {
+    const now = this.clock.now();
+    return this.mapConstraints(() =>
       this.db.transaction(async (tx) => {
         if (await this.usage.isUsed(id, tx)) throw itemInUse();
-        const before = (
-          await tx.execute<ItemDbRow>(sql`
-            DELETE FROM items WHERE id = ${id} RETURNING ${ITEM_COLUMNS}
-          `)
+        const deleted = (
+          await tx.execute<ItemDbRow & { full_row: Record<string, unknown> }>(
+            sql`DELETE FROM items WHERE id = ${id}
+                RETURNING ${ITEM_COLUMNS}, to_jsonb(items.*) AS full_row`,
+          )
         ).rows[0];
-        if (!before) throw itemNotFound();
+        if (!deleted) throw itemNotFound();
+        const { full_row, ...before } = deleted;
         await this.audit.appendWithin(tx, {
           actor,
           action: 'item.deleted',
@@ -278,6 +287,14 @@ export class CatalogService {
           objectId: id,
           detail: { before },
         });
+        const undoId = await this.undo.record(tx, {
+          id: randomUUID(),
+          kind: 'item_delete',
+          actor,
+          now,
+          payload: { item: full_row },
+        });
+        return { undo_id: undoId };
       }),
     );
   }

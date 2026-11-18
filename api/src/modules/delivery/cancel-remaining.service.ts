@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClockService } from '../../common/clock.service';
 import { addMonths } from '../../common/period';
@@ -9,9 +10,13 @@ import { eventIds } from '../notifications/notification-events';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PeriodsService } from '../periods/periods.service';
 import { LineDeliveryStore } from '../requests/line-delivery.store';
-import type { LockedLine } from '../requests/line-delivery.store';
+import type {
+  CancelOutcome,
+  LockedLine,
+} from '../requests/line-delivery.store';
 import { LineNotifier } from '../requests/line-notifier';
 import { lineNotFound } from '../requests/request-errors';
+import { UndoLedgerService } from '../undo/undo-ledger.service';
 import {
   ADM_OUT_NOTE,
   ADM_OUT_REASON,
@@ -35,6 +40,7 @@ export class CancelRemainingService {
     private readonly audit: AuditWriterService,
     private readonly notifications: NotificationsService,
     private readonly notifier: LineNotifier,
+    private readonly undo: UndoLedgerService,
   ) {}
 
   async cancelRemaining(
@@ -66,8 +72,12 @@ export class CancelRemainingService {
       // Tháng đang giao chỉ hủy được khi khóa đang đánh ADM hết hàng (đường hộp giao); nợ tháng trước dùng mã như một lý do
       if (!isDebt && !marked) throw itemNotAdmOut();
       const reason = marked ? ADM_OUT_NOTE : note;
-      const result = await this.lines.cancelRemaining(tx, lineId, reason, now);
-      if (result.cancelled_now === 0) return result;
+      const outcome = await this.lines.cancelRemaining(tx, lineId, reason, now);
+      const result = {
+        line: outcome.line,
+        cancelled_now: outcome.cancelled_now,
+      };
+      if (result.cancelled_now === 0) return { ...result, undo_id: null };
       if (marked) return this.afterAdmOut(tx, line, result, actor, now);
       await this.audit.appendWithin(tx, {
         actor,
@@ -84,21 +94,49 @@ export class CancelRemainingService {
         at: now,
       });
       await this.lines.touchRequest(tx, line.request_id, now);
-      if (
-        code !== 'user_left' &&
-        (await this.notifier.ownerActive(line.user_sub))
-      ) {
-        await this.notifyOwner(tx, line, result, reason, now);
-      }
-      return result;
+      const bell =
+        code !== 'user_left' && (await this.notifier.ownerActive(line.user_sub))
+          ? await this.notifyOwner(tx, line, result, reason, now)
+          : null;
+      const undoId = await this.recordUndo(tx, line, outcome, bell, {
+        actor,
+        now,
+      });
+      return { ...result, undo_id: undoId };
+    });
+  }
+
+  private recordUndo(
+    tx: Tx,
+    line: LockedLine,
+    outcome: CancelOutcome,
+    bell: string | null,
+    by: { actor: string; now: Date },
+  ): Promise<string> {
+    return this.undo.record(tx, {
+      id: randomUUID(),
+      kind: 'cancel',
+      actor: by.actor,
+      now: by.now,
+      payload: {
+        line_id: line.id,
+        request_id: line.request_id,
+        before: {
+          cancelled_qty: line.cancelled_qty,
+          cancel_note: outcome.note_before,
+        },
+        after: { cancelled_qty: outcome.line.cancelled_qty },
+        bell,
+      },
     });
   }
 
   // ADM hết hàng: không chuông line_cancelled, gộp vào chuông ngày line_adjusted
+  // Không mở hoàn tác: chuông ngày line_adjusted gộp nhiều lần hủy, không gỡ riêng một lần được
   private async afterAdmOut(
     tx: Tx,
     line: LockedLine,
-    result: CancelResult,
+    result: Omit<CancelResult, 'undo_id'>,
     actor: string,
     now: Date,
   ): Promise<CancelResult> {
@@ -117,22 +155,23 @@ export class CancelRemainingService {
       reasons: [ADM_OUT_REASON],
       now,
     });
-    return result;
+    return { ...result, undo_id: null };
   }
 
-  // Không gọi notifyIfComplete: hủy nợ làm phiếu đủ thì không báo "đã giao đủ"
+  // Không gọi notifyIfComplete: hủy nợ làm phiếu đủ thì không báo "đã giao đủ". Trả event_id khi chuông mới được ghi
   private async notifyOwner(
     tx: Tx,
     line: LockedLine,
-    result: CancelResult,
+    result: Omit<CancelResult, 'undo_id'>,
     reason: string,
     now: Date,
-  ): Promise<void> {
+  ): Promise<string | null> {
     const item = line.item_id
       ? (await this.catalog.itemFacts([line.item_id], tx)).get(line.item_id)
       : undefined;
-    await this.notifications.notifyWithin(tx, {
-      eventId: eventIds.lineCancelled(line.id, result.line.cancelled_qty),
+    const eventId = eventIds.lineCancelled(line.id, result.line.cancelled_qty);
+    const written = await this.notifications.notifyWithin(tx, {
+      eventId,
       recipients: [line.user_sub],
       topic: 'line_cancelled',
       params: {
@@ -146,5 +185,6 @@ export class CancelRemainingService {
       link: `/history/${line.period_ym}`,
       now,
     });
+    return written > 0 ? eventId : null;
   }
 }

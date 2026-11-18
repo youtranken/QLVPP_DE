@@ -10,6 +10,7 @@ interface CancelResult {
     cancel_note: string | null;
   };
   cancelled_now: number;
+  undo_id: string | null;
 }
 
 describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
@@ -73,6 +74,7 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
         cancel_note: NOT_NEEDED,
       },
       cancelled_now: 2,
+      undo_id: expect.any(String),
     });
     expect(await backlogLineIds()).not.toContain(line.id);
     const mine = (
@@ -151,6 +153,7 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
         cancel_note: NOT_NEEDED,
       },
       cancelled_now: 0,
+      undo_id: null,
     });
     expect(await lineCancelled()).toHaveLength(1);
     expect(await auditOf('line.cancel_remaining', line.id)).toHaveLength(1);

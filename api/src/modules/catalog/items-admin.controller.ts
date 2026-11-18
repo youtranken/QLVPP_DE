@@ -58,12 +58,13 @@ export class ItemsAdminController {
     return this.catalog.update(id, dto, identity.sub);
   }
 
+  // 200 kèm undo_id (hoàn tác 5 giây) thay cho 204 không thân
   @Delete(':id')
-  @HttpCode(204)
-  async remove(
+  @HttpCode(200)
+  remove(
     @Param('id', uuidParam) id: string,
     @CurrentIdentity() identity: RequestIdentity,
-  ): Promise<void> {
-    await this.catalog.remove(id, identity.sub);
+  ): Promise<{ undo_id: string }> {
+    return this.catalog.remove(id, identity.sub);
   }
 }

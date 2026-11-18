@@ -113,8 +113,8 @@ const admin = {
       category: { created: 'Thêm nhóm hàng', updated: 'Sửa nhóm hàng' },
       config: { updated: 'Sửa cấu hình' },
       files: { orphans_deleted: 'Dọn ảnh mồ côi', uploaded: 'Tải ảnh lên' },
-      item: { created: 'Thêm món', updated: 'Sửa món', deactivated: 'Ngừng dùng món', deleted: 'Xóa món' },
-      line: { review: 'Duyệt món ngoài danh mục', delivered: 'Giao hàng', cancel_remaining: 'Hủy nợ' },
+      item: { created: 'Thêm món', updated: 'Sửa món', deactivated: 'Ngừng dùng món', deleted: 'Xóa món', delete_undone: 'Hoàn tác xóa món' },
+      line: { review: 'Duyệt món ngoài danh mục', delivered: 'Giao hàng', cancel_remaining: 'Hủy nợ', delivery_undone: 'Hoàn tác giao hàng', cancel_undone: 'Hoàn tác hủy nợ' },
       period: {
         headcount_recorded: 'Chốt số người của kỳ',
         no_order: 'Tháng này không cần đề nghị NCC',

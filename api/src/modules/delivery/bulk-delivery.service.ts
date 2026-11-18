@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   BadRequestException,
   HttpException,
@@ -12,6 +13,7 @@ import { LineDeliveryStore } from '../requests/line-delivery.store';
 import type { LockedLine } from '../requests/line-delivery.store';
 import { lineNotFound } from '../requests/request-errors';
 import { ReviewWriter } from '../requests/review-writer';
+import { UndoLedgerService } from '../undo/undo-ledger.service';
 import type {
   BulkDeliverBody,
   BulkDeliverResult,
@@ -43,6 +45,7 @@ export class BulkDeliveryService {
     private readonly lines: LineDeliveryStore,
     private readonly delivery: DeliveryService,
     private readonly reviews: ReviewWriter,
+    private readonly undo: UndoLedgerService,
   ) {}
 
   // Mỗi phiếu một transaction: một phiếu lỗi không kéo phiếu khác, kết quả trả theo thứ tự body
@@ -51,21 +54,36 @@ export class BulkDeliveryService {
     actor: string,
   ): Promise<BulkDeliverResult> {
     assertDistinct(body.requests);
+    // Ghi Không mua không đảo được: lô có reject_line_ids không mở hoàn tác
+    const undoId = body.requests.some((r) => r.reject_line_ids?.length)
+      ? null
+      : randomUUID();
     const results: BulkRequestResult[] = [];
     for (const req of body.requests) {
-      results.push(await this.deliverRequest(req, actor));
+      results.push(await this.deliverRequest(req, actor, undoId));
     }
-    return { results };
+    const delivered = results.some((r) => r.ok && r.delivered_units > 0);
+    if (!undoId || !delivered) return { results, undo_id: null };
+    // Cửa sổ 5 giây mở lúc lô xong, không phải lúc phiếu đầu: lô dài không hết hạn trước khi web nhận kết quả
+    const now = this.clock.now();
+    await this.undo.record(this.db, {
+      id: undoId,
+      kind: 'delivery',
+      actor,
+      now,
+    });
+    return { results, undo_id: undoId };
   }
 
   private async deliverRequest(
     req: BulkRequest,
     actor: string,
+    undoId: string | null,
   ): Promise<BulkRequestResult> {
     const now = this.clock.now();
     try {
       const done = await this.db.transaction((tx) =>
-        this.deliverOne(tx, req, actor, now),
+        this.deliverOne(tx, req, { actor, now, undoId }),
       );
       return { request_id: req.request_id, ok: true, ...done };
     } catch (e) {
@@ -77,9 +95,9 @@ export class BulkDeliveryService {
   private async deliverOne(
     tx: Tx,
     req: BulkRequest,
-    actor: string,
-    now: Date,
+    by: { actor: string; now: Date; undoId: string | null },
   ): Promise<{ delivered_units: number; request_complete: boolean }> {
+    const { actor, now } = by;
     const rejectIds = req.reject_line_ids ?? [];
     const ids = [...req.lines.map((l) => l.line_id), ...rejectIds];
     const locked = await this.lines.lockRequestLines(tx, req.request_id, ids);
@@ -109,7 +127,7 @@ export class BulkDeliveryService {
     let units = 0;
     for (const { line, want } of todo) {
       await this.guard(
-        () => this.delivery.deliverWithin(tx, line, want.qty, actor, now),
+        () => this.delivery.deliverWithin(tx, line, want.qty, by),
         line.id,
       );
       units += want.qty;
