@@ -48,7 +48,7 @@ describe('khuôn thẻ ≤ 680 px (TC-16)', () => {
   });
 
   it('khung bảng không cuộn ngang, không nền/bóng riêng (thẻ tự có viền)', () => {
-    const b = rule(`${S}.table-wrap:has(> .table--cards)`);
+    const b = rule(`${S}.table-wrap:is(.table-wrap):has(> .table--cards)`);
     expect(b).toMatch(/overflow:\s*visible/);
     expect(b).toMatch(/box-shadow:\s*none/);
   });
