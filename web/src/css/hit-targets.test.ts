@@ -52,4 +52,14 @@ describe('vùng bấm', () => {
       expect(phone).toMatch(new RegExp(`\\[data-shell='admin'\\] ${e}::after[^{]*\\{[^}]*position:\\s*absolute;[^}]*inset:\\s*min\\(0px, calc\\(50% - var\\(--hit\\) / 2\\)\\)`));
     }
   });
+
+  it('Toast: nút "Hoàn tác (n)" (all: unset) đủ vùng chạm var(--hit) khi pointer: coarse; chuột giữ cỡ chữ gọn', () => {
+    const css = read('css/m1/states.css');
+    const base = css.match(/\[data-shell='admin'\] \.toast__undo\s*\{[^}]*\}/)?.[0] ?? '';
+    expect(base).not.toMatch(/min-(height|width)/);
+    const coarse = css.match(/@media \(pointer: coarse\)\s*\{\s*\[data-shell='admin'\] \.toast__undo\s*\{[^}]*\}/)?.[0] ?? '';
+    expect(coarse).toMatch(/min-height:\s*var\(--hit\)/);
+    expect(coarse).toMatch(/min-width:\s*var\(--hit\)/);
+    expect(coarse).toMatch(/display:\s*inline-flex/);
+  });
 });

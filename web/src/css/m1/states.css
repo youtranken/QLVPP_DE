@@ -14,6 +14,8 @@
 [data-shell='admin'] .toast:has(.toast__bar) { position: relative; overflow: hidden; }
 [data-shell='admin'] .toast__undo { color: var(--c-rail-bar); text-decoration: none; font-variant-numeric: tabular-nums; white-space: nowrap; }
 [data-shell='admin'] .toast__undo:disabled { opacity: .6; cursor: default; }
+/* all: unset bỏ cả vùng chạm: màn cảm ứng nới đủ --hit, chuột giữ cỡ chữ */
+@media (pointer: coarse) { [data-shell='admin'] .toast__undo { display: inline-flex; align-items: center; justify-content: center; min-height: var(--hit); min-width: var(--hit); } }
 [data-shell='admin'] .toast__bar { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--c-rail-bar); transform-origin: left; animation: m1-toast-undo 5s linear forwards; }
 @keyframes m1-toast-undo { to { transform: scaleX(0); } }
 @media (prefers-reduced-motion: reduce) { [data-shell='admin'] .toast__bar { animation: none; } }
