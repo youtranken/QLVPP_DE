@@ -26,12 +26,19 @@ function show(rows: DeliveryPerson[], shortages: Map<string, Shortage> = new Map
 const rowOf = (name: string) => screen.getByText(name).closest('tr')!;
 
 describe('PeopleTable G4 — cùng kiểu bảng Kỳ tháng', () => {
-  it('cột Người · Tiến độ giao · Tủ · Còn nợ; không còn Phòng, Tháng, Số món, Đơn vị, Trạng thái', () => {
+  it('cột Nhân viên đặt phiếu · Tiến độ giao · Tủ · Còn nợ; không còn Người, Phòng, Tháng, Số món, Đơn vị, Trạng thái', () => {
     show([P]);
     const heads = screen.getAllByRole('columnheader').map((h) => h.textContent);
-    expect(heads).toEqual(expect.arrayContaining(['Người', 'Tiến độ giao', 'Tủ', 'Còn nợ']));
+    expect(heads).not.toContain('Người');
+    expect(heads).toEqual(expect.arrayContaining(['Nhân viên đặt phiếu', 'Tiến độ giao', 'Tủ', 'Còn nợ']));
     for (const gone of ['Phòng', 'Tháng', 'Số món', 'Đơn vị', 'Trạng thái']) expect(heads).not.toContain(gone);
     expect(within(rowOf('Phan Thị Hoa')).getByText('Kết cấu')).toBeInTheDocument();
+  });
+
+  it('A5: người đã nghỉ có nhãn "Người đã nghỉ — giao chỉ khi có người nhận thay" ngay dưới tên, không cần chọn; người đang làm không có', () => {
+    show([{ ...P, user_status: 'locked' }, person({ user_sub: 'u-q', full_name: 'Lê Văn Quý', lines: P.lines })]);
+    expect(within(rowOf('Phan Thị Hoa')).getByText('Người đã nghỉ — giao chỉ khi có người nhận thay')).toBeInTheDocument();
+    expect(within(rowOf('Lê Văn Quý')).queryByText(/Người đã nghỉ/)).toBeNull();
   });
 
   it('Tiến độ giao "18/35" + thanh 51% (giao 15 + 2 + 1 trên 30 + 3 + 2)', () => {

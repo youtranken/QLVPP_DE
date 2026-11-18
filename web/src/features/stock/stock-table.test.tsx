@@ -17,13 +17,24 @@ const statusCell = (name: string) => within(rowOf(name)).getAllByRole('cell')[4]
 const cells = (name: string) => within(rowOf(name)).getAllByRole('cell').map((c) => c.textContent);
 
 describe('StockTable — Tủ/Kho theo người đang chờ', () => {
-  it('G5: cột Trong tủ · Mức đặt lại · Tình trạng · Cần thêm; không còn Đang giữ / Còn trống / Còn nợ', async () => {
+  it('G5: cột Trong tủ · Tồn kho lần nhập trước · Tình trạng · Cần thêm; không còn Mức đặt lại / Đang giữ / Còn trống / Còn nợ', async () => {
     await open();
     const headers = screen.getAllByRole('columnheader').map((h) => h.textContent);
-    expect(headers).toEqual(expect.arrayContaining(['Trong tủ', 'Mức đặt lại', 'Tình trạng', 'Cần thêm']));
-    for (const gone of ['Đang giữ cho người chờ', 'Còn trống', 'Còn nợ']) expect(headers).not.toContain(gone);
+    expect(headers).toEqual(expect.arrayContaining(['Trong tủ', 'Tồn kho lần nhập trước', 'Tình trạng', 'Cần thêm']));
+    for (const gone of ['Mức đặt lại', 'Đang giữ cho người chờ', 'Còn trống', 'Còn nợ']) expect(headers).not.toContain(gone);
     expect(cells('Giấy A4')).toEqual(expect.arrayContaining(['6', '30', 'Sắp hết']));
     expect(within(rowOf('Ghim bấm')).getAllByRole('cell').some((c) => /^—/.test(c.textContent ?? ''))).toBe(true);
+  });
+
+  it('A1: nút (i) ở đầu cột Tồn kho lần nhập trước mở bằng bàn phím, nói ngưỡng 20 % ra Sắp hết', async () => {
+    await open();
+    const header = screen.getByRole('columnheader', { name: /Tồn kho lần nhập trước/ });
+    const info = within(header).getByRole('button', { name: 'Tồn kho lần nhập trước là gì?' });
+    info.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(screen.getByRole('dialog', { name: 'Tồn kho lần nhập trước là gì?' })).toHaveTextContent(
+      'Số trong tủ ngay sau lần nhập mua gần nhất. Còn trống ≤ 20 % số này thì món hiện Sắp hết.',
+    );
   });
 
   it('G5 Cần thêm = phần thiếu sau khi trừ hàng đang về: Bìa còng 3; Bút chì (về đủ bù) "—"', async () => {

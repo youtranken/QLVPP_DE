@@ -17,6 +17,5 @@ export interface MeResponse {
   config: {
     registration_last_day: number;
     default_max_qty: number;
-    admin_contact: string;
   };
 }

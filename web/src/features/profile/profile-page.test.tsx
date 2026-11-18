@@ -29,6 +29,12 @@ describe('Trang Tôi', () => {
     expect(screen.queryByRole('textbox')).toBeNull();
   });
 
+  it('A7: có câu cố định "Liên hệ Adm D&E để được hỗ trợ."', () => {
+    mockViewport(390);
+    renderApp(makeMe('member'), '/me');
+    expect(screen.getByText('Liên hệ Adm D&E để được hỗ trợ.')).toBeInTheDocument();
+  });
+
   it('có đổi ngôn ngữ (thanh trên điện thoại không còn VI/EN): chọn English thì trang đổi sang tiếng Anh', async () => {
     mockViewport(390);
     renderApp(makeMe('member'), '/me');

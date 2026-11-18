@@ -1,9 +1,11 @@
+import type { TFunction } from 'i18next';
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatVnStamp } from '@/lib/format-time';
 import type { LineView } from '@/features/request/request.api';
 import { useRequestFormat } from '@/features/request/request-format';
-import { adjustable, canReduce, floorOf, reduceError, reduceRange, targetOf, type Pick } from './adjust-plan';
+import { QtyInput } from '@/ui/qty-input';
+import { adjustable, canReduce, floorOf, initialPick, reduceError, reduceRange, targetOf, type Pick, type ReduceError } from './adjust-plan';
 import { lineNameOf, lineUnitOf } from './adjust-preview';
 
 interface Props {
@@ -17,6 +19,9 @@ interface Props {
 
 const parseQty = (raw: string) => (raw.trim() === '' ? null : Number(raw));
 
+const qtyMessage = (t: TFunction, e: ReduceError) =>
+  e.kind === 'over' ? t('summary.adjust.reduceOver', { ordered: e.ordered }) : t('summary.adjust.reduceUnder', { min: e.min });
+
 // Một dòng phiếu: tick để chọn, rồi "Giảm còn n" hoặc "Từ chối" (về số đã giao)
 export function AdjustPickRow({ line, pick, error, sentAt, onToggle, onPick }: Props) {
   const { t } = useTranslation();
@@ -28,8 +33,8 @@ export function AdjustPickRow({ line, pick, error, sentAt, onToggle, onPick }: P
   const status = line.review_status === 'pending' ? t('summary.adjust.pendingHere') : !adjustable(line) ? t('summary.adjust.doneLine') : null;
   const range = reduceRange(line);
   const qtyError = pick?.mode === 'reduce' ? reduceError(line, pick.qty) : null;
-  const message = qtyError ? t('summary.adjust.reduceRange', qtyError) : error;
-  const initial: Pick = canReduce(line) ? { mode: 'reduce', qty: line.qty - 1 } : { mode: 'reject' };
+  const message = qtyError ? qtyMessage(t, qtyError) : error;
+  const initial = initialPick(line);
   return (
     <li className={pick ? 'ajd-row is-picked' : 'ajd-row'}>
       <div className="ajd-row__head">
@@ -56,24 +61,24 @@ export function AdjustPickRow({ line, pick, error, sentAt, onToggle, onPick }: P
                 <span>{t('summary.adjust.reduce')}</span>
               </label>
             )}
-            <label className="aj-chip">
+            <label className="aj-chip aj-chip--danger">
               <input type="radio" name={`${id}-mode`} checked={pick.mode === 'reject'} onChange={() => onPick({ mode: 'reject' })} />
               <span>{t('summary.adjust.reject')}</span>
             </label>
           </div>
           {pick.mode === 'reject' && floor > 0 && <small className="ajd-row__hint">{t('summary.adjust.rejectKeep', { n: floor })}</small>}
           {pick.mode === 'reduce' && (
-            <input
-              type="number"
-              inputMode="numeric"
-              className="ajd-row__input"
+            <QtyInput
+              steppers
+              wrapClassName="ajd-row__stepper"
               min={range.min}
               max={range.max}
-              value={pick.qty ?? ''}
-              aria-label={t('summary.adjust.reduceLabel', { name })}
-              aria-invalid={message ? true : undefined}
+              value={pick.qty === null ? '' : String(pick.qty)}
+              label={t('summary.adjust.reduceLabel', { name })}
+              name={name}
+              invalid={!!message}
               aria-describedby={message ? `${id}-err` : undefined}
-              onChange={(e) => onPick({ mode: 'reduce', qty: parseQty(e.target.value) })}
+              onChange={(v) => onPick({ mode: 'reduce', qty: parseQty(v) })}
             />
           )}
           {message && (

@@ -1,9 +1,5 @@
 /* Dùng hết bề ngang như các trang Hành chính khác: màn rộng 2 cột, khối Kỳ đăng ký (có lịch minh họa) chiếm cả hàng; hẹp 1 cột */
 [data-shell='admin'] .cf-blocks { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-6); align-items: start; min-width: 0; }
-@media (min-width: 1280px) {
-  [data-shell='admin'] .cf-blocks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  [data-shell='admin'] .cf-blocks > .cf-block:first-child { grid-column: 1 / -1; }
-}
 [data-shell='admin'] .cf-block { position: relative; display: grid; gap: var(--s-4); padding: var(--s-5); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); min-width: 0; }
 [data-shell='admin'] .cf-block[data-dirty]::before { content: ''; position: absolute; left: 0; top: var(--s-4); bottom: var(--s-4); width: 4px; border-radius: 0 var(--r-xs) var(--r-xs) 0; background: var(--c-warn-fill); }
 [data-shell='admin'] .cf-block__head { display: grid; gap: var(--s-1); }

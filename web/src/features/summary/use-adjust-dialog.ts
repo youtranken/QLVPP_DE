@@ -7,7 +7,7 @@ import { useToast } from '@/ui/toast-context';
 import { useRefreshAfterLineChange } from '@/features/delivery/people/use-refresh-after-flow';
 import { REVIEW_KEY } from '@/features/review/review.api';
 import { useSendState } from '@/features/send-adm/use-send-state';
-import { adjustBody, otherNoteMissing, reduceError, type Pick } from './adjust-plan';
+import { adjustable, adjustBody, initialPick, otherNoteMissing, reduceError, type Pick } from './adjust-plan';
 import { adjustFailure, isStaleUpdate, type AdjustErrors } from './summary-errors';
 import { saveAdjust, useAdminRequest, type AdjustReason } from './summary.api';
 
@@ -81,6 +81,8 @@ export function useAdjustDialog(requestId: string, onDone: () => void, preset?: 
         else next[id] = initial;
         return next;
       }),
+    pickable: lines.filter(adjustable).length,
+    toggleAll: (on: boolean) => setPicks(on ? Object.fromEntries(lines.filter(adjustable).map((l) => [l.id, picks[l.id] ?? initialPick(l)])) : {}),
     setPick: (id: string, p: Pick) => setPicks((x) => ({ ...x, [id]: p })),
     reason,
     setReason,

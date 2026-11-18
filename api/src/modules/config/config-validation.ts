@@ -8,9 +8,7 @@ export interface ConfigPatch {
   registration_last_day?: number;
   reminder_days_left?: number;
   default_max_qty?: number;
-  low_stock_notify?: boolean;
   signature_boxes?: SignatureBox[];
-  admin_contact?: string;
 }
 
 export type ConfigPatchResult =
@@ -28,12 +26,9 @@ const BOX_LIMITS: Record<keyof SignatureBox, { min: number; max: number }> = {
 };
 const BOXES_MIN = 1;
 const BOXES_MAX = 3;
-const CONTACT_MAX = 500;
 
 const isIntIn = (v: unknown, min: number, max: number) =>
   typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max;
-const isText = (v: unknown, max: number): v is string =>
-  typeof v === 'string' && v.length <= max;
 const isPlainObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
@@ -41,10 +36,8 @@ const RULES: Record<keyof ConfigPatch, (v: unknown) => boolean> = {
   registration_last_day: (v) => isIntIn(v, 3, 28),
   reminder_days_left: (v) => isIntIn(v, 1, 7),
   default_max_qty: (v) => isIntIn(v, 1, 999),
-  low_stock_notify: (v) => typeof v === 'boolean',
   signature_boxes: (v) =>
     Array.isArray(v) && v.length >= BOXES_MIN && v.length <= BOXES_MAX,
-  admin_contact: (v) => isText(v, CONTACT_MAX),
 };
 
 export function validateConfigPatch(body: unknown): ConfigPatchResult {

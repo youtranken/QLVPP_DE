@@ -15,9 +15,7 @@ const VISIBLE_KEYS = [
   'registration_last_day',
   'reminder_days_left',
   'default_max_qty',
-  'low_stock_notify',
   'signature_boxes',
-  'admin_contact',
 ];
 const REMINDER_KEYS = ['registration_last_day', 'reminder_days_left'];
 

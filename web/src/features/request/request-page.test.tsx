@@ -167,7 +167,7 @@ describe('RequestPage', () => {
     const line = (await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Giấy A4')).closest('li')!;
     expect(within(line).getByText('Adm D&E thêm')).toHaveAttribute(
       'title',
-      'Dòng này do Adm D&E thêm — cần sửa thì liên hệ chị Bình — Adm D&E.',
+      'Dòng này do Adm D&E thêm — cần sửa thì liên hệ Adm D&E.',
     );
     expect(within(line).queryAllByRole('button')).toEqual([]);
     expect(within(line).getByText('2 ram')).toBeInTheDocument();
@@ -233,13 +233,12 @@ describe('RequestPage', () => {
     expect(within(cartLine('Bút bi xanh')).getByRole('spinbutton')).toHaveValue(3);
   });
 
-  it('dòng chỉ xem được, chưa cấu hình liên hệ → câu "liên hệ Adm D&E"', async () => {
+  it('dòng chỉ xem được → câu cố định "liên hệ Adm D&E" (không còn cấu hình liên hệ)', async () => {
     mockViewport(1280);
     stubRequestApi({
       request: view({ lines: [lineView({ id: 'l-a', item_id: A4.id, item: facts(A4), qty: 2, added_by_admin: true, readonly_for_member: true })] }),
     });
-    const me = makeMe('member');
-    renderApp({ ...me, config: { ...me.config, admin_contact: ' ' } }, '/');
+    renderApp(makeMe('member'), '/');
     const line = (await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Giấy A4')).closest('li')!;
     expect(within(line).getByText('Adm D&E thêm')).toHaveAttribute('title', 'Dòng này do Adm D&E thêm — cần sửa thì liên hệ Adm D&E.');
   });

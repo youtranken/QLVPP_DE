@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { noteLength } from '@/lib/note-text';
+import { SelectBox } from '@/ui/data-table-row';
 import { DialogClose } from '@/ui/dialog';
 import { useDisabledReason } from '@/ui/disabled-reason';
 import { FormField } from '@/ui/form-field';
@@ -38,6 +39,21 @@ function ReasonPicker({ a }: { a: AdjustDialogState }) {
       >
         {(control) => <textarea {...control} className="aj-why__note" rows={2} value={a.note} onChange={(e) => a.setNote(e.target.value)} />}
       </FormField>
+    </div>
+  );
+}
+
+function PickAll({ a }: { a: AdjustDialogState }) {
+  const { t } = useTranslation();
+  const id = useId();
+  if (a.pickable === 0) return null;
+  const all = a.count === a.pickable;
+  return (
+    <div className="ajd-all">
+      <SelectBox id={id} checked={all} indeterminate={a.count > 0 && !all} label={t('summary.adjust.pickAll')} onChange={a.toggleAll} />
+      <label htmlFor={id} aria-hidden="true">
+        {t('summary.adjust.pickAll')}
+      </label>
     </div>
   );
 }
@@ -104,6 +120,7 @@ export function AdjustDialog({ requestId, presetReason, onClose, onSaved, nav }:
         {view && (
           <>
             <p className="ajd__hint">{t('summary.adjust.pickHint')}</p>
+            <PickAll a={a} />
             <ul className="ajd__lines" aria-label={t('summary.adjust.lines')}>
               {view.lines.map((l) => (
                 <AdjustPickRow key={l.id} line={l} pick={a.picks[l.id]} error={a.errors.lines?.[l.id]} sentAt={a.sentAt} onToggle={(p) => a.toggle(l.id, p)} onPick={(p) => a.setPick(l.id, p)} />

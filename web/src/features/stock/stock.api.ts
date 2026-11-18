@@ -1,6 +1,5 @@
-import { queryOptions, useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import type { AdminItem } from '@/features/catalog/catalog.api';
 import { REPORTS_KEY } from '@/features/reports/reports.api';
 
 export type MovementReason = 'purchase' | 'adjust' | 'issue' | 'delivery' | 'return';
@@ -57,21 +56,11 @@ export interface StockFacts {
 export const STOCK_KEY = ['stock'] as const;
 const MOVEMENTS_PAGE = 20;
 
-export const lowStockQuery = () =>
-  queryOptions({
-    queryKey: [...STOCK_KEY, 'low'],
-    queryFn: () => apiFetch<AdminItem[]>('/api/admin/stock/low'),
-  });
-
 export const stockListQuery = () =>
   queryOptions({
     queryKey: [...STOCK_KEY, 'list'],
     queryFn: () => apiFetch<StockFacts[]>('/api/admin/stock'),
   });
-
-export function useLowStock() {
-  return useQuery(lowStockQuery());
-}
 
 export function useMovements(itemId: string) {
   return useInfiniteQuery({

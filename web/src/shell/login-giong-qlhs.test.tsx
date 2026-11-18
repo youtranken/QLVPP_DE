@@ -100,7 +100,7 @@ describe('đăng nhập giống QLHS', () => {
     renderWithI18n(<LoginScreen />);
     expect(screen.getByRole('heading', { name: 'No access' })).toBeInTheDocument();
     expect(
-      await screen.findByText('Your account does not have access to QLVPP. Contact D&E Admin to be granted access.'),
+      await screen.findByText('Your account does not have access to QLVPP. Contact D&E Admin for support.'),
     ).toBeInTheDocument();
     window.history.replaceState(null, '', '/');
   });

@@ -2,6 +2,11 @@
 [data-shell='admin'] .td-urgent { color: var(--c-danger); }
 
 [data-shell='admin'] .td-tiles[data-count='7'] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+/* Bảy thẻ một hàng ở màn rộng: thẻ hẹp nên dòng phụ xuống dòng tự do, không cắt */
+@media (min-width: 1200px) {
+  [data-shell='admin'] .td-tiles[data-count='7'] { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  [data-shell='admin'] .td-tiles[data-count='7'] .stat-card__sub { display: block; -webkit-line-clamp: unset; overflow: visible; overflow-wrap: break-word; }
+}
 [data-shell='admin'] a.td-tile { cursor: pointer; text-decoration: none; transition: box-shadow var(--d-1) var(--ease-out); }
 [data-shell='admin'] a.td-tile:hover { box-shadow: inset 0 0 0 2px var(--c-line-strong), var(--e-1); }
 [data-shell='admin'] a.td-tile:focus-visible { box-shadow: var(--focus); }

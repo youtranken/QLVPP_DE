@@ -1,7 +1,7 @@
 import { fetchJson } from '@/lib/fetch-json';
 
 // Server dựng từ PMH_ISSUER_URL (dev → dev-admin, prod → de-admin) — không để cứng host cổng PMH ID
-export type PublicConfig = { admin_contact: string; pmh_portal_url?: string | null };
+export type PublicConfig = { pmh_portal_url?: string | null };
 
 export const fetchPublicConfig = () => fetchJson<PublicConfig>('/api/public-config');
 

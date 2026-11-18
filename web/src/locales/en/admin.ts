@@ -143,7 +143,6 @@ const admin: Messages<typeof vi> = {
       actorSearch: 'Find actor',
       actorHint: 'Name or email',
       system: 'System (automatic)',
-      systemOnly: 'Automated jobs only',
       action: 'Action',
       anyAction: 'Any action',
       from: 'From',

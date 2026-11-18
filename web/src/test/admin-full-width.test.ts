@@ -166,7 +166,8 @@ describe('Bố cục theo route', () => {
     const css = readFileSync(join(SRC, 'features/admin/config.m1.css'), 'utf8');
     expect(css).not.toMatch(/\.cf-blocks \{[^}]*max-(?:inline-size|width)/);
     expect(css).toMatch(/\.cf-blocks \{[^}]*grid-template-columns: minmax\(0, 1fr\)/);
-    expect(css).toMatch(/@media \(min-width: 1280px\) \{[^}]*\.cf-blocks \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}[^}]*\.cf-blocks > \.cf-block:first-child \{ grid-column: 1 \/ -1; \}/);
+    // Còn 2 khối (A7 bỏ Liên hệ): một cột ở mọi bề rộng, không để khối Ô ký nằm nửa hàng
+    expect(css).not.toMatch(/\.cf-blocks \{ grid-template-columns: repeat\(2,/);
     expect(css).not.toMatch(/\.cf-layout|\.cf-aside/);
   });
 
@@ -177,9 +178,9 @@ describe('Bố cục theo route', () => {
   });
 
   // dải chấm nối là tiến trình nên giữ một hàng cả ở 390 (hai hàng thì đường nối gãy)
-  it('Kỳ tháng: dải 4 bước một hàng bốn cột ở mọi bề rộng; bảng dùng hết bề ngang', () => {
+  it('Kỳ tháng: dải 4 bước một hàng ở mọi bề rộng, bước cuối vừa nội dung để dải chạm hai mép (A3); bảng dùng hết bề ngang', () => {
     const css = readFileSync(join(SRC, 'features/month/month.m1.css'), 'utf8');
-    expect(css).toMatch(/\.mk-strip \{[^}]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
+    expect(css).toMatch(/\.mk-strip \{[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\) auto/);
     expect(css).not.toMatch(/\.mk-strip \{[^}]*grid-template-columns: repeat\(2,/);
   });
 

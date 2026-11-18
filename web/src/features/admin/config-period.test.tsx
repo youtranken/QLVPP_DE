@@ -201,10 +201,10 @@ describe('Cấu hình · khối Kỳ đăng ký', () => {
   it('khối Kỳ đăng ký chỉ gửi khóa của khối, dù khối khác cũng đang sửa', async () => {
     const fetchMock = stubConfigApi((body) => jsonResponse(200, { ...CONFIG, ...body }));
     await openConfig();
-    await typeInto(screen.getByLabelText('Tên và cách liên hệ Adm D&E'), 'chị Hoa');
+    await typeInto(screen.getAllByLabelText('Người ký')[0], 'chị Hoa');
     await typeInto(reminder(), '4');
     await savePeriod();
     await vi.waitFor(() => expect(putBodies(fetchMock)).toEqual([{ reminder_days_left: 4 }]));
-    expect(screen.getByLabelText('Tên và cách liên hệ Adm D&E')).toHaveValue('chị Hoa');
+    expect(screen.getAllByLabelText('Người ký')[0]).toHaveValue('chị Hoa');
   });
 });

@@ -15,7 +15,6 @@ export function ForbiddenScreen() {
   });
   // Cổng PMH ID của đúng môi trường (theo issuer); chưa tải / lỗi / server không cấu hình → suy từ host của VPP
   const portal = config.data?.pmh_portal_url || portalFallback();
-  const adminContact = config.data?.admin_contact?.trim() || t('auth.forbidden.defaultContact');
   return (
     <AuthFrame>
       <div className="auth-card__head">
@@ -25,10 +24,7 @@ export function ForbiddenScreen() {
         <LanguageSwitch short className="seg--sm" />
       </div>
       <h1>{t('auth.forbidden.title')}</h1>
-      {/* Đang tải liên hệ: giữ chỗ bằng câu với liên hệ mặc định (ẩn) để nút bên dưới không bị đẩy khi câu thật hiện ra */}
-      <p className={`auth-card__body${config.isPending ? ' is-pending' : ''}`} aria-busy={config.isPending}>
-        {t('auth.forbidden.body', { admin_contact: adminContact })}
-      </p>
+      <p className="auth-card__body">{t('auth.forbidden.body')}</p>
       <div className="auth-actions">
         <button type="button" className="btn btn--primary btn--lg btn--block" onClick={switchAccount}>
           {t('auth.forbidden.switchAccount')}

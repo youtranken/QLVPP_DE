@@ -136,7 +136,7 @@ const delivery = {
       },
     },
     confirm: {
-      adjust: 'Từ chối / giảm dòng…',
+      adjust: 'Từ chối / giảm S/Lượng…',
       title: 'Giao cho {{name}}?',
       cols: { item: 'Món', need: 'Cần giao', now: 'Giao lần này', left: 'Còn lại sau lần này' },
       leftTag: 'Chưa nhận {{n}}',
@@ -197,7 +197,7 @@ const delivery = {
     people: {
       title: 'Giao hàng kỳ tháng {{month}}',
       period: 'Tháng {{month}}',
-      cols: { person: 'Người', progress: 'Tiến độ giao', stock: 'Tủ', debt: 'Còn nợ', actions: 'Thao tác' },
+      cols: { person: 'Nhân viên đặt phiếu', progress: 'Tiến độ giao', stock: 'Tủ', debt: 'Còn nợ', actions: 'Thao tác' },
       progressLabel: 'Đã giao {{done}}/{{total}}',
       stockOk: 'Đủ',
       stockShort: 'Thiếu: {{names}}',

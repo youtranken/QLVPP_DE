@@ -7,8 +7,7 @@ import { discardOptions, useConfirm } from '@/ui/confirm-context';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { useLeaveGuard } from '@/features/request/use-leave-guard';
 import { useAdminConfig, type AdminConfig } from './admin.api';
-import { contactSpec, deadlineHitsReminder, periodSpec, signersSpec, wholeIn } from './config-form';
-import { ContactBlock } from './contact-block';
+import { deadlineHitsReminder, periodSpec, signersSpec, wholeIn } from './config-form';
 import { effectiveSentence } from './effective-period';
 import { PeriodBlock } from './period-block';
 import { SignatureBoxesBlock } from './signature-boxes-block';
@@ -58,9 +57,8 @@ function ConfigForm({ config }: { config: AdminConfig }) {
   };
   const period = useConfigBlock(periodSpec, config, confirmDeadline);
   const signers = useConfigBlock(signersSpec, config);
-  const contact = useConfigBlock(contactSpec, config);
 
-  const blocks = { period, signers, contact };
+  const blocks = { period, signers };
   const dirtyNames = (Object.keys(blocks) as (keyof typeof blocks)[]).filter((k) => blocks[k].dirty).map((k) => t(`config.${k}.title`));
   const dirtyList = dirtyNames.join(', ');
   const prompt = useMemo(() => ({ ...discardOptions(t), message: t('config.page.leaveBody', { blocks: dirtyList }) }), [t, dirtyList]);
@@ -77,7 +75,6 @@ function ConfigForm({ config }: { config: AdminConfig }) {
       <div className="cf-blocks">
         <PeriodBlock state={period} />
         <SignatureBoxesBlock state={signers} />
-        <ContactBlock state={contact} />
       </div>
     </div>
   );

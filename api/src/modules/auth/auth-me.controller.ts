@@ -66,13 +66,12 @@ export class AuthMeController {
   private async buildMe(
     user: NonNullable<AuthedRequest['user']>,
   ): Promise<MeResponse> {
-    const [session, profile, registrationLastDay, defaultMaxQty, adminContact] =
+    const [session, profile, registrationLastDay, defaultMaxQty] =
       await Promise.all([
         user.sessionId ? this.sessions.find(user.sessionId) : null,
         this.users.findBySub(user.sub),
         this.config.getInt('registration_last_day'),
         this.config.getInt('default_max_qty'),
-        this.config.get<string>('admin_contact'),
       ]);
     // Ngôn ngữ = tài khoản PMH ID (docs 7a): claim của phiên SSO; không lưu ở DB của VPP
     const pmh = session && !user.devMode && isPmhSession(session);
@@ -91,7 +90,6 @@ export class AuthMeController {
       config: {
         registration_last_day: registrationLastDay,
         default_max_qty: defaultMaxQty,
-        admin_contact: adminContact,
       },
     };
   }

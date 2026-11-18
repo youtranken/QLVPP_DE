@@ -186,7 +186,7 @@ test.describe('Giao hàng theo người — mọi lần giao qua hộp xác nh�
     }
   });
 
-  test('G4 Giao hàng: bảng Tiến độ/Tủ/Còn nợ, "Từ chối / giảm dòng…" trong hộp Giao mở Điều chỉnh, lưu xong hộp Giao lấy số mới', async ({ page, request }, info) => {
+  test('G4 Giao hàng: bảng Tiến độ/Tủ/Còn nợ, "Từ chối / giảm S/Lượng…" trong hộp Giao mở Điều chỉnh, lưu xong hộp Giao lấy số mới', async ({ page, request }, info) => {
     test.setTimeout(90_000);
     const release = await acquireLock('prev-period');
     const tag = `${Date.now().toString(36)}${isMobile(info) ? 'm' : 'd'}g4`;
@@ -206,7 +206,7 @@ test.describe('Giao hàng theo người — mọi lần giao qua hộp xác nh�
 
       await cardB.getByRole('button', { name: `Giao…, ${s.b.name}` }).click();
       const dlg = page.getByRole('dialog', { name: `Giao cho ${s.b.name}?` });
-      await dlg.getByRole('button', { name: 'Từ chối / giảm dòng…' }).click();
+      await dlg.getByRole('button', { name: 'Từ chối / giảm S/Lượng…' }).click();
       const adjust = page.getByRole('dialog', { name: `Điều chỉnh phiếu ${s.b.name}` });
       await adjust.getByRole('checkbox', { name: `Chọn ${s.pen.name}` }).check();
       await adjust.getByRole('spinbutton', { name: `Giảm còn: ${s.pen.name}` }).fill('5');

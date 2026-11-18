@@ -129,7 +129,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
         vi.fn().mockImplementation((url: string) =>
           Promise.resolve(
             url === '/api/public-config'
-              ? jsonResponse(200, { admin_contact: '', pmh_portal_url: portal })
+              ? jsonResponse(200, { pmh_portal_url: portal })
               : jsonResponse(401, {}),
           ),
         ),
@@ -159,7 +159,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     vi.stubGlobal(
       'fetch',
       vi.fn().mockImplementation((url: string) =>
-        Promise.resolve(url === '/api/public-config' ? jsonResponse(200, { admin_contact: 'chị Bình' }) : jsonResponse(401, {})),
+        Promise.resolve(url === '/api/public-config' ? jsonResponse(200, {}) : jsonResponse(401, {})),
       ),
     );
     renderWithI18n(<App />);

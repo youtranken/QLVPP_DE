@@ -160,9 +160,8 @@ export class NotificationScheduler
     });
   }
 
-  // Tắt cờ hoặc chưa có admin thì không đòi quyền: món giữ chưa đánh dấu để được báo khi bật lại/có admin
+  // Chuông sắp hết luôn bật (chủ dự án chốt 18/11/2026); chưa có admin thì món giữ chưa đánh dấu để được báo khi có admin
   private async lowStock(now: Date): Promise<number> {
-    if (!(await this.config.getBool('low_stock_notify'))) return 0;
     const recipients = await this.notifications.adminRecipients();
     if (recipients.length === 0) return 0;
     return this.db.transaction(async (tx) => {
