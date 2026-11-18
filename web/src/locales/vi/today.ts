@@ -33,6 +33,7 @@ const today = {
       leftQty: 'còn {{qty}} SL chưa nhận',
       review: 'Duyệt',
       open: 'Mở phiếu',
+      error: { review: 'Không tải được món chờ duyệt — thử lại.', people: 'Không tải được người đã nghỉ còn phần — thử lại.' },
     },
   },
 };

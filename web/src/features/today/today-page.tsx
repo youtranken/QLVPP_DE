@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { langOf, lockPhrase } from '@/lib/period-text';
+import { LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { greetingKey } from './greeting';
 import { attentionItems, todaySummary, todayTiles, type Text, type Tile } from './today-tiles';
@@ -47,13 +48,19 @@ function TileView({ tile, source }: { tile: Tile; source: SourceState }) {
   );
 }
 
-function AttentionList({ items, settled }: { items: ReturnType<typeof attentionItems>; settled: boolean }) {
+type AttentionSources = { review: SourceState; people: SourceState };
+
+function AttentionList({ items, settled, sources }: { items: ReturnType<typeof attentionItems>; settled: boolean; sources: AttentionSources }) {
   const { t } = useTranslation();
+  const failed = (['review', 'people'] as const).filter((k) => sources[k].failed);
   return (
     <section className="td-panel" aria-labelledby="td-attention">
       <h2 id="td-attention">{t('today.attention.title')}</h2>
+      {failed.map((k) => (
+        <LoadError key={k} message={t(`today.attention.error.${k}`)} onRetry={sources[k].retry} />
+      ))}
       {items.length === 0 ? (
-        settled && <p className="td-empty">{t('today.attention.empty')}</p>
+        settled && failed.length === 0 && <p className="td-empty">{t('today.attention.empty')}</p>
       ) : (
         <ul aria-label={t('today.attention.title')}>
           {items.map((it) =>
@@ -124,7 +131,7 @@ export function TodayPage() {
           <TileView key={tile.key} tile={tile} source={sources[tile.source]} />
         ))}
       </section>
-      <AttentionList items={attentionItems(data)} settled={settled} />
+      <AttentionList items={attentionItems(data)} settled={settled} sources={sources} />
     </div>
   );
 }

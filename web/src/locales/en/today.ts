@@ -36,6 +36,7 @@ const today: Messages<typeof vi> = {
       leftQty: '{{qty}} units not received',
       review: 'Review',
       open: 'Open order',
+      error: { review: 'Could not load items awaiting review — try again.', people: 'Could not load leavers with items left — try again.' },
     },
   },
 };

@@ -91,6 +91,33 @@ describe('Việc hôm nay', () => {
     expect(within(rows[1]).getByRole('link', { name: 'Mở phiếu' })).toHaveAttribute('href', '/admin/delivery?tab=left&person=u-v');
   });
 
+  it('"Cần chú ý": query món chờ duyệt lỗi thì khối báo lỗi + "Thử lại", người đã nghỉ vẫn hiện', async () => {
+    mockViewport(1280);
+    let fail = true;
+    stubToday({ '/api/admin/review?status=pending': () => (fail ? jsonResponse(500, { code: 'INTERNAL' }) : jsonResponse(200, { items: [REVIEW] })) });
+    renderApp(makeMe('admin'), '/admin/today');
+    const panel = await screen.findByRole('region', { name: 'Cần chú ý' });
+    const alert = await within(panel).findByRole('alert');
+    expect(alert).toHaveTextContent('Không tải được món chờ duyệt — thử lại.');
+    expect(await within(panel).findByText('Phạm Quốc Việt')).toBeInTheDocument();
+    expect(within(panel).queryByText('Không có việc cần chú ý')).toBeNull();
+    fail = false;
+    await userEvent.click(within(alert).getByRole('button', { name: 'Thử lại' }));
+    expect(await within(panel).findByText('Hoàng Minh')).toBeInTheDocument();
+    expect(within(panel).queryByRole('alert')).toBeNull();
+  });
+
+  it('"Cần chú ý": query người cần giao lỗi thì khối báo lỗi + "Thử lại", món chờ duyệt vẫn hiện', async () => {
+    mockViewport(1280);
+    stubToday({ [PEOPLE_URL]: () => jsonResponse(500, { code: 'INTERNAL' }) });
+    renderApp(makeMe('admin'), '/admin/today');
+    const panel = await screen.findByRole('region', { name: 'Cần chú ý' });
+    const alert = await within(panel).findByRole('alert');
+    expect(alert).toHaveTextContent('Không tải được người đã nghỉ còn phần — thử lại.');
+    expect(within(alert).getByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
+    expect(await within(panel).findByText('Hoàng Minh')).toBeInTheDocument();
+  });
+
   it('bấm ô "Giao được ngay" tới Giao hàng với ?tab=ready', async () => {
     mockViewport(390);
     stubToday();
