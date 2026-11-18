@@ -61,3 +61,109 @@ describe('EN: một từ "items", số nhiều theo i18next', () => {
     expect(VI('request.history.customCount.accepted', { count: 2 })).toBe('2 món đã chấp nhận');
   });
 });
+
+describe('EN: số đếm admin (Hôm nay, Giao hàng, Kỳ tháng) theo số ít / số nhiều', () => {
+  it.each([
+    ['today.tiles.backlog.hint', {}, 'people · 1 month', 'people · 2 months'],
+    ['today.tiles.review.hint', { month: 11 }, 'people · period 11 · oldest 1 day', 'people · period 11 · oldest 2 days'],
+    ['today.attention.waiting', {}, 'Awaiting review 1 day', 'Awaiting review 2 days'],
+    ['today.attention.leftQty', {}, '1 unit not received', '2 units not received'],
+    ['month.table.orderValue', { qty: 3 }, '1 item · 3 qty', '2 items · 3 qty'],
+    ['delivery.people.debtValue', { months: 'M11' }, '1 item · M11', '2 items · M11'],
+    ['delivery.people.panel.sum', {}, 'Deliver 1 unit', 'Deliver 2 units'],
+    ['delivery.confirm.sumCancel', {}, 'Cancel 1 out-of-stock item', 'Cancel 2 out-of-stock items'],
+    ['delivery.bulk.rejected', {}, '1 item marked Do not buy', '2 items marked Do not buy'],
+  ] as const)('%s: 1 / 2', (key, params, one, two) => {
+    expect(EN(key, { ...params, count: 1 })).toBe(one);
+    expect(EN(key, { ...params, count: 2 })).toBe(two);
+  });
+
+  it('hạn khóa kỳ: "1 day left" / "2 days left"', () => {
+    expect(EN('today.tiles.period.hint', { lock: 'x', count: 1 })).toBe('locks x · 1 day left');
+    expect(EN('today.tiles.period.hint', { lock: 'x', count: 2 })).toBe('locks x · 2 days left');
+  });
+
+  it('dòng nhiều số đếm ghép từ common.count: "1 month · 1 person · 1 unit"', () => {
+    const c = (k: string, n: number) => EN(`common.count.${k}`, { count: n });
+    expect(EN('delivery.backlog.summaryAll', { months: c('months', 1), people: c('people', 1), units: c('units', 1) })).toBe('1 month · 1 person · 1 unit');
+    expect(EN('delivery.backlog.monthHead', { month: 'December', people: c('people', 2), units: c('units', 5) })).toBe('December · 2 people · 5 units');
+    expect(EN('delivery.bulk.line', { items: c('items', 1), units: c('units', 3) })).toBe('1 item · 3 units');
+    expect(VI('delivery.backlog.summaryAll', { months: VI('common.count.months', { count: 2 }), people: VI('common.count.people', { count: 3 }), units: VI('common.count.units', { count: 9 }) })).toBe('2 tháng · 3 người · 9 đơn vị');
+  });
+
+  it('tiêu đề Giao hàng gọi tháng bằng tên như Nhận hàng: "Deliveries · December"', () => {
+    expect(EN('delivery.people.title', { month: 12 })).toBe('Deliveries · December');
+    expect(EN('arrivals.title', { month: 12 })).toBe('Receiving · December');
+    expect(VI('delivery.people.title', { month: 12 })).toBe('Giao hàng kỳ tháng 12');
+  });
+});
+
+// Số trước danh từ đếm được ("{{n}} items") cần cặp _one/_other, không thì EN ra "1 items".
+// Khóa cũ ngoài Hôm nay/Giao hàng/Kỳ tháng còn nợ được liệt kê ở đây — danh sách chỉ được rút ngắn.
+const COUNTED = /\{\{\s*(n|count|months|qty|days|k|u|lines|units|items)\s*\}\}\s+(?:[\w-]+\s+)?(items?|units?|months?|days?|requests?|lines?|people|persons?|changes?|entries|entry|groups?)\b/;
+const PLURAL_DEBT = new Set<string>([
+  'common.dateRange.summary',
+  'nav.badge.review',
+  'nav.badge.delivery',
+  'nav.badge.stock',
+  'nav.periodCard.daysLeft',
+  'catalog.list.groupItems',
+  'catalog.bulk.maxTitle',
+  'catalog.bulk.maxDone',
+  'catalog.bulk.moveTitle',
+  'catalog.bulk.moveDone',
+  'catalog.bulk.deactivateTitle',
+  'catalog.bulk.partial',
+  'catalog.drawer.changes',
+  'catalog.categories.deactivateBody',
+  'catalog.categories.reactivated',
+  'stock.page.showMore',
+  'users.page.syncNoAccess',
+  'audit.page.dayCount',
+  'audit.batch.title',
+  'summary.history.avgLabel',
+  'summary.history.summaryNone',
+  'summary.open.dialogSaved',
+  'summary.table.groupPeople',
+  'summary.adjust.subtitle',
+  'summary.adjust.heading',
+  'summary.adjust.units',
+  'summary.adjust.changes',
+  'delivery.page.shortToBacklog',
+  'delivery.detail.shortWarn',
+  'reports.part1.groupItems',
+  'reports.part1.rows',
+  'reports.send.whoLabel',
+  'reports.send.status.customLabel',
+  'reports.preview.sub',
+  'units.page.dirty',
+  'units.page.orderSaved',
+  'units.page.orderPartial',
+  'arrivals.batchPicked',
+  'arrivals.makeup.saved',
+  'arrivals.receivePicked',
+  'arrivals.receivePickedPartial',
+  'arrivals.saved',
+  'sendAdm.leave.body',
+  'sendAdm.confirm.more',
+  'warn.W8',
+  'warn.W19row',
+  'warn.W19head',
+  'warn.W21',
+  'warn.W25',
+]);
+
+describe('EN: chặn số đếm thiếu _one/_other', () => {
+  const counted = strings(en).filter(([k, s]) => !/_(zero|one|other)$/.test(k) && COUNTED.test(s)).map(([k]) => k);
+
+  it('quét bắt được mẫu (tránh regex hỏng mà test vẫn xanh)', () => {
+    expect(COUNTED.test('{{n}} items')).toBe(true);
+    expect(COUNTED.test('{{count}} off-catalog items')).toBe(true);
+    expect(COUNTED.test('{{months}} · {{people}}')).toBe(false);
+  });
+
+  it('không chuỗi mới nào thiếu _one/_other; danh sách nợ không còn khóa đã sửa', () => {
+    expect(counted.filter((k) => !PLURAL_DEBT.has(k))).toEqual([]);
+    expect([...PLURAL_DEBT].filter((k) => !counted.includes(k))).toEqual([]);
+  });
+});

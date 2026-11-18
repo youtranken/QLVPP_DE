@@ -8,6 +8,16 @@ const common: Messages<typeof vi> = {
     adminTitle: 'VPP Admin',
   },
   common: {
+    count: {
+      items_one: '{{count}} item',
+      items_other: '{{count}} items',
+      units_one: '{{count}} unit',
+      units_other: '{{count}} units',
+      people_one: '{{count}} person',
+      people_other: '{{count}} people',
+      months_one: '{{count}} month',
+      months_other: '{{count}} months',
+    },
     requestStatus: { notDelivered: 'Not delivered', partial: 'Delivered {{delivered}}/{{total}}', done: 'Received in full', owed: 'Owed {{n}}', cancelled: 'Not delivered (cancelled)' },
     disabledReason: { noChanges: 'No changes yet', noQty: 'No quantity chosen to deliver', noStock: 'None left in the cabinet', nothingToOrder: 'Nothing to order yet', fixErrors: 'Fix the highlighted field before saving', sorting: 'Sorting — save the order or cancel before editing', notSent: 'Not sent to the supplier for this month' },
     paused: 'Paused',

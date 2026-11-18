@@ -107,7 +107,7 @@ export function BacklogMonthTable({ months, onAction }: { months: BacklogMonth[]
             {months.length > 1 && (
             <tr className="dt-group">
               <th scope="rowgroup" colSpan={COLUMNS.length}>
-                {t('delivery.backlog.monthHead', { month: f.month(m.ym), people: m.people.length, units: m.owed_units })}
+                {t('delivery.backlog.monthHead', { month: f.month(m.ym), people: t('common.count.people', { count: m.people.length }), units: t('common.count.units', { count: m.owed_units }) })}
               </th>
             </tr>
             )}

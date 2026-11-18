@@ -77,7 +77,7 @@ function DebtCell({ person }: { person: DeliveryPerson }) {
   const debt = person.lines.filter((l) => l.is_debt && l.remaining_qty > 0);
   if (debt.length === 0) return <EmptyValue />;
   const months = [...new Set(debt.map((l) => l.period_ym))].sort().map((ym) => t('delivery.people.monthShort', { month: Number(ym.slice(5)) }));
-  return <span className="num">{t('delivery.people.debtValue', { n: debt.length, months: months.join(', ') })}</span>;
+  return <span className="num">{t('delivery.people.debtValue', { count: debt.length, months: months.join(', ') })}</span>;
 }
 
 function PickHeader() {

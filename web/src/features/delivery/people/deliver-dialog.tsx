@@ -38,7 +38,7 @@ const NO_WAIT = { people: 0, qty: 0 };
 function sumText(s: Totals, t: (k: string, o?: Record<string, unknown>) => string) {
   const base = s.left === 0 && s.debt === 0 ? t('delivery.confirm.sumAll', { give: s.give }) : t('delivery.confirm.sumOwe', { give: s.give, left: s.left });
   const debt = s.debt > 0 ? t('delivery.confirm.sumDebt', { debt: s.debt }) : '';
-  const cancel = s.cancel > 0 ? ` · ${t('delivery.confirm.sumCancel', { n: s.cancel })}` : '';
+  const cancel = s.cancel > 0 ? ` · ${t('delivery.confirm.sumCancel', { count: s.cancel })}` : '';
   return `${base}${debt}${cancel}`;
 }
 

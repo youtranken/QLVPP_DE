@@ -31,7 +31,7 @@ function useColumns(onView: (row: RegistrationRow) => void) {
             <MonthPersonText name={nameOf(r)} sub={[r.team, t('month.table.savedOn', { date: formatVnStamp(r.saved_at).split(' ')[1] })].filter(Boolean).join(' · ')} />
           ),
         },
-        { id: 'order', header: t('month.table.order'), meta: { minWidth: '8rem' }, cell: ({ row: { original: r } }: Cell) => <span className="num">{t('month.table.orderValue', { lines: r.line_count, qty: r.total_qty })}</span> },
+        { id: 'order', header: t('month.table.order'), meta: { minWidth: '8rem' }, cell: ({ row: { original: r } }: Cell) => <span className="num">{t('month.table.orderValue', { count: r.line_count, qty: r.total_qty })}</span> },
         { id: 'note', header: t('month.table.note'), meta: { minWidth: '7rem' }, cell: ({ row: { original: r } }: Cell) => (r.custom_count > 0 ? <span className="tag tag--warn">{t('month.notes.custom')}</span> : <EmptyValue />) },
         { id: 'status', header: t('month.table.status'), meta: { width: '8rem' }, cell: () => <span className="tag">{t('month.table.saved')}</span> },
         {

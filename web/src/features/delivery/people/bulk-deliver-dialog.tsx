@@ -74,7 +74,7 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
   const text = (r: PersonResult) =>
     [
       r.units > 0 && t('delivery.confirm.done', { n: r.units }),
-      r.rejected > 0 && t('delivery.bulk.rejected', { k: r.rejected }),
+      r.rejected > 0 && t('delivery.bulk.rejected', { count: r.rejected }),
       ...new Set(r.failures.map(reason)),
       r.skippedRejects > 0 && t('delivery.confirm.rejectSkipped'),
     ]
@@ -123,7 +123,7 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
               {plan.summary.map((s) => (
                 <li key={s.user_sub}>
                   <b>{nameOf(people, s.user_sub)}</b>
-                  <span className="num">{t('delivery.bulk.line', { n: s.items, u: s.give })}</span>
+                  <span className="num">{t('delivery.bulk.line', { items: t('common.count.items', { count: s.items }), units: t('common.count.units', { count: s.give }) })}</span>
                   {s.left > 0 && <small className="bd-left">{t('delivery.bulk.left', { n: s.left })}</small>}
                 </li>
               ))}

@@ -5,6 +5,16 @@ const common = {
     adminTitle: 'Quản lý VPP',
   },
   common: {
+    count: {
+      items_one: '{{count}} món',
+      items_other: '{{count}} món',
+      units_one: '{{count}} đơn vị',
+      units_other: '{{count}} đơn vị',
+      people_one: '{{count}} người',
+      people_other: '{{count}} người',
+      months_one: '{{count}} tháng',
+      months_other: '{{count}} tháng',
+    },
     requestStatus: { notDelivered: 'Chưa giao', partial: 'Đã giao {{delivered}}/{{total}}', done: 'Đã nhận đủ', owed: 'Còn nợ {{n}}', cancelled: 'Không giao' },
     disabledReason: { noChanges: 'Chưa có thay đổi', noQty: 'Chưa chọn số lượng giao', noStock: 'Tủ hết món này', nothingToOrder: 'Chưa có món nào cần đặt', fixErrors: 'Sửa ô đang báo lỗi trước khi lưu', sorting: 'Đang sắp xếp — Lưu thứ tự hoặc Hủy trước khi sửa', notSent: 'Kỳ này chưa gửi NCC' },
     paused: 'Tạm ngưng',

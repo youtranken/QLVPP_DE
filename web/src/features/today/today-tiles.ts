@@ -59,7 +59,7 @@ function reviewTile(items: ReviewLite[] | undefined, now: Date): Tile {
   const badge = reviewBadge(items);
   const ym = items[0]?.period_ym;
   const oldest = items.filter((r) => r.period_ym === ym).reduce<string | null>((min, r) => (min === null || r.created_at < min ? r.created_at : min), null);
-  const hint = ym && oldest ? { key: 'today.tiles.review.hint', params: { month: monthOf(ym), days: vnDaysWaiting(oldest, now) } } : null;
+  const hint = ym && oldest ? { key: 'today.tiles.review.hint', params: { month: monthOf(ym), count: vnDaysWaiting(oldest, now) } } : null;
   return work('review', 'review', badge.n, 'danger', hint, badge.link ?? '/admin/month');
 }
 
@@ -77,7 +77,7 @@ function periodTile(period: TodayData['period'], summary: TodayData['summary']):
     source: 'period',
     label: period ? { key: 'today.tiles.period.label', params: { month: monthOf(period.ym) } } : { key: 'today.tiles.period.labelPlain' },
     value: period && summary ? `${summary.registered}/${summary.headcount}` : null,
-    hint: period ? { key: 'today.tiles.period.hint', params: { deadline: period.deadline, days: period.days_left } } : null,
+    hint: period ? { key: 'today.tiles.period.hint', params: { deadline: period.deadline, count: period.days_left } } : null,
     tone: 'neutral',
     to: period ? `/admin/month?ym=${period.ym}` : '/admin/month',
   };
@@ -90,7 +90,7 @@ export function todayTiles(d: TodayData): Tile[] {
     reviewTile(d.review, d.now),
     work('ready', 'people', tabs ? tabs.ready.length : null, 'neutral', { key: 'today.tiles.ready.hint' }, '/admin/delivery?tab=ready'),
     arrivalsTile(d.arrivals),
-    work('backlog', 'backlog', months ? peopleIn(months) : null, 'neutral', { key: 'today.tiles.backlog.hint', params: { months: months?.length ?? 0 } }, '/admin/backlog'),
+    work('backlog', 'backlog', months ? peopleIn(months) : null, 'neutral', { key: 'today.tiles.backlog.hint', params: { count: months?.length ?? 0 } }, '/admin/backlog'),
     periodTile(d.period, d.summary),
     work('low', 'stock', d.stockRows ? stockStats(d.stockRows).low : null, 'warn', { key: 'today.tiles.low.hint' }, '/admin/stock?filter=low'),
     work('left', 'people', tabs ? tabs.left.length : null, 'warn', { key: 'today.tiles.left.hint' }, '/admin/delivery?tab=left'),

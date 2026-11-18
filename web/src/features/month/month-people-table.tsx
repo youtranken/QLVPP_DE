@@ -38,7 +38,7 @@ function OrderCell({ row }: { row: PersonRow }) {
   const { t } = useTranslation();
   return (
     <span className="mk-order">
-      <span className="num">{t('month.table.orderValue', { lines: row.line_count, qty: row.total_qty })}</span>
+      <span className="num">{t('month.table.orderValue', { count: row.line_count, qty: row.total_qty })}</span>
       {row.custom_pending > 0 && <span className="tag tag--warn">{t('month.table.pendingReview', { n: row.custom_pending })}</span>}
     </span>
   );

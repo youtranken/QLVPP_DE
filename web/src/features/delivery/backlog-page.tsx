@@ -83,8 +83,8 @@ export function BacklogPage() {
             <ListMeta>
               <p className="bl-summary" role="status">
                 {months.length === 1
-                  ? t('delivery.backlog.monthHead', { month: f.month(months[0].ym), people: months[0].people.length, units: months[0].owed_units })
-                  : t('delivery.backlog.summaryAll', { months: months.length, people: peopleIn(months), units: unitsIn(months) })}
+                  ? t('delivery.backlog.monthHead', { month: f.month(months[0].ym), people: t('common.count.people', { count: months[0].people.length }), units: t('common.count.units', { count: months[0].owed_units }) })
+                  : t('delivery.backlog.summaryAll', { months: t('common.count.months', { count: months.length }), people: t('common.count.people', { count: peopleIn(months) }), units: t('common.count.units', { count: unitsIn(months) }) })}
               </p>
             </ListMeta>
           )}

@@ -57,7 +57,7 @@ describe('todayTiles', () => {
     const t = byKey(FULL).review;
     expect(t.tone).toBe('danger');
     expect(t.to).toBe('/admin/month?ym=2026-11&chip=pending');
-    expect(t.hint).toEqual({ key: 'today.tiles.review.hint', params: { month: 11, days: 3 } });
+    expect(t.hint).toEqual({ key: 'today.tiles.review.hint', params: { month: 11, count: 3 } });
   });
 
   it('ô số 0 thì hint "Không có việc", tone ok', () => {
@@ -102,7 +102,7 @@ describe('todayTiles', () => {
   it('kỳ đang đăng ký: nhãn tháng, hint câu khóa + số ngày còn', () => {
     const t = byKey(FULL).period;
     expect(t.label).toEqual({ key: 'today.tiles.period.label', params: { month: 12 } });
-    expect(t.hint).toEqual({ key: 'today.tiles.period.hint', params: { deadline: PERIOD.deadline, days: 22 } });
+    expect(t.hint).toEqual({ key: 'today.tiles.period.hint', params: { deadline: PERIOD.deadline, count: 22 } });
   });
 
   it('nguồn chưa có (lỗi/đang tải) → value null, ô khác vẫn có số', () => {

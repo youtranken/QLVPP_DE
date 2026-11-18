@@ -52,7 +52,7 @@ export function PersonPanel({ ym, person, people, next, onNext, onDelivered, foc
   const footer = (
     <>
       <p className="pp-sum">
-        {totals.left > 0 ? t('delivery.people.panel.sumOwe', { give: totals.give, left: totals.left }) : t('delivery.people.panel.sum', { give: totals.give })}
+        {totals.left > 0 ? t('delivery.people.panel.sumOwe', { give: totals.give, left: totals.left }) : t('delivery.people.panel.sum', { count: totals.give })}
         {totals.debt > 0 && t('delivery.people.panel.sumDebt', { debt: totals.debt })}
       </p>
       <button type="button" className="btn btn--primary pp-deliver" disabled={totals.give === 0 && totals.cancel === 0} onClick={() => setConfirming(true)}>

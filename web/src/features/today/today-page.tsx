@@ -21,7 +21,7 @@ const dayLine = (now: Date, lang: string) => {
 function TileView({ tile, source }: { tile: Tile; source: SourceState }) {
   const { t, i18n } = useTranslation();
   const text = (x: Text) =>
-    x.key === 'today.tiles.period.hint' ? t(x.key, { lock: lockPhrase(String(x.params?.deadline), langOf(i18n.language)), days: x.params?.days }) : t(x.key, x.params);
+    x.key === 'today.tiles.period.hint' ? t(x.key, { lock: lockPhrase(String(x.params?.deadline), langOf(i18n.language)), count: x.params?.count }) : t(x.key, x.params);
   const label = text(tile.label);
   if (source.failed) {
     return (
@@ -66,7 +66,7 @@ function AttentionList({ items, settled, sources }: { items: ReturnType<typeof a
           {items.map((it) =>
             it.kind === 'review' ? (
               <li key={`r-${it.id}`} className="td-todo">
-                <span className="tag tag--danger">{t('today.attention.waiting', { days: it.days })}</span>
+                <span className="tag tag--danger">{t('today.attention.waiting', { count: it.days })}</span>
                 <span className="td-todo__text">
                   <b>{it.name}</b> · {t('today.attention.custom', { name: it.what })}
                 </span>
@@ -78,7 +78,7 @@ function AttentionList({ items, settled, sources }: { items: ReturnType<typeof a
               <li key={`l-${it.id}`} className="td-todo">
                 <span className="tag tag--warn">{t('today.attention.leftTag')}</span>
                 <span className="td-todo__text">
-                  <b>{it.name}</b> · {t('today.attention.leftQty', { qty: it.qty })}
+                  <b>{it.name}</b> · {t('today.attention.leftQty', { count: it.qty })}
                 </span>
                 <Link className="btn btn--sm" to={it.to}>
                   {t('today.attention.open')}
