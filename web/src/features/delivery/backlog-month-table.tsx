@@ -5,7 +5,6 @@ import { RowMenu } from '@/ui/row-menu';
 import type { BacklogLine } from './backlog.api';
 import { useBacklogFormat } from './backlog-format';
 import { isLeft, type BacklogMonth, type BacklogPerson } from './backlog-months';
-import { DeliveryAvatar } from './delivery-avatar';
 
 export type LineAction = 'deliver' | 'cancel' | 'history';
 type OnAction = (action: LineAction, line: BacklogLine) => void;
@@ -73,7 +72,6 @@ function PersonRows({ person, phone, onAction }: { person: BacklogPerson; phone:
       <tr className="bl-person">
         <th scope="row" colSpan={COLUMNS.length}>
           <span className="bl-head">
-            <DeliveryAvatar name={name} />
             <b>{name}</b>
             <small>{person.department ?? t('delivery.noDepartment')}</small>
             {isLeft(person) && <span className="tag tag--outline">{t('delivery.backlog.left')}</span>}

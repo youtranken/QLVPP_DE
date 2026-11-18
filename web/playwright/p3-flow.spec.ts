@@ -54,7 +54,7 @@ async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
 }
 
 const debtRow = (page: Page, itemName: string) => page.getByRole('row').filter({ hasText: itemName }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung' }) });
-// Cột: Món · ĐVT · Đăng ký · Đã giao · Còn nợ · Tủ còn · Thao tác
+// Cột: Món · ĐVT · Đăng ký · Đã giao · Còn nợ · Tủ · Thao tác
 const owedCell = (row: Locator) => row.getByRole('cell').nth(4);
 
 async function backlogByItem(admin: Page, info: TestInfo, s: MonthSeed) {

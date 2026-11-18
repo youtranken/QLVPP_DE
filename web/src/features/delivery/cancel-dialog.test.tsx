@@ -55,8 +55,8 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
     expect(radios.map((r) => r.closest('label')?.textContent)).toEqual(['NCC hết hàng', 'Người nhận không cần nữa', 'Người đã nghỉ', 'Khác']);
     expect(radios.every((r) => !(r as HTMLInputElement).checked)).toBe(true);
     expect(screen.getByText('Nhân viên sẽ thấy lý do trong Lịch sử.')).toBeInTheDocument();
-    const footer = screen.getAllByRole('button', { name: 'Đóng' }).at(-1)!.parentElement!;
-    expect(within(footer).getAllByRole('button').map((b) => b.textContent)).toEqual(['Đóng', 'Hủy nợ']);
+    const footer = screen.getByRole('button', { name: 'Quay lại' }).parentElement!;
+    expect(within(footer).getAllByRole('button').map((b) => b.textContent)).toEqual(['Quay lại', 'Hủy nợ']);
     expect(submit()).toBeDisabled();
     expect(submit()).toHaveClass('btn--danger', 'btn--solid');
   });
@@ -135,7 +135,7 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
   it('"Quay lại" đóng hộp, không gửi', async () => {
     const f = stub();
     const { onClose } = renderDialog();
-    await userEvent.click(screen.getAllByRole('button', { name: 'Đóng' }).at(-1)!);
+    await userEvent.click(screen.getByRole('button', { name: 'Quay lại' }));
     expect(onClose).toHaveBeenCalled();
     expect(posts(f)).toHaveLength(0);
   });

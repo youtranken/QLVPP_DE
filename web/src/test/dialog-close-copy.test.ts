@@ -80,9 +80,9 @@ describe('Nút đóng hộp thoại: "Hủy" / "Đóng" / "Quay lại sửa"', (
     expect(get(en as unknown as Tree, 'sendAdm.leave.discard')).toBe('Discard changes');
   });
 
-  it('Hủy nợ: nút hành động thật là "Hủy nợ", nút đóng là "Đóng" (không đặt "Hủy" cạnh "Hủy nợ")', () => {
+  it('Hủy nợ: nút hành động thật là "Hủy nợ", nút thoát là "Quay lại" (không đặt "Hủy" cạnh "Hủy nợ")', () => {
     expect(get(vi as unknown as Tree, 'delivery.backlog.cancelDialog.submit')).toBe('Hủy nợ');
-    expect(get(vi as unknown as Tree, 'delivery.backlog.cancelDialog.back')).toBe('Đóng');
+    expect(get(vi as unknown as Tree, 'delivery.backlog.cancelDialog.back')).toBe('Quay lại');
     // Hộp Giao / Giao n phiếu: bỏ một thao tác thì ghi "Hủy" như hộp Giao bổ sung (quyết định 18/11)
     expect(get(vi as unknown as Tree, 'delivery.confirm.cancel')).toBe('Hủy');
     expect(get(en as unknown as Tree, 'delivery.confirm.cancel')).toBe('Cancel');

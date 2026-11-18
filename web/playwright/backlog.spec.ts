@@ -61,7 +61,8 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
         expect(fit.barSW, `thanh công cụ không tràn ở ${width}`).toBeLessThanOrEqual(fit.barCW);
       }
       if (vp) await page.setViewportSize(vp);
-      // Cột: Món · ĐVT · Đăng ký · Đã giao · Còn nợ · Tủ còn · Thao tác
+      // Cột: Món · ĐVT · Đăng ký · Đã giao · Còn nợ · Tủ · Thao tác
+      if (!isMobile(info)) await expect(page.getByRole('columnheader', { name: 'Tủ', exact: true })).toBeVisible();
       await expect(row.getByRole('cell').nth(2)).toHaveText('3');
       await expect(row.getByRole('cell').nth(3)).toHaveText('1');
       await expect(row.getByRole('cell').nth(4)).toHaveText('2');
@@ -89,6 +90,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       const deliver = page.getByRole('dialog', { name: `Giao bổ sung ${a.name} cho ${seed.name}` });
       const qty = deliver.getByLabel('Số lượng giao');
       await expect(qty).toHaveValue('2');
+      await expect(deliver.getByText('Giao được tối đa 2 cái — bằng số còn nợ hoặc số trong tủ, lấy số nhỏ hơn')).toBeVisible();
       await expect(deliver.getByText('Tủ sau khi giao 7')).toBeVisible();
       await expect(deliver.getByRole('button', { name: /^Thêm/ })).toBeDisabled();
       await qty.fill('3');
@@ -188,7 +190,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       }
       const cancel = page.getByRole('dialog', { name: `Hủy nợ 2 cái ${debt.items[0].name} của ${debt.name}?` });
       await expect(cancel.getByRole('radio', { name: 'Người đã nghỉ' })).toBeChecked();
-      await expect(cancel.getByRole('button', { name: 'Đóng' }).last()).toBeVisible();
+      await expect(cancel.getByRole('button', { name: 'Quay lại' })).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await cancel.getByRole('button', { name: 'Hủy nợ', exact: true }).click();
       await expect(cancel).toHaveCount(0);
