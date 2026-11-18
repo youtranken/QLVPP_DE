@@ -9,6 +9,7 @@ import { Icon } from '@/ui/icon';
 import { Loading, LoadError } from '@/ui/load-state';
 import { MonthSwitcher } from '@/ui/month-switcher';
 import { Switch } from '@/ui/switch';
+import { Toolbar } from '@/ui/toolbar';
 import { useAdminItems, useAllCategories } from '@/features/catalog/catalog.api';
 import { currentPeriodQuery, useCurrentPeriod, type CurrentPeriod } from '@/features/request/request.api';
 import { useLeaveGuard } from '@/features/request/use-leave-guard';
@@ -37,32 +38,43 @@ import './reports.m1.css';
 import { useDisabledReason } from '@/ui/disabled-reason';
 import { PageCrumbs } from '@/ui/page-header';
 
-// Nhãn cạnh nút › (tắt): nói rõ kỳ đang mở còn đăng ký, chưa báo cáo được tới khi khóa
-function Heading({ ym, open, onMonth, children }: { ym: string; open: CurrentPeriod; onMonth: (ym: string) => void; children?: React.ReactNode }) {
-  const { t, i18n } = useTranslation();
-  const openYm = open.ym;
+function Heading() {
+  const { t } = useTranslation();
   return (
     <div className="bc-head">
       <div className="page-head__text">
         <PageCrumbs crumbs={[t('nav.groups.monthly'), t('nav.reports')]} />
         <h1>{t('reports.send.title')}</h1>
       </div>
-      <MonthSwitcher
-        value={ym}
-        max={lockedYm(openYm)}
-        onChange={onMonth}
-        beyond={{ ym: openYm, label: t('reports.page.openNotReady', { month: monthOf(openYm), lockPhrase: lockPhrase(open.deadline, langOf(i18n.language)) }) }}
-        formatLabel={(v) => t('reports.page.month', { month: monthOf(v), year: v.slice(0, 4) })}
-        labels={{ group: t('reports.page.monthNav'), prev: t('reports.page.prevMonth'), next: t('reports.page.nextMonth') }}
-      />
-      {children}
     </div>
+  );
+}
+
+// Bộ chọn tháng đầu thanh công cụ; lý do › tắt (kỳ đang mở còn đăng ký) nằm ở chú thích của nút
+function ReportToolbar({ ym, open, onMonth, children }: { ym: string; open: CurrentPeriod; onMonth: (ym: string) => void; children: React.ReactNode }) {
+  const { t, i18n } = useTranslation();
+  return (
+    <Toolbar
+      label={t('reports.page.toolbar')}
+      lead={
+        <MonthSwitcher
+          value={ym}
+          max={lockedYm(open.ym)}
+          onChange={onMonth}
+          nextReason={t('reports.page.openNotReady', { month: monthOf(open.ym), lockPhrase: lockPhrase(open.deadline, langOf(i18n.language)) })}
+          formatLabel={(v) => t('reports.page.month', { month: monthOf(v), year: v.slice(0, 4) })}
+          labels={{ group: t('reports.page.monthNav'), prev: t('reports.page.prevMonth'), next: t('reports.page.nextMonth') }}
+        />
+      }
+    >
+      {children}
+    </Toolbar>
   );
 }
 
 function ActionButton({ xlsx, disabled, taking, previewing = false, describedBy, onTake }: { xlsx: boolean; disabled: boolean; taking: SnapshotKind | null; previewing?: boolean; describedBy?: string; onTake: (xlsx: boolean) => void }) {
   const { t } = useTranslation();
-  // Nút in giờ là "Xem tổng kết": bận khi đang dựng bản xem hoặc đang chốt bản in sau "Đồng ý và in"
+  // Nút "In trình ký" mở bản xem trước: bận khi đang dựng bản xem hoặc đang chốt bản in sau "Đồng ý và in"
   const busy = xlsx ? taking === 'xlsx' : previewing || taking === 'print';
   const label = xlsx ? (busy ? 'reports.page.taking' : 'reports.send.excel') : previewing ? 'reports.preview.loading' : busy ? 'reports.page.preparingPrint' : 'reports.send.preview';
   return (
@@ -163,7 +175,8 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
   const retry = () => [items, cats].forEach((q) => q.isError && void q.refetch());
   return (
     <div className="bc-page">
-      <Heading ym={report.ym} open={open} onMonth={onMonth}>
+      <Heading />
+      <ReportToolbar ym={report.ym} open={open} onMonth={onMonth}>
         <Switch checked={onlyNeed} text={t('reports.part1.onlyNeed')} onChange={setOnlyNeed} />
         {/* Điện thoại: bảng thành thẻ, đầu bảng (nơi có ⓘ) ẩn — đưa ⓘ lên hàng công cụ */}
         <span className="bc-how-phone">
@@ -171,11 +184,14 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
             <p>{t('reports.page.how.formula')}</p>
           </InfoTip>
         </span>
-        <div className="bc-head__actions">
-          <ReportStatusLine send={send} rowsChanged={changed.size} pendingCustom={report.pending_custom_count} ym={report.ym} onReprint={sent ? () => void printer.print(sent.data) : undefined} reprinting={printer.pending} onlyChanged={showChanged} onToggleChanged={() => setOnlyChanged((v) => !v)} />
-          {actions}
-        </div>
-      </Heading>
+        <ReportStatusLine send={send} rowsChanged={changed.size} pendingCustom={report.pending_custom_count} ym={report.ym} />
+        {changed.size > 0 && (
+          <button type="button" className="flt-chip" aria-pressed={showChanged} onClick={() => setOnlyChanged((v) => !v)}>
+            {t('reports.send.status.changedChip', { n: changed.size })}
+          </button>
+        )}
+        <div className="toolbar__end">{actions}</div>
+      </ReportToolbar>
       {empty && editable && send.state !== 'sent' && send.state !== 'no_order' && (
         <p className="bc-row">
           <button type="button" className="btn" disabled={noOrder.pending} onClick={() => void noOrder.run()}>
@@ -234,16 +250,10 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
 }
 
 function Frame({ children }: { children: React.ReactNode }) {
-  const { t } = useTranslation();
   return (
     <div className="ct-page bc-page">
       {/* Cùng khung đầu trang với lúc tải xong: tiêu đề không nhảy */}
-      <div className="bc-head">
-        <div className="page-head__text">
-          <PageCrumbs crumbs={[t('nav.groups.monthly'), t('nav.reports')]} />
-          <h1>{t('reports.send.title')}</h1>
-        </div>
-      </div>
+      <Heading />
       {children}
     </div>
   );

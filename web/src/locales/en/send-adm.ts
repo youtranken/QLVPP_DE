@@ -9,7 +9,7 @@ const sendAdm: Messages<typeof vi> = {
       item: 'Item',
       registered: 'Requested',
       backlog: 'Carried over',
-      stock: 'In stock (reference)',
+      stock: 'In stock',
       need: 'Total requested',
       qty: 'Order',
       qtyLabel: 'Request: {{name}}',

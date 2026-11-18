@@ -224,16 +224,16 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await expect(page.getByText(/^Đã chốt bản \d\d:\d\d \d\d\/\d\d\. Cần in lại: mở Bản chốt\.$/)).toBeVisible();
     expect(await leftovers(page)).toEqual({ region: false, pageRule: false });
 
-    // Đã gửi: In lại in từ bản có sẵn, không tạo bản mới; hộp in không đóng (không afterprint) → vùng in còn
+    // Đã gửi: In trình ký → Đồng ý và in dùng lại bản có sẵn, không tạo bản mới; hộp in không đóng (không afterprint) → vùng in còn
     await page.evaluate(() => void ((window as unknown as PrintSpy).__after = false));
-    await page.getByRole('button', { name: 'In lại' }).click();
+    await previewAndPrint(page);
     await expect.poll(async () => (await printsOf(page)).length).toBe(2);
     expect(snapshotCount(PRIVATE_YM)).toBe(1);
     expect(await leftovers(page)).toEqual({ region: true, pageRule: true });
     await page.emulateMedia({ media: 'print' });
     await expect(page.getByRole('heading', { level: 1, name: FORM })).toBeVisible();
     await expect(page.getByRole('heading', { level: 1, name: /^Báo cáo & gửi ADM/ })).toBeHidden();
-    await expect(page.getByRole('button', { name: 'In lại' })).toBeHidden();
+    await expect(page.getByRole('button', { name: 'In trình ký' })).toBeHidden();
     await expect(page.getByRole('row', { name: new RegExp(a.name) }).getByRole('cell').last()).toHaveText('4');
     await page.emulateMedia({ media: 'screen' });
     expect(await leftovers(page)).toEqual({ region: true, pageRule: true });
@@ -249,7 +249,7 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     // Khổ giấy: in lại lần nữa rồi xuất PDF theo @page (page.pdf tự phát beforeprint/afterprint → vùng in gỡ sau đó)
     await page.goBack();
     await expect(page).toHaveURL(/\/admin\/reports/);
-    await page.getByRole('button', { name: 'In lại' }).click();
+    await previewAndPrint(page);
     await expect.poll(async () => (await printsOf(page)).length).toBe(3);
     expect(snapshotCount(PRIVATE_YM)).toBe(1);
     const pdf = (await page.pdf({ preferCSSPageSize: true })).toString('latin1');

@@ -7,6 +7,7 @@ const reports: Messages<typeof vi> = {
       taking: 'Creating snapshot…',
       month: '{{month}}/{{year}}',
       monthNav: 'Choose report month',
+      toolbar: 'Reports toolbar',
       prevMonth: 'Previous month',
       nextMonth: 'Next month',
       openNotReady: '{{month, MonthName}} still registering — report after {{lockPhrase}}',
@@ -103,7 +104,7 @@ const reports: Messages<typeof vi> = {
     send: {
       title: 'Reports & ordering',
       excel: 'Export Excel',
-      preview: 'Review summary',
+      preview: 'Print for signing',
       colWho: 'Who signed up',
       whoLoading: 'Loading sign-ups',
       whoUnknown: 'Sign-ups not loaded',
@@ -114,12 +115,11 @@ const reports: Messages<typeof vi> = {
       changedTag: 'Changed since print: {{was}} → {{now}}',
       status: {
         sent: 'Sent to supplier {{time}}',
-        changed: '{{n}} items changed since this copy',
+        changedChip: 'Changed since printed copy ({{n}})',
         unsent: 'Not sent to supplier yet',
         noOrder: 'No order needed from the supplier {{time}}',
         customLink: 'View',
         customLabel: 'View {{n}} off-catalog items awaiting approval',
-        reprint: 'Print again',
       },
       people: {
         title: 'Who signed up for the item',

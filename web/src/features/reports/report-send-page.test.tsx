@@ -13,13 +13,17 @@ afterEach(() => {
 });
 
 describe('Báo cáo & gửi NCC: bảng và ô Đề nghị', () => {
-  it('bảng kẻ ô: Món · ĐVT · Đăng ký · Nợ tháng trước · Tủ hiện có · Tổng cần · Đề nghị · Ai đăng ký; hàng nhóm "… · 2 món"; không còn Phần 2 hay Bản chốt', async () => {
+  it('AD-20 bảng kẻ ô: Món · ĐVT · Đăng ký · Nợ tháng trước · Tủ · Tổng cần · Đề nghị · Ai đăng ký; hàng nhóm "… · 2 món"; không còn Phần 2 hay Bản chốt', async () => {
     setupSendAdm({ report: REPORT, people: { kA: 3, kB: 1 } });
     open();
     const t = await table();
     await qtyBox('Bút bi');
-    expect(t.getAllByRole('columnheader').map((h) => h.textContent?.replace(/Cách tính Tổng cần/, ''))).toEqual(['Món', 'ĐVT', 'Đăng ký', 'Nợ tháng trước', 'Tủ hiện có (tham khảo)', 'Tổng cần', 'Đề nghị', 'Ai đăng ký']);
+    expect(t.getAllByRole('columnheader').map((h) => h.textContent?.replace(/Cách tính Tổng cần/, ''))).toEqual(['Món', 'ĐVT', 'Đăng ký', 'Nợ tháng trước', 'Tủ', 'Tổng cần', 'Đề nghị', 'Ai đăng ký']);
     expect(t.getByText('2 món')).toBeInTheDocument();
+    // AD-21 AD-22: dòng nhóm nền trung tính (không data-tone tô màu), không nút thu/mở
+    const group = t.getByText('2 món').closest('tr')!;
+    expect(group.querySelector('[data-tone]')).toBeNull();
+    expect(within(group).queryByRole('button')).toBeNull();
     expect(screen.queryByText(/Phần 2/)).toBeNull();
     expect(screen.queryByText('Bản chốt')).toBeNull();
     expect(within(screen.getByRole('main')).queryByText(/Xuất lẻ/)).toBeNull();
@@ -34,8 +38,8 @@ describe('Báo cáo & gửi NCC: bảng và ô Đề nghị', () => {
       await userEvent.type(box, '0');
     }
     expect(await screen.findByRole('button', { name: 'Tháng này không cần đề nghị NCC' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toHaveAccessibleDescription('Chưa có món nào cần đặt');
+    expect(screen.getByRole('button', { name: 'In trình ký' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'In trình ký' })).toHaveAccessibleDescription('Chưa có món nào cần đặt');
     expect(screen.getByRole('button', { name: 'Xuất Excel' })).toHaveAccessibleDescription('Chưa có món nào cần đặt');
   });
 
@@ -48,8 +52,8 @@ describe('Báo cáo & gửi NCC: bảng và ô Đề nghị', () => {
     const paper = await qtyBox('Giấy A4');
     await userEvent.clear(paper);
     await userEvent.type(paper, '1');
-    expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Xem tổng kết' })).not.toHaveAccessibleDescription('Chưa có món nào cần đặt');
+    expect(screen.getByRole('button', { name: 'In trình ký' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'In trình ký' })).not.toHaveAccessibleDescription('Chưa có món nào cần đặt');
   });
 
   it('Xem tổng kết → gọi preview với ô đã sửa, hộp có "Phiếu đề xuất văn phòng phẩm" và các hàng; chưa POST bản chốt', async () => {
@@ -58,7 +62,7 @@ describe('Báo cáo & gửi NCC: bảng và ô Đề nghị', () => {
     const box = await qtyBox('Bút bi');
     await userEvent.clear(box);
     await userEvent.type(box, '7');
-    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    await userEvent.click(screen.getByRole('button', { name: 'In trình ký' }));
     const dialog = await screen.findByRole('dialog', { name: 'Xem tổng kết tháng 10/2026' });
     expect(callsTo(f, 'POST', '/snapshots/preview')).toEqual([{ url: `/api/admin/reports/${YM}/snapshots/preview`, body: { order_qty: { kA: 7 } } }]);
     expect(within(dialog).getByText('2 món · 10 đơn vị. Kiểm tra lại trước khi in trình ký.')).toBeInTheDocument();
@@ -75,7 +79,7 @@ describe('Báo cáo & gửi NCC: bảng và ô Đề nghị', () => {
     const f = setupSendAdm({ report: REPORT });
     open();
     await qtyBox('Bút bi');
-    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    await userEvent.click(screen.getByRole('button', { name: 'In trình ký' }));
     const dialog = await screen.findByRole('dialog', { name: /Xem tổng kết tháng/ });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Hủy' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
@@ -91,7 +95,7 @@ describe('Báo cáo & gửi NCC: bảng và ô Đề nghị', () => {
     const box = await qtyBox('Bút bi');
     await userEvent.clear(box);
     await userEvent.type(box, '7');
-    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    await userEvent.click(screen.getByRole('button', { name: 'In trình ký' }));
     const dialog = await screen.findByRole('dialog', { name: /Xem tổng kết tháng/ });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Đồng ý và in' }));
     await waitFor(() => expect(snapshotPosts(f)).toHaveLength(1));
@@ -138,7 +142,7 @@ describe('Báo cáo & gửi NCC: kỳ cũ hơn, ai đăng ký, các bản đã i
       },
     });
     open('/admin/reports?ym=2026-09');
-    for (const name of ['Xuất Excel', 'Xem tổng kết']) {
+    for (const name of ['Xuất Excel', 'In trình ký']) {
       const btn = await screen.findByRole('button', { name });
       expect(btn).toBeDisabled();
       await waitFor(() => expect(btn).toHaveAccessibleDescription('Kỳ này chưa gửi NCC'));
@@ -203,7 +207,7 @@ describe('Báo cáo & gửi NCC: kỳ cũ hơn, ai đăng ký, các bản đã i
     });
     open('/admin/reports?ym=2026-09');
     await table();
-    const btn = await screen.findByRole('button', { name: 'Xem tổng kết' });
+    const btn = await screen.findByRole('button', { name: 'In trình ký' });
     await waitFor(() => expect(btn).toBeEnabled());
     await userEvent.click(btn);
     const dialog = await screen.findByRole('dialog', { name: 'Xem tổng kết tháng 9/2026' });

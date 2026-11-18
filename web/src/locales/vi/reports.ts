@@ -4,6 +4,7 @@ const reports = {
       taking: 'Đang chốt…',
       month: 'Tháng {{month}}/{{year}}',
       monthNav: 'Chọn tháng báo cáo',
+      toolbar: 'Thanh công cụ Báo cáo',
       prevMonth: 'Tháng trước',
       nextMonth: 'Tháng sau',
       openNotReady: 'Tháng {{month}} đang đăng ký — báo cáo sau {{lockPhrase}}',
@@ -99,7 +100,7 @@ const reports = {
     send: {
       title: 'Báo cáo & gửi NCC',
       excel: 'Xuất Excel',
-      preview: 'Xem tổng kết',
+      preview: 'In trình ký',
       colWho: 'Ai đăng ký',
       whoLoading: 'Đang tải số người',
       whoUnknown: 'Chưa tải được số người',
@@ -110,12 +111,11 @@ const reports = {
       changedTag: 'Đổi sau bản in: {{was}} → {{now}}',
       status: {
         sent: 'Đã gửi NCC {{time}}',
-        changed: 'có {{n}} món đổi sau bản này',
+        changedChip: 'Đã đổi sau bản in ({{n}})',
         unsent: 'Chưa gửi NCC',
         noOrder: 'Không cần đề nghị NCC {{time}}',
         customLink: 'Xem',
         customLabel: 'Xem {{n}} món ngoài danh mục chờ duyệt',
-        reprint: 'In lại',
       },
       people: {
         title: 'Ai đăng ký món',

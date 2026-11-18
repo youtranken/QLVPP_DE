@@ -1,4 +1,3 @@
-import type { Tone } from '@/lib/group-tone';
 import { indexCategories } from '@/features/catalog/catalog-rows';
 import type { AdminItem, Category } from '@/features/catalog/catalog.api';
 import { defaultOrder, wantOf } from '@/lib/report-qty';
@@ -13,7 +12,6 @@ export interface Part1Row {
   row: ReportItemRow | ReportCustomRow;
   custom: boolean;
   group: string;
-  tone: Tone;
   packNote: string | null;
   n: Part1Numbers;
 }
@@ -62,12 +60,11 @@ export function part1Rows(report: Pick<MonthReport, 'byItem' | 'custom'>, items:
       row,
       custom: false,
       group: known ? item!.category_id! : NONE_GROUP,
-      tone: known ? index.tone.get(item!.category_id!)! : 'g0',
       packNote: item?.pack_note ?? null,
       n: numbersOf(row, ctx),
     };
   });
-  const custom = report.custom.map((row): Part1Row => ({ id: row.key, row, custom: true, group: CUSTOM_GROUP, tone: 'g0', packNote: null, n: numbersOf(row, ctx) }));
+  const custom = report.custom.map((row): Part1Row => ({ id: row.key, row, custom: true, group: CUSTOM_GROUP, packNote: null, n: numbersOf(row, ctx) }));
   return [...catalog, ...custom].sort((a, b) => rank(a.group) - rank(b.group));
 }
 

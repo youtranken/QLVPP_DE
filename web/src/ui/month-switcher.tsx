@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { autoUpdate, useFloating } from '@floating-ui/react';
 import { shiftYm } from '@/lib/ym';
@@ -20,11 +20,14 @@ interface MonthSwitcherProps {
   onBeyond?: () => void;
   // Nhãn trạng thái từng tháng trong bảng năm-tháng (trang nào biết tháng nào có dữ liệu thì truyền)
   markOf?: (ym: string) => MonthMark | undefined;
+  // Lý do nút › tắt ở trần, đọc qua chú thích của chính nút (không thêm nút chữ dài cạnh viên)
+  nextReason?: string;
 }
 
 // ym dạng 'YYYY-MM' so sánh chuỗi được trực tiếp
-export function MonthSwitcher({ value, onChange, formatLabel, labels, min, max, status, beyond, onBeyond, markOf }: MonthSwitcherProps) {
+export function MonthSwitcher({ value, onChange, formatLabel, labels, min, max, status, beyond, onBeyond, markOf, nextReason }: MonthSwitcherProps) {
   const { t } = useTranslation();
+  const reasonId = useId();
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const { refs, floatingStyles } = useFloating({
@@ -48,6 +51,8 @@ export function MonthSwitcher({ value, onChange, formatLabel, labels, min, max, 
     trigger.current?.focus();
   };
   const label = formatLabel(value);
+  const atMax = max !== undefined && value >= max;
+  const nextWhy = atMax ? nextReason : undefined;
   return (
     <>
       <div className="month-switch" role="group" aria-label={labels.group}>
@@ -80,11 +85,18 @@ export function MonthSwitcher({ value, onChange, formatLabel, labels, min, max, 
           <button
             type="button"
             aria-label={labels.next}
-            disabled={max !== undefined && value >= max}
+            disabled={atMax}
+            aria-describedby={nextWhy ? reasonId : undefined}
+            title={nextWhy}
             onClick={() => onChange(shiftYm(value, 1))}
           >
             <Icon name="chevr" size={18} />
           </button>
+          {nextWhy && (
+            <span id={reasonId} hidden>
+              {nextWhy}
+            </span>
+          )}
         </div>
         {beyond && (
           <button

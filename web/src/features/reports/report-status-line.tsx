@@ -2,7 +2,6 @@ import { Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { SendState } from '@/features/send-adm/use-send-state';
-import { Icon } from '@/ui/icon';
 import { reportStatus } from './report-status';
 
 interface Props {
@@ -10,10 +9,6 @@ interface Props {
   rowsChanged: number;
   pendingCustom: number;
   ym: string;
-  onReprint?: () => void;
-  reprinting?: boolean;
-  onlyChanged?: boolean;
-  onToggleChanged?: () => void;
 }
 
 // Dấu chấm chỉ để nhìn; điện thoại ẩn đi (dùng khoảng cách) để không đứng lẻ đầu dòng khi xuống dòng
@@ -23,10 +18,10 @@ const Sep = () => (
   </span>
 );
 
-// Nằm trên hàng tiêu đề, ngay trước Xuất Excel (vòng 4 mục 9), chấm tròn theo tone
-export function ReportStatusLine({ send, rowsChanged, pendingCustom, ym, onReprint, reprinting = false, onlyChanged = false, onToggleChanged }: Props) {
+// Trên thanh công cụ, ngay trước Xuất Excel, chấm tròn theo tone; in lại từng bản ở "Các bản đã in / xuất"
+export function ReportStatusLine({ send, rowsChanged, pendingCustom, ym }: Props) {
   const { t } = useTranslation();
-  const { tone, parts, changed } = reportStatus(send, rowsChanged, t);
+  const { tone, parts } = reportStatus(send, rowsChanged, t);
   return (
     <span className="bc-status bc-status--inline" role="status" data-tone={tone}>
       {parts.map((p, i) => (
@@ -35,33 +30,12 @@ export function ReportStatusLine({ send, rowsChanged, pendingCustom, ym, onRepri
           <span>{p}</span>
         </Fragment>
       ))}
-      {changed && (
-        <>
-          <Sep />
-          {onToggleChanged ? (
-            <button type="button" className="sa-link" aria-pressed={onlyChanged} onClick={onToggleChanged}>
-              {changed}
-            </button>
-          ) : (
-            changed
-          )}
-        </>
-      )}
       {pendingCustom > 0 && (
         <>
           <Sep />
           <Link to={`/admin/review?status=pending&ym=${ym}`} aria-label={t('reports.send.status.customLabel', { n: pendingCustom })}>
             {t('reports.send.status.customLink')}
           </Link>
-        </>
-      )}
-      {send.state === 'sent' && onReprint && (
-        <>
-          <Sep />
-          <button type="button" className="sa-link bc-reprint" disabled={reprinting} onClick={onReprint}>
-            <Icon name="rotateccw" size={16} />
-            {t('reports.send.status.reprint')}
-          </button>
         </>
       )}
     </span>

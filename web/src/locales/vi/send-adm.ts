@@ -6,7 +6,7 @@ const sendAdm = {
       item: 'Món',
       registered: 'Đăng ký',
       backlog: 'Nợ tháng trước',
-      stock: 'Tủ hiện có (tham khảo)',
+      stock: 'Tủ',
       need: 'Tổng cần',
       qty: 'Đề nghị',
       qtyLabel: 'Đề nghị: {{name}}',
