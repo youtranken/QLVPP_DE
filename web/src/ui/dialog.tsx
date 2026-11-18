@@ -86,6 +86,7 @@ export function Dialog({
   opener: openerProp,
   onOpenAutoFocus,
   onCloseFocus,
+  placement,
   children,
 }: {
   open: boolean;
@@ -108,6 +109,8 @@ export function Dialog({
   onOpenAutoFocus?: (e: Event) => void;
   // Lúc đóng: trả true nếu đã tự đặt focus (vd về ô tìm sau khi giao xong) thì bỏ qua trả focus mặc định
   onCloseFocus?: () => boolean;
+  // Ngăn kéo bám mép phải (panel phủ): test và CSS nhận ra qua data-placement
+  placement?: 'end';
   children: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -160,6 +163,7 @@ export function Dialog({
             ref={setContent}
             data-modal-sheet=""
             data-stacked={stacked || undefined}
+            data-placement={placement}
             className={className}
             style={maxWidth ? { maxWidth } : undefined}
             onEscapeKeyDown={onEscape}

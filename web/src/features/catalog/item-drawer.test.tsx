@@ -49,16 +49,14 @@ describe('Ngăn kéo Thêm sản phẩm', () => {
     expect(screen.getByLabelText(/^Đơn vị tính/)).toHaveAttribute('aria-invalid', 'true');
   });
 
-  it('ô ảnh trống là khung "Chụp hoặc chọn ảnh" kèm gợi ý 5 MB; có ảnh → "Đổi ảnh" và "Xóa ảnh" (xóa về khung trống)', async () => {
+  it('ô ảnh trống là khung "Chụp hoặc chọn ảnh" kèm gợi ý 5 MB; có ảnh → chỉ "Đổi ảnh", không "Xóa ảnh" vì ảnh bắt buộc (AD-46)', async () => {
     stubDrawerApi();
     renderDrawer();
     expect(screen.getByText('JPG/PNG tới 5 MB. Nhân viên chọn món bằng ảnh nên ảnh là bắt buộc.')).toBeInTheDocument();
     await userEvent.upload(screen.getByLabelText(PICK), png());
     expect(await screen.findByRole('img', { name: 'Ảnh món' })).toHaveAttribute('src', '/api/files/f-new');
     expect(screen.getByLabelText('Đổi ảnh')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Xóa ảnh' }));
-    expect(screen.queryByRole('img', { name: 'Ảnh món' })).toBeNull();
-    expect(screen.getByLabelText(PICK)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Xóa ảnh' })).toBeNull();
   });
 
   it('chọn ảnh HEIC → "Chọn ảnh JPG, PNG hoặc WebP" tại ô ảnh, không tải lên', async () => {
@@ -269,15 +267,6 @@ describe('Ngăn kéo Sửa món', () => {
     await vi.waitFor(() => expect(callsTo(f, `/api/admin/items/${PAPER.id}`, 'PATCH')).toHaveLength(1));
     expect(bodyOf(f, `/api/admin/items/${PAPER.id}`, 'PATCH')).toEqual({ code: 'VPP-001-B' });
     expect(screen.queryByText(/^Cần thêm/)).toBeNull();
-  });
-
-  it('món đang có ảnh mà xóa ảnh → "Cần thêm: ảnh.", không gửi', async () => {
-    const f = stubDrawerApi();
-    renderDrawer({ item: PEN });
-    await userEvent.click(screen.getByRole('button', { name: 'Xóa ảnh' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Lưu' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('Cần thêm: ảnh.');
-    expect(callsTo(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toHaveLength(0);
   });
 
   it('bấm "Lưu thay đổi" hai lần liền → chỉ một PATCH', async () => {

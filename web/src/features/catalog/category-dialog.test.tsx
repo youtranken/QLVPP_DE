@@ -73,6 +73,14 @@ describe('Hộp thoại Thêm nhóm', () => {
   describe('chế độ Sửa', () => {
     const editing = { ...cat('b', 20), name: 'Bút & viết', name_en: 'Pens' };
 
+    it('TC-11: Sửa nhóm là ngăn kéo phải rộng (data-placement="end", ovp--wide), mục "Thông tin" có tiêu đề', () => {
+      render([cat('a', 10), editing], undefined, editing);
+      const drawer = screen.getByRole('dialog', { name: 'Sửa nhóm' });
+      expect(drawer).toHaveAttribute('data-placement', 'end');
+      expect(drawer).toHaveClass('ovp', 'ovp--wide');
+      expect(within(drawer).getByRole('heading', { name: 'Thông tin' })).toHaveClass('ct-panel-sec__title');
+    });
+
     it('điền sẵn tên và tên tiếng Anh, không có dòng vị trí/màu nhóm mới', () => {
       const { dialog } = render([cat('a', 10), editing], undefined, editing);
       expect(dialog.getByLabelText(/^Tên nhóm/)).toHaveValue('Bút & viết');

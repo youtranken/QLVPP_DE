@@ -34,6 +34,6 @@
   [data-shell='admin'] .ct-seg__opt { height: var(--hit); padding: 0 var(--s-3); }
   [data-shell='admin'] .ct-filter__groups { flex-wrap: wrap; }
   [data-shell='admin'] .ct-gchips-scroll { flex-basis: 100%; }
-  [data-shell='admin'] .ct-filter__view { flex: 1 1 100%; order: -1; margin-left: 0; }
+  [data-shell='admin'] .ct-filter__view { display: none; }
   [data-shell='admin'] .ct-gchip { height: var(--hit); }
 }

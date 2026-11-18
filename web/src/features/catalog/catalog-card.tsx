@@ -5,7 +5,6 @@ import { Icon } from '@/ui/icon';
 import { ItemThumb } from '@/ui/item-thumb';
 import { PausedStamp } from '@/ui/paused-stamp';
 import type { CatalogRow } from './catalog-rows';
-import { ItemActiveButton } from './item-active-button';
 import { useCardUpload } from './use-card-upload';
 
 function UploadButton({ id, name }: { id: string; name: string }) {
@@ -44,12 +43,11 @@ function UploadButton({ id, name }: { id: string; name: string }) {
 interface CardProps {
   row: CatalogRow;
   groupName: string;
-  groupActive: boolean;
   open?: boolean;
   onEdit: (id: string) => void;
 }
 
-export function CatalogCard({ row, groupName, groupActive, open = false, onEdit }: CardProps) {
+export function CatalogCard({ row, groupName, open = false, onEdit }: CardProps) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
   const name = fmt.name(row);
@@ -58,7 +56,6 @@ export function CatalogCard({ row, groupName, groupActive, open = false, onEdit 
     <article className={['ct-card', row.usable ? '' : 'is-inactive', open ? 'is-open' : ''].filter(Boolean).join(' ')}>
       <div className="ct-card__tile">
         <ItemThumb fileId={row.image_file_id} alt={name} tone={row.tone} size="card" category={groupName} />
-        <span className="ct-card__group">{groupName}</span>
         {!row.usable && <PausedStamp />}
         {row.image_file_id === null && (
           <div className="ct-card__noimg">
@@ -76,7 +73,6 @@ export function CatalogCard({ row, groupName, groupActive, open = false, onEdit 
         <button type="button" className="btn btn--sm" aria-label={t('catalog.page.editLabel', { name })} onClick={() => onEdit(row.id)}>
           {t('catalog.page.edit')}
         </button>
-        <ItemActiveButton row={row} name={name} groupActive={groupActive} />
       </div>
     </article>
   );

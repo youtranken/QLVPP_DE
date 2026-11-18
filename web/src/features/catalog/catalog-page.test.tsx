@@ -13,13 +13,13 @@ const chips = () => within(screen.getByRole('group', { name: 'Lọc theo nhóm' 
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Danh mục — đầu trang, thẻ, lọc', () => {
-  it('đúng một h1 "Sản phẩm" + mô tả; "Danh mục" tới /admin/categories; nhóm lấy cả nhóm đã ngừng (?all=1)', async () => {
+  it('đúng một h1 "Sản phẩm" + mô tả một câu (AD-45); không nút "Danh mục" (AD-41); nhóm lấy cả nhóm đã ngừng (?all=1)', async () => {
     const f = await openCatalog({ items: ITEMS });
     expect(f.mock.calls.map((c) => c[0])).toContain('/api/item-categories?all=1');
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Sản phẩm');
-    expect(screen.getByText(/^Nhân viên thấy món theo đúng thứ tự nhóm dưới đây/)).toBeInTheDocument();
-    expect(within(screen.getByRole('main')).getByRole('link', { name: 'Danh mục' })).toHaveAttribute('href', '/admin/categories');
+    expect(screen.getByText('Thứ tự nhóm ở đây là thứ tự nhân viên thấy; mỗi món cần ảnh.')).toBeInTheDocument();
+    expect(within(screen.getByRole('main')).queryByRole('link', { name: 'Danh mục' })).toBeNull();
   });
 
   it('không còn thẻ thống kê tồn (Sắp hết/Hết hàng); bảng dùng tab Tất cả 4 · Đang dùng 3 · Tạm ngưng 1 · Chưa có ảnh 1', async () => {
