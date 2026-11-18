@@ -5,13 +5,12 @@ import { useState } from 'react';
 import { act, renderWithI18n as render, screen, waitFor } from '@/test/test-utils';
 import { ScrollFade } from './scroll-fade';
 import { StockFilterTabs } from '@/features/stock/stock-filter-tabs';
-import { AuditQuick } from '@/features/admin/audit-quick';
 import { MonthChips } from '@/features/month/month-chips-bar';
 import { GroupChips } from './group-chips';
 import { fadeEdges } from './use-scroll-fade';
 
 // Rà soát 13/11 Gu #11: hàng chip/tab cuộn ngang ở 360/390 (Kỳ tháng, Nhận hàng, Tủ/Kho,
-// Sản phẩm, chip nhanh Nhật ký) cắt thẳng qua chữ, không có dấu còn mục khuất.
+// Sản phẩm) cắt thẳng qua chữ, không có dấu còn mục khuất.
 
 const box = (scrollWidth: number, clientWidth: number, scrollLeft: number) => ({ scrollWidth, clientWidth, scrollLeft }) as HTMLElement;
 
@@ -38,11 +37,6 @@ describe('các hàng chip dùng chung mờ mép', () => {
     render(<MonthChips rows={[]} chip="all" q="" onChip={() => {}} onQ={() => {}} />);
     expect(screen.getAllByRole('radiogroup')).toHaveLength(2);
     expect(document.querySelector('.flt-chips')).toBeNull();
-  });
-
-  it('Nhật ký: chip nhanh', () => {
-    render(<AuditQuick now={new Date('2026-11-13T03:00:00Z')} applied={{ actor: '', action: '', from: '', to: '' }} onPatch={() => {}} />);
-    expect(screen.getByRole('group')).toHaveAttribute('data-fade', 'end');
   });
 
   it('Nhận hàng: GroupChips fade (tự là khung cuộn); không bật thì không đụng', () => {

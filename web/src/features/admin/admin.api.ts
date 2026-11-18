@@ -68,9 +68,10 @@ function pageParams(limit: number, cursor: string | null, extra: Record<string, 
   return params;
 }
 
-export function useAuditLog(filters: AuditFilters) {
+export function useAuditLog(filters: AuditFilters, enabled = true) {
   return useInfiniteQuery({
     queryKey: ['audit', filters],
+    enabled,
     initialPageParam: null as string | null,
     queryFn: ({ pageParam }) =>
       apiFetch<Page<AuditEntry>>(`/api/admin/audit?${pageParams(AUDIT_PAGE, pageParam, { ...filters })}`),

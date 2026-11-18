@@ -84,6 +84,7 @@ const common = {
     pageActions: 'Thao tác trang',
     dateRange: {
       any: 'Mọi ngày',
+      presets: 'Chọn nhanh',
       since: 'Từ {{d}}',
       until: 'Đến {{d}}',
       weekdays: 'T2,T3,T4,T5,T6,T7,CN',

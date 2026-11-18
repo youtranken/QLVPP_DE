@@ -51,7 +51,6 @@ export function ConfigSection({
           {saving ? t('config.saving') : state.dirty ? saveLabel : t('config.page.noChanges')}
         </button>
         {fix.node}
-        <p className="cf-block__note">{t('config.page.saveNote')}</p>
       </footer>
     </form>
   );

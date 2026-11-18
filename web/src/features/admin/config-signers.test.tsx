@@ -21,20 +21,29 @@ describe('Cấu hình · khối Ô ký trên phiếu đề xuất', () => {
     expect(within(second).getByLabelText('Người ký')).toHaveAttribute('maxLength', '200');
   });
 
-  it('"Thêm ô ký" tắt khi đủ 2 ô (phiếu chỉ in 2 ô), kèm câu "Đã đủ 2 ô in trên phiếu."; xóa bớt thì bật lại', async () => {
+  it('AD-56 biên: 2 ô → không ô nào "Không in", "Thêm ô ký" bật; thêm ô 3 → ô 3 mang nhãn "Không in", nút tắt; câu cạnh nút luôn "Tối đa 3 ô; phiếu in 2 ô đầu"', async () => {
     stubConfigApi();
     await openConfig();
-    const add = within(signers()).getByRole('button', { name: 'Thêm ô ký' });
-    expect(add).toBeDisabled();
-    expect(add).toHaveAccessibleDescription('Đã đủ 2 ô in trên phiếu.');
+    const add = () => within(signers()).getByRole('button', { name: 'Thêm ô ký' });
+    expect(add()).toBeEnabled();
+    expect(add()).toHaveAccessibleDescription('Tối đa 3 ô; phiếu in 2 ô đầu');
+    expect(within(signers()).queryByText('Không in')).toBeNull();
+    expect(within(signers()).queryByText(/Đã đủ|Phiếu chỉ in/)).toBeNull();
+    await userEvent.click(add());
+    expect(within(row(3)).getByText('Không in')).toBeInTheDocument();
+    expect(within(row(2)).queryByText('Không in')).toBeNull();
+    expect(add()).toBeDisabled();
+    expect(add()).toHaveAccessibleDescription('Tối đa 3 ô; phiếu in 2 ô đầu');
+  });
+
+  it('còn 1 ô thì không xóa được; xóa ô 2 rồi thêm lại vẫn bật nút', async () => {
+    stubConfigApi();
+    await openConfig();
     await userEvent.click(within(row(2)).getByRole('button', { name: 'Xóa ô ký 2 · Người yêu cầu' }));
-    expect(within(signers()).getByRole('button', { name: 'Thêm ô ký' })).toBeEnabled();
-    expect(within(signers()).queryByText('Đã đủ 2 ô in trên phiếu.')).toBeNull();
-    // Còn 1 ô thì không xóa được
     expect(within(row(1)).queryByRole('button', { name: /^Xóa ô ký/ })).toBeNull();
     await userEvent.click(within(signers()).getByRole('button', { name: 'Thêm ô ký' }));
     expect(row(2)).toBeInTheDocument();
-    expect(within(signers()).getByRole('button', { name: 'Thêm ô ký' })).toBeDisabled();
+    expect(within(signers()).getByRole('button', { name: 'Thêm ô ký' })).toBeEnabled();
   });
 
   it('Thêm ô ký → ô Chức danh mới trống chưa báo lỗi (chưa chạm), nút Lưu khóa kèm lý do; gõ rồi xóa hết → báo lỗi', async () => {
@@ -58,19 +67,19 @@ describe('Cấu hình · khối Ô ký trên phiếu đề xuất', () => {
     expect(within(row(2)).getByRole('button', { name: 'Xóa ô ký 2' })).toBeInTheDocument();
   });
 
-  it('cấu hình cũ 3 ô: ô thứ 3 mờ kèm "Phiếu chỉ in 2 ô đầu", vẫn sửa/xóa được; xem trước chỉ 2 ô đầu', async () => {
+  it('cấu hình 3 ô: ô thứ 3 mờ kèm nhãn "Không in", vẫn sửa/xóa được; xem trước chỉ 2 ô đầu', async () => {
     const boxes = [...CONFIG.signature_boxes, { title: 'Duyệt', title_en: 'Approved by', name: 'Đỗ Minh Châu' }];
     stubConfigApi(undefined, (url, init) => (url === '/api/admin/config' && !init?.method ? jsonResponse(200, { ...CONFIG, signature_boxes: boxes }) : undefined));
     await openConfig();
     const third = row(3);
     expect(third).toHaveClass('cf-box--off');
-    expect(within(third).getByText('Phiếu chỉ in 2 ô đầu')).toBeInTheDocument();
-    expect(within(row(1)).queryByText('Phiếu chỉ in 2 ô đầu')).toBeNull();
+    expect(within(third).getByText('Không in')).toBeInTheDocument();
+    expect(within(row(1)).queryByText('Không in')).toBeNull();
     expect(within(third).getByLabelText('Người ký')).toBeEnabled();
     const preview = within(signers()).getByRole('group', { name: 'Chữ ký' });
     expect(within(preview).getAllByRole('group').map((g) => g.getAttribute('aria-label'))).toEqual(['Chủ quản đơn vị', 'Người yêu cầu']);
     await userEvent.click(within(third).getByRole('button', { name: 'Xóa ô ký 3 · Duyệt' }));
-    expect(within(signers()).queryByText('Phiếu chỉ in 2 ô đầu')).toBeNull();
+    expect(within(signers()).queryByText('Không in')).toBeNull();
   });
 
   it('sửa người ký → gửi cả mảng signature_boxes (giữ chức danh), kèm X-CSRF-Token, chỉ khóa của khối', async () => {

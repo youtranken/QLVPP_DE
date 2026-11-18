@@ -15,8 +15,6 @@ const FIELDS: { key: BoxField; label: string; max: number; required?: boolean; h
   { key: 'name', label: 'config.signers.name', max: 200, hint: 'config.signers.nameHint' },
 ];
 
-// Phiếu chỉ in 2 ô đầu: Cấu hình không cho thêm quá số ô in được; cấu hình cũ có ô thứ 3 vẫn hiện (mờ) để sửa hoặc xóa
-const ADD_LIMIT = Math.min(MAX_SIGN_BOXES, BOXES_MAX);
 
 export function SignatureBoxesBlock({ state }: { state: ConfigBlockState<BoxDraft[]> }) {
   const { t, i18n } = useTranslation();
@@ -26,7 +24,7 @@ export function SignatureBoxesBlock({ state }: { state: ConfigBlockState<BoxDraf
     update((boxes) => boxes.map((b, j) => (j === i ? { ...b, [key]: value } : b)), `signature_boxes.${i}.${key}`);
   // Xóa/thêm làm lệch chỉ số hàng nên bỏ hết lỗi ô cũ
   const reshape = (next: (boxes: BoxDraft[]) => BoxDraft[]) => update(next, 'all');
-  const full = draft.length >= ADD_LIMIT;
+  const full = draft.length >= BOXES_MAX;
 
   return (
     <ConfigSection title={t('config.signers.title')} description={t('config.signers.hint')} saveLabel={t('config.signers.save')} state={state}>
@@ -38,7 +36,12 @@ export function SignatureBoxesBlock({ state }: { state: ConfigBlockState<BoxDraf
           <fieldset key={box.id} className={off ? 'cf-box cf-box--off' : 'cf-box'}>
             <legend>
               {named}
-              {off && <span className="cf-box__off">{t('config.signers.notPrinted', { n: MAX_SIGN_BOXES })}</span>}
+              {off && (
+                <>
+                  {' '}
+                  <span className="cf-box__off">{t('config.signers.notPrinted')}</span>
+                </>
+              )}
             </legend>
             {FIELDS.map((f) => {
               const err = errors[`signature_boxes.${i}.${f.key}`];
@@ -66,16 +69,15 @@ export function SignatureBoxesBlock({ state }: { state: ConfigBlockState<BoxDraf
           type="button"
           className="btn cf-box__add"
           disabled={full}
-          aria-describedby={full ? fullId : undefined}
+          aria-describedby={fullId}
           onClick={() => reshape((boxes) => [...boxes, newBox()])}
         >
           {t('config.signers.add')}
         </button>
-        {full && (
-          <span id={fullId} className="cf-box__full">
-            {t('config.signers.full', { n: MAX_SIGN_BOXES })}
-          </span>
-        )}
+        {/* Server nhận tới 3 ô nhưng tờ in chỉ có chỗ 2 ô: nói cả hai giới hạn một lần cạnh nút (AD-56) */}
+        <span id={fullId} className="cf-box__full">
+          {t('config.signers.limit', { max: BOXES_MAX, n: MAX_SIGN_BOXES })}
+        </span>
       </div>
       <SignaturePreview boxes={draft} />
     </ConfigSection>

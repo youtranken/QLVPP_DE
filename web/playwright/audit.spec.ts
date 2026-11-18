@@ -55,11 +55,13 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
     await expect(detail).toHaveCount(0);
     await expect(page.getByRole('cell', { name: 'moi-50', exact: true })).toHaveCount(0);
 
-    await page.getByRole('button', { name: 'Hôm nay', exact: true }).click();
+    // AD-52: "Hôm nay" là lựa chọn trong ô Khoảng ngày, không còn hàng "Nhanh:"
+    await expect(page.getByRole('group', { name: 'Nhanh:' })).toHaveCount(0);
+    await page.getByRole('button', { name: /^Khoảng ngày/ }).click();
+    await page.getByRole('dialog', { name: 'Khoảng ngày' }).getByRole('button', { name: 'Hôm nay', exact: true }).click();
     const today = vnToday();
     await expect.poll(() => new URL(page.url()).searchParams.get('from')).toBe(today);
     expect(new URL(page.url()).searchParams.get('to')).toBe(today);
-    await expect(page.getByRole('button', { name: 'Hôm nay', exact: true })).toHaveAttribute('aria-pressed', 'true');
 
     await page.getByRole('button', { name: 'Xóa lọc', exact: true }).first().click();
     await expect(page.getByText(/^Đang lọc:/)).toHaveCount(0);
@@ -67,7 +69,6 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
     await page.goto('/admin/audit?from=2026-10-20&to=2026-10-19');
     await page.waitForLoadState('networkidle');
     const before = calls;
-    await page.getByRole('button', { name: 'Lọc', exact: true }).click();
     const range = page.getByRole('button', { name: /^Khoảng ngày/ });
     await expect(range).toHaveAccessibleDescription('Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.');
     expect(calls).toBe(before);
@@ -77,7 +78,6 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
     await cal.locator('[data-day="2026-10-20"]').click();
     await expect(cal).toHaveCount(0);
     await expect(range).toHaveAccessibleName('Khoảng ngày 20/10/2026 – 20/10/2026');
-    await page.getByRole('button', { name: 'Lọc', exact: true }).click();
     await expect(page).toHaveURL(/from=2026-10-20&to=2026-10-20/);
   });
 
@@ -105,21 +105,19 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
     await expect(page.getByRole('main').getByRole('button', { name: 'Thử lại' })).toBeVisible();
   });
 
-  test('Vòng8 Nhật ký: thanh lọc một hàng ở 1280 (người + Hệ thống, Hành động, khoảng ngày, Lọc/Xóa lọc), gợi ý ô tìm người không bị cắt', async ({ page }, info) => {
+  test('Vòng8 Nhật ký: thanh lọc một hàng ở 1280 (người + Chỉ việc tự động, Hành động, khoảng ngày, Xóa lọc; không nút Lọc — AD-51/53), gợi ý ô tìm người không bị cắt', async ({ page }, info) => {
     test.skip(isMobile(info), 'một hàng chỉ đòi ở màn rộng');
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto(`/admin/audit?from=2026-11-01&to=2026-11-12`);
     const bar = page.getByRole('form', { name: 'Lọc nhật ký' });
-    await expect(bar.getByRole('button', { name: 'Lọc', exact: true })).toBeVisible();
+    await expect(bar.getByRole('button', { name: 'Lọc', exact: true })).toHaveCount(0);
     const tops = await bar.locator('.au-filters__grid > *').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
     expect(tops).toHaveLength(4);
     expect(new Set(tops).size, `mọi cụm cùng một hàng: ${tops.join(',')}`).toBe(1);
-    const filter = bar.getByRole('button', { name: 'Lọc', exact: true });
     const clear = bar.getByRole('button', { name: 'Xóa lọc', exact: true });
-    const sys = bar.getByRole('button', { name: 'Hệ thống (tự động)' });
-    const [f, c, y] = await Promise.all([filter.boundingBox(), clear.boundingBox(), sys.boundingBox()]);
-    expect(Math.round(f!.y)).toBe(Math.round(c!.y));
-    expect(Math.round(f!.y)).toBe(Math.round(y!.y));
+    const sys = bar.getByRole('button', { name: 'Chỉ việc tự động' });
+    const [c, y] = await Promise.all([clear.boundingBox(), sys.boundingBox()]);
+    expect(Math.round(c!.y)).toBe(Math.round(y!.y));
     // Gợi ý "Tên hoặc email" vừa trọn ô (input không tự báo tràn placeholder nên đo bằng canvas)
     const fits = await bar.getByPlaceholder('Tên hoặc email').evaluate((el: HTMLInputElement) => {
       const cs = getComputedStyle(el);

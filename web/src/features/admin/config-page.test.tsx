@@ -16,19 +16,18 @@ async function retype(el: HTMLElement, value: string) {
 }
 
 describe('Cấu hình · trang', () => {
-  it('đầu trang có đúng một h1, mô tả, 3 khối sửa được (không còn Quyền truy cập / Thay đổi gần đây); không còn khối "Lưu thế nào", thay bằng một dòng dưới mỗi nút Lưu', async () => {
+  it('đầu trang có đúng một h1, mô tả nói một lần "Mỗi khối lưu riêng và ghi vào Nhật ký." (AD-55), 3 khối sửa được; không còn khối "Lưu thế nào", không lặp câu dưới mỗi nút Lưu', async () => {
     stubConfigApi();
     await openConfig();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1, name: 'Cấu hình' })).toBeInTheDocument();
-    expect(screen.getByText('Tham số chung của app, áp dụng cho mọi người dùng.', { exact: true })).toBeInTheDocument();
+    expect(screen.getByText('Tham số chung của app, áp dụng cho mọi người dùng. Mỗi khối lưu riêng và ghi vào Nhật ký.', { exact: true })).toBeInTheDocument();
     for (const name of SAVED_BLOCKS) expect(block(name)).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Quyền truy cập' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Thay đổi gần đây' })).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Lưu thế nào' })).toBeNull();
-    for (const name of SAVED_BLOCKS) {
-      expect(within(block(name)).getByText('Chỉ lưu khối này · ghi vào Nhật ký')).toBeInTheDocument();
-    }
+    expect(screen.queryByText('Chỉ lưu khối này · ghi vào Nhật ký')).toBeNull();
+    expect(screen.getAllByText(/ghi vào Nhật ký/)).toHaveLength(1);
   });
 
   it('nhãn ngắn: "Hạn đăng ký (ngày)", "Nhắc trước (ngày)", "Tối đa mỗi món"', async () => {

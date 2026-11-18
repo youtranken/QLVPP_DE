@@ -16,5 +16,5 @@ export function useAuditParams() {
     for (const k of KEYS) if (k in next) p[k] = next[k] || null;
     update(p);
   };
-  return { filters, patch, apply: (f: AuditFilters) => patch(f), clear: () => patch(NO_FILTERS) };
+  return { filters, patch, clear: () => patch(NO_FILTERS) };
 }

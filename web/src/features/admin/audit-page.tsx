@@ -1,12 +1,11 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiErrorFields } from '@/lib/api-error';
-import { ListMeta } from '@/ui/list-meta';
 import { LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { useAuditLog } from './admin.api';
 import { AuditFilterBar } from './audit-filters';
-import { AuditQuick } from './audit-quick';
+import { dateRangeInvalid } from './audit-quick-ranges';
 import { AuditTable } from './audit-table';
 import { useAuditParams } from './use-audit-params';
 import './audit.m1.css';
@@ -15,30 +14,22 @@ export function AuditPage() {
   const { t } = useTranslation();
   const p = useAuditParams();
   const { filters } = p;
-  const audit = useAuditLog(filters);
+  const rangeOk = !dateRangeInvalid(filters.from, filters.to);
+  const audit = useAuditLog(filters, rangeOk);
   const rows = useMemo(() => audit.data?.pages.flatMap((pg) => pg.items) ?? [], [audit.data]);
   const fields = audit.isError ? apiErrorFields(audit.error) : [];
   const serverError = { from: fields.includes('from'), to: fields.includes('to') };
   const fieldError = serverError.from || serverError.to;
   const narrowed = Object.values(filters).some(Boolean);
   const title = t('audit.title');
-  // Thanh lọc đã có "Xóa lọc" và dòng đếm đã có số: không thêm hàng "Đang lọc … · Xóa lọc" lặp cùng việc
+  // Thanh lọc đã có "Xóa lọc": không thêm hàng "Đang lọc … · Xóa lọc" lặp cùng việc
   const clear = <button type="button" className="btn" onClick={p.clear}>{t('audit.filters.clear')}</button>;
-  const count = audit.hasNextPage ? t('audit.page.countMore', { count: rows.length }) : t('audit.page.count', { count: rows.length });
 
   return (
     <div className="ct-page">
       <PageHeader crumbs={[t('nav.groups.system'), title]} title={title} description={t('audit.page.description')} />
-      <AuditFilterBar key={`${filters.actor}|${filters.action}|${filters.from}|${filters.to}`} applied={filters} serverError={serverError} onApply={p.apply} onClear={p.clear} />
-      <div className="au-quick-row">
-        <AuditQuick now={new Date()} applied={filters} onPatch={p.patch} />
-        {!audit.isError && (!audit.isPending || narrowed) && (
-          <ListMeta>
-            {!audit.isPending && <p className="au-count">{count}</p>}
-          </ListMeta>
-        )}
-      </div>
-      {fieldError ? null : audit.isError ? (
+      <AuditFilterBar applied={filters} serverError={serverError} onPatch={p.patch} onClear={p.clear} />
+      {fieldError || !rangeOk ? null : audit.isError ? (
         <LoadError onRetry={() => void audit.refetch()} />
       ) : (
         <AuditTable

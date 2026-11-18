@@ -79,7 +79,7 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await confirmDeadline(page);
     await saved(period);
     await expect(period.getByRole('button', { name: 'Chưa có thay đổi' })).toBeDisabled();
-    await expect(period.getByText('Chỉ lưu khối này · ghi vào Nhật ký')).toBeVisible();
+    await expect(page.getByText('Chỉ lưu khối này · ghi vào Nhật ký')).toHaveCount(0);
 
     await lastDay.fill('27');
     await period.getByRole('button', { name: 'Thêm một ngày' }).click();
@@ -117,15 +117,14 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await shot(page, info, 'admin-config-m1');
   });
 
-  test('E9-S6 Cấu hình: ô ký khớp phiếu 2 ô — Thêm tắt ở 2 ô, ô 3 cũ mờ, xem trước chân phiếu, xóa còn 1 ô', async ({ page }, info) => {
-    // Cấu hình cũ 3 ô (đặt qua API): Cấu hình hiện ô 3 mờ để sửa hoặc xóa, phiếu chỉ in 2 ô đầu
+  test('E9-S6 Cấu hình: ô ký tối đa 3, phiếu in 2 — ô 3 nhãn "Không in", Thêm tắt ở 3 ô (AD-56), xem trước chân phiếu, xóa còn 1 ô', async ({ page }, info) => {
     expect((await api!.put('/api/admin/config', { data: { signature_boxes: [...TWO_BOXES, { title: 'PW Duyệt', title_en: '', name: 'a'.repeat(200) }] } })).ok()).toBe(true);
     await page.goto('/admin/config');
     const signers = block(page, 'Ô ký trên phiếu đề xuất');
     await expect(signers.getByRole('button', { name: 'Thêm ô ký' })).toBeDisabled();
-    await expect(signers.getByText('Đã đủ 2 ô in trên phiếu.')).toBeVisible();
+    await expect(signers.getByText('Tối đa 3 ô; phiếu in 2 ô đầu')).toBeVisible();
     const third = signers.getByRole('group', { name: /^Ô ký 3/ });
-    await expect(third.getByText('Phiếu chỉ in 2 ô đầu')).toBeVisible();
+    await expect(third.getByText('Không in', { exact: true })).toBeVisible();
     const preview = signers.getByRole('region', { name: 'Xem trước chân phiếu' }).getByRole('group', { name: 'Chữ ký' });
     await expect(preview.getByRole('group')).toHaveCount(2);
     await expect(preview.getByRole('group', { name: 'PW Duyệt' })).toHaveCount(0);
