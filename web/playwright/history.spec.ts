@@ -244,8 +244,13 @@ test.describe('E2-S6 lịch sử', () => {
         await expect(page.getByRole('heading', { level: 2, name: `Phiếu tháng ${prevMonth}/${prevYm.slice(0, 4)}` })).toBeVisible();
         await expect(link).toHaveAttribute('aria-current', 'page');
         const row = page.getByRole('row').filter({ hasText: a.name });
-        await expect(row.getByText('Chờ 1')).toBeVisible();
-        await expect(row.getByText(`Nhận 09:10 08/${prevYm.slice(5)}`)).toBeVisible();
+        // NV-27…29: nhãn "Còn chờ n món", cột Còn chờ, "Nhận lần cuối" chỉ giờ ngày; không cột Được giao khi bằng số đăng ký
+        await expect(page.getByText('Còn chờ 1 món', { exact: true })).toBeVisible();
+        await expect(page.getByRole('columnheader', { name: 'Được giao' })).toHaveCount(0);
+        await expect(page.getByRole('columnheader', { name: 'Nhận lần cuối' })).toBeVisible();
+        await expect(row.getByText(`09:10 08/${prevYm.slice(5)}`, { exact: true })).toBeVisible();
+        // NV-25: 1280 dòng tháng không có mũi tên
+        await expect(link.locator('svg')).toHaveCount(0);
         await snap(page, info, 'master-detail');
       }
     } finally {

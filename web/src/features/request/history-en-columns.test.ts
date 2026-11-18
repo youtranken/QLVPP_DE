@@ -10,20 +10,20 @@ const rem = (sel: string, block: string) => Number(new RegExp(`${sel.replace(/[.
 describe('bảng chi tiết lịch sử: cột EN vừa một dòng ở ≥1280', () => {
   const en = css.slice(css.indexOf('@media (min-width: 1280px)'));
   const start = css.indexOf('@media (min-width: 768px) {');
-  const base = css.slice(start, css.indexOf('}\n', css.indexOf('.hs-c-note', start)) + 2);
+  const base = css.slice(start, css.indexOf('}\n', css.indexOf('.hs-c-last', start)) + 2);
 
-  it('chỉ áp khi :lang(en), trong @media (min-width: 1280px); Tình trạng ≥ 124px, Ghi chú ≥ 172px', () => {
+  it('chỉ áp khi :lang(en), trong @media (min-width: 1280px); Còn chờ ≥ 124px, Nhận lần cuối ≥ 172px', () => {
     expect(css).toContain('@media (min-width: 1280px)');
-    expect(rem("[data-shell='member']:lang(en) .hs-c-st", en) * 16).toBeGreaterThanOrEqual(124);
-    expect(rem("[data-shell='member']:lang(en) .hs-c-note", en) * 16).toBeGreaterThanOrEqual(172);
+    expect(rem("[data-shell='member']:lang(en) .hs-c-wait", en) * 16).toBeGreaterThanOrEqual(124);
+    expect(rem("[data-shell='member']:lang(en) .hs-c-last", en) * 16).toBeGreaterThanOrEqual(172);
     // cột số EN vẫn đủ tiêu đề (Ordered 60px, To deliver 70px + padding 24px)
     expect(rem("[data-shell='member']:lang(en) .hs-c-reg", en) * 16).toBeGreaterThanOrEqual(84);
     expect(rem("[data-shell='member']:lang(en) .hs-c-give", en) * 16).toBeGreaterThanOrEqual(94);
   });
 
-  it('bề rộng chung (VI) giữ nguyên: Tình trạng 7.5rem, Ghi chú 9rem', () => {
-    expect(rem("[data-shell='member'] .hs-c-st", base)).toBe(7.5);
-    expect(rem("[data-shell='member'] .hs-c-note", base)).toBe(9);
+  it('bề rộng chung (VI) giữ nguyên: Còn chờ 7.5rem, Nhận lần cuối 9rem', () => {
+    expect(rem("[data-shell='member'] .hs-c-wait", base)).toBe(7.5);
+    expect(rem("[data-shell='member'] .hs-c-last", base)).toBe(9);
     expect(base).not.toContain(':lang(');
   });
 });

@@ -64,7 +64,7 @@ describe('Lịch sử — điều chỉnh của Adm D&E', () => {
       removed_lines: [removed({ reason_code: 'other', reason_note: `${SCRIPT}\ndòng 2` })],
     });
     renderApp(makeMe('member'), '/history/2026-10');
-    const row = (await screen.findByRole('rowheader', { name: 'Kéo cắt' })).closest('tr')!;
+    const row = (await screen.findByRole('rowheader', { name: /^Kéo cắt/ })).closest('tr')!;
     expect(within(row).getByText('Không giao')).toBeInTheDocument();
     expect(within(row).getByText(`Adm D&E bỏ món · ${SCRIPT} dòng 2`)).toBeInTheDocument();
     expect(screen.getByText(`13/12 · 09:10 · Kéo cắt 3 thành 0 · Lý do: ${SCRIPT} dòng 2`)).toBeInTheDocument();
@@ -90,7 +90,7 @@ describe('Lịch sử — điều chỉnh của Adm D&E', () => {
     await i18n.changeLanguage('en');
     past({ lines: [], removed_all: false, removed_lines: [removed({})] });
     renderApp(makeMe('member'), '/history/2026-10');
-    expect(await screen.findByRole('rowheader', { name: 'Scissors' })).toBeInTheDocument();
+    expect(await screen.findByRole('rowheader', { name: /^Scissors/ })).toBeInTheDocument();
     expect(screen.getByText('D&E Admin removed · Duplicate of another request')).toBeInTheDocument();
     expect(screen.getByText(/Scissors 3 to 0 · Reason: Duplicate of another request/)).toBeInTheDocument();
   });

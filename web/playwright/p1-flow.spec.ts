@@ -10,8 +10,8 @@ type SignBox = { title: string; title_en: string; name: string };
 async function saLogin(page: Page) {
   await page.goto('/');
   // Một ô như QLTS/QLHS: đúng tên SA (server kiểm) → bước mật khẩu
-  await page.getByLabel('Email', { exact: true }).fill(SA_USERNAME);
-  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+  await page.getByLabel(/^Email/).fill(SA_USERNAME);
+  await page.getByRole('button', { name: 'Đăng nhập bằng Tài khoản D&E', exact: true }).click();
   await page.getByLabel('Mật khẩu', { exact: true }).fill(SA_PASSWORD!);
   const login = page.waitForResponse((r) => r.url().endsWith('/api/auth/sa-login'));
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
@@ -88,7 +88,7 @@ async function saveSigner(page: Page, preparer: string) {
 async function logout(page: Page) {
   await page.goto('/me');
   await page.getByRole('button', { name: /^Đăng xuất/ }).click();
-  await expect(page.getByLabel('Email', { exact: true })).toBeVisible();
+  await expect(page.getByLabel(/^Email/)).toBeVisible();
   expect(await page.evaluate(() => fetch('/api/auth/me').then((r) => r.status))).toBe(401);
 }
 

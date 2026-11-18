@@ -166,6 +166,14 @@ describe('HistoryPage — master–detail', () => {
     expect(oct.querySelector('svg.hs-m-chev')).toHaveAttribute('aria-hidden', 'true');
   });
 
+  it('1280: dòng tháng không có mũi tên › (chi tiết đã hiện bên phải); 390 vẫn có', async () => {
+    mockViewport(1280);
+    stub([{ items: [item({ period_ym: '2026-10', delivered_qty: 1, remaining_qty: 1 })], next_cursor: null }]);
+    renderApp(makeMe('member'), '/history');
+    const oct = (await screen.findByText('Tháng 10')).closest('a')!;
+    expect(oct.querySelector('svg')).toBeNull();
+  });
+
   it('1280: chỉ có phiếu kỳ đang mở (chưa chốt) → khung phải báo "Chưa có phiếu nào đã chốt."', async () => {
     stub([{ items: [item({ period_ym: '2026-12', line_count: 2, total_qty: 3, remaining_qty: 3 })], next_cursor: null }], [], {}, PERIOD_DEC);
     renderApp(makeMe('member'), '/history');

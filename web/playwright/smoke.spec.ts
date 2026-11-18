@@ -98,14 +98,14 @@ test.describe('E0-S9 khung Adm D&E (dev-identity admin)', () => {
 });
 
 test.describe('E0-S9 màn vào (chưa đăng nhập)', () => {
-  test('E0-S9 đăng nhập (giống QLTS/QLHS): một ô nhãn "Email", trong ô trống; email → PMH ID kèm login_hint', async ({ page }, info) => {
+  test('E0-S9 đăng nhập (NV-32, NV-33): nút chính "Đăng nhập bằng Tài khoản D&E", ô email không bắt buộc; email → PMH ID kèm login_hint, trống vẫn đi', async ({ page }, info) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1, name: 'Đăng nhập' })).toBeVisible();
     await expect(page.getByRole('img', { name: 'Phú Mỹ Hưng' })).toBeVisible();
     await expect(page.locator('.auth-card input')).toHaveCount(1);
-    await expect(page.getByLabel('Email', { exact: true })).not.toHaveAttribute('placeholder');
+    await expect(page.getByLabel('Email (không bắt buộc, để điền sẵn)', { exact: true })).not.toHaveAttribute('placeholder');
     await expect(page.getByText(/© \d{4} Phú Mỹ Hưng · Division D&E/)).toBeVisible();
-    await expect(page.getByText('Phát triển bởi IT Department')).toBeVisible();
+    await expect(page.getByText('Phát triển bởi Phòng IT')).toBeVisible();
     // Ảnh tòa nhà: máy tính hiện bên trái, điện thoại ẩn
     await expect(page.locator('.auth-media img')).toBeVisible({ visible: !isMobile(info) });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -114,17 +114,21 @@ test.describe('E0-S9 màn vào (chưa đăng nhập)', () => {
     // Không đi PMH ID thật: chỉ bắt URL chuyển hướng
     await page.route('**/api/auth/login**', (route) => route.fulfill({ status: 200, contentType: 'text/plain', body: 'sso' }));
     const sso = page.waitForRequest((r) => r.url().includes('/api/auth/login'));
-    await page.getByLabel('Email', { exact: true }).fill('an.nguyen@pmh.com.vn');
-    await page.getByRole('button', { name: 'Tiếp tục', exact: true }).click();
+    await page.getByLabel('Email (không bắt buộc, để điền sẵn)', { exact: true }).fill('an.nguyen@pmh.com.vn');
+    await page.getByRole('button', { name: 'Đăng nhập bằng Tài khoản D&E', exact: true }).click();
     const url = new URL((await sso).url());
     expect(url.searchParams.get('login_hint')).toBe('an.nguyen@pmh.com.vn');
     expect(url.searchParams.get('ui_locales')).toBe('vi');
+    await page.goto('/');
+    const bare = page.waitForRequest((r) => r.url().includes('/api/auth/login'));
+    await page.getByRole('button', { name: 'Đăng nhập bằng Tài khoản D&E', exact: true }).click();
+    expect(new URL((await bare).url()).searchParams.has('login_hint')).toBe(false);
   });
 
   test('E0-S9 đăng nhập: chữ không phải email, không phải tên SA → "Email không hợp lệ", không lộ bước mật khẩu', async ({ page }) => {
     await page.goto('/');
-    await page.getByLabel('Email', { exact: true }).fill('applicant1');
-    await page.getByRole('button', { name: 'Tiếp tục', exact: true }).click();
+    await page.getByLabel('Email (không bắt buộc, để điền sẵn)', { exact: true }).fill('applicant1');
+    await page.getByRole('button', { name: 'Đăng nhập bằng Tài khoản D&E', exact: true }).click();
     await expect(page.getByRole('alert')).toHaveText('Email không hợp lệ.');
     await expect(page.getByLabel('Mật khẩu', { exact: true })).toHaveCount(0);
   });
@@ -133,8 +137,8 @@ test.describe('E0-S9 màn vào (chưa đăng nhập)', () => {
     // Chỉ server biết tên SA (LOCAL_SA_USERNAME của compose dev, như sessions.ts); test không gửi mật khẩu nào
     const saName = process.env.PW_SA_USERNAME ?? 'sa';
     await page.goto('/');
-    await page.getByLabel('Email', { exact: true }).fill(saName);
-    await page.getByRole('button', { name: 'Tiếp tục', exact: true }).click();
+    await page.getByLabel('Email (không bắt buộc, để điền sẵn)', { exact: true }).fill(saName);
+    await page.getByRole('button', { name: 'Đăng nhập bằng Tài khoản D&E', exact: true }).click();
     await expect(page.getByText('Đăng nhập với')).toBeVisible();
     const password = page.getByLabel('Mật khẩu', { exact: true });
     await expect(password).toHaveAttribute('type', 'password');
@@ -144,7 +148,7 @@ test.describe('E0-S9 màn vào (chưa đăng nhập)', () => {
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'login-password');
     await page.getByRole('button', { name: 'Đổi' }).click();
-    await expect(page.getByLabel('Email', { exact: true })).toHaveValue(saName);
+    await expect(page.getByLabel('Email (không bắt buộc, để điền sẵn)', { exact: true })).toHaveValue(saName);
   });
 
   test('E0-S9 bị chặn quyền (?login=forbidden) → trang "Không có quyền truy cập"', async ({ page }, info) => {

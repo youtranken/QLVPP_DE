@@ -14,7 +14,7 @@ let App: ComponentType;
 let navigateTo: ReturnType<typeof vi.fn>;
 
 // "PMH ID" dùng khoảng trắng không ngắt (không để "ID)" lẻ dòng)
-const LOGIN_FIELD = 'Email';
+const LOGIN_FIELD = 'Email (không bắt buộc, để điền sẵn)';
 
 describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', () => {
   beforeEach(async () => {

@@ -182,11 +182,6 @@
 }
 [data-shell='member'] .rq-cart-cancel { min-height: var(--hit); border: 0; background: transparent; box-shadow: none; color: var(--c-ink-2); font: var(--t-label); }
 [data-shell='member'] .rq-cart-cancel:hover { background: var(--c-surface); color: var(--c-ink); }
-[data-shell='member'] .rq-np-eyebrow { margin: 0 0 var(--s-1); color: var(--c-ink-2); font: var(--t-body); }
 /* Tháng mới và hạn chót là thứ người dùng phải nhớ: nổi bằng chữ đậm màu thương hiệu; đỏ để dành cho lỗi */
-[data-shell='member'] .rq-np-hl { color: var(--c-acc); font-style: normal; font-weight: 800; }
-[data-shell='member'] .rq-np-prev { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-3); border: 1px solid var(--c-line); border-radius: var(--r-md); background: var(--c-surface-2); color: var(--c-ink); font: var(--t-body); }
 /* Link "Xem phiếu": một dòng, vùng chạm 44px như các nút khác */
-[data-shell='member'] .rq-np-prev a { display: inline-flex; flex: none; align-items: center; min-height: 44px; margin-left: auto; padding-inline: var(--s-2); border-radius: var(--r-sm); color: var(--c-acc); font: var(--t-label); text-decoration: none; white-space: nowrap; }
-[data-shell='member'] .rq-np-prev a:hover { text-decoration: underline; }
 [data-shell='member'] .rq-newperiod .sheet-footer { justify-content: flex-end; flex-wrap: wrap; }

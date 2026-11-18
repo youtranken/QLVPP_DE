@@ -29,7 +29,7 @@ const IDENTIFY_ERROR_KEY = { invalid: 'auth.idInvalid', locked: 'auth.saLocked',
 type Props = { sessionExpired?: boolean; ssoDown?: boolean };
 
 /**
- * Một ô nhập như QLTS/QLHS: email → PMH ID (kèm login_hint, mật khẩu nhập ở PMH ID); không phải email → hỏi server:
+ * Nút chính sang PMH ID ngay (ô email tùy chọn, có thì gửi login_hint); chữ không phải email → hỏi server:
  * đúng tên tài khoản nội bộ của IT mới sang bước mật khẩu (/api/auth/sa-login), còn lại báo email không hợp lệ.
  */
 export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) {
@@ -64,14 +64,10 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
   const submitId = async (e: FormEvent) => {
     e.preventDefault();
     const id = identifier.trim();
-    if (!id) {
-      setError(t('auth.idRequired'));
-      idRef.current?.focus();
-      return;
-    }
     setError(null);
-    if (isEmail(id)) {
-      loginWithPmhId(id);
+    // Email chỉ để điền sẵn ở Tài khoản D&E: trống vẫn đăng nhập được
+    if (!id || isEmail(id)) {
+      loginWithPmhId(id || undefined);
       return;
     }
     setBusy(true);
@@ -124,7 +120,7 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
         <h1>{t('auth.heading')}</h1>
         <LanguageSwitch short className="seg--sm" />
       </div>
-      <p className="auth-card__sub">{step === 'id' ? t('auth.subtitle') : t('auth.passwordPrompt')}</p>
+      {step === 'password' && <p className="auth-card__sub">{t('auth.passwordPrompt')}</p>}
       {ssoDown && (
         <p role="alert" className="alert alert--warn">
           {t('auth.ssoUnavailable')}
@@ -142,6 +138,9 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
       )}
       {step === 'id' ? (
         <form className="auth-form" onSubmit={(e) => void submitId(e)} noValidate>
+          <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={busy}>
+            {t('auth.signInWithAccount')}
+          </button>
           <label className="auth-label" htmlFor="login-id">
             {t('auth.idLabel')}
           </label>
@@ -167,9 +166,6 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
             />
           </div>
           {errorNode}
-          <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={busy}>
-            {t('auth.continue')}
-          </button>
         </form>
       ) : (
         <form className="auth-form" onSubmit={(e) => void submitPassword(e)} noValidate>

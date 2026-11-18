@@ -71,6 +71,7 @@ export function HistoryLayout({ ym }: { ym?: string }) {
       items={items}
       selected={selected}
       isOpen={isOpen}
+      chevron={narrow}
       hasMore={!!history.hasNextPage}
       loadingMore={history.isFetchingNextPage}
       onMore={() => void history.fetchNextPage()}
