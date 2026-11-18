@@ -25,6 +25,7 @@ const nav: Messages<typeof vi> = {
       stock: 'Catalog & cupboard',
       system: 'Manage',
     },
+    today: 'Today',
     month: 'Month period',
     catalog: 'Products',
     stock: 'Cupboard',

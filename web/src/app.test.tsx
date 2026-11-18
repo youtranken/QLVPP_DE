@@ -243,10 +243,10 @@ describe('Adm D&E không có phiếu — route nhân viên chuyển về /admin'
     vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {})));
   });
 
-  it.each(['admin', 'sa'] as const)('%s vào /, /history, /history/2026-10, /me → /admin/month', (role) => {
+  it.each(['admin', 'sa'] as const)('%s vào /, /history, /history/2026-10, /me → /admin/today', (role) => {
     for (const path of ['/', '/history', '/history/2026-10', '/me']) {
       const { unmount } = renderApp(makeMe(role), path);
-      expect(screen.getByTestId('location')).toHaveTextContent('/admin/month');
+      expect(screen.getByTestId('location')).toHaveTextContent('/admin/today');
       unmount();
     }
   });
@@ -269,7 +269,7 @@ describe('Adm D&E không có phiếu — route nhân viên chuyển về /admin'
     vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(url === '/api/auth/session' ? jsonResponse(200, makeMe('admin')) : new Promise<Response>(() => {}))));
     const Fresh = (await import('@/App')).default;
     renderWithI18n(<Fresh />);
-    await vi.waitFor(() => expect(window.location.pathname).toBe('/admin/month'));
+    await vi.waitFor(() => expect(window.location.pathname).toBe('/admin/today'));
     window.history.replaceState(null, '', '/');
   });
 });

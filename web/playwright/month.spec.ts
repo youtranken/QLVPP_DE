@@ -20,11 +20,11 @@ async function openMonth(page: Page, ym?: string) {
 }
 
 test.describe('Vòng3-KT Kỳ tháng', () => {
-  test('Vòng3-KT /admin vào Kỳ tháng: dải 4 bước gọn, chip lọc, bảng kẻ ô, không cuộn ngang', async ({ page, request }, info) => {
+  test('Vòng3-KT Kỳ tháng: dải 4 bước gọn, chip lọc, bảng kẻ ô, không cuộn ngang', async ({ page, request }, info) => {
     // Tự seed kỳ đã khóa (tháng đang giao): dữ liệu dev có thể chỉ còn kỳ đang mở, khi đó /admin rơi vào kỳ đăng ký không có chip
     const seed: Seed = await seedLockedRequest(request, info, [{ stock: 5, qty: 1 }]);
     try {
-      await page.goto('/admin');
+      await page.goto('/admin/month');
       await expect(page).toHaveURL(/\/admin\/month/);
       await expect(page.getByRole('heading', { level: 1, name: `Kỳ tháng ${Number(seed.prevYm.slice(5))}` })).toBeVisible();
       const items = steps(page).getByRole('listitem');
