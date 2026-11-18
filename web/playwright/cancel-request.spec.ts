@@ -45,8 +45,8 @@ test.describe('Hủy phiếu người đã nghỉ', () => {
 
       const confirm = page.getByRole('dialog', { name: `Hủy phiếu của ${s.name}?` });
       await expect(confirm).toBeVisible();
-      await expect(confirm.getByText(/^\+6/)).toBeVisible();
-      await expect(confirm.getByText(/^\+2/)).toBeVisible();
+      await expect(confirm.getByText(/^6 /)).toBeVisible();
+      await expect(confirm.getByText(/^2 /)).toBeVisible();
       await expect(confirm.getByText(/giữ nguyên trong lịch sử/)).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await confirm.getByRole('button', { name: 'Đóng' }).click();
@@ -55,7 +55,7 @@ test.describe('Hủy phiếu người đã nghỉ', () => {
 
       await rowOf(page, s.name).getByRole('button', { name: `Hủy phiếu, ${s.name}` }).click();
       await page.getByRole('dialog', { name: `Hủy phiếu của ${s.name}?` }).getByRole('button', { name: 'Hủy phiếu' }).click();
-      await expect(page.getByText(`Đã hủy phiếu của ${s.name}, trả 2 món về Tủ.`)).toBeVisible();
+      await expect(page.getByText(`Đã hủy phiếu của ${s.name} (2 món chưa giao).`)).toBeVisible();
       expect(cancelledOf(s.sub)).toBe('6,2');
       await page.getByRole('button', { name: /Hoàn tác/ }).click();
       await expect.poll(() => cancelledOf(s.sub)).toBe('0,0');

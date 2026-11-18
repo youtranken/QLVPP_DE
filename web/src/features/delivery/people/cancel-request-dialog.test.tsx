@@ -89,17 +89,20 @@ describe('Hộp xác nhận Hủy phiếu', () => {
   const posts = (f: ReturnType<typeof stub>) =>
     f.mock.calls.filter(([u]) => String(u).includes('/cancel-remaining')).map(([u, init]) => [String(u), JSON.parse(String(init?.body))]);
 
-  it('liệt kê món còn nợ với số trả về Tủ (không món chờ duyệt), ghi phần đã giao giữ nguyên', () => {
+  it('"Các món sau sẽ không giao nữa:" + món còn nợ với số (không dấu +, không món chờ duyệt), ghi phần đã giao giữ nguyên', () => {
     stub();
     show();
     const dlg = screen.getByRole('dialog', { name: 'Hủy phiếu của Trần Văn Nam?' });
     expect(within(dlg).getAllByRole('row')).toHaveLength(3);
-    expect(within(dlg).getByText(/^\+6/)).toBeInTheDocument();
+    expect(within(dlg).getByText('Các món sau sẽ không giao nữa:')).toBeInTheDocument();
+    expect(within(dlg).getByText(/^6 /)).toBeInTheDocument();
+    expect(within(dlg).queryByText(/^\+/)).toBeNull();
+    expect(within(dlg).queryByText(/Tủ/)).toBeNull();
     expect(within(dlg).queryByText('Món lạ')).toBeNull();
     expect(within(dlg).getByText(/giữ nguyên trong lịch sử/)).toBeInTheDocument();
   });
 
-  it('bấm Hủy phiếu → mỗi phiếu một POST với expected_lines đang hiện; toast "trả 3 món về Tủ" có Hoàn tác gọi undo/cancel', async () => {
+  it('bấm Hủy phiếu → mỗi phiếu một POST với expected_lines đang hiện; toast "(3 món chưa giao)" có Hoàn tác gọi undo/cancel', async () => {
     const f = stub();
     const onDone = show();
     await userEvent.click(screen.getByRole('button', { name: 'Hủy phiếu' }));
@@ -108,7 +111,7 @@ describe('Hộp xác nhận Hủy phiếu', () => {
       ['/api/admin/requests/r-cur/cancel-remaining', { expected_lines: [{ line_id: 'l1', remaining: 6 }, { line_id: 'l2', remaining: 2 }] }],
       ['/api/admin/requests/r-old/cancel-remaining', { expected_lines: [{ line_id: 'l3', remaining: 1 }] }],
     ]);
-    expect(await screen.findByText('Đã hủy phiếu của Trần Văn Nam, trả 3 món về Tủ.')).toBeInTheDocument();
+    expect(await screen.findByText('Đã hủy phiếu của Trần Văn Nam (3 món chưa giao).')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Hoàn tác/, hidden: true }));
     await waitFor(() => expect(f.mock.calls.some(([u]) => String(u).endsWith('/undo/cancel'))).toBe(true));
     const undo = f.mock.calls.find(([u]) => String(u).endsWith('/undo/cancel'))!;

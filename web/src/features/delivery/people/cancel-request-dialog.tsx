@@ -69,7 +69,7 @@ export function CancelRequestDialog({ person, onClose, onDone }: { person: Deliv
             {lines.map((l) => (
               <tr key={l.line_id}>
                 <td>{fmt.name(l)}</td>
-                <td className="r num">{t('delivery.cancelRequest.gain', { qty: l.remaining_qty, unit: fmt.unit(l.unit) })}</td>
+                <td className="r num">{t('delivery.cancelRequest.qty', { qty: l.remaining_qty, unit: fmt.unit(l.unit) })}</td>
               </tr>
             ))}
           </tbody>
