@@ -91,6 +91,18 @@ describe('Tủ / Kho — tab Lịch sử nhập xuất (G5)', () => {
     expect(within(table.getByText('sa:local').closest('tr')!).getByText('Dùng chung')).toBeInTheDocument();
   });
 
+  it('lọc "Tất cả" cùng cách ghi người như lọc Xuất lẻ: cột "Người nhận" + "Người làm"; dòng xuất lẻ dùng chung vẫn hiện người xuất', async () => {
+    stubStockApi((url) => (url.startsWith('/api/admin/stock/movements?') ? jsonResponse(200, { ...ALL, items: [...ISSUES.items, ALL.items[1]] }) : undefined));
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin/stock?tab=history&ym=2026-11');
+    const table = within(await screen.findByRole('table', { name: 'Lịch sử nhập xuất' }));
+    const shared = (await table.findByText('sa:local')).closest('tr')!;
+    expect(table.getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Thời gian', 'Món', 'Loại', 'Số lượng', 'Người nhận', 'Người làm', 'Ghi chú']);
+    expect(within(shared).getByText('Dùng chung')).toBeInTheDocument();
+    expect(within(table.getByText('Trần Thị Bình').closest('tr')!).getByText('Phạm Hành Chính')).toBeInTheDocument();
+    expect(within(table.getByText('Nhập').closest('tr')!).getByText('Phạm Hành Chính')).toBeInTheDocument();
+  });
+
   it('AD-38/39: đầu trang Tủ / Kho có nút chính "Xuất lẻ một món" mở hộp xuất lẻ; không nút "Tủ / Kho"', async () => {
     open('/admin/stock?tab=history&kind=issue&ym=2026-11');
     const main = within(screen.getByRole('main'));

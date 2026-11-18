@@ -14,7 +14,7 @@ const stock: Messages<typeof vi> = {
       colItem: 'Item',
       colKind: 'Type',
       colQty: 'Quantity',
-      colPerson: 'Person',
+      colActor: 'Done by',
       colNote: 'Note',
       empty: 'No stock movements this month.',
     },

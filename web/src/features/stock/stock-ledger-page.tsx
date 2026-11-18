@@ -19,17 +19,19 @@ import { useLedgerParams } from './use-ledger-params';
 const ALL = 'all';
 const signed = (n: number) => (n === 0 ? '0' : n > 0 ? `+${n}` : `−${Math.abs(n)}`);
 
-// Dòng giao/xuất lẻ ghi người nhận; nhập, trả lại, điều chỉnh ghi người làm
-const personOf = (r: LedgerRow) => (r.reason === 'delivery' || r.reason === 'issue' ? r.recipient_name : r.actor_name);
-
 type Col = ColumnDef<LedgerRow, unknown>;
 type Cell = { row: { original: LedgerRow } };
 
-// Lọc Xuất lẻ (thay trang Xuất lẻ cũ): mọi dòng cùng loại nên bỏ cột Loại, tách Người nhận / Người xuất
-function issueColumns(t: TFunction): Col[] {
+function recipientOf(r: LedgerRow, t: TFunction) {
+  if (r.recipient_name) return r.recipient_name;
+  return r.reason === 'issue' ? t('stock.issues.shared') : <EmptyValue />;
+}
+
+// Mọi lọc cùng cột Người nhận / Người làm (lọc Xuất lẻ gọi người làm là Người xuất): một dòng ghi người giống nhau ở mọi lọc
+function personColumns(t: TFunction, kind: LedgerKind | null): Col[] {
   return [
-    { id: 'recipient', header: t('stock.issues.colRecipient'), meta: { minWidth: '8rem' }, cell: ({ row }: Cell) => row.original.recipient_name ?? t('stock.issues.shared') },
-    { id: 'actor', header: t('stock.issues.colActor'), meta: { minWidth: '8rem' }, cell: ({ row }: Cell) => row.original.actor_name ?? <EmptyValue /> },
+    { id: 'recipient', header: t('stock.issues.colRecipient'), meta: { minWidth: '8rem' }, cell: ({ row }: Cell) => recipientOf(row.original, t) },
+    { id: 'actor', header: t(kind === 'issue' ? 'stock.issues.colActor' : 'stock.book.colActor'), meta: { minWidth: '8rem' }, cell: ({ row }: Cell) => row.original.actor_name ?? <EmptyValue /> },
   ];
 }
 
@@ -52,7 +54,7 @@ function useColumns(kind: LedgerKind | null) {
             </span>
           ),
         },
-        ...(kind === 'issue' ? issueColumns(t) : [{ id: 'person', header: t('stock.book.colPerson'), meta: { minWidth: '8rem' }, cell: ({ row }: Cell) => personOf(row.original) ?? <EmptyValue /> }]),
+        ...personColumns(t, kind),
         { id: 'note', header: t('stock.book.colNote'), meta: { minWidth: '8rem' }, cell: ({ row }: { row: { original: LedgerRow } }) => row.original.note ?? <EmptyValue /> },
       ].map((c) => ({ ...c, enableSorting: false })) as Col[],
     [t, unitName, kind],

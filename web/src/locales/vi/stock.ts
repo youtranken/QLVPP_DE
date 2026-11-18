@@ -11,7 +11,7 @@ const stock = {
       colItem: 'Món',
       colKind: 'Loại',
       colQty: 'Số lượng',
-      colPerson: 'Người',
+      colActor: 'Người làm',
       colNote: 'Ghi chú',
       empty: 'Tháng này chưa có lần nhập xuất nào.',
     },
