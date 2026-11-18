@@ -78,14 +78,14 @@ describe('POST admin/undo/cancel: hoàn tác hủy nợ trong 5 giây', () => {
     expect(again.body).toMatchObject({ code: 'UNDO_ALREADY_DONE' });
   });
 
-  it('có audit line.cancel_undone before/after cancelled_qty', async () => {
+  it('có audit line.cancel_undone before/after cancelled_qty và cancel_note', async () => {
     const { line, body } = await cancelDebt();
     freeze(plus(100));
     await undo([body.undo_id!]).expect(200);
     expect(await auditOf('line.cancel_undone', line.id)).toEqual([
       expect.objectContaining({
-        before: { cancelled_qty: 5 },
-        after: { cancelled_qty: 0 },
+        before: { cancelled_qty: 5, cancel_note: NOT_NEEDED },
+        after: { cancelled_qty: 0, cancel_note: null },
       }),
     ]);
   });

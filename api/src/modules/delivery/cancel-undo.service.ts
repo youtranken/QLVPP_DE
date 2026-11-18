@@ -72,8 +72,14 @@ export class CancelUndoService {
       objectId: line.id,
       detail: {
         request_id: line.request_id,
-        before: { cancelled_qty: line.cancelled_qty },
-        after: { cancelled_qty: p.before.cancelled_qty },
+        before: {
+          cancelled_qty: line.cancelled_qty,
+          cancel_note: line.cancel_note,
+        },
+        after: {
+          cancelled_qty: p.before.cancelled_qty,
+          cancel_note: p.before.cancel_note,
+        },
       },
       at: now,
     });

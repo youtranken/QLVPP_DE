@@ -22,6 +22,7 @@ export interface LockedLine {
   qty: number;
   delivered_qty: number;
   cancelled_qty: number;
+  cancel_note: string | null;
   review_status: string;
 }
 
@@ -51,7 +52,7 @@ const CANCELLED_COLUMNS = sql.raw(
 
 const LINE_COLUMNS = sql`
   l.id, l.request_id, to_char(r.period_ym, 'YYYY-MM') AS period_ym, r.user_sub,
-  l.item_id, l.custom_name, l.custom_unit, l.qty, l.delivered_qty, l.cancelled_qty, l.review_status
+  l.item_id, l.custom_name, l.custom_unit, l.qty, l.delivered_qty, l.cancelled_qty, l.cancel_note, l.review_status
 `;
 
 // Dòng còn phần chưa giao của một khóa món trong kỳ; thứ tự theo phiếu để khóa cùng chiều lockLine
