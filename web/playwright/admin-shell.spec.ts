@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { asRole, devHeaders, expectNoContrastViolations, isMobile, removeTestItem, seedPwItem } from './helpers';
 
-const NAV_ORDER = ['Kỳ tháng', 'Báo cáo & gửi NCC', 'Nhận hàng', 'Giao hàng', 'Còn nợ', 'Sản phẩm', 'Tủ / Kho', 'Danh mục', 'Danh bạ', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Việc hôm nay', 'Kỳ tháng', 'Báo cáo & gửi NCC', 'Nhận hàng', 'Giao hàng', 'Còn nợ', 'Sản phẩm', 'Tủ / Kho', 'Danh mục', 'Danh bạ', 'Nhật ký', 'Cấu hình'];
 const OPEN_MENU = /^(Mở menu quản lý|Open admin menu)$/;
 
 // Bell: topbar on phone, bottom of sidebar (next to avatar) elsewhere
@@ -14,7 +14,7 @@ const sidebarWidth = (page: Page) =>
 test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
   asRole('admin');
 
-  test('E9-S1 shell Adm D&E: sidebar 3 nhóm, 11 mục theo luồng chuẩn (cột và menu điện thoại như nhau), thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
+  test('E9-S1 shell Adm D&E: sidebar 3 nhóm, 12 mục theo luồng chuẩn (TC-06 Việc hôm nay đứng đầu) (cột và menu điện thoại như nhau), thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
     await page.goto('/admin/catalog');
     await expect(page.getByRole('heading', { level: 1, name: 'Sản phẩm' })).toBeVisible();
     await expect(bellOf(page, isMobile(info))).toBeVisible();
@@ -196,8 +196,9 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     const th = page.locator('.table thead th').first();
     await expect(th).toBeVisible();
     await page.mouse.wheel(0, 900);
-    await expect.poll(async () => (await th.boundingBox())!.y).toBeGreaterThanOrEqual(60);
-    expect((await th.boundingBox())!.y).toBeLessThan(62);
+    // Chờ cuộn xong (đầu cột đã lên dính) rồi mới đo: poll ≥ 60 đúng ngay từ trước khi cuộn nên không chờ được gì
+    await expect.poll(async () => (await th.boundingBox())!.y).toBeLessThan(62);
+    expect((await th.boundingBox())!.y).toBeGreaterThanOrEqual(60);
     const head = await th.evaluate((el) => document.elementFromPoint(el.getBoundingClientRect().left + 20, el.getBoundingClientRect().top + 18)?.closest('th') === el);
     expect(head, 'đầu cột thấy được, không nằm dưới thanh trên').toBe(true);
   });
@@ -207,7 +208,7 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto('/admin/month');
     const nav = page.getByRole('navigation', { name: 'Menu quản lý' });
-    await expect(nav.getByRole('group', { name: 'Hằng tháng' }).getByRole('link')).toHaveCount(5);
+    await expect(nav.getByRole('group', { name: 'Hằng tháng' }).getByRole('link')).toHaveCount(6);
     await expect(page.getByRole('group', { name: 'Tài khoản và ngôn ngữ' })).toBeInViewport({ ratio: 1 });
     expect(await nav.evaluate((el) => getComputedStyle(el).overflowY)).toBe('auto');
     await nav.getByRole('link', { name: 'Cấu hình' }).scrollIntoViewIfNeeded();
@@ -237,7 +238,7 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     for (const height of [800, 720]) {
       await page.setViewportSize({ width: 1280, height });
       await page.goto('/admin/stock');
-      // 11 mục (V2D-20, AD-38 bỏ Xuất lẻ): ở 720 nav tự cuộn, mục cuối vẫn tới được; khối tài khoản không cuộn theo
+      // 12 mục (V2D-20, AD-38 bỏ Xuất lẻ, TC-06 thêm Việc hôm nay): ở 720 nav tự cuộn, mục cuối vẫn tới được; khối tài khoản không cuộn theo
       await side.getByRole('link', { name: /^Cấu hình/ }).scrollIntoViewIfNeeded();
       await expect(side.getByRole('link', { name: /^Cấu hình/ })).toBeInViewport({ ratio: 1 });
       await expect(page.getByRole('button', { name: /^Đăng xuất/ })).toBeInViewport({ ratio: 1 });
@@ -319,13 +320,13 @@ test.describe('V2D-13 toàn màn hình và panel phủ', () => {
           return getComputedStyle(hit).position === 'fixed' && !hit.closest('nav, main, [role="dialog"]');
         });
         expect(onScrim, 'điểm (10,10) thuộc nền mờ, không phải sidebar').toBe(true);
-        expect(Math.round((await panel.boundingBox())!.width)).toBe(440);
+        expect(Math.round((await panel.boundingBox())!.width)).toBe(560);
         await page.setViewportSize({ width: 767, height: 900 });
         await expect(panel.getByRole('button', { name: 'Đóng' })).toBeVisible();
         expect(Math.round((await panel.boundingBox())!.width)).toBe(767);
         await page.setViewportSize({ width: 768, height: 900 });
         await expect(panel.getByRole('button', { name: 'Đóng' })).toBeVisible();
-        expect(Math.round((await panel.boundingBox())!.width)).toBe(440);
+        expect(Math.round((await panel.boundingBox())!.width)).toBe(560);
         await page.setViewportSize({ width: 1280, height: 900 });
       }
       await page.goBack();
@@ -365,7 +366,7 @@ test.describe('E9-S1 trang member giữ giao diện cũ', () => {
     let role: 'admin' | 'member' = 'admin';
     await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...devHeaders(role) } }));
 
-    await page.goto('/admin');
+    await page.goto('/admin/month');
     await expect(page.getByRole('heading', { level: 1, name: /^Kỳ tháng \d+$/ })).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
     expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(243, 246, 251)');

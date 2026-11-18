@@ -110,6 +110,7 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto(`/admin/audit?from=2026-11-01&to=2026-11-12`);
     const bar = page.getByRole('form', { name: 'Lọc nhật ký' });
+    await expect(bar.getByRole('button', { name: 'Xóa lọc', exact: true })).toBeVisible();
     await expect(bar.getByRole('button', { name: 'Lọc', exact: true })).toHaveCount(0);
     const tops = await bar.locator('.au-filters__grid > *').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
     expect(tops).toHaveLength(4);

@@ -216,7 +216,9 @@ test.describe('Giao hàng theo người — mọi lần giao qua hộp xác nh�
       const row = dlg.getByRole('row').filter({ hasText: s.pen.name });
       await expect(row.getByText(/^Cần 5 ·/)).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
-      await dlg.getByRole('button', { name: 'Đóng', exact: true }).click();
+      // AD-31: hộp Giao cho …? đóng bằng "Hủy"
+      await dlg.getByRole('button', { name: 'Hủy', exact: true }).click();
+      await expect(dlg).toBeHidden();
     } finally {
       s.cleanup();
       release();

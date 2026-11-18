@@ -40,7 +40,8 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
       await expect(page.getByRole('link', { name: 'Xem bản in', exact: true })).toBeVisible();
       // Chưa chọn nhóm nào: không có dòng "Đã chọn …" và nút nhận hàng loạt
       await expect(page.getByText(/^Đã chọn \d+ nhóm/)).toHaveCount(0);
-      await expect(page.getByText(/^Đang hiện 2\/\d+ món$/)).toBeVisible();
+      // AD-26: kỳ riêng chỉ có 2 món PW, ô tìm khớp cả 2/2 nên không hiện "Đang hiện" (chỉ hiện khi lọc bớt dòng)
+      await expect(page.getByText(/^Đang hiện \d+\/\d+ món$/)).toHaveCount(0);
       const boxA = page.getByRole('spinbutton', { name: `Nhận đợt này: ${a.name}` });
       const boxB = page.getByRole('spinbutton', { name: `Nhận đợt này: ${b.name}` });
       await expect(boxA).toHaveValue('5');
@@ -73,10 +74,9 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
       await pick.check();
       await expect(page.getByText(/^Đã chọn 1 nhóm · \d+ món$/)).toBeVisible();
       // Màn rộng: dòng đếm nhường chỗ; điện thoại: thanh nhận hàng loạt nổi ở đáy, dòng đếm ở lại
-      if (!isMobile(info)) await expect(page.getByText(/^Đang hiện \d+\/\d+ món$/)).toBeHidden();
       expect(await tableTop(), 'tick nhóm không đẩy bảng').toBe(top0);
       await pick.uncheck();
-      await expect(page.getByText(/^Đang hiện 2\/\d+ món$/)).toBeVisible();
+      await expect(page.getByText(/^Đã chọn \d+ nhóm/)).toHaveCount(0);
       expect(await tableTop(), 'bỏ tick không kéo bảng').toBe(top0);
       page.off('request', onReq);
       expect(writes, 'tick/bỏ tick không gửi lệnh ghi').toEqual([]);

@@ -12,6 +12,24 @@ async function snap(page: Page, info: TestInfo, name: string) {
 // Kỳ quá khứ chỉ V2D-21 dùng (khác PRIVATE_YM của Gửi ADM/Hàng về): cũ trước
 const OWED_YMS = ['2000-03', '2000-04'] as const;
 
+// NV-28/NV-30: 1280 bảng "Đăng ký · Đã nhận · Còn chờ"; 390 mỗi món một dòng "tên · sl đvt — đã nhận a, còn chờ b"
+async function expectLine(page: Page, info: TestInfo, name: string, n: { registered: number; received: number; waiting: number }) {
+  if (isMobile(info)) {
+    const li = page.getByRole('listitem').filter({ hasText: name });
+    await expect(li).toContainText(`${name} · ${n.registered} `);
+    await expect(li).toContainText(`đã nhận ${n.received}, còn chờ ${n.waiting}`);
+    return;
+  }
+  const row = page.getByRole('row').filter({ hasText: name });
+  await expect(row).toBeVisible();
+  const heads = (await page.getByRole('columnheader').allTextContents()).map((h) => h.trim());
+  // cột đầu là tiêu đề dòng (tên món), các ô số đếm từ cột thứ hai
+  const cell = (head: string) => row.getByRole('cell').nth(heads.indexOf(head) - 1);
+  await expect(cell('Đăng ký')).toHaveText(String(n.registered));
+  await expect(cell('Đã nhận')).toHaveText(String(n.received));
+  await expect(cell('Còn chờ')).toHaveText(String(n.waiting));
+}
+
 const prevYmOf = (ym: string) => {
   const [y, m] = ym.split('-').map(Number);
   return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
@@ -82,10 +100,9 @@ test.describe('E2-S6 lịch sử', () => {
 
       await expect(page).toHaveURL(new RegExp(`/history/${prevYm}$`));
       await expect(page.getByRole('heading', { name: `Phiếu tháng ${prevMonth}/${prevYm.slice(0, 4)}` })).toBeVisible();
-      const rowA = page.getByRole('row').filter({ hasText: a.name });
-      await expect(rowA.getByText('Chờ 2')).toBeVisible();
-      await expect(rowA.getByText('đã hủy 1')).toBeVisible();
-      await expect(page.getByRole('row').filter({ hasText: b.name }).getByText('Đã nhận 2/2')).toBeVisible();
+      await expectLine(page, info, a.name, { registered: 8, received: 5, waiting: 2 });
+      await expect(page.getByRole(isMobile(info) ? 'listitem' : 'row').filter({ hasText: a.name }).getByText('đã hủy 1')).toBeVisible();
+      await expectLine(page, info, b.name, { registered: 2, received: 2, waiting: 0 });
       await expect(page.getByText('Sản phẩm ngoài danh mục, chờ phê duyệt', { exact: true })).toBeVisible();
       await expect(page.getByText('Từ chối: Đã có trong kho')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
@@ -138,7 +155,7 @@ test.describe('E2-S6 lịch sử', () => {
 
       await page.getByRole('link', { name: new RegExp(`^Tháng ${prevMonth}(?!\\d)`) }).click();
       await expect(page.getByText('đã hủy 2 — Người đã nghỉ')).toBeVisible();
-      await expect(page.getByRole('row').filter({ hasText: itemName }).getByText('Đã nhận 3/3')).toBeVisible();
+      await expectLine(page, info, itemName, { registered: 5, received: 3, waiting: 0 });
       if (isMobile(info)) await expectNoContrastViolations(page);
     } finally {
       psql(`DELETE FROM stock_movements WHERE item_id = '${itemId}'`);
@@ -245,7 +262,8 @@ test.describe('E2-S6 lịch sử', () => {
         await expect(link).toHaveAttribute('aria-current', 'page');
         const row = page.getByRole('row').filter({ hasText: a.name });
         // NV-27…29: nhãn "Còn chờ n món", cột Còn chờ, "Nhận lần cuối" chỉ giờ ngày; không cột Được giao khi bằng số đăng ký
-        await expect(page.getByText('Còn chờ 1 món', { exact: true })).toBeVisible();
+        await expect(master.getByText('Còn chờ 1 món', { exact: true })).toBeVisible();
+        await expect(page.getByText('Còn chờ 1 món', { exact: true }), 'danh sách và đầu phiếu đếm cùng một cách (NV-06)').toHaveCount(2);
         await expect(page.getByRole('columnheader', { name: 'Được giao' })).toHaveCount(0);
         await expect(page.getByRole('columnheader', { name: 'Nhận lần cuối' })).toBeVisible();
         await expect(row.getByText(`09:10 08/${prevYm.slice(5)}`, { exact: true })).toBeVisible();

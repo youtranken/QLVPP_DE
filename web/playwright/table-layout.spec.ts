@@ -98,8 +98,8 @@ test.describe('Bảng quản lý', () => {
     });
   }
 
-  // Máy tính: ô chọn trong bảng là vùng bấm 44px (ô vuông 18px vẽ ở giữa), như ở điện thoại
-  test('Vòng8 1280px: ô chọn trong bảng có vùng bấm 44×44', async ({ page }, info) => {
+  // Máy tính chuột: ô chọn trong bảng là vùng bấm --hit 40px (ô vuông 18px vẽ ở giữa); cảm ứng/điện thoại 44 đo ở admin-mobile.spec
+  test('Vòng8 1280px: ô chọn trong bảng có vùng bấm 40×40 (--hit máy tính, ruling đợt 1)', async ({ page }, info) => {
     test.skip(isMobile(info), '390 đã đo ở admin-mobile.spec');
     await page.setViewportSize({ width: 1280, height: 900 });
     for (const route of ['/admin/catalog?view=table', '/admin/delivery', '/admin/arrivals']) {
@@ -109,7 +109,7 @@ test.describe('Bảng quản lý', () => {
       const small = await page.locator('table input[type="checkbox"]').evaluateAll((boxes) =>
         boxes
           .map((b) => b.getBoundingClientRect())
-          .filter((r) => r.width > 0 && (r.width < 44 || r.height < 44))
+          .filter((r) => r.width > 0 && (r.width < 40 || r.height < 40))
           .map((r) => `${Math.round(r.width)}×${Math.round(r.height)}`),
       );
       expect(small, route).toEqual([]);
@@ -158,7 +158,8 @@ test.describe('Bảng quản lý', () => {
 
 // Lịch sử của nhân viên: tháng có ghi chú dài (từ chối, đã hủy) và tháng chỉ có số phải cùng cột (bảng tự co từng lệch 83px;
 // sau đó ẩn cột Ghi chú khi cả tháng trống làm cột dời 104–144px). Tháng trống ghi chú vẫn có cột, ô hiện "—";
-// dạng thẻ (390) không hiện nhãn "Ghi chú:" trơ trọi
+// dạng thẻ (390) không hiện nhãn "Ghi chú:" trơ trọi. Cột "Được giao" chỉ có khi khác số đăng ký (NV-28): cả hai tháng đều có
+// một dòng bị hủy bớt để cùng bộ cột, phép đo chỉ còn bắt cột co giãn theo chữ
 test('Vòng8 Lịch sử: đổi tháng không dời cột bảng chi tiết', async ({ page, request }, info) => {
   await skipNewPeriodPopup(page);
   const sub = `pw-tl-${Date.now()}-${info.project.name}`;
@@ -170,7 +171,7 @@ test('Vòng8 Lịch sử: đổi tháng không dời cột bảng chi tiết', a
   const release = await acquireLock('table-layout-history');
   const created = psql(`INSERT INTO periods (ym, deadline) VALUES ('${ymA}-01', '${ymA}-10T17:00:00Z'), ('${ymB}-01', '${ymB}-10T17:00:00Z') ON CONFLICT DO NOTHING RETURNING ym`);
   psql(`WITH r AS (INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('${ymA}-01', '${sub}', '${sub}') RETURNING id)
-    INSERT INTO request_lines (request_id, item_id, qty, delivered_qty, cancelled_qty) SELECT r.id, x.item::uuid, x.qty, x.qty, 0 FROM r, (VALUES ('${a.id}', 1), ('${b.id}', 2)) AS x(item, qty)`);
+    INSERT INTO request_lines (request_id, item_id, qty, delivered_qty, cancelled_qty) SELECT r.id, x.item::uuid, x.qty, x.dq, x.cq FROM r, (VALUES ('${a.id}', 1, 1, 0), ('${b.id}', 2, 1, 1)) AS x(item, qty, dq, cq)`);
   psql(`WITH r AS (INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('${ymB}-01', '${sub}', '${sub}') RETURNING id),
     m AS (INSERT INTO request_lines (request_id, item_id, qty, delivered_qty, cancelled_qty) SELECT r.id, '${a.id}'::uuid, 12, 5, 1 FROM r)
     INSERT INTO request_lines (request_id, custom_name, custom_unit, qty, review_status, review_note)

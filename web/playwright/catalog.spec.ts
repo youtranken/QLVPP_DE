@@ -262,6 +262,35 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
     }
   });
 
+  test('TC-18 Hoàn tác xóa món: Xóa trong ngăn Sửa không hỏi lại, thông báo có "Hoàn tác", bấm thì món trở lại', async ({ page, request }, info) => {
+    const name = `PW Hoàn tác ${Date.now()}-${info.project.name}`;
+    const id = await createItemViaApi(request, name);
+    try {
+      await page.goto('/admin/catalog');
+      await page.getByRole('searchbox', { name: /^Tìm trong \d+ sản phẩm$/ }).fill(name);
+      const card = page.getByRole('article').filter({ hasText: name });
+      await card.getByRole('button', { name: `Sửa ${name}` }).click();
+      const drawer = page.getByRole('dialog', { name: `Sửa món ${name}` });
+      const removed = page.waitForResponse((r) => r.url().endsWith(`/api/admin/items/${id}`) && r.request().method() === 'DELETE');
+      await drawer.getByRole('button', { name: 'Xóa', exact: true }).click();
+      expect((await removed).status()).toBe(200);
+      await expect(page.getByRole('dialog', { name: /chắc|Xóa .*\?/ })).toHaveCount(0);
+      await expect(drawer).toBeHidden();
+      await expect(card).toHaveCount(0);
+      const toast = page.getByRole('status').filter({ hasText: `Đã xóa ${name}` });
+      const undo = toast.getByRole('button', { name: 'Hoàn tác' });
+      await expect(undo).toBeVisible();
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await shot(page, info, 'tc18-undo-toast', false);
+      await undo.click();
+      await expect(page.getByRole('status').filter({ hasText: 'Đã hoàn tác.' })).toBeVisible();
+      await expect(card).toBeVisible();
+      expect((await request.get('/api/admin/items', { headers: devHeaders('admin') }).then((r) => r.json())).some((it: { id: string }) => it.id === id)).toBe(true);
+    } finally {
+      await removeTestItem(request, id);
+    }
+  });
+
   test('Lưới: tab Tạm ngưng đủ tương phản ở 390 px', async ({ page, request }, info) => {
     // Danh mục dev đã đặt lại (không còn món ngừng): test tự tạo một món "PW …" rồi ngừng nó
     const id = await createItemViaApi(request, `PW Ngừng ${Date.now()}-${info.project.name}`);

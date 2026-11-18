@@ -65,6 +65,8 @@ test.describe('Nút không gãy dòng (360/390/1280)', () => {
       await as(page, 'member');
       await settle(page, '/');
       found.push(...(await wrappedButtons(page)).map((s) => `/ ${s}`));
+      // Rời trang nhân viên trước khi gỡ danh tính: request đang bay trả 401 sẽ đẩy trang đi và hủy lượt goto kế tiếp
+      await page.goto('about:blank');
       await page.unrouteAll();
 
       await as(page, 'admin');
@@ -142,37 +144,38 @@ test.describe('Điện thoại và màn vừa: khối không bị cắt (vòng 8
     }
   });
 
-  test('Kỳ tháng: viên ‹ tháng › một dòng; điện thoại chip + link xuống dưới viên; bảng năm-tháng nằm trọn màn; đổi kỳ bảng không xô', async ({ page }, info) => {
+  test('Kỳ tháng: viên ‹ tháng › một dòng trên thanh công cụ (AD-04), nhãn kỳ cạnh tiêu đề; bảng năm-tháng nằm trọn màn; đổi kỳ bảng không xô', async ({ page }, info) => {
     test.skip(isMobile(info), 'tự đặt đủ 5 bề rộng, chạy một lần ở dự án máy tính');
     // 5 bề rộng × 3 lần tải trang chờ mạng lặng + mở bảng năm-tháng: quá 30 giây mặc định
     test.setTimeout(120_000);
     await as(page, 'admin');
     const open = (await (await page.request.get('/api/periods/current', { headers: devHeaders('admin') })).json()) as { ym: string };
     const locked = prevYmOf(open.ym);
+    const bar = page.getByRole('toolbar', { name: 'Thanh công cụ Kỳ tháng' });
+    const switcher = bar.getByRole('group', { name: 'Chọn kỳ' });
+    const steps = page.getByRole('list', { name: 'Các bước của tháng' });
     for (const width of [360, 390, 768, 1024, 1280]) {
       await page.setViewportSize({ width, height: 800 });
       const tops: number[] = [];
       for (const ym of [locked, open.ym, locked]) {
         await settle(page, `/admin/month?ym=${ym}`);
-        const m = await page.locator('.mk-switch').evaluate((el) => {
-          const pill = el.querySelector('.month-switch__label')!.closest('.month-switch')!.getBoundingClientRect();
-          const chip = el.querySelector('.mk-switch__status')!.getBoundingClientRect();
-          return { pillH: pill.height, chipBelow: chip.top >= pill.bottom - 1, strip: document.querySelector('.mk-strip')!.getBoundingClientRect().top, sw: document.documentElement.scrollWidth };
-        });
-        expect(m.pillH, `${width}px`).toBeLessThanOrEqual(48);
-        expect(m.sw, `${width}px`).toBeLessThanOrEqual(width);
-        if (width < 768) expect(m.chipBelow, `${width}px`).toBe(true);
-        tops.push(m.strip);
+        const status = ym === open.ym ? 'Đang đăng ký' : 'Đang giao';
+        await expect(page.getByRole('heading', { level: 1 }).locator('..').getByText(status, { exact: true })).toBeVisible();
+        const pill = (await switcher.boundingBox())!;
+        expect(pill.height, `${width}px`).toBeLessThanOrEqual(48);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth), `${width}px`).toBeLessThanOrEqual(width);
+        tops.push(Math.round((await steps.boundingBox())!.y));
       }
       // Dải bước (ngay trên bảng) đứng yên khi chuyển kỳ đang giao ↔ kỳ đăng ký
-      expect(new Set(tops).size, `${width}px`).toBe(1);
-      await page.locator('.month-switch__label').click();
+      expect(new Set(tops).size, `${width}px: ${tops.join(',')}`).toBe(1);
+      const label = switcher.getByRole('button', { name: /bấm để chọn năm-tháng$/ });
+      await label.click();
       const pop = await page.getByRole('dialog', { name: 'Chọn năm-tháng' }).boundingBox();
       expect(pop!.x).toBeGreaterThanOrEqual(0);
       expect(pop!.x + pop!.width).toBeLessThanOrEqual(width);
       expect(pop!.y + pop!.height).toBeLessThanOrEqual(800);
       await page.keyboard.press('Escape');
-      await expect(page.locator('.month-switch__label')).toBeFocused();
+      await expect(label).toBeFocused();
     }
   });
 

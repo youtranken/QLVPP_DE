@@ -188,8 +188,9 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
       await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
       // Giả kỳ đã khóa sổ ở phía đọc (is_open false); PUT vẫn do server chặn PERIOD_LOCKED
+      // route sau thắng route của asNewMember: tự gắn danh tính dev, không thì 401 đẩy sang trang đăng nhập thật
       await page.route('**/api/periods/current', async (route) => {
-        const res = await route.fetch();
+        const res = await route.fetch({ headers: { ...route.request().headers(), ...me.headers } });
         await route.fulfill({ response: res, json: { ...(await res.json()), is_open: false, days_left: 0 } });
       });
       await page.reload();

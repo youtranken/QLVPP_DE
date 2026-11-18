@@ -18,7 +18,7 @@ test.describe('G5 Tủ / Kho (dev-identity admin)', () => {
       }
 
       await page.getByRole('radio', { name: 'Lịch sử nhập xuất' }).click();
-      await expect(page).toHaveURL(/tab=ledger/);
+      await expect(page).toHaveURL(/tab=history/);
       const ledger = page.getByRole('table', { name: 'Lịch sử nhập xuất' });
       await expect(ledger.getByRole('row').filter({ hasText: item.name }).filter({ hasText: '+7' })).toBeVisible();
       if (isMobile(info)) await pickOption(page.getByRole('combobox', { name: 'Lọc theo loại' }), 'Nhập');

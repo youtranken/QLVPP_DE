@@ -105,7 +105,9 @@ test.describe('Hệ điều khiển', () => {
     await page.getByRole('menuitem', { name: 'Xem phiếu' }).click();
     const sheet = page.getByRole('dialog');
     await expect(sheet).toBeVisible();
-    const close = sheet.locator('.ovp-foot').getByRole('button', { name: 'Đóng' });
+    // AD-13: ngăn Phiếu của … chỉ còn nút ✕ "Đóng" ở đầu, không có chân
+    const close = sheet.getByRole('button', { name: 'Đóng' });
+    await expect(close).toHaveCount(1);
     await expect(close).toBeInViewport({ ratio: 1 });
     await open(page, 'admin', '/admin/delivery');
     await page.getByRole('button', { name: /^Giao…, / }).first().click();

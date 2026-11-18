@@ -119,7 +119,8 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await catRow.getByRole('button', { name: `Sửa nhóm ${category}` }).click();
       const edit = page.getByRole('dialog', { name: 'Sửa nhóm' });
       await expect(edit).toHaveAttribute('data-placement', 'end');
-      await expect(page.getByRole('table')).toBeVisible();
+      // Ngăn kéo là modal (nền aria-hidden) nhưng bảng vẫn thấy được phía sau
+      await expect(page.getByRole('table', { includeHidden: true })).toBeVisible();
       await edit.getByRole('button', { name: 'Hủy' }).click();
       await expect(edit).toBeHidden();
       await catRow.getByRole('button', { name: `Tạm ngưng nhóm ${category}` }).click();

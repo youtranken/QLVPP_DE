@@ -13,7 +13,11 @@ test.describe('Nhóm 1 · Sản phẩm (dev-identity admin)', () => {
       await expect(page.getByRole('button', { name: /^Tất cả \d/ })).toHaveAttribute('aria-pressed', 'true');
       await page.getByRole('searchbox', { name: /^Tìm trong \d+ sản phẩm$/ }).fill(name);
       const card = page.getByRole('article').filter({ hasText: name });
-      const pause = card.getByRole('button', { name: `Tạm ngưng ${name}` });
+      // AD-43: thẻ chỉ còn "Sửa"; Tạm ngưng / Dùng lại ở chân ngăn Sửa
+      await expect(card.getByRole('button', { name: `Tạm ngưng ${name}` })).toHaveCount(0);
+      await card.getByRole('button', { name: `Sửa ${name}` }).click();
+      const drawer = page.getByRole('dialog', { name: `Sửa món ${name}` });
+      const pause = drawer.getByRole('button', { name: `Tạm ngưng ${name}` });
       const idle = await pause.evaluate((el) => getComputedStyle(el).backgroundColor);
       await pause.hover();
       await expect.poll(() => pause.evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe(idle);
@@ -24,10 +28,17 @@ test.describe('Nhóm 1 · Sản phẩm (dev-identity admin)', () => {
       const toast = page.getByRole('status').filter({ hasText: `Đã tạm ngưng ${name}` });
       await expect(toast).toBeVisible();
       await expect(toast.getByRole('button', { name: 'Hoàn tác' })).toHaveCount(0);
+      await expect(drawer.getByRole('button', { name: `Dùng lại ${name}` })).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(drawer).toBeHidden();
       await expect(card.getByRole('img', { name: 'Tạm ngưng' })).toBeVisible();
       expect(await card.getByRole('heading', { name }).evaluate((el) => getComputedStyle(el).textDecorationLine)).not.toContain('line-through');
-      await card.getByRole('button', { name: `Dùng lại ${name}` }).click();
+      await card.getByRole('button', { name: `Sửa ${name}` }).click();
+      await drawer.getByRole('button', { name: `Dùng lại ${name}` }).click();
       await page.getByRole('dialog', { name: `Dùng lại ${name}?` }).getByRole('button', { name: 'Dùng lại' }).click();
+      await expect(drawer.getByRole('button', { name: `Tạm ngưng ${name}` })).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(drawer).toBeHidden();
       await expect(card.getByRole('img', { name: 'Tạm ngưng' })).toHaveCount(0);
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'nhom1-catalog-grid', false);
@@ -80,8 +91,11 @@ test.describe('Nhóm 1 · Sản phẩm (dev-identity admin)', () => {
       const view = page.getByRole('group', { name: 'Chế độ xem' });
       const chips = page.getByRole('group', { name: 'Lọc theo nhóm' });
       await expect(chips).toBeVisible();
-      const [s, st, v, c] = await Promise.all([search, status, view, chips].map(async (l) => (await l.boundingBox())!));
+      // AD-44: màn hẹp không có Lưới/Bảng
+      if (isMobile(info)) await expect(view).toBeHidden();
+      const [s, st, c] = await Promise.all([search, status, chips].map(async (l) => (await l.boundingBox())!));
       if (!isMobile(info)) {
+        const v = (await view.boundingBox())!;
         for (const box of [s, st, v]) expect(Math.round(box.height)).toBe(40);
         expect(Math.abs(s.y - st.y)).toBeLessThanOrEqual(1);
         // Lưới/Bảng nằm cuối hàng chip nhóm (hàng 2), không ở hàng tìm

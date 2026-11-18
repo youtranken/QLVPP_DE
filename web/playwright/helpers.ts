@@ -71,7 +71,8 @@ export async function settled(page: Page) {
       document
         .getAnimations()
         .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
-        .map((a) => a.finished),
+        // animation bị hủy giữa chừng (toast Hoàn tác đóng sớm) thì finished reject AbortError: coi như đã dừng
+        .map((a) => a.finished.catch(() => undefined)),
     ),
   );
 }

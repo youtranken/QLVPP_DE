@@ -104,7 +104,7 @@ test.describe('E9-S7 Adm D&E 390 px (dev-identity admin)', () => {
 
       for (const [path, title] of PAGES) {
         await page.goto('/admin/delivery');
-        await page.getByRole('button', { name: /, Adm D&E$/ }).tap();
+        await page.getByRole('button', { name: 'Mở menu quản lý' }).tap();
         await menuLink(page, title).tap();
         await expect(page).toHaveURL(new RegExp(`/admin/${path}`));
         await expect(heading(page, title)).toBeVisible();
@@ -204,7 +204,7 @@ test.describe('TC-17 Tìm nhanh (dev-identity admin)', () => {
     await expect(dialog.getByText('Gõ ít nhất 2 ký tự để tìm món, người hoặc trang.')).toBeVisible();
     await expect(dialog.getByRole('option')).toHaveCount(0);
     await box.fill('danh ba');
-    await dialog.getByRole('group', { name: 'Đi tới' }).getByRole('option', { name: /^Danh bạ/ }).tap();
+    await dialog.getByRole('group', { name: 'Đi tới' }).getByRole('option', { name: /^Danh bạ(?! ›)/ }).tap();
     await expect(page).toHaveURL(/\/admin\/users$/);
     await expect(heading(page, 'Danh bạ')).toBeVisible();
     await expectNoHorizontalScroll(page, 'users sau Tìm nhanh');
