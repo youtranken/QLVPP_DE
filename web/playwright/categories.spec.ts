@@ -191,8 +191,11 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await expect(panel.getByText(`Đã tạm ngưng ${names[0]}`)).toBeVisible();
       await panel.getByRole('button', { name: 'Hoàn tác' }).click();
       await expect(one).toHaveAttribute('aria-checked', 'true');
-      await one.click();
-      await expect(one).toHaveAttribute('aria-checked', 'false');
+      // Công tắc lạc quan bật ngay nhưng bấm khi lượt Hoàn tác còn đang gửi/tải lại bị bỏ qua (có chủ ý): bấm lại tới khi nhận
+      await expect(async () => {
+        if ((await one.getAttribute('aria-checked')) === 'true') await one.click();
+        await expect(one).toHaveAttribute('aria-checked', 'false', { timeout: 1_000 });
+      }).toPass();
 
       await panel.getByRole('switch', { name: `Nhóm ${category}` }).click();
       const confirm = page.getByRole('dialog', { name: `Ngừng nhóm “${category}”?` });
