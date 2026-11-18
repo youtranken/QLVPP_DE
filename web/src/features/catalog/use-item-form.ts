@@ -66,13 +66,13 @@ export function useItemForm({ item, defaultCategoryId, onClose }: { item: AdminI
   const [closing, setClosing] = useState(false);
   const inFlight = useRef(false);
 
-  const finish = (text: string, close: boolean, undo?: () => Promise<unknown>) => {
+  const finish = (text: string, close: boolean, undo?: () => Promise<unknown>, undoSince?: number) => {
     void refresh();
     if (!close) {
       panelToast.show({ text, tone: 'ok' });
       return setSaving(false);
     }
-    toast.show({ text, tone: 'ok', undo });
+    toast.show({ text, tone: 'ok', undo, undoSince });
     // Đã lưu/xóa xong: nháp không còn là "chưa lưu", đóng không hỏi và không chặn rời trang
     setClosing(true);
     onClose();
@@ -102,9 +102,10 @@ export function useItemForm({ item, defaultCategoryId, onClose }: { item: AdminI
     if (!item || inFlight.current) return;
     inFlight.current = true;
     setSaving(true);
+    const sentAt = Date.now();
     try {
       const { undo_id } = await deleteItem(item.id, csrfToken);
-      finish(t('catalog.drawer.deleted', { name: item.name }), true, () => undoActions('item-delete', [undo_id], csrfToken).then(refresh));
+      finish(t('catalog.drawer.deleted', { name: item.name }), true, () => undoActions('item-delete', [undo_id], csrfToken).then(refresh), sentAt);
     } catch (error) {
       d.fail({ form: catalogErrorKey(error) });
       setSaving(false);

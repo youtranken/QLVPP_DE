@@ -44,7 +44,10 @@ const submit = () => screen.getByRole('button', { name: 'Hủy nợ' });
 const noteOf = (el: HTMLElement) => document.getElementById(el.getAttribute('aria-describedby') ?? '')?.textContent;
 const setNote = (text: string) => fireEvent.change(noteBox(), { target: { value: text } });
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
   it('tiêu đề "Hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức?"; 4 lựa chọn, chưa chọn sẵn; dòng "Nhân viên sẽ thấy lý do trong Lịch sử."; nút [Quay lại] [Hủy nợ], Hủy nợ vô hiệu', () => {
@@ -239,5 +242,21 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
     await waitFor(() => expect(f.mock.calls.some((c) => c[0] === '/api/admin/undo/cancel')).toBe(true));
     const call = f.mock.calls.find((c) => c[0] === '/api/admin/undo/cancel')!;
     expect(JSON.parse(String(call[1]?.body))).toEqual({ ids: ['u-c1'] });
+  });
+
+  it('server trả sau 1 500 ms → Hoàn tác đếm từ lúc gửi: "(4)" khi toast hiện, còn ở +4 999 ms, mất ở +5 000 ms', async () => {
+    stub(() => new Promise<Response>((r) => setTimeout(() => r(jsonResponse(200, { cancelled_now: 3, undo_id: 'u-c1' })), 1500)));
+    renderDialog();
+    await pick('Người nhận không cần nữa');
+    vi.useFakeTimers();
+    const t0 = Date.now();
+    fireEvent.click(submit());
+    const at = (ms: number) => act(() => vi.advanceTimersByTimeAsync(t0 + ms - Date.now()));
+    await at(1500);
+    expect(screen.getByRole('button', { name: 'Hoàn tác', hidden: true })).toHaveTextContent('Hoàn tác (4)');
+    await at(4999);
+    expect(screen.getByRole('button', { name: 'Hoàn tác', hidden: true })).toBeInTheDocument();
+    await at(5000);
+    expect(screen.queryByRole('button', { name: 'Hoàn tác', hidden: true })).not.toBeInTheDocument();
   });
 });

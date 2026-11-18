@@ -80,10 +80,11 @@ export function CancelDialog({ line, sentYm, initialReason, onDone, onStale, onC
     const body = { reason_code: form.code, ...(form.trimmed ? { reason: form.trimmed } : {}), expected_delivered_qty: delivered, expected_qty: qty };
     void flight.run(async () => {
       form.setFailed(null);
+      const sentAt = Date.now();
       try {
         const { cancelled_now: n, undo_id } = await cancelRemaining(line.line_id, body, csrfToken);
         const undo = undo_id ? () => undoActions('cancel', [undo_id], csrfToken).then(refresh) : undefined;
-        toast.show(n > 0 ? { text: t(`${KEY}.done`, { n, unit, name: f.name(line), person: f.person(line) }), tone: 'ok', undo } : { text: t(`${KEY}.none`), tone: 'info' });
+        toast.show(n > 0 ? { text: t(`${KEY}.done`, { n, unit, name: f.name(line), person: f.person(line) }), tone: 'ok', undo, undoSince: sentAt } : { text: t(`${KEY}.none`), tone: 'info' });
         await onDone();
       } catch (err) {
         fail(err);

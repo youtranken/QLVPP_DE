@@ -1,9 +1,13 @@
+import { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, jsonResponse, screen, userEvent } from '@/test/test-utils';
 import { PEN, PENCIL } from './catalog-fixtures';
 import { bodyOf, callsTo, renderDrawer, stubDrawerApi } from './item-drawer-fixtures';
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 describe('Ngăn kéo món — đầu, chuyển món, thông tin kho', () => {
   it('đầu panel: tên món là tiêu đề hộp + bộ đếm vị trí "3/48" trong dòng nhỏ', () => {
@@ -92,6 +96,21 @@ describe('Ngăn kéo món — xóa món (TC-18: không hỏi lại, có Hoàn t�
     expect(await screen.findByText('Đã xóa Bút bi xanh')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Hoàn tác', hidden: true }));
     await vi.waitFor(() => expect(bodyOf(f, '/api/admin/undo/item-delete', 'POST')).toEqual({ ids: ['u-it'] }));
+  });
+
+  it('server xóa xong sau 1 500 ms → Hoàn tác đếm từ lúc gửi: "(4)" khi toast hiện, còn ở +4 999 ms, mất ở +5 000 ms', async () => {
+    stubDrawerApi((_url, init) => (init.method === 'DELETE' ? new Promise<Response>((r) => setTimeout(() => r(jsonResponse(200, { undo_id: 'u-it' })), 1500)) : undefined));
+    renderDrawer({ item: PEN });
+    vi.useFakeTimers();
+    const t0 = Date.now();
+    fireEvent.click(screen.getByRole('button', { name: 'Xóa' }));
+    const at = (ms: number) => act(() => vi.advanceTimersByTimeAsync(t0 + ms - Date.now()));
+    await at(1500);
+    expect(screen.getByRole('button', { name: 'Hoàn tác', hidden: true })).toHaveTextContent('Hoàn tác (4)');
+    await at(4999);
+    expect(screen.getByRole('button', { name: 'Hoàn tác', hidden: true })).toBeInTheDocument();
+    await at(5000);
+    expect(screen.queryByRole('button', { name: 'Hoàn tác', hidden: true })).not.toBeInTheDocument();
   });
 
   it('ITEM_IN_USE → "Món này đã được dùng — chỉ ngừng được, không xóa." trong ngăn kéo, không đóng', async () => {

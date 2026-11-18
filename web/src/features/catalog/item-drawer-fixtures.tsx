@@ -11,7 +11,7 @@ import { ItemDrawer } from './item-drawer';
 
 export const png = () => new File([new Uint8Array([137, 80, 78, 71])], 'but.png', { type: 'image/png' });
 
-type Reply = (url: string, init: RequestInit) => Response | undefined;
+type Reply = (url: string, init: RequestInit) => Response | Promise<Response> | undefined;
 
 export function stubDrawerApi(reply: Reply = () => undefined) {
   const fetchMock = vi.fn(async (url: string, init: RequestInit = {}) => {

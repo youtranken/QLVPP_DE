@@ -39,7 +39,10 @@ const giao = () => screen.getByRole('button', { name: 'Giao' });
 const plus = () => screen.getByRole('button', { name: /^Thêm/ });
 const minus = () => screen.getByRole('button', { name: /^Bớt/ });
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 describe('DeliverMoreDialog — giao bổ sung một dòng còn nợ', () => {
   it('còn 4, tủ 2 → mặc định 2, "+" vô hiệu ở 2; mô tả "Tủ 2 cây", không còn chữ "tồn kho"', () => {
@@ -167,5 +170,20 @@ describe('DeliverMoreDialog — giao bổ sung một dòng còn nợ', () => {
     await waitFor(() => expect(f.mock.calls.some((c) => c[0] === '/api/admin/undo/delivery')).toBe(true));
     const call = f.mock.calls.find((c) => c[0] === '/api/admin/undo/delivery')!;
     expect(JSON.parse(String(call[1]?.body))).toEqual({ ids: ['u-pen'] });
+  });
+
+  it('server trả sau 1 500 ms → Hoàn tác đếm từ lúc gửi: "(4)" khi toast hiện, còn ở +4 999 ms, mất ở +5 000 ms', async () => {
+    vi.useFakeTimers();
+    stub(() => new Promise<Response>((r) => setTimeout(() => r(jsonResponse(200, { request_complete: false, undo_id: 'u-pen' })), 1500)));
+    renderDialog();
+    const t0 = Date.now();
+    fireEvent.click(giao());
+    const at = (ms: number) => act(() => vi.advanceTimersByTimeAsync(t0 + ms - Date.now()));
+    await at(1500);
+    expect(screen.getByRole('button', { name: 'Hoàn tác', hidden: true })).toHaveTextContent('Hoàn tác (4)');
+    await at(4999);
+    expect(screen.getByRole('button', { name: 'Hoàn tác', hidden: true })).toBeInTheDocument();
+    await at(5000);
+    expect(screen.queryByRole('button', { name: 'Hoàn tác', hidden: true })).not.toBeInTheDocument();
   });
 });

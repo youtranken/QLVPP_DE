@@ -56,10 +56,11 @@ export function DeliverMoreDialog({ line, onDone, onStale, onClose }: Props) {
     if (max < 1) return;
     void flight.run(async () => {
       setError(null);
+      const sentAt = Date.now();
       try {
         const { undo_id } = await deliverLine(line.line_id, { qty, expected_delivered_qty: line.delivered_qty }, csrfToken);
         const undo = undo_id ? () => undoActions('delivery', [undo_id], csrfToken).then(refresh) : undefined;
-        toast.show({ text: t('delivery.backlog.deliver.done', { qty, unit, name: f.name(line), person: f.person(line) }), tone: 'ok', undo });
+        toast.show({ text: t('delivery.backlog.deliver.done', { qty, unit, name: f.name(line), person: f.person(line) }), tone: 'ok', undo, undoSince: sentAt });
         await onDone();
       } catch (err) {
         fail(err);
