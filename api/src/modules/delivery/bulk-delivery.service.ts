@@ -4,6 +4,7 @@ import {
   HttpException,
   Inject,
   Injectable,
+  Logger,
 } from '@nestjs/common';
 import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
@@ -38,6 +39,8 @@ class RequestFailure extends Error {
 
 @Injectable()
 export class BulkDeliveryService {
+  private readonly logger = new Logger(BulkDeliveryService.name);
+
   constructor(
     @Inject(DRIZZLE_DB) private readonly db: Database,
     private readonly clock: ClockService,
@@ -64,15 +67,22 @@ export class BulkDeliveryService {
     }
     const delivered = results.some((r) => r.ok && r.delivered_units > 0);
     if (!undoId || !delivered) return { results, undo_id: null };
-    // Cửa sổ 5 giây mở lúc lô xong, không phải lúc phiếu đầu: lô dài không hết hạn trước khi web nhận kết quả
-    const now = this.clock.now();
-    await this.undo.record(this.db, {
-      id: undoId,
-      kind: 'delivery',
-      actor,
-      now,
-    });
-    return { results, undo_id: undoId };
+    return { results, undo_id: await this.openUndo(undoId, actor) };
+  }
+
+  // Các phiếu đã commit: ghi sổ hoàn tác lỗi thì vẫn trả kết quả giao, chỉ mất nút Hoàn tác
+  private async openUndo(id: string, actor: string): Promise<string | null> {
+    try {
+      // Cửa sổ 5 giây mở lúc lô xong, không phải lúc phiếu đầu: lô dài không hết hạn trước khi web nhận kết quả
+      const now = this.clock.now();
+      await this.undo.record(this.db, { id, kind: 'delivery', actor, now });
+      return id;
+    } catch {
+      this.logger.warn(
+        'Không ghi được sổ hoàn tác cho lô giao — trả kết quả không kèm undo_id',
+      );
+      return null;
+    }
   }
 
   private async deliverRequest(
