@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { ColumnDef } from '@tanstack/react-table';
 import { formatVnStamp } from '@/lib/format-time';
 import { vnYmNow } from '@/lib/ym';
@@ -21,15 +22,26 @@ const signed = (n: number) => (n === 0 ? '0' : n > 0 ? `+${n}` : `−${Math.abs(
 // Dòng giao/xuất lẻ ghi người nhận; nhập, trả lại, điều chỉnh ghi người làm
 const personOf = (r: LedgerRow) => (r.reason === 'delivery' || r.reason === 'issue' ? r.recipient_name : r.actor_name);
 
-function useColumns() {
+type Col = ColumnDef<LedgerRow, unknown>;
+type Cell = { row: { original: LedgerRow } };
+
+// Lọc Xuất lẻ (AD-38, thay trang Xuất lẻ cũ): mọi dòng cùng loại nên bỏ cột Loại, tách Người nhận / Người xuất
+function issueColumns(t: TFunction): Col[] {
+  return [
+    { id: 'recipient', header: t('stock.issues.colRecipient'), meta: { minWidth: '8rem' }, cell: ({ row }: Cell) => row.original.recipient_name ?? t('stock.issues.shared') },
+    { id: 'actor', header: t('stock.issues.colActor'), meta: { minWidth: '8rem' }, cell: ({ row }: Cell) => row.original.actor_name ?? <EmptyValue /> },
+  ];
+}
+
+function useColumns(kind: LedgerKind | null) {
   const { t } = useTranslation();
   const unitName = useUnitNames();
-  return useMemo<ColumnDef<LedgerRow, unknown>[]>(
+  return useMemo<Col[]>(
     () =>
       [
         { id: 'at', header: t('stock.book.colAt'), meta: { width: '8rem' }, cell: ({ row }: { row: { original: LedgerRow } }) => <span className="num">{formatVnStamp(row.original.created_at)}</span> },
         { id: 'item', header: t('stock.book.colItem'), meta: { minWidth: '10rem' }, cell: ({ row }: { row: { original: LedgerRow } }) => row.original.item_name },
-        { id: 'kind', header: t('stock.book.colKind'), meta: { width: '7rem' }, cell: ({ row }: { row: { original: LedgerRow } }) => t(`stock.ledger.tags.${row.original.reason}`) },
+        ...(kind === 'issue' ? [] : [{ id: 'kind', header: t('stock.book.colKind'), meta: { width: '7rem' }, cell: ({ row }: Cell) => t(`stock.ledger.tags.${row.original.reason}`) }]),
         {
           id: 'qty',
           header: t('stock.book.colQty'),
@@ -40,10 +52,10 @@ function useColumns() {
             </span>
           ),
         },
-        { id: 'person', header: t('stock.book.colPerson'), meta: { minWidth: '8rem' }, cell: ({ row }: { row: { original: LedgerRow } }) => personOf(row.original) ?? <EmptyValue /> },
+        ...(kind === 'issue' ? issueColumns(t) : [{ id: 'person', header: t('stock.book.colPerson'), meta: { minWidth: '8rem' }, cell: ({ row }: Cell) => personOf(row.original) ?? <EmptyValue /> }]),
         { id: 'note', header: t('stock.book.colNote'), meta: { minWidth: '8rem' }, cell: ({ row }: { row: { original: LedgerRow } }) => row.original.note ?? <EmptyValue /> },
-      ].map((c) => ({ ...c, enableSorting: false })) as ColumnDef<LedgerRow, unknown>[],
-    [t, unitName],
+      ].map((c) => ({ ...c, enableSorting: false })) as Col[],
+    [t, unitName, kind],
   );
 }
 
@@ -52,7 +64,7 @@ export function StockLedgerPage() {
   const { t } = useTranslation();
   const p = useLedgerParams();
   const q = useStockLedger(p.ym, p.kind);
-  const columns = useColumns();
+  const columns = useColumns(p.kind);
   const rows = useMemo(() => (q.data?.pages ?? []).flatMap((pg) => pg.items), [q.data]);
   const totals = q.data?.pages[0]?.totals;
   return (

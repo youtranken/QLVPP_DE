@@ -263,12 +263,12 @@ test.describe('Đóng panel/hộp trả focus về nút mở', () => {
     await expect(more).toBeFocused();
   });
 
-  test('Tủ / Kho: Lịch sử nhập xuất; trang Xuất lẻ: Xuất lẻ một món', async ({ page }) => {
+  test('Tủ / Kho: Lịch sử nhập xuất; nút đầu trang Xuất lẻ một món', async ({ page }) => {
     const item = await seedPwItem(page, { stock: 3 });
     try {
       await page.goto(`/admin/stock?q=${encodeURIComponent(item.name)}`);
       await enterThenEsc(page, page.getByRole('button', { name: `Xem lịch sử nhập xuất ${item.name}` }), page.getByRole('dialog', { name: `Lịch sử nhập xuất ${item.name}` }));
-      await page.goto('/admin/issues');
+      await page.goto('/admin/stock');
       await enterThenEsc(page, page.getByRole('button', { name: 'Xuất lẻ một món' }), page.getByRole('dialog', { name: /^Xuất lẻ/ }));
     } finally {
       await removeTestItem(page.request, item.id);

@@ -198,19 +198,19 @@ describe('StockPage', () => {
       expect(screen.queryByRole('button', { name: /^Xem thêm/ })).toBeNull();
     });
   });
-  describe('G6: Xuất lẻ thành trang riêng', () => {
+  describe('AD-38: Xuất lẻ gộp vào Tủ / Kho', () => {
     it('không còn bộ chuyển "Trong tủ / Xuất lẻ" trên Tủ / Kho', async () => {
       await open();
       expect(screen.queryByRole('radio', { name: 'Xuất lẻ' })).toBeNull();
       expect(screen.queryByRole('radiogroup', { name: 'Chế độ xem Kho' })).toBeNull();
     });
 
-    it('link cũ /admin/stock?tab=issues&ym=2026-10 → chuyển sang /admin/issues?ym=2026-10', async () => {
+    it('link cũ /admin/stock?tab=issues&ym=2026-10 → tab Lịch sử lọc Xuất lẻ, giữ tháng', async () => {
       mockViewport(1280);
-      stubStockApi((url) => (url.startsWith('/api/admin/issues') ? jsonResponse(200, []) : undefined));
+      stubStockApi((url) => (url.startsWith('/api/admin/stock/movements') ? jsonResponse(200, { items: [], next_cursor: null, totals: { in: 0, out: 0 } }) : undefined));
       renderApp(makeMe('admin'), '/admin/stock?tab=issues&ym=2026-10');
-      expect(await screen.findByRole('heading', { level: 1, name: 'Xuất lẻ' })).toBeInTheDocument();
-      expect(screen.getByTestId('location-search')).toHaveTextContent('?ym=2026-10');
+      expect(await screen.findByRole('radio', { name: 'Lịch sử nhập xuất' })).toBeChecked();
+      expect(screen.getByTestId('location-search')).toHaveTextContent('?tab=history&kind=issue&ym=2026-10');
     });
   });
 });

@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { devHeaders, isMobile, skipNewPeriodPopup } from './helpers';
 
 // L1: bảng vừa khung ở 768–1280 (sidebar mở), chữ không tràn ô, cột không nhảy khi lọc. Chỉ đọc.
-const ROUTES = ['/admin/month?ym=2026-11', '/admin/month?ym=2026-12', '/admin/delivery', '/admin/reports', '/admin/users', '/admin/audit', '/admin/catalog?view=table', '/admin/stock', '/admin/stock?tab=ledger', '/admin/issues'];
+const ROUTES = ['/admin/month?ym=2026-11', '/admin/month?ym=2026-12', '/admin/delivery', '/admin/reports', '/admin/users', '/admin/audit', '/admin/catalog?view=table', '/admin/stock', '/admin/stock?tab=ledger', '/admin/stock?tab=history&kind=issue'];
 
 async function as(page: Page) {
   await skipNewPeriodPopup(page);

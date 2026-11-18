@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { asRole, expectNoContrastViolations, isMobile, removeTestItem, shot, seedPwItem } from './helpers';
 
-test.describe('G6 Xuất lẻ (dev-identity admin)', () => {
+test.describe('AD-38 Xuất lẻ trong Tủ / Kho (dev-identity admin)', () => {
   asRole('admin');
 
-  test('G6 Xuất lẻ: trang riêng, hộp chọn món có tìm, gõ 21 khi tủ 19 → lỗi dưới ô + nút khóa có lý do; Hủy → không POST', async ({ page }, info) => {
+  test('AD-38 /admin/issues chuyển tới Tủ / Kho tab Lịch sử lọc Xuất lẻ (cột Người xuất); nút chính "Xuất lẻ một món": gõ 21 khi tủ 19 → lỗi dưới ô + nút khóa có lý do; Hủy → không POST', async ({ page }, info) => {
     const item = await seedPwItem(page, { stock: 19 });
     const posts: string[] = [];
     page.on('request', (r) => {
@@ -12,8 +12,10 @@ test.describe('G6 Xuất lẻ (dev-identity admin)', () => {
     });
     try {
       await page.goto('/admin/issues');
-      await expect(page.getByRole('heading', { level: 1, name: 'Xuất lẻ' })).toBeVisible();
-      await expect(page.getByText(/^Đang hiện \d+ lần xuất/)).toBeVisible();
+      await expect(page).toHaveURL(/\/admin\/stock\?tab=history&kind=issue/);
+      await expect(page.getByRole('heading', { level: 1, name: 'Tủ / Kho' })).toBeVisible();
+      await expect(page.getByRole('navigation', { name: 'Điều hướng chính' }).getByRole('link', { name: 'Xuất lẻ' })).toHaveCount(0);
+      if (!isMobile(info)) await expect(page.getByRole('columnheader', { name: 'Người xuất' })).toBeVisible();
       await page.getByRole('button', { name: 'Xuất lẻ một món' }).click();
       const dialog = page.getByRole('dialog', { name: /^Xuất lẻ/ });
       await dialog.getByRole('searchbox', { name: 'Tìm món' }).fill(item.name);

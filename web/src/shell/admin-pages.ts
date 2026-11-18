@@ -6,7 +6,6 @@ export { DeliveryClassicRedirect, DeliveryPeoplePage } from '@/features/delivery
 export { BacklogPage } from '@/features/delivery/backlog-page';
 export { ReportSendPage } from '@/features/reports/report-send-page';
 export { StockPage } from '@/features/stock/stock-page';
-export { IssuesPage } from '@/features/issues/issues-page';
 export { CatalogPage } from '@/features/catalog/catalog-page';
 export { CategoriesPage } from '@/features/catalog/categories-page';
 export { UnitsPage } from '@/features/units/units-page';

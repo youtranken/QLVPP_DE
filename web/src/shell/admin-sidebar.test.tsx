@@ -56,7 +56,7 @@ describe('AdminSidebar: đếm', () => {
     expect(navLink('Kỳ tháng')).toHaveTextContent(shown ? /1/ : /^Kỳ tháng$/);
   });
 
-  it('lỗi tải đếm → không có số, sidebar vẫn đủ 12 mục', async () => {
+  it('lỗi tải đếm → không có số, sidebar vẫn đủ 11 mục', async () => {
     mockViewport(1280);
     const f = stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(500, null),
@@ -67,7 +67,7 @@ describe('AdminSidebar: đếm', () => {
     await waitFor(() => expect(f.mock.calls.some(([u]) => u === '/api/admin/periods/2026-10/delivery-people')).toBe(true));
     await new Promise((r) => setTimeout(r, 0));
     const links = within(sideNav()).getAllByRole('link');
-    expect(links).toHaveLength(12);
+    expect(links).toHaveLength(11);
     for (const a of links) expect(a.textContent).not.toMatch(/\d/);
   });
 });
@@ -82,7 +82,7 @@ describe('AdminSidebar: nhóm', () => {
     expect(groups.map((g) => g.getAttribute('aria-label'))).toEqual(['Hằng tháng', 'Danh mục và tủ', 'Quản lý']);
     expect(within(groups[0]).getByRole('link', { name: 'Còn nợ' })).toHaveAttribute('href', '/admin/backlog');
     expect(within(groups[0]).queryByRole('link', { name: 'Giao hàng (bản cũ)' })).toBeNull();
-    expect(within(groups[1]).getByRole('link', { name: 'Xuất lẻ' })).toBeInTheDocument();
+    expect(within(groups[1]).queryByRole('link', { name: 'Xuất lẻ' })).toBeNull();
   });
 });
 
@@ -277,7 +277,7 @@ describe('AdminSidebar: tên đầy đủ khi nhãn bị cắt', () => {
 });
 
 describe('AdminSidebar: tên app (Q2)', () => {
-  it('đầu sidebar có logo + "QLVPP" (liên kết về trang đầu Adm D&E), nằm ngoài menu 12 mục', async () => {
+  it('đầu sidebar có logo + "QLVPP" (liên kết về trang đầu Adm D&E), nằm ngoài menu 11 mục', async () => {
     mockViewport(1280);
     stubShellApi({});
     renderApp(makeMe('admin'), '/admin/catalog');

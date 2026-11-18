@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { asRole, devHeaders, expectNoContrastViolations, isMobile, removeTestItem, seedPwItem } from './helpers';
 
-const NAV_ORDER = ['Kỳ tháng', 'Báo cáo & gửi NCC', 'Nhận hàng', 'Giao hàng', 'Còn nợ', 'Sản phẩm', 'Tủ / Kho', 'Xuất lẻ', 'Danh mục', 'Danh bạ', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Kỳ tháng', 'Báo cáo & gửi NCC', 'Nhận hàng', 'Giao hàng', 'Còn nợ', 'Sản phẩm', 'Tủ / Kho', 'Danh mục', 'Danh bạ', 'Nhật ký', 'Cấu hình'];
 const OPEN_MENU = /^(Mở menu quản lý|Open admin menu)$/;
 
 // Bell: topbar on phone, bottom of sidebar (next to avatar) elsewhere
@@ -14,7 +14,7 @@ const sidebarWidth = (page: Page) =>
 test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
   asRole('admin');
 
-  test('E9-S1 shell Adm D&E: sidebar 3 nhóm, 12 mục theo luồng chuẩn (cột và menu điện thoại như nhau), thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
+  test('E9-S1 shell Adm D&E: sidebar 3 nhóm, 11 mục theo luồng chuẩn (cột và menu điện thoại như nhau), thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
     await page.goto('/admin/catalog');
     await expect(page.getByRole('heading', { level: 1, name: 'Sản phẩm' })).toBeVisible();
     await expect(bellOf(page, isMobile(info))).toBeVisible();
@@ -217,8 +217,8 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
 
     for (const height of [800, 720]) {
       await page.setViewportSize({ width: 1280, height });
-      await page.goto('/admin/issues');
-      // 12 mục (V2D-20): ở 720 nav tự cuộn, mục cuối vẫn tới được; khối tài khoản không cuộn theo
+      await page.goto('/admin/stock');
+      // 11 mục (V2D-20, AD-38 bỏ Xuất lẻ): ở 720 nav tự cuộn, mục cuối vẫn tới được; khối tài khoản không cuộn theo
       await side.getByRole('link', { name: /^Cấu hình/ }).scrollIntoViewIfNeeded();
       await expect(side.getByRole('link', { name: /^Cấu hình/ })).toBeInViewport({ ratio: 1 });
       await expect(page.getByRole('button', { name: /^Đăng xuất/ })).toBeInViewport({ ratio: 1 });

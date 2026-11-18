@@ -94,7 +94,6 @@ const ADMIN_PAGES: [string, string][] = [
   ['/admin/backlog', 'Còn nợ'],
   ['/admin/catalog', 'Sản phẩm'],
   ['/admin/stock', 'Tủ / Kho'],
-  ['/admin/issues', 'Xuất lẻ'],
   ['/admin/categories', 'Danh mục'],
   ['/admin/categories/units', 'Danh mục'],
   ['/admin/users', 'Danh bạ'],
