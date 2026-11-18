@@ -179,7 +179,6 @@ const request: Messages<typeof vi> = {
       summary_one: '{{count}} item · {{units}}',
       summary_other: '{{count}} items · {{units}}',
       statusSavedAt: 'Saved {{time}}',
-      editOrder: 'Edit order',
       cancelEdit: 'Cancel',
       qty: '{{qty}} {{unit}}',
       custom: 'Not in catalog',

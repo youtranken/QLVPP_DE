@@ -89,8 +89,6 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'custom-saved');
 
-      // Phiếu đã lưu ở chế độ xem: "Sửa phiếu" mở lại ô số lượng
-      await cart.getByRole('button', { name: 'Sửa phiếu' }).click();
       // Còn thay đổi chưa lưu → link nội bộ (Lịch sử) hỏi trước khi rời
       await line.getByRole('button', { name: `Thêm ${name}` }).click();
       await closeCart(page, info);
@@ -169,7 +167,6 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
       await page.reload();
       await openCart(page, info);
-      await cart.getByRole('button', { name: 'Sửa phiếu' }).click();
       await expect(cart.getByRole('spinbutton', { name: nameA, exact: true })).toHaveValue('5');
       await snap(page, info, 'copy-saved');
     } finally {

@@ -66,9 +66,11 @@
 [data-shell='member'] .rq-line-x { display: grid; place-items: center; grid-column: 3; grid-row: 1; width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--c-ink-2); font: var(--t-h3); cursor: pointer; }
 [data-shell='member'] .rq-line-x:hover { background: var(--c-surface-2); }
 [data-shell='member'] .rq-line-x:focus-visible, [data-shell='member'] .rq-notice button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; box-shadow: none; }
-[data-shell='member'] .rq-line-stepper { grid-column: 2 / 4; grid-row: 2; justify-self: start; display: grid; grid-template-columns: 44px 56px 44px; align-items: center; height: 44px; border-radius: var(--r-sm); background: var(--c-surface-2); overflow: hidden; }
-[data-shell='member'] .rq-line-stepper button { height: 44px; border: 0; background: transparent; color: var(--c-ink); font: var(--t-h3); font-weight: 800; cursor: pointer; }
-[data-shell='member'] .rq-line-stepper button:disabled { color: var(--c-faint); cursor: default; }
+[data-shell='member'] .rq-line-qtyrow { grid-column: 2 / 4; grid-row: 2; display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
+[data-shell='member'] .rq-line-unit { color: var(--c-cart-ink); font: var(--t-body); }
+[data-shell='member'] .rq-line-stepper { display: grid; grid-template-columns: var(--hit) 48px var(--hit); align-items: center; height: var(--hit); border-radius: var(--r-sm); background: var(--c-surface-2); overflow: hidden; }
+[data-shell='member'] .rq-line-stepper button { height: var(--hit); border: 0; background: transparent; color: var(--c-ink); font: var(--t-h3); font-weight: 800; cursor: pointer; }
+[data-shell='member'] .rq-line-stepper button:disabled { opacity: .55; cursor: default; }
 [data-shell='member'] .rq-line-stepper input { width: 100%; min-width: 0; border: 0; background: transparent; text-align: center; font: var(--t-body-l); font-weight: 800; color: var(--c-ink); appearance: textfield; -moz-appearance: textfield; }
 [data-shell='member'] .rq-line-stepper input::-webkit-outer-spin-button, [data-shell='member'] .rq-line-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 [data-shell='member'] .rq-line-alert { flex: 1 1 100%; color: var(--c-danger); font-size: 13px; font-weight: 600; }
@@ -97,9 +99,8 @@
 [data-shell='member'] .rq-bar-open:focus-visible, [data-shell='member'] .rq-bar-save:focus-visible { outline: 2px solid var(--c-acc); outline-offset: 2px; border-radius: var(--r-md); box-shadow: none; }
 [data-shell='member'] .rq-bar-title { font: var(--t-label); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 [data-shell='member'] .rq-bar-sub { font: var(--t-body); line-height: 1.3; color: var(--c-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-[data-shell='member'] .rq-bar-save { flex: 0 1 auto; max-width: 50%; min-height: 44px; display: grid; align-content: center; justify-items: center; padding: 2px 16px; border: 0; border-radius: var(--r-md); background: var(--c-acc); color: var(--c-on-acc); font: var(--t-body-l); font-weight: 700; line-height: 1.2; white-space: nowrap; cursor: pointer; }
-[data-shell='member'] .rq-bar-save[aria-disabled='true'] { opacity: .55; cursor: default; }
-[data-shell='member'] .rq-bar-dirty { font: var(--t-micro); }
+[data-shell='member'] .rq-bar-save { flex: none; white-space: nowrap; min-height: 44px; display: grid; align-content: center; justify-items: center; padding: 2px 16px; border: 0; border-radius: var(--r-md); background: var(--c-acc); color: var(--c-on-acc); font: var(--t-body-l); font-weight: 700; line-height: 1.2; white-space: nowrap; cursor: pointer; }
+[data-shell='member'] .rq-bar-save:disabled { opacity: .55; cursor: default; }
 
 /* Sheet phiếu (≤ 900): bo trên 28, cuộn danh sách, nút Lưu ở đáy, chừa vùng an toàn */
 [data-shell='member'] .rq-sheet-backdrop { background: var(--c-scrim); }
@@ -141,8 +142,6 @@
   [data-shell='member'] .rq-line-qty { line-height: 1.3; }
   /* ảnh 42px phủ cả hai hàng: hàng tên không bị kéo cao theo ảnh */
   [data-shell='member'] .rq-line > :first-child { grid-row: 1 / span 2; align-self: start; }
-  [data-shell='member'] .rq-line-stepper { grid-column: 2 / 4; grid-row: 2; justify-self: start; grid-template-columns: 32px 36px 32px; height: 34px; }
-  [data-shell='member'] .rq-line-stepper button { height: 34px; }
   [data-shell='member'] .rq-line-x { grid-column: 3; grid-row: 1; width: 32px; height: 32px; }
   /* Dòng có nhãn (ngoài danh mục, chờ xem): khối tên + nhãn dùng cả bề ngang dưới nút ×, để nhãn dài vẫn một dòng
      và phiếu 3 dòng không phải cuộn; tên chừa chỗ cho nút × ở góc trên */
@@ -181,8 +180,8 @@
 @media (max-width: 900px) {
   [data-shell='member'] .rq-notice, [data-shell='member'] .rq-toast-slot { bottom: calc(142px + env(safe-area-inset-bottom)); }
 }
-[data-shell='member'] .rq-cart-save.is-cancel { background: var(--c-surface); color: var(--c-acc); border-color: var(--c-acc); }
-[data-shell='member'] .rq-cart-cancel { min-height: 44px; font: var(--t-body); font-weight: 700; }
+[data-shell='member'] .rq-cart-cancel { min-height: var(--hit); border: 0; background: transparent; box-shadow: none; color: var(--c-ink-2); font: var(--t-label); }
+[data-shell='member'] .rq-cart-cancel:hover { background: var(--c-surface); color: var(--c-ink); }
 [data-shell='member'] .rq-np-eyebrow { margin: 0 0 var(--s-1); color: var(--c-ink-2); font: var(--t-body); }
 /* Tháng mới và hạn chót là thứ người dùng phải nhớ: nổi bằng chữ đậm màu thương hiệu; đỏ để dành cho lỗi */
 [data-shell='member'] .rq-np-hl { color: var(--c-acc); font-style: normal; font-weight: 800; }

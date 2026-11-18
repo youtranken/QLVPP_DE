@@ -176,7 +176,6 @@ const request = {
       summary_one: '{{count}} loại món · {{units}}',
       summary_other: '{{count}} loại món · {{units}}',
       statusSavedAt: 'Đã lưu {{time}}',
-      editOrder: 'Sửa phiếu',
       cancelEdit: 'Hủy',
       qty: '{{qty}} {{unit}}',
       custom: 'Ngoài danh mục',

@@ -16,7 +16,6 @@ const twoLines = () =>
       lineView({ id: 'l-2', item_id: NOTE.id, item: facts(NOTE), qty: 1 }),
     ],
   });
-const barSave = () => screen.getByRole('button', { name: /Lưu phiếu$/ });
 
 async function saveViaBar() {
   await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu phiếu' }));
@@ -43,7 +42,7 @@ describe('RequestPage — focus sau lưu / chép / lỗi dòng (≤ 900)', () =>
     expect(copy).toHaveFocus();
   });
 
-  it('390 px: lưu thành công từ nút "Lưu phiếu" của thanh nổi (sheet đóng) → focus trở lại nút Lưu đó', async () => {
+  it('390 px: lưu thành công từ nút "Lưu phiếu" của thanh nổi → nút Lưu biến mất (NV-20), focus sang "Xem phiếu" (không rơi về body)', async () => {
     mockViewport(390);
     stubRequestApi({ request: saved(), put: () => jsonResponse(200, { request: saved() }) });
     renderApp(makeMe('member'), '/');
@@ -51,8 +50,8 @@ describe('RequestPage — focus sau lưu / chép / lỗi dòng (≤ 900)', () =>
     await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm Bút bi xanh' }));
     await saveViaBar();
     expect(await screen.findByText('Đã lưu phiếu tháng 11')).toBeInTheDocument();
-    await waitFor(() => expect(barSave()).toHaveFocus());
-    expect(barSave()).toHaveAttribute('aria-disabled', 'true');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Xem phiếu (1 món)' })).toHaveFocus());
+    expect(screen.queryByRole('button', { name: /Lưu phiếu$/ })).toBeNull();
   });
 
   it('390 px: sheet tự mở vì lỗi dòng → Esc đóng và focus về "Xem phiếu" (không rơi về body)', async () => {

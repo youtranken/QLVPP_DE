@@ -6,7 +6,6 @@ import { makeMe } from '@/test/fixtures-me';
 import { lineView } from '@/test/fixtures-request';
 import { NOTE, PAUSED, PEN, facts, stubRequestApi, view } from '@/test/request-api-stub';
 import { mockViewport } from '@/test/viewport';
-import { startEditingOrder } from '@/test/request-cart';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -26,7 +25,6 @@ describe('Giỏ — tối đa/tháng bị hạ sau khi lưu', () => {
     renderApp(makeMe('member'), '/');
     const line = (await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Bút bi xanh')).closest('li')!;
     expect(within(line).getByText('Adm D&E đã đổi tối đa còn 4/tháng. Số lượng 5 vẫn được giữ, không thể tăng thêm.')).toBeInTheDocument();
-    await startEditingOrder();
     expect(within(line).getByRole('button', { name: 'Thêm Bút bi xanh' })).toBeDisabled();
 
     await userEvent.click(within(line).getByRole('button', { name: 'Bớt Bút bi xanh' }));
@@ -78,7 +76,6 @@ describe('Giỏ — món/nhóm đã ngừng sau khi lưu (GAP-21, L.17)', () => 
     stubRequestApi({ request: view({ lines: [paused, off, pen] }), items: [PEN, PAUSED, { ...NOTE, active: false, usable: false }] });
     renderApp(makeMe('member'), '/');
     await lineOf('Bút dạ quang');
-    await startEditingOrder();
     for (const name of ['Bút dạ quang', 'Giấy note vàng']) {
       const line = await lineOf(name);
       expect(within(line).getByText(STOPPED)).toBeInTheDocument();
