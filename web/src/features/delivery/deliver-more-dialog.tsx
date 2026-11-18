@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiErrorCode, apiErrorNumber, apiErrorString } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
+import { undoActions } from '@/lib/undo.api';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { Icon } from '@/ui/icon';
@@ -13,6 +14,7 @@ import { useBacklogFormat } from './backlog-format';
 import { deliverLine, deliverMax } from './delivery.api';
 import { langOf } from '@/lib/period-text';
 import { blockText, isBlockCode, lineErrorText, makesViewStale } from './delivery-errors';
+import { useRefreshAfterLineChange } from './people/use-refresh-after-flow';
 
 interface Props {
   line: BacklogLine;
@@ -26,6 +28,7 @@ export function DeliverMoreDialog({ line, onDone, onStale, onClose }: Props) {
   const { t, i18n } = useTranslation();
   const { csrfToken } = useMe();
   const toast = useToast();
+  const refresh = useRefreshAfterLineChange();
   const f = useBacklogFormat();
   const errorId = useId();
   const [cap, setCap] = useState<number | undefined>();
@@ -54,8 +57,9 @@ export function DeliverMoreDialog({ line, onDone, onStale, onClose }: Props) {
     void flight.run(async () => {
       setError(null);
       try {
-        await deliverLine(line.line_id, { qty, expected_delivered_qty: line.delivered_qty }, csrfToken);
-        toast.show({ text: t('delivery.backlog.deliver.done', { qty, unit, name: f.name(line), person: f.person(line) }), tone: 'ok' });
+        const { undo_id } = await deliverLine(line.line_id, { qty, expected_delivered_qty: line.delivered_qty }, csrfToken);
+        const undo = undo_id ? () => undoActions('delivery', [undo_id], csrfToken).then(refresh) : undefined;
+        toast.show({ text: t('delivery.backlog.deliver.done', { qty, unit, name: f.name(line), person: f.person(line) }), tone: 'ok', undo });
         await onDone();
       } catch (err) {
         fail(err);

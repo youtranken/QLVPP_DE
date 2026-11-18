@@ -4,6 +4,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { apiErrorCode, apiErrorFields, apiErrorNumber } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { cutNote, noteLength } from '@/lib/note-text';
+import { undoActions } from '@/lib/undo.api';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { ChoiceList } from '@/ui/choice-list';
 import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
@@ -12,6 +13,7 @@ import { Icon } from '@/ui/icon';
 import { useToast } from '@/ui/toast-context';
 import { CANCEL_REASONS, OTHER_NOTE_MIN, REASON_MAX, cancelRemaining, type BacklogLine, type CancelReason } from './backlog.api';
 import { useBacklogFormat } from './backlog-format';
+import { useRefreshAfterLineChange } from './people/use-refresh-after-flow';
 
 interface Props {
   line: BacklogLine;
@@ -47,6 +49,7 @@ export function CancelDialog({ line, sentYm, initialReason, onDone, onStale, onC
   const { t } = useTranslation();
   const { csrfToken } = useMe();
   const toast = useToast();
+  const refresh = useRefreshAfterLineChange();
   const f = useBacklogFormat();
   const form = useCancelForm(line, initialReason);
   const flight = useSingleFlight();
@@ -78,8 +81,9 @@ export function CancelDialog({ line, sentYm, initialReason, onDone, onStale, onC
     void flight.run(async () => {
       form.setFailed(null);
       try {
-        const n = (await cancelRemaining(line.line_id, body, csrfToken)).cancelled_now;
-        toast.show(n > 0 ? { text: t(`${KEY}.done`, { n, unit, name: f.name(line), person: f.person(line) }), tone: 'ok' } : { text: t(`${KEY}.none`), tone: 'info' });
+        const { cancelled_now: n, undo_id } = await cancelRemaining(line.line_id, body, csrfToken);
+        const undo = undo_id ? () => undoActions('cancel', [undo_id], csrfToken).then(refresh) : undefined;
+        toast.show(n > 0 ? { text: t(`${KEY}.done`, { n, unit, name: f.name(line), person: f.person(line) }), tone: 'ok', undo } : { text: t(`${KEY}.none`), tone: 'info' });
         await onDone();
       } catch (err) {
         fail(err);

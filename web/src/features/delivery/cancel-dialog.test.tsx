@@ -228,4 +228,16 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
     expect(submit()).toBeDisabled();
     await act(async () => release(jsonResponse(200, { cancelled_now: 3 })));
   });
+
+  it('hủy xong có undo_id → toast kèm Hoàn tác; bấm thì POST undo/cancel với id đó (TC-18)', async () => {
+    const f = stub(() => jsonResponse(200, { cancelled_now: 3, undo_id: 'u-c1' }));
+    const { onDone } = renderDialog();
+    await pick('Người nhận không cần nữa');
+    await userEvent.click(submit());
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole('button', { name: 'Hoàn tác', hidden: true }));
+    await waitFor(() => expect(f.mock.calls.some((c) => c[0] === '/api/admin/undo/cancel')).toBe(true));
+    const call = f.mock.calls.find((c) => c[0] === '/api/admin/undo/cancel')!;
+    expect(JSON.parse(String(call[1]?.body))).toEqual({ ids: ['u-c1'] });
+  });
 });

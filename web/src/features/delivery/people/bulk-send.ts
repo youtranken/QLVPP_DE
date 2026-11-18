@@ -15,6 +15,8 @@ export interface BulkSent {
 export interface BulkOutcome {
   sent: BulkSent[];
   error: unknown;
+  // Id hoàn tác của từng lô; null khi có lô server không mở hoàn tác (kèm ghi Không mua) — không hoàn tác dở
+  undoIds: string[] | null;
 }
 
 // Gửi theo đúng thứ tự gói (người, rồi phiếu nợ trước), lô ≤ BULK_MAX_REQUESTS. Mục mang reject_line_ids chỉ gửi kèm
@@ -23,13 +25,16 @@ export async function sendBulk(plan: BulkPlan, csrfToken: string | null): Promis
   const ownerOf = (id: string) => plan.owners[id];
   const entries = withRejects(plan.body.requests, plan.pending, (id) => ({ request_id: id, lines: [] }), ownerOf);
   const sent: BulkSent[] = [];
+  let undoIds: string[] | null = [];
   const failedOwners = new Set<string>();
   let batch: Omit<BulkSent, 'result'>[] = [];
   const flush = async () => {
     if (batch.length === 0) return;
     const cur = batch;
     batch = [];
-    const { results } = await deliverBulk({ requests: cur.map((b) => b.entry) }, csrfToken);
+    const { results, undo_id } = await deliverBulk({ requests: cur.map((b) => b.entry) }, csrfToken);
+    const delivered = results.some((r) => r.ok && r.delivered_units > 0);
+    if (delivered) undoIds = undo_id && undoIds ? [...undoIds, undo_id] : null;
     for (const b of cur) {
       const result = results.find((r) => r.request_id === b.entry.request_id) ?? { request_id: b.entry.request_id, ok: false as const, code: 'UNKNOWN' };
       sent.push({ ...b, result });
@@ -55,13 +60,13 @@ export async function sendBulk(plan: BulkPlan, csrfToken: string | null): Promis
       if (batch.length === BULK_MAX_REQUESTS) await flush();
     }
     await flush();
-    return { sent, error: null };
+    return { sent, error: null, undoIds: undoIds?.length ? undoIds : null };
   } catch (error) {
     const done = new Set(sent.map((s) => s.entry.request_id));
     for (const entry of entries) {
       if (!done.has(entry.request_id)) sent.push({ entry, skippedRejects: 0, result: { request_id: entry.request_id, ok: false, code: NOT_SENT } });
     }
-    return { sent, error };
+    return { sent, error, undoIds: null };
   }
 }
 

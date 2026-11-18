@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
@@ -11,6 +12,7 @@ import { PeriodsService } from '../periods/periods.service';
 import { LineDeliveryStore } from '../requests/line-delivery.store';
 import type { LockedLine } from '../requests/line-delivery.store';
 import { lineNotFound } from '../requests/request-errors';
+import { UndoLedgerService } from '../undo/undo-ledger.service';
 import {
   deliverExceedsQty,
   lineNotReviewed,
@@ -31,6 +33,7 @@ export class DeliveryService {
     private readonly stock: StockService,
     private readonly audit: AuditWriterService,
     private readonly notifications: NotificationsService,
+    private readonly undo: UndoLedgerService,
   ) {}
 
   async deliverLine(
@@ -47,10 +50,16 @@ export class DeliveryService {
       if (line.delivered_qty !== body.expected_delivered_qty) {
         throw staleDelivery(line.delivered_qty);
       }
-      const result = await this.deliverWithin(tx, line, body.qty, actor, now);
+      const undoId = randomUUID();
+      const result = await this.deliverWithin(tx, line, body.qty, {
+        actor,
+        now,
+        undoId,
+      });
       await this.lines.touchRequest(tx, line.request_id, now);
       const complete = await this.notifyIfComplete(tx, line, now);
-      return { ...result, request_complete: complete };
+      await this.undo.record(tx, { id: undoId, kind: 'delivery', actor, now });
+      return { ...result, request_complete: complete, undo_id: undoId };
     });
   }
 
@@ -59,9 +68,9 @@ export class DeliveryService {
     tx: Tx,
     line: LockedLine,
     qty: number,
-    actor: string,
-    now: Date,
-  ): Promise<Omit<DeliverResult, 'request_complete'>> {
+    by: { actor: string; now: Date; undoId: string | null },
+  ): Promise<LineDelivered> {
+    const { actor, now, undoId } = by;
     assertDeliverable(line);
     const remaining = remainingOf(line);
     if (qty > remaining) throw deliverExceedsQty(remaining);
@@ -91,6 +100,7 @@ export class DeliveryService {
       movementId,
       actor,
       now,
+      undoId,
     });
     await this.auditDelivered(tx, line, qty, movementId, actor);
     return toResult(line, qty, taken);
@@ -138,11 +148,13 @@ export class DeliveryService {
   }
 }
 
+type LineDelivered = Omit<DeliverResult, 'request_complete' | 'undo_id'>;
+
 function toResult(
   line: LockedLine,
   qty: number,
   taken: StockResult | null,
-): Omit<DeliverResult, 'request_complete'> {
+): LineDelivered {
   return {
     line: {
       id: line.id,

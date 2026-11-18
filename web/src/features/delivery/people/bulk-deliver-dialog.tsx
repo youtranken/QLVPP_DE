@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isSessionExpired } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
+import { undoActions } from '@/lib/undo.api';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { useToast } from '@/ui/toast-context';
@@ -45,7 +46,7 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
     flight.run(async () => {
       if (delivered.current) return;
       setError(null);
-      const { sent, error: e } = await sendBulk(plan, csrfToken);
+      const { sent, error: e, undoIds } = await sendBulk(plan, csrfToken);
       if (e && isSessionExpired(e) && sent.every((s) => s.result.ok === false && s.result.code === NOT_SENT)) {
         setError(t('delivery.confirm.sessionExpired'));
         return;
@@ -55,7 +56,8 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
       const rows = byPerson(sent, plan.owners);
       if (!e && rows.every((r) => r.ok)) {
         delivered.current = true;
-        toast.show({ text: t('delivery.bulk.done', { count }) });
+        const undo = undoIds ? () => undoActions('delivery', undoIds, csrfToken).then(refresh) : undefined;
+        toast.show({ text: t('delivery.bulk.done', { count }), undo });
         onDone();
       } else setResults(rows);
     });
