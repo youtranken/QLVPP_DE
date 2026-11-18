@@ -34,13 +34,12 @@ describe('Nhật ký — thanh lọc lọc ngay (AD-51…53)', () => {
     expect(await within(screen.getByRole('group', { name: 'Người thực hiện' })).findByText('Lê Thị Bình')).toBeInTheDocument();
   });
 
-  it('AD-53: nút "Chỉ việc tự động" lọc actor=system ngay; "Xóa lọc" bỏ mọi khóa khỏi URL', async () => {
+  it('A2: không còn nút "Chỉ việc tự động"; URL cũ ?actor=system vẫn mở được, hiện "Hệ thống (tự động)" ở ô người, "Xóa lọc" bỏ actor', async () => {
     const fetchMock = stubApi();
-    await openAudit();
-    expect(screen.queryByRole('button', { name: 'Hệ thống (tự động)' })).toBeNull();
-    await userEvent.click(screen.getByRole('button', { name: 'Chỉ việc tự động' }));
-    expect(screen.getByRole('button', { name: 'Chỉ việc tự động' })).toHaveAttribute('aria-pressed', 'true');
-    await vi.waitFor(() => expect(lastAudit(fetchMock).get('actor')).toBe('system'));
+    await openAudit('/admin/audit?actor=system');
+    expect(screen.queryByRole('button', { name: 'Chỉ việc tự động' })).toBeNull();
+    expect(lastAudit(fetchMock).get('actor')).toBe('system');
+    expect(await within(screen.getByRole('group', { name: 'Người thực hiện' })).findByText('Hệ thống (tự động)')).toBeInTheDocument();
     await userEvent.click(screen.getAllByRole('button', { name: 'Xóa lọc' })[0]);
     await vi.waitFor(() => expect(lastAudit(fetchMock).has('actor')).toBe(false));
     expect(screen.getByTestId('location-search')).not.toHaveTextContent('actor=');

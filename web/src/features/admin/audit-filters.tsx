@@ -31,8 +31,7 @@ function useActorUser(sub: string): DirectoryUser | null {
 // Lọc ngay khi đổi ô như mọi màn khác: người chọn từ gợi ý, hành động, khoảng ngày đều ghi thẳng lên URL
 export function AuditFilterBar({ applied, serverError, onPatch, onClear }: Props) {
   const { t, i18n } = useTranslation();
-  const system = applied.actor === SYSTEM_ACTOR;
-  const actor = useActorUser(system ? '' : applied.actor);
+  const actor = useActorUser(applied.actor);
   const dateError = dateRangeInvalid(applied.from, applied.to) ? t('audit.filters.rangeInvalid') : serverError.from || serverError.to ? t('audit.filters.dateInvalid') : undefined;
   const known = AUDIT_ACTIONS.includes(applied.action);
   const actionOptions = [
@@ -55,9 +54,6 @@ export function AuditFilterBar({ applied, serverError, onPatch, onClear }: Props
             resultsWhenEmpty={false}
             onChange={(u) => onPatch({ actor: u?.sub ?? '' })}
           />
-          <button type="button" className="au-system" aria-pressed={system} onClick={() => onPatch({ actor: system ? '' : SYSTEM_ACTOR })}>
-            {t('audit.filters.systemOnly')}
-          </button>
         </div>
         <div className="au-action-field">
           <Select label={t('audit.filters.action')} stacked value={applied.action} options={actionOptions} onChange={(v) => onPatch({ action: v })} />

@@ -105,7 +105,7 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
     await expect(page.getByRole('main').getByRole('button', { name: 'Thử lại' })).toBeVisible();
   });
 
-  test('Vòng8 Nhật ký: thanh lọc một hàng ở 1280 (người + Chỉ việc tự động, Hành động, khoảng ngày, Xóa lọc; không nút Lọc — AD-51/53), gợi ý ô tìm người không bị cắt', async ({ page }, info) => {
+  test('Vòng8 Nhật ký: thanh lọc một hàng ở 1280 (người, Hành động, khoảng ngày, Xóa lọc; không nút Lọc, không nút Chỉ việc tự động — AD-51, A2), gợi ý ô tìm người không bị cắt', async ({ page }, info) => {
     test.skip(isMobile(info), 'một hàng chỉ đòi ở màn rộng');
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto(`/admin/audit?from=2026-11-01&to=2026-11-12`);
@@ -116,9 +116,8 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
     expect(tops).toHaveLength(4);
     expect(new Set(tops).size, `mọi cụm cùng một hàng: ${tops.join(',')}`).toBe(1);
     const clear = bar.getByRole('button', { name: 'Xóa lọc', exact: true });
-    const sys = bar.getByRole('button', { name: 'Chỉ việc tự động' });
-    const [c, y] = await Promise.all([clear.boundingBox(), sys.boundingBox()]);
-    expect(Math.round(c!.y)).toBe(Math.round(y!.y));
+    await expect(clear).toBeVisible();
+    await expect(bar.getByRole('button', { name: 'Chỉ việc tự động' })).toHaveCount(0);
     // Gợi ý "Tên hoặc email" vừa trọn ô (input không tự báo tràn placeholder nên đo bằng canvas)
     const fits = await bar.getByPlaceholder('Tên hoặc email').evaluate((el: HTMLInputElement) => {
       const cs = getComputedStyle(el);

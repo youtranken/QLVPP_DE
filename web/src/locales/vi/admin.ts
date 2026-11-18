@@ -141,7 +141,6 @@ const admin = {
       actorSearch: 'Tìm người thực hiện',
       actorHint: 'Tên hoặc email',
       system: 'Hệ thống (tự động)',
-      systemOnly: 'Chỉ việc tự động',
       action: 'Hành động',
       anyAction: 'Mọi hành động',
       from: 'Từ ngày',
