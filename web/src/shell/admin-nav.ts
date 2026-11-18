@@ -18,6 +18,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     labelKey: 'nav.groups.monthly',
     pages: [
+      { path: 'today', titleKey: 'nav.today', icon: 'clipboard' },
       { path: 'month', titleKey: 'nav.month', icon: 'calendar', badge: 'review' },
       { path: 'reports', titleKey: 'nav.reports', icon: 'printer' },
       { path: 'arrivals', titleKey: 'nav.arrivals', icon: 'pkg' },
@@ -43,4 +44,4 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   },
 ];
 
-export const ADMIN_HOME = 'month';
+export const ADMIN_HOME = 'today';

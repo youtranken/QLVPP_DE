@@ -32,7 +32,7 @@ describe('AppRoutes — đường dẫn lạ', () => {
 
 describe('AppRoutes — chuyển hướng đường cũ của Adm D&E (giữ nguyên query)', () => {
   it.each([
-    ['/admin', '/admin/month', ''],
+    ['/admin', '/admin/today', ''] /* TC-06: trang đầu là Việc hôm nay */,
     ['/admin/home', '/admin/month', ''],
     ['/admin/summary?ym=2026-10&q=an&request=r1', '/admin/month', '?ym=2026-10&q=an&request=r1'],
     ['/admin/summary?ym=2026-11&left=1', '/admin/month', '?ym=2026-11&left=1'],

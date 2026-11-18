@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Kỳ tháng', 'Báo cáo & gửi NCC', 'Nhận hàng', 'Giao hàng', 'Còn nợ', 'Sản phẩm', 'Tủ / Kho', 'Danh mục', 'Danh bạ', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Việc hôm nay', 'Kỳ tháng', 'Báo cáo & gửi NCC', 'Nhận hàng', 'Giao hàng', 'Còn nợ', 'Sản phẩm', 'Tủ / Kho', 'Danh mục', 'Danh bạ', 'Nhật ký', 'Cấu hình'];
 
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
 const linkLabels = (nav: HTMLElement) =>
@@ -24,7 +24,7 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.queryByRole('navigation', { name: 'Menu quản lý' })).toBeNull();
   });
 
-  it.each(['admin', 'sa'] as const)('role %s: sidebar 3 nhóm, 11 mục theo luồng chuẩn, mục đang chọn aria-current, không "Phiếu của tôi"', (role) => {
+  it.each(['admin', 'sa'] as const)('role %s: sidebar 3 nhóm, 12 mục theo luồng chuẩn, mục đang chọn aria-current, không "Phiếu của tôi"', (role) => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe(role), '/admin/catalog');
@@ -45,20 +45,13 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeInTheDocument();
   });
 
-  it('/admin chuyển tới /admin/month (trang Kỳ tháng)', async () => {
+  it('/admin chuyển tới /admin/today (Việc hôm nay, TC-06)', async () => {
     mockViewport(1280);
-    // Kỳ khóa còn dòng chưa giao → mặc định mở kỳ khóa
-    const kpi = { registered: 30, headcount: 40, is_open: false, unregistered: 0, lines_pending_delivery: 3 };
-    stubShellApi({
-      '/api/admin/periods/2026-11/summary': () => jsonResponse(200, { ...kpi, is_open: true }),
-      '/api/admin/periods/2026-10/summary': () => jsonResponse(200, kpi),
-      '/api/admin/periods/2026-10/send-state': () => jsonResponse(200, { state: 'unsent', no_order_at: null, no_order_by_name: null, sent: null, changed_after: false, changed_at: null }),
-      '/api/admin/periods/2026-10/arrivals-plan': () => jsonResponse(200, { snapshot: null, batches: [], rows: [], custom: [], makeup: [] }),
-    });
+    stubShellApi();
     renderApp(makeMe('admin'), '/admin');
-    expect(screen.getByTestId('location')).toHaveTextContent('/admin/month');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 10' })).toBeInTheDocument();
-    expect(within(sideNav()).getByRole('link', { name: 'Kỳ tháng' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByTestId('location')).toHaveTextContent('/admin/today');
+    expect(await screen.findByRole('heading', { level: 1, name: /Nguyễn Văn An/ })).toBeInTheDocument();
+    expect(within(sideNav()).getByRole('link', { name: 'Việc hôm nay' })).toHaveAttribute('aria-current', 'page');
   });
 
   it.each(['/admin/month', '/admin/config'])('%s tự dựng đầu trang: đúng một h1, shell không dựng h1 riêng', async (path) => {
@@ -94,7 +87,7 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.getByRole('main').querySelector('.shell__panel')).not.toBeNull();
   });
 
-  it('767 px: không có sidebar, nút "Mở menu quản lý" mở hộp thoại liệt kê đủ 11 mục', async () => {
+  it('767 px: không có sidebar, nút "Mở menu quản lý" mở hộp thoại liệt kê đủ 12 mục', async () => {
     mockViewport(767);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');

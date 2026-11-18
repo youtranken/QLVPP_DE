@@ -20,7 +20,8 @@ import arrivals from './arrivals';
 import sendAdm from './send-adm';
 import month from './month';
 import warnings from './warnings';
+import today from './today';
 
-const en: Messages<typeof vi> = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review, ...notifications, ...delivery, ...reports, ...units, ...config, ...arrivals, ...sendAdm, ...month, ...warnings };
+const en: Messages<typeof vi> = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review, ...notifications, ...delivery, ...reports, ...units, ...config, ...arrivals, ...sendAdm, ...month, ...warnings, ...today };
 
 export default en;

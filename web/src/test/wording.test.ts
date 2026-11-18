@@ -20,6 +20,7 @@ function strings(node: unknown, path = ''): [string, string][] {
 
 // Khóa tiêu đề h1 của từng trang trong menu quản lý. Trang có tháng trong tiêu đề ("Kỳ tháng 12") so phần chữ đứng trước số
 const PAGE_TITLE: Record<string, { key: string; dynamic?: true }> = {
+  today: { key: 'today.title' },
   month: { key: 'month.title', dynamic: true },
   reports: { key: 'reports.send.title' },
   arrivals: { key: 'arrivals.title', dynamic: true },

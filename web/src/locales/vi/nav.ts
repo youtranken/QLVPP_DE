@@ -22,6 +22,7 @@ const nav = {
       stock: 'Danh mục và tủ',
       system: 'Quản lý',
     },
+    today: 'Việc hôm nay',
     month: 'Kỳ tháng',
     catalog: 'Sản phẩm',
     stock: 'Tủ / Kho',
