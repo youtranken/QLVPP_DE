@@ -4,7 +4,7 @@ import { useMe } from '@/lib/me';
 import { shiftYm } from '@/lib/ym';
 import { saveMyLines, useSetMyRequest, type RequestView } from './request.api';
 import { saveFailure } from './request-errors';
-import { monthOf, useAdminContact, useRequestFormat } from './request-format';
+import { monthOf, useRequestFormat } from './request-format';
 import { carryOf, type Cart, type ReplaceLineInput } from './use-cart';
 import { useAtLock } from './use-lock-timer';
 
@@ -67,7 +67,6 @@ export function useSaveFlow(
 ) {
   const { t } = useTranslation();
   const me = useMe();
-  const contact = useAdminContact();
   const fmt = useRequestFormat();
   const setMyRequest = useSetMyRequest();
   const [confirming, setConfirming] = useState(false);
@@ -128,7 +127,7 @@ export function useSaveFlow(
       showToast(t('request.toast.saved', { month }));
       setSavedSeq((n) => n + 1);
     } catch (e) {
-      const failure = saveFailure(e, cart.lines, (k, o) => t(k, { contact, ...o }), ym);
+      const failure = saveFailure(e, cart.lines, (k, o) => t(k, { contact: t('request.contactFallback'), ...o }), ym);
       if (failure.kind === 'locked') {
         locked(failure.nextYm);
       } else if (failure.kind === 'stale') {

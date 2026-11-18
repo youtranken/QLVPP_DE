@@ -49,10 +49,4 @@ export function useRequestFormat() {
   };
 }
 
-// Chủ dự án chốt 18/11/2026: bỏ cấu hình liên hệ, luôn gọi chung "Adm D&E"
-export function useAdminContact(): string {
-  const { t } = useTranslation();
-  return t('request.contactFallback');
-}
-
 export { matchesSearch } from '@/lib/search';

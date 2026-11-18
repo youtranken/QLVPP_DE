@@ -37,7 +37,6 @@ function scheduler(
     notifications as unknown as Ctor[4],
     stock as unknown as Ctor[5],
     {
-      getBool: () => Promise.resolve(true),
       getInt: () => Promise.resolve(3),
     } as unknown as Ctor[6],
     { settleAdmOut: jest.fn() } as unknown as Ctor[7],

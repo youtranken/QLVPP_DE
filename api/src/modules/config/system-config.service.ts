@@ -67,16 +67,6 @@ export class SystemConfigService {
     return n;
   }
 
-  async getBool(key: string): Promise<boolean> {
-    const raw = await this.get<unknown>(key);
-    if (typeof raw !== 'boolean') {
-      throw new Error(
-        `Tham số cấu hình '${key}' phải là boolean (đang là ${JSON.stringify(raw)}).`,
-      );
-    }
-    return raw;
-  }
-
   // Marker runtime (epoch ms), không phải tham số admin chỉnh; đọc thẳng không cache
   async getDirectorySyncLastAt(): Promise<Date | null> {
     const rows = await this.db
