@@ -47,14 +47,14 @@ describe('Menu theo luồng chuẩn', () => {
     expect(within(sideNav()).queryByText('Nhóm & đơn vị')).toBeNull();
   });
 
-  it('G6: mục "Xuất lẻ" ngay sau "Tủ / Kho", trỏ /admin/issues', () => {
+  it('AD-38: không còn mục "Xuất lẻ" (gộp vào Tủ / Kho); sau "Tủ / Kho" là "Danh mục"', () => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
     const group = within(sideNav()).getByRole('group', { name: 'Danh mục và tủ' });
     const labels = within(group).getAllByRole('link').map((a) => a.querySelector('.side__label')?.textContent);
-    expect(labels[labels.indexOf('Tủ / Kho') + 1]).toBe('Xuất lẻ');
-    expect(within(group).getByRole('link', { name: 'Xuất lẻ' })).toHaveAttribute('href', '/admin/issues');
+    expect(labels).not.toContain('Xuất lẻ');
+    expect(labels[labels.indexOf('Tủ / Kho') + 1]).toBe('Danh mục');
   });
 
   it('G8: không còn mục "Món ngoài danh mục"; /admin/review chuyển về Kỳ tháng lọc "Có món chờ duyệt" ở kỳ cũ nhất còn món chờ', async () => {

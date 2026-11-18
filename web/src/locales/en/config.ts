@@ -5,8 +5,7 @@ const config: Messages<typeof vi> = {
   config: {
     title: 'Settings',
     page: {
-      description: 'App-wide parameters that apply to every user.',
-      saveNote: 'Saves this block only · recorded in the Audit log',
+      description: 'App-wide parameters that apply to every user. Each block saves separately and is recorded in the Audit log.',
       noChanges: 'No changes',
       leaveBody: 'Unsaved: {{blocks}}.',
       saved: '{{block}} saved',
@@ -59,8 +58,8 @@ const config: Messages<typeof vi> = {
       remove: 'Remove signature box',
       removeN: 'Remove signature box {{n}}',
       removeNamed: 'Remove signature box {{n}} · {{title}}',
-      notPrinted: 'Only the first {{n}} boxes are printed',
-      full: 'The form already prints {{n}} boxes.',
+      notPrinted: 'Not printed',
+      limit: 'Up to {{max}} boxes; the form prints the first {{n}}',
       preview: 'Footer preview',
       save: 'Save signature boxes',
     },

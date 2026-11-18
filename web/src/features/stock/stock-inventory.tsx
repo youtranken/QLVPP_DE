@@ -85,7 +85,7 @@ export function StockInventory({ p }: { p: StockParams }) {
           ),
         }}
       />
-      <StockMore shown={page.visible.length} total={page.total} hidden={page.hidden} onMore={page.showMore} />
+      <StockMore hidden={page.hidden} onMore={page.showMore} />
       {ledgerItem && (
         <MovementsDrawer
           item={ledgerItem}

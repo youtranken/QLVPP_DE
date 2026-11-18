@@ -120,6 +120,11 @@ html, [data-shell] * { scrollbar-width: thin; }
 [data-shell] .date-range__trigger[aria-expanded='true']::after { transform: none; }
 /* max-height do popoverFit đặt (không cao quá màn): màn thấp hơn lịch thì cuộn trong lịch, không bị cắt */
 [data-shell] .cal-pop { z-index: 60; box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain; padding: var(--s-3); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-2); }
+[data-shell] .cal-presets { display: flex; flex-wrap: wrap; gap: var(--s-1); padding-bottom: var(--s-2); margin-bottom: var(--s-2); border-bottom: 1px solid var(--c-line); }
+[data-shell] .cal-preset { min-height: 32px; padding: 0 var(--s-3); border: 1px solid var(--c-line); border-radius: var(--r-sm); background: var(--c-surface); color: var(--c-ink-2); font: var(--t-sm); cursor: pointer; }
+[data-shell] .cal-preset:hover { background: var(--c-surface-2); }
+[data-shell] .cal-preset[aria-pressed='true'] { border-color: var(--c-acc-line); background: var(--c-acc-soft); color: var(--c-acc-ink); font-weight: 600; }
+[data-shell] .cal-preset:focus-visible { outline: none; box-shadow: var(--focus); }
 [data-shell] .cal { display: grid; gap: var(--s-2); width: 296px; max-width: calc(100vw - var(--s-7)); }
 [data-shell] .cal__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
 [data-shell] .cal__title { font: var(--t-label); color: var(--c-ink); text-transform: capitalize; }

@@ -215,10 +215,10 @@ test.describe('E9-S5 Tủ / Kho M1 (dev-identity admin)', () => {
       await issue.getByRole('button', { name: 'Xuất', exact: true }).click();
       await expect(issue).toBeHidden();
 
-      await page.goto('/admin/issues');
+      await page.goto('/admin/stock?tab=history&kind=issue');
       const issued = page.getByRole('row').filter({ hasText: itemName });
       await expect(issued).toBeVisible();
-      await expect(issued).toContainText('3 cái');
+      await expect(issued).toContainText('−3');
       await expect(issued).toContainText('Họp khách PW');
       await expect(issued).toContainText('Dùng chung');
       if (isMobile(info)) await expectNoContrastViolations(page);
@@ -293,8 +293,8 @@ test.describe('V2D-16 Tủ / Kho theo người đang chờ (dev-identity admin)'
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'v2d16-stock-short', false);
 
-      await page.goto('/admin/issues');
-      await expect(page.getByRole('button', { name: 'Xuất lẻ một món' })).toBeVisible();
+      await page.goto('/admin/stock');
+      await expect(page.getByRole('main').getByRole('button', { name: 'Xuất lẻ một món' })).toBeVisible();
     } finally {
       seed.cleanup();
     }

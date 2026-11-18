@@ -116,6 +116,7 @@ export function ItemDrawer({ item, categories, defaultCategoryId, onClose, nav }
   return (
     <OverlayPanel
       open
+      wide
       onClose={onClose}
       title={item ? t('catalog.panel.edit', { name: item.name }) : t('catalog.panel.add')}
       dirty={f.dirty}

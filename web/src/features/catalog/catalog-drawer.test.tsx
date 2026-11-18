@@ -18,6 +18,15 @@ describe('Danh mục — panel phủ món', () => {
     expect(row).toHaveAttribute('aria-current', 'true');
   });
 
+  it('TC-11: Sửa món là ngăn kéo phải rộng (data-placement="end", ovp--wide), bảng vẫn còn phía sau', async () => {
+    await openCatalog({ items: ITEMS }, `/admin/catalog?view=table&item=${PEN.id}`);
+    const drawer = await screen.findByRole('dialog', { name: 'Sửa món Bút bi xanh' });
+    expect(drawer).toHaveAttribute('data-placement', 'end');
+    expect(drawer).toHaveClass('ovp', 'ovp--wide');
+    expect(document.querySelector('table')).toBeInTheDocument();
+    expect(within(drawer).getByRole('heading', { name: 'Thông tin' })).toHaveClass('ct-panel-sec__title');
+  });
+
   it('"Món sau" đi theo thứ tự hàng đang thấy (Giấy A4 → Bút bi xanh → Bút chì 2B); món cuối không có "Món sau"', async () => {
     await openCatalog({ items: ITEMS }, `/admin/catalog?item=${PAPER.id}`);
     const drawer = await screen.findByRole('dialog', { name: 'Sửa món Giấy A4' });

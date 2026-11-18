@@ -97,11 +97,11 @@ describe('Trang Đơn vị tính', () => {
     expect(table().queryAllByRole('switch')).toHaveLength(0);
   });
 
-  it('thanh công cụ cùng khung với tab Nhóm: ô tìm · "Đang hiện x/y đơn vị" · Sắp xếp; gõ "hop" (không dấu) chỉ còn hộp', async () => {
+  it('thanh công cụ cùng khung với tab Nhóm: ô tìm · Sắp xếp, chưa tìm không có "Đang hiện" (AD-47); gõ "hop" (không dấu) chỉ còn hộp, "Đang hiện 1/3 đơn vị"', async () => {
     await open();
     const tools = document.querySelector('.setup-tools') as HTMLElement;
     expect(within(tools).getByRole('searchbox', { name: 'Tìm đơn vị (không cần dấu)' })).toBeInTheDocument();
-    expect(within(tools).getByText('Đang hiện 3/3 đơn vị')).toBeInTheDocument();
+    expect(within(tools).queryByText(/^Đang hiện/)).toBeNull();
     expect(within(tools).getByRole('button', { name: 'Sắp xếp' })).toBeInTheDocument();
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm đơn vị (không cần dấu)' }), 'hop');
     expect(names()).toEqual(['hộp']);

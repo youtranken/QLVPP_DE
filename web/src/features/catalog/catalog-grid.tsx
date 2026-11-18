@@ -62,7 +62,7 @@ export function CatalogGrid({ rows, index, loading, openId, onEdit, emptyAction,
             {open && (
               <div className="ct-grid">
                 {list.map((r) => (
-                  <CatalogCard key={r.id} row={r} groupName={name} groupActive={cat?.active ?? true} open={r.id === openId} onEdit={onEdit} />
+                  <CatalogCard key={r.id} row={r} groupName={name} open={r.id === openId} onEdit={onEdit} />
                 ))}
               </div>
             )}

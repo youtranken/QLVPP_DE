@@ -26,7 +26,6 @@ const DeliveryClassicRedirect = adminChunk.page('DeliveryClassicRedirect');
 const BacklogPage = adminChunk.page('BacklogPage');
 const ReportSendPage = adminChunk.page('ReportSendPage');
 const StockPage = adminChunk.page('StockPage');
-const IssuesPage = adminChunk.page('IssuesPage');
 const CatalogPage = adminChunk.page('CatalogPage');
 const CategoriesPage = adminChunk.page('CategoriesPage');
 const UnitsPage = adminChunk.page('UnitsPage');
@@ -39,6 +38,13 @@ const PrintPage = printChunk.page('PrintPage');
 function RedirectKeepSearch({ to }: { to: string }) {
   const { search } = useLocation();
   return <Navigate to={{ pathname: to, search }} replace />;
+}
+
+// Xuất lẻ gộp vào Tủ / Kho (AD-38): link cũ trong chuông, sổ tay vẫn tới đúng bảng, giữ tháng
+function IssuesRedirect() {
+  const ym = new URLSearchParams(useLocation().search).get('ym');
+  const search = new URLSearchParams({ tab: 'history', kind: 'issue', ...(ym ? { ym } : {}) });
+  return <Navigate to={{ pathname: '/admin/stock', search: `?${search}` }} replace />;
 }
 
 function AdminNotFound() {
@@ -114,7 +120,7 @@ export function AppRoutes() {
         <Route path="backlog" element={<BacklogPage />} />
         <Route path="reports" element={<ReportSendPage />} />
         <Route path="stock" element={<StockPage />} />
-        <Route path="issues" element={<IssuesPage />} />
+        <Route path="issues" element={<IssuesRedirect />} />
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="categories/units" element={<UnitsPage />} />

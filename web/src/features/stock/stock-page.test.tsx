@@ -36,13 +36,13 @@ describe('StockPage', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Tủ / Kho' })).toBeInTheDocument();
   });
 
-  it('đúng một h1 "Tủ / Kho" + liên kết "Sản phẩm"; không còn liên kết "Hàng NCC về? → Hàng về"', async () => {
+  it('AD-35: đúng một h1 "Tủ / Kho", không còn nút "Sản phẩm" ở đầu trang; không còn liên kết "Hàng NCC về? → Hàng về"', async () => {
     await open();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1, name: 'Tủ / Kho' })).toBeInTheDocument();
     const main = within(screen.getByRole('main'));
     expect(screen.queryByRole('link', { name: /Hàng ADM về/ })).toBeNull();
-    expect(main.getByRole('link', { name: 'Sản phẩm' })).toHaveAttribute('href', '/admin/catalog');
+    expect(main.queryByRole('link', { name: 'Sản phẩm' })).toBeNull();
   });
 
   it('một hàng chip lọc có số (G5): Tất cả 6 (ẩn món ngừng tủ 0), Thiếu kỳ này 2, Sắp hết 1, Hết 1', async () => {
@@ -180,11 +180,11 @@ describe('StockPage', () => {
       expect(screen.queryByRole('button', { name: /^Xem thêm/ })).toBeNull();
     });
 
-    it('51 món: hiện 50 + "Xem thêm (1 món nữa)"; bấm thì hiện món 51 và nút biến mất', async () => {
+    it('51 món: hiện 50 + "Xem thêm (1 món nữa)", không có dòng "Đang hiện" (AD-37); bấm thì hiện món 51 và nút biến mất', async () => {
       await openMany(51);
       expect(screen.getByText('Món 050')).toBeInTheDocument();
       expect(screen.queryByText('Món 051')).toBeNull();
-      expect(screen.getByText('Đang hiện 50/51 món')).toBeInTheDocument();
+      expect(screen.queryByText(/Đang hiện/)).toBeNull();
       await userEvent.click(screen.getByRole('button', { name: 'Xem thêm (1 món nữa)' }));
       expect(screen.getByText('Món 051')).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /^Xem thêm/ })).toBeNull();
@@ -198,19 +198,19 @@ describe('StockPage', () => {
       expect(screen.queryByRole('button', { name: /^Xem thêm/ })).toBeNull();
     });
   });
-  describe('G6: Xuất lẻ thành trang riêng', () => {
+  describe('AD-38: Xuất lẻ gộp vào Tủ / Kho', () => {
     it('không còn bộ chuyển "Trong tủ / Xuất lẻ" trên Tủ / Kho', async () => {
       await open();
       expect(screen.queryByRole('radio', { name: 'Xuất lẻ' })).toBeNull();
       expect(screen.queryByRole('radiogroup', { name: 'Chế độ xem Kho' })).toBeNull();
     });
 
-    it('link cũ /admin/stock?tab=issues&ym=2026-10 → chuyển sang /admin/issues?ym=2026-10', async () => {
+    it('link cũ /admin/stock?tab=issues&ym=2026-10 → tab Lịch sử lọc Xuất lẻ, giữ tháng', async () => {
       mockViewport(1280);
-      stubStockApi((url) => (url.startsWith('/api/admin/issues') ? jsonResponse(200, []) : undefined));
+      stubStockApi((url) => (url.startsWith('/api/admin/stock/movements') ? jsonResponse(200, { items: [], next_cursor: null, totals: { in: 0, out: 0 } }) : undefined));
       renderApp(makeMe('admin'), '/admin/stock?tab=issues&ym=2026-10');
-      expect(await screen.findByRole('heading', { level: 1, name: 'Xuất lẻ' })).toBeInTheDocument();
-      expect(screen.getByTestId('location-search')).toHaveTextContent('?ym=2026-10');
+      expect(await screen.findByRole('radio', { name: 'Lịch sử nhập xuất' })).toBeChecked();
+      expect(screen.getByTestId('location-search')).toHaveTextContent('?tab=history&kind=issue&ym=2026-10');
     });
   });
 });

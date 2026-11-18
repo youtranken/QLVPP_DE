@@ -90,7 +90,8 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await page.getByRole('group', { name: 'Trạng thái' }).getByRole('button', { name: /^Tạm ngưng \d/ }).click();
       await expect(itemRow.getByRole('button', { name: `Dùng lại ${itemName}` })).toBeVisible();
 
-      await page.getByRole('main').getByRole('link', { name: 'Danh mục' }).click();
+      await expect(page.getByRole('main').getByRole('link', { name: 'Danh mục' })).toHaveCount(0);
+      await page.goto('/admin/categories');
       await page.getByRole('button', { name: `Tạm ngưng nhóm ${category}` }).click();
       const pause = page.getByRole('dialog', { name: `Ngừng nhóm “${category}”?` });
       await expect(pause.getByText('0 món sẽ ẩn với nhân viên. Dùng lại nhóm chỉ hiện lại những món này; món đã ngừng riêng vẫn ngừng.')).toBeVisible();
@@ -201,7 +202,9 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
       psql(`UPDATE items SET image_file_id = NULL WHERE id = '${id}'`);
       deleteTestFiles([oldImage]);
       await page.goto('/admin/catalog');
-      await expect(page.getByRole('group', { name: 'Chế độ xem' }).getByRole('button', { name: 'Lưới' })).toHaveAttribute('aria-pressed', 'true');
+      // AD-44: màn hẹp luôn là lưới, không có công tắc Lưới / Bảng
+      if (isMobile(info)) await expect(page.getByRole('group', { name: 'Chế độ xem' })).toBeHidden();
+      else await expect(page.getByRole('group', { name: 'Chế độ xem' }).getByRole('button', { name: 'Lưới' })).toHaveAttribute('aria-pressed', 'true');
       await page.getByRole('button', { name: /^Chưa có ảnh/ }).click();
       await page.getByRole('searchbox', { name: /^Tìm trong \d+ sản phẩm$/ }).fill(name);
       const card = page.getByRole('article').filter({ hasText: name });
@@ -227,7 +230,7 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
     }
   });
 
-  test('Tạm ngưng một món bằng nút trung tính cạnh "Sửa" trên thẻ lưới; "Dùng lại" ở tab Tạm ngưng', async ({ page, request }, info) => {
+  test('AD-43 thẻ lưới chỉ còn "Sửa"; Tạm ngưng / Dùng lại nằm ở chân ngăn Sửa (ngăn phải, TC-11)', async ({ page, request }, info) => {
     const name = `PW Tạm ngưng ${Date.now()}-${info.project.name}`;
     const id = await createItemViaApi(request, name);
     const patched = () => page.waitForResponse((r) => r.url().endsWith(`/api/admin/items/${id}`) && r.request().method() === 'PATCH');
@@ -235,30 +238,25 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
       await page.goto('/admin/catalog');
       await page.getByRole('searchbox', { name: /^Tìm trong \d+ sản phẩm$/ }).fill(name);
       const card = page.getByRole('article').filter({ hasText: name });
-      const pause = card.getByRole('button', { name: `Tạm ngưng ${name}` });
-      await expect(pause).toHaveText('Tạm ngưng');
       await expect(card.getByRole('button', { name: `Sửa ${name}` })).toBeVisible();
-      if (isMobile(info)) expect((await pause.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-      await shot(page, info, 'catalog-card-pause', false);
+      await expect(card.getByRole('button', { name: `Tạm ngưng ${name}` })).toHaveCount(0);
+      await card.getByRole('button', { name: `Sửa ${name}` }).click();
+      const drawer = page.getByRole('dialog', { name: `Sửa món ${name}` });
+      await expect(drawer).toHaveAttribute('data-placement', 'end');
+      if (!isMobile(info)) expect((await drawer.boundingBox())!.width).toBeCloseTo(560, 0);
+      await expect(drawer.getByRole('button', { name: 'Xóa ảnh' })).toHaveCount(0);
       const off = patched();
-      await pause.click();
+      await drawer.getByRole('button', { name: `Tạm ngưng ${name}` }).click();
       await page.getByRole('dialog', { name: `Tạm ngưng ${name}?` }).getByRole('button', { name: 'Tạm ngưng' }).click();
       expect((await off).status()).toBe(200);
-      await expect(page.getByRole('status').filter({ hasText: `Đã tạm ngưng ${name}` })).toBeVisible();
-      await expect(card.getByRole('img', { name: 'Tạm ngưng', exact: true })).toBeVisible();
-
-      await page.getByRole('button', { name: /^Tạm ngưng \d/ }).click();
-      await expect(card.getByText('Ngừng riêng')).toHaveCount(0);
-      const back = card.getByRole('button', { name: `Dùng lại ${name}` });
-      await expect(back).toHaveText('Dùng lại');
+      await expect(drawer.getByRole('button', { name: `Dùng lại ${name}` })).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
-      await shot(page, info, 'catalog-card-reactivate', false);
+      await shot(page, info, 'catalog-drawer-pause', false);
       const on = patched();
-      await back.click();
+      await drawer.getByRole('button', { name: `Dùng lại ${name}` }).click();
       await page.getByRole('dialog', { name: `Dùng lại ${name}?` }).getByRole('button', { name: 'Dùng lại' }).click();
       expect((await on).status()).toBe(200);
-      await expect(page.getByRole('status').filter({ hasText: `Đã dùng lại ${name}` })).toBeVisible();
-      await expect(card).toHaveCount(0);
+      await expect(drawer.getByRole('button', { name: `Tạm ngưng ${name}` })).toBeVisible();
     } finally {
       await removeTestItem(request, id);
     }

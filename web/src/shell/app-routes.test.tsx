@@ -39,6 +39,8 @@ describe('AppRoutes — chuyển hướng đường cũ của Adm D&E (giữ ngu
     ['/admin/summary?ym=2026-10&filter=pending_delivery', '/admin/month', '?ym=2026-10&chip=undelivered'] /* ?filter cũ đổi thành chip */,
     ['/admin/send-adm?ym=2026-10', '/admin/reports', '?ym=2026-10'],
     ['/admin/units?x=1', '/admin/categories/units', '?x=1'],
+    ['/admin/issues', '/admin/stock', '?tab=history&kind=issue'] /* AD-38: Xuất lẻ gộp vào Tủ/Kho */,
+    ['/admin/issues?ym=2026-10', '/admin/stock', '?tab=history&kind=issue&ym=2026-10'],
   ])('%s → %s%s', (from, path, query) => {
     mockViewport(1280);
     vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, {}))));

@@ -36,21 +36,6 @@ export interface IssueBody {
   reason: string;
 }
 
-export interface IssueRow {
-  id: string;
-  item_id: string;
-  item_name: string;
-  item_name_en: string | null;
-  unit: string;
-  qty: number;
-  recipient_sub: string | null;
-  recipient_name: string | null;
-  note: string | null;
-  actor_sub: string;
-  actor_name: string | null;
-  created_at: string;
-}
-
 export type HeldStockState = 'short' | 'incoming' | 'none' | 'low' | 'untracked' | 'ok';
 
 // Tủ/Kho theo người đang chờ: held = phần còn lại của dòng kỳ khóa, incoming = hàng ADM đang về
@@ -70,7 +55,6 @@ export interface StockFacts {
 }
 
 export const STOCK_KEY = ['stock'] as const;
-export const ISSUES_KEY = ['admin', 'issues'] as const;
 const MOVEMENTS_PAGE = 20;
 
 export const lowStockQuery = () =>
@@ -83,13 +67,6 @@ export const stockListQuery = () =>
   queryOptions({
     queryKey: [...STOCK_KEY, 'list'],
     queryFn: () => apiFetch<StockFacts[]>('/api/admin/stock'),
-  });
-
-export const issuesQuery = (ym: string | undefined) =>
-  queryOptions({
-    queryKey: [...ISSUES_KEY, ym],
-    enabled: !!ym,
-    queryFn: () => apiFetch<IssueRow[]>(`/api/admin/issues?ym=${ym}`),
   });
 
 export function useLowStock() {
@@ -109,14 +86,13 @@ export function useMovements(itemId: string) {
   });
 }
 
-// Tồn hiện ở cả trang Kho, Danh mục và báo cáo nên làm mới cả ba; danh sách xuất lẻ không đang mở chỉ bị đánh dấu cũ, không gọi mạng
+// Tồn hiện ở cả trang Kho, Danh mục và báo cáo nên làm mới cả ba; sổ Lịch sử (khóa con của STOCK_KEY) không đang mở chỉ bị đánh dấu cũ, không gọi mạng
 export function useRefreshStock() {
   const qc = useQueryClient();
   return () =>
     Promise.all([
       qc.invalidateQueries({ queryKey: STOCK_KEY }),
       qc.invalidateQueries({ queryKey: ['catalog'] }),
-      qc.invalidateQueries({ queryKey: ISSUES_KEY }),
       // Tồn đổi thì "Cần mua" của báo cáo/Gửi ADM đổi theo
       qc.invalidateQueries({ queryKey: REPORTS_KEY }),
     ]);

@@ -107,6 +107,24 @@ describe('GET admin/stock/movements?ym=&kind= — sổ cái toàn kho (G5)', () 
     });
   });
 
+  it('AD-40: xuất lẻ bằng SA local (sub không có trong users) → actor_name = sub, không null', async () => {
+    const sa = `sa:e2e-ledger-${SUFFIX}`;
+    const id = (
+      await pool.query<{ id: string }>(
+        `INSERT INTO stock_movements (item_id, delta, reason, note, actor_sub, created_at)
+         VALUES ($1, -1, 'issue', 'sa xuất', $2, '2023-06-20T03:00:00Z') RETURNING id`,
+        [itemId, sa],
+      )
+    ).rows[0].id;
+    try {
+      const body = (await get(`ym=${YM}&kind=issue`).expect(200)).body as Body;
+      expect(body.items.find((r) => r.id === id)?.actor_name).toBe(sa);
+      expect(body.items.find((r) => r.id !== id)?.actor_name).toBe('Người xuất');
+    } finally {
+      await pool.query('DELETE FROM stock_movements WHERE id = $1', [id]);
+    }
+  });
+
   it('kind=issue → chỉ xuất lẻ, tổng chỉ tính phần lọc', async () => {
     const body = (await get(`ym=${YM}&kind=issue`).expect(200)).body as Body;
     expect(body.items.map((r) => r.reason)).toEqual(['issue', 'issue']);

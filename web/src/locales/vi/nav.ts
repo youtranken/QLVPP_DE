@@ -25,7 +25,6 @@ const nav = {
     month: 'Kỳ tháng',
     catalog: 'Sản phẩm',
     stock: 'Tủ / Kho',
-    issues: 'Xuất lẻ',
     users: 'Danh bạ',
     arrivals: 'Nhận hàng',
     delivery: 'Giao hàng',

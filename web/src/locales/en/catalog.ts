@@ -6,7 +6,6 @@ const catalog: Messages<typeof vi> = {
     title: 'Products',
     page: {
       add: 'Add product',
-      categoriesLink: 'Categories',
       categoryFilter: 'Filter by category',
       allCategories: 'All categories',
       colUnit: 'Unit',
@@ -17,7 +16,7 @@ const catalog: Messages<typeof vi> = {
       editLabel: 'Edit {{name}}',
     },
     list: {
-      description: 'Staff see items in exactly the category order below. Every item needs a photo so staff can pick it by sight.',
+      description: 'Category order here is the order staff see; every item needs a photo.',
       search: 'Search {{n}} products',
       searchPending: 'Search products',
       collapseAll: 'Collapse all',

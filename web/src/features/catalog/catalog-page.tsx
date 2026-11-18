@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePanelParam } from '@/lib/use-panel-param';
 import { LoadError } from '@/ui/load-state';
@@ -104,11 +103,6 @@ export function CatalogPage() {
       crumbs={[t('nav.groups.stock'), title]}
       title={title}
       description={t('catalog.list.description')}
-      secondary={
-        <Link className="btn" to="/admin/categories">
-          {t('catalog.page.categoriesLink')}
-        </Link>
-      }
       primary={
         <button type="button" className="btn btn--primary" onClick={() => addItem()}>
           {t('catalog.page.add')}

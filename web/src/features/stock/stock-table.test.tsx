@@ -13,6 +13,7 @@ async function open(width = 1280, stock = STOCK) {
 }
 
 const rowOf = (name: string) => screen.getByText(name).closest('tr')!;
+const statusCell = (name: string) => within(rowOf(name)).getAllByRole('cell')[4];
 const cells = (name: string) => within(rowOf(name)).getAllByRole('cell').map((c) => c.textContent);
 
 describe('StockTable — Tủ/Kho theo người đang chờ', () => {
@@ -31,13 +32,15 @@ describe('StockTable — Tủ/Kho theo người đang chờ', () => {
     expect(cells('Bút chì').at(-2)).toMatch(/^—/);
   });
 
-  it('tình trạng: Thiếu kỳ này 3 · Thiếu kỳ này 5 (title "Hàng đang về 5") · Hết · Không theo dõi · Còn 7; không chữ "Đủ dùng"', async () => {
+  it('tình trạng: Thiếu kỳ này 3 · Thiếu kỳ này 5 (title "Hàng đang về 5") · Hết · Không theo dõi; món đủ ghi "—" (AD-36), không "Còn 7"/"Đủ dùng"', async () => {
     await open();
     expect(within(rowOf('Bìa còng')).getByText('Thiếu kỳ này 3')).toHaveAttribute('title', 'Thiếu 3 cho người chờ');
     expect(within(rowOf('Bút chì')).getByText('Thiếu kỳ này 5')).toHaveAttribute('title', 'Hàng đang về 5');
     expect(within(rowOf('Kẹp giấy')).getByText('Hết')).toBeInTheDocument();
     expect(within(rowOf('Ghim bấm')).getByText('Không theo dõi')).toBeInTheDocument();
-    expect(within(rowOf('Bút bi xanh')).getByText('Còn 7')).toBeInTheDocument();
+    expect(statusCell('Bút bi xanh')).toHaveTextContent(/^—/);
+    expect(within(statusCell('Bút bi xanh')).queryByText(/Còn/)).toBeNull();
+    expect(within(statusCell('Bút bi xanh')).queryByText((_, el) => el?.classList.contains('tag') ?? false)).toBeNull();
     expect(screen.queryByText('Đủ dùng')).toBeNull();
     expect(screen.queryByText('Hết hàng')).toBeNull();
   });
@@ -89,5 +92,15 @@ describe('StockTable — Tủ/Kho theo người đang chờ', () => {
     const row = within(rowOf('Bút xóa cũ'));
     expect(row.getByText('Thiếu kỳ này 2')).toHaveClass('tag--danger');
     expect(row.getByText('Tạm ngưng')).toHaveClass('tag', 'tag--outline');
+  });
+
+  it('AD-36 biên ngưỡng Sắp hết (mức 10 → ngưỡng 2 trống): trống 2 có nhãn "Sắp hết", trống 3 ghi "—"', async () => {
+    await open(1280, [
+      facts('i-1', { stock_qty: 2, restock_level: 10, free: 2, stock_state: 'low' }),
+      facts('i-2', { stock_qty: 3, restock_level: 10, free: 3, stock_state: 'ok' }),
+    ]);
+    expect(within(statusCell('Giấy A4')).getByText('Sắp hết')).toHaveClass('tag', 'tag--warn');
+    expect(statusCell('Bút bi xanh')).toHaveTextContent(/^—/);
+    expect(within(statusCell('Bút bi xanh')).queryByText('Sắp hết')).toBeNull();
   });
 });

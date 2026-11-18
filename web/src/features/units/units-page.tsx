@@ -96,11 +96,13 @@ export function UnitsPage() {
   const tools = !sort.on && list.length > 0 && (
     <div className="setup-tools">
       <Toolbar search={{ value: q, onChange: setQ, label: t('units.page.search'), placeholder: t('units.page.search'), maxLength: 40 }} />
-      <ListMeta>
-        <p className="setup-shown" role="status">
-          {t('units.page.shown', { shown, total: list.length })}
-        </p>
-      </ListMeta>
+      {query && (
+        <ListMeta>
+          <p className="setup-shown" role="status">
+            {t('units.page.shown', { shown, total: list.length })}
+          </p>
+        </ListMeta>
+      )}
       <ReorderToggle count={list.length} onStart={sort.start} />
     </div>
   );

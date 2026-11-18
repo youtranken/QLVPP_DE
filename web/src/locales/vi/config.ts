@@ -2,8 +2,7 @@ const config = {
   config: {
     title: 'Cấu hình',
     page: {
-      description: 'Tham số chung của app, áp dụng cho mọi người dùng.',
-      saveNote: 'Chỉ lưu khối này · ghi vào Nhật ký',
+      description: 'Tham số chung của app, áp dụng cho mọi người dùng. Mỗi khối lưu riêng và ghi vào Nhật ký.',
       noChanges: 'Chưa có thay đổi',
       leaveBody: 'Chưa lưu: {{blocks}}.',
       saved: 'Đã lưu {{block}}',
@@ -56,8 +55,8 @@ const config = {
       remove: 'Xóa ô ký',
       removeN: 'Xóa ô ký {{n}}',
       removeNamed: 'Xóa ô ký {{n}} · {{title}}',
-      notPrinted: 'Phiếu chỉ in {{n}} ô đầu',
-      full: 'Đã đủ {{n}} ô in trên phiếu.',
+      notPrinted: 'Không in',
+      limit: 'Tối đa {{max}} ô; phiếu in {{n}} ô đầu',
       preview: 'Xem trước chân phiếu',
       save: 'Lưu ô ký',
     },

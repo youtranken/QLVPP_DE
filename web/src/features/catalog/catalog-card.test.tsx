@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { jsonResponse, renderWithI18n, screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { jsonResponse, renderWithI18n, screen, userEvent, waitFor } from '@/test/test-utils';
 import { makeMe } from '@/test/fixtures-me';
 import { MeContext } from '@/lib/me';
 import { compressImage } from '@/lib/image-compress';
@@ -30,14 +30,14 @@ function stub(reply: (url: string, init: RequestInit) => Response | undefined = 
 }
 const patches = (f: ReturnType<typeof stub>) => f.mock.calls.filter((c) => (c[1] as RequestInit | undefined)?.method === 'PATCH');
 
-function renderCard(item = PAPER, onEdit = vi.fn(), groupActive = true) {
+function renderCard(item = PAPER, onEdit = vi.fn()) {
   renderWithI18n(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
       <MeContext.Provider value={makeMe('admin')}>
         <MemoryRouter>
           <ToastProvider>
             <ConfirmProvider>
-              <CatalogCard row={rowOf(item)} groupName="Giấy & sổ" groupActive={groupActive} onEdit={onEdit} />
+              <CatalogCard row={rowOf(item)} groupName="Giấy & sổ" onEdit={onEdit} />
             </ConfirmProvider>
           </ToastProvider>
         </MemoryRouter>
@@ -53,10 +53,10 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Thẻ món dạng lưới', () => {
-  it('hiện nhóm, "Tủ: 10" xám để tham khảo, tên, mã · ĐVT · tối đa', async () => {
+  it('không nhãn nhóm đè trên ảnh (AD-42); "Tủ: 10" xám để tham khảo, tên, mã · ĐVT · tối đa', async () => {
     stub();
     renderCard(PEN);
-    expect(screen.getByText('Giấy & sổ')).toBeInTheDocument();
+    expect(screen.queryByText('Giấy & sổ')).toBeNull();
     expect(screen.getByText('Tủ: 10')).toHaveClass('ct-card__stock');
     expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
     expect(await screen.findByText('VPP-010 · Tối đa 10 cây/tháng')).toBeInTheDocument();
@@ -164,87 +164,20 @@ describe('Tải ảnh lên ở thẻ', () => {
   });
 });
 
-// Ngừng/Dùng lại ngay trên thẻ lưới: cùng hành vi công tắc món trong panel nhóm/panel món
-describe('Ngừng / Dùng lại ở thẻ', () => {
-  const bodies = (f: ReturnType<typeof stub>) => patches(f).map((c) => JSON.parse(String((c[1] as RequestInit).body)) as unknown);
-
-  it('món đang dùng: nút "Tạm ngưng" viền đỏ (btn--danger-line, không đỏ đặc) cạnh "Sửa"; bấm → hỏi "Tạm ngưng Bút bi xanh?" → xác nhận → PATCH {active:false} → toast thường, không "Hoàn tác"', async () => {
-    const f = stub();
-    const onEdit = renderCard(PEN);
-    const stop = screen.getByRole('button', { name: 'Tạm ngưng Bút bi xanh' });
-    expect(stop).toHaveTextContent('Tạm ngưng');
-    expect(stop).toHaveClass('btn--danger-line');
-    expect(stop).not.toHaveClass('btn--danger');
-    expect(screen.getByRole('button', { name: 'Sửa Bút bi xanh' }).nextElementSibling).toBe(stop);
-    await userEvent.click(stop);
-    const ask = await screen.findByRole('dialog', { name: 'Tạm ngưng Bút bi xanh?' });
-    expect(within(ask).getByText('Nhân viên vẫn thấy món nhưng không đặt thêm được. Phiếu đã lưu giữ nguyên.')).toBeInTheDocument();
-    expect(patches(f)).toHaveLength(0);
-    await userEvent.click(within(ask).getByRole('button', { name: 'Tạm ngưng' }));
-    await waitFor(() => expect(bodies(f)).toEqual([{ active: false }]));
-    expect(await screen.findByText('Đã tạm ngưng Bút bi xanh')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Hoàn tác' })).toBeNull();
-    expect(onEdit).not.toHaveBeenCalled();
+describe('Thẻ chỉ còn "Sửa" (AD-43)', () => {
+  it.each([
+    ['đang dùng', PEN],
+    ['tạm ngưng riêng', adminItem({ ...PEN, active: false, usable: false, inactive_reason: 'item' })],
+  ])('món %s: không nút "Tạm ngưng"/"Dùng lại" trên thẻ, chỉ "Sửa"', (_label, item) => {
+    stub();
+    renderCard(item);
+    expect(screen.queryByRole('button', { name: /^(Tạm ngưng|Dùng lại) / })).toBeNull();
+    expect(screen.getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Sửa Bút bi xanh']);
   });
 
-  it('món tạm ngưng riêng: con dấu "Tạm ngưng", không nhãn "Ngừng riêng", tên không gạch, nút "Dùng lại" → hỏi "Dùng lại Bút bi xanh?"; Quay lại không gửi; xác nhận → PATCH {active:true} + toast', async () => {
-    const f = stub();
+  it('món tạm ngưng vẫn có con dấu "Tạm ngưng"; món đang dùng thì không', () => {
+    stub();
     renderCard(adminItem({ ...PEN, active: false, usable: false, inactive_reason: 'item' }));
     expect(screen.getByRole('img', { name: 'Tạm ngưng' })).toBeInTheDocument();
-    expect(screen.queryByText('Ngừng riêng')).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Bút bi xanh' }).className).not.toMatch(/paused|struck/);
-    const back = screen.getByRole('button', { name: 'Dùng lại Bút bi xanh' });
-    expect(back).toHaveTextContent('Dùng lại');
-    expect(back).not.toHaveClass('btn--danger-line');
-    await userEvent.click(back);
-    let ask = await screen.findByRole('dialog', { name: 'Dùng lại Bút bi xanh?' });
-    expect(within(ask).getByText('Nhân viên đặt được món này trở lại từ kỳ đang mở.')).toBeInTheDocument();
-    await userEvent.click(within(ask).getByRole('button', { name: 'Hủy' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(patches(f)).toHaveLength(0);
-    await userEvent.click(back);
-    ask = await screen.findByRole('dialog', { name: 'Dùng lại Bút bi xanh?' });
-    await userEvent.click(within(ask).getByRole('button', { name: 'Dùng lại' }));
-    await waitFor(() => expect(bodies(f)).toEqual([{ active: true }]));
-    expect(await screen.findByText('Đã dùng lại Bút bi xanh')).toBeInTheDocument();
-  });
-
-  it('món trong nhóm tạm ngưng: con dấu, không nhãn "Ngừng theo nhóm", "Dùng lại" vô hiệu kèm gợi ý hiện rõ "Bật lại nhóm để đổi từng món"', () => {
-    stub();
-    renderCard(adminItem({ ...PEN, category_id: 'c-old', usable: false, inactive_reason: 'group' }), vi.fn(), false);
-    expect(screen.getByRole('img', { name: 'Tạm ngưng' })).toBeInTheDocument();
-    expect(screen.queryByText('Ngừng theo nhóm')).toBeNull();
-    const btn = screen.getByRole('button', { name: 'Dùng lại Bút bi xanh' });
-    expect(btn).toBeDisabled();
-    expect(btn).toHaveAccessibleDescription('Bật lại nhóm để đổi từng món');
-    expect(screen.getByText('Bật lại nhóm để đổi từng món')).not.toHaveClass('sr-only');
-  });
-
-  it('món đang dùng không có con dấu', () => {
-    stub();
-    renderCard(PEN);
-    expect(screen.queryByRole('img', { name: 'Tạm ngưng' })).toBeNull();
-  });
-
-  it('W24: còn hàng NCC đang về → hỏi "Ngừng Bút bi xanh?" kèm khối cam; Quay lại → không PATCH', async () => {
-    const f = stub((url) => (url.endsWith('/pending-arrival') ? jsonResponse(200, { remaining: 3, unit: 'cay', snapshot_at: '2026-11-03T02:15:00.000Z' }) : undefined));
-    renderCard(PEN);
-    await userEvent.click(screen.getByRole('button', { name: 'Tạm ngưng Bút bi xanh' }));
-    const ask = await screen.findByRole('dialog', { name: 'Tạm ngưng Bút bi xanh?' });
-    expect(within(ask).getByRole('note')).toHaveTextContent(/đang chờ NCC giao 3 cây/);
-    await userEvent.click(within(ask).getByRole('button', { name: 'Hủy' }));
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Tạm ngưng Bút bi xanh?' })).toBeNull());
-    expect(patches(f)).toHaveLength(0);
-  });
-
-  it('lỗi tải hàng đang về → vẫn hỏi (hộp thường, không khối cam); Ngừng → PATCH', async () => {
-    const f = stub((url) => (url.endsWith('/pending-arrival') ? jsonResponse(500, { code: 'X' }) : undefined));
-    renderCard(PEN);
-    await userEvent.click(screen.getByRole('button', { name: 'Tạm ngưng Bút bi xanh' }));
-    const ask = await screen.findByRole('dialog', { name: 'Tạm ngưng Bút bi xanh?' });
-    expect(within(ask).queryByRole('note')).toBeNull();
-    expect(patches(f)).toHaveLength(0);
-    await userEvent.click(within(ask).getByRole('button', { name: 'Tạm ngưng' }));
-    await waitFor(() => expect(bodies(f)).toEqual([{ active: false }]));
   });
 });

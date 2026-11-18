@@ -87,6 +87,7 @@ const common: Messages<typeof vi> = {
     pageActions: 'Page actions',
     dateRange: {
       any: 'Any date',
+      presets: 'Quick pick',
       since: 'From {{d}}',
       until: 'Until {{d}}',
       weekdays: 'Mo,Tu,We,Th,Fr,Sa,Su',

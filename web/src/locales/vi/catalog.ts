@@ -3,7 +3,6 @@ const catalog = {
     title: 'Sản phẩm',
     page: {
       add: 'Thêm sản phẩm',
-      categoriesLink: 'Danh mục',
       categoryFilter: 'Lọc theo nhóm',
       allCategories: 'Tất cả nhóm',
       colUnit: 'ĐVT',
@@ -14,7 +13,7 @@ const catalog = {
       editLabel: 'Sửa {{name}}',
     },
     list: {
-      description: 'Nhân viên thấy món theo đúng thứ tự nhóm dưới đây. Mỗi món cần ảnh để nhân viên chọn bằng mắt.',
+      description: 'Thứ tự nhóm ở đây là thứ tự nhân viên thấy; mỗi món cần ảnh.',
       search: 'Tìm trong {{n}} sản phẩm',
       searchPending: 'Tìm sản phẩm',
       collapseAll: 'Thu tất cả',

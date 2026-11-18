@@ -26,9 +26,12 @@ interface Props {
   // Dòng phụ nhỏ trên tiêu đề (kỳ · tổ…)
   eyebrow?: string;
   onCloseFocus?: () => boolean;
+  // Form sửa món/nhóm: ngăn rộng 560 để form hai cột không chật (TC-11)
+  wide?: boolean;
   children: ReactNode;
 }
 
+const PLACEMENT = 'end';
 const TYPING = 'input, textarea, select, [contenteditable="true"], [role="combobox"], [role="listbox"]';
 
 function stepOf(e: KeyboardEvent<HTMLElement>): 1 | -1 | null {
@@ -56,7 +59,7 @@ function NavButtons({ nav, can, onStep, showPos = true }: { nav: PanelNav; can: 
   );
 }
 
-export function OverlayPanel({ open, onClose, title, head, dirty = false, saving = false, nav, footer, eyebrow, onCloseFocus, children }: Props) {
+export function OverlayPanel({ open, onClose, title, head, dirty = false, saving = false, nav, footer, eyebrow, onCloseFocus, wide = false, children }: Props) {
   const { t } = useTranslation();
   const askConfirm = useOptionalConfirm();
   const ask = () => (askConfirm ? askConfirm(discardOptions(t)) : Promise.resolve(true));
@@ -78,7 +81,8 @@ export function OverlayPanel({ open, onClose, title, head, dirty = false, saving
       open={open}
       onOpenChange={(next) => !next && guarded(onClose)}
       dismissible={!saving}
-      className="ovp"
+      className={wide ? 'ovp ovp--wide' : 'ovp'}
+      placement={PLACEMENT}
       overlayClassName="ovp-backdrop"
       viewportClassName="ovp-viewport"
       onKeyDown={onKeyDown}

@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
-import { asRole, expectNoContrastViolations, isMobile, monthRowAction, removeTestItem, seedPwItem } from './helpers';
+import { asRole, expectNoContrastViolations, isMobile, monthRowAction, psql, removeTestItem, seedPwItem } from './helpers';
 
 // Dữ liệu giả cho trang chỉ đọc: không tra người/phiếu/dòng có sẵn của DB dev chung
 const PW_PERSON_LINE = {
@@ -212,6 +212,27 @@ test.describe('V2D-17b panel phủ ở Giao hàng, Tổng hợp, Tủ / Kho, Nh�
   });
 });
 
+test.describe('Tủ / Kho theo bản Sau (AD-35…37)', () => {
+  asRole('admin');
+
+  test('AD-35/36: không nút "Sản phẩm" đầu trang; mức 10 trống 2 → "Sắp hết", trống 3 → "—"', async ({ page }) => {
+    const low = await seedPwItem(page, { stock: 2 });
+    const ok = await seedPwItem(page, { stock: 3 });
+    try {
+      psql(`UPDATE items SET restock_level = 10 WHERE id IN ('${low.id}', '${ok.id}')`);
+      await page.goto(`/admin/stock?q=${encodeURIComponent('PW món')}`);
+      await expect(page.getByRole('heading', { level: 1, name: 'Tủ / Kho' })).toBeVisible();
+      await expect(page.getByRole('main').getByRole('link', { name: 'Sản phẩm' })).toHaveCount(0);
+      await expect(page.getByRole('row').filter({ hasText: low.name }).getByText('Sắp hết')).toBeVisible();
+      await expect(page.getByRole('row').filter({ hasText: ok.name }).getByText('Sắp hết')).toHaveCount(0);
+      await expect(page.getByText(/^Đang hiện \d+\/\d+ món$/)).toHaveCount(0);
+    } finally {
+      await removeTestItem(page.request, low.id);
+      await removeTestItem(page.request, ok.id);
+    }
+  });
+});
+
 // Rà soát 13/11 #2: mở bằng Enter, đóng bằng Esc → focus về đúng nút mở (trước đây rơi về BODY ở 3 hộp này)
 test.describe('Đóng panel/hộp trả focus về nút mở', () => {
   asRole('admin');
@@ -242,12 +263,12 @@ test.describe('Đóng panel/hộp trả focus về nút mở', () => {
     await expect(more).toBeFocused();
   });
 
-  test('Tủ / Kho: Lịch sử nhập xuất; trang Xuất lẻ: Xuất lẻ một món', async ({ page }) => {
+  test('Tủ / Kho: Lịch sử nhập xuất; nút đầu trang Xuất lẻ một món', async ({ page }) => {
     const item = await seedPwItem(page, { stock: 3 });
     try {
       await page.goto(`/admin/stock?q=${encodeURIComponent(item.name)}`);
       await enterThenEsc(page, page.getByRole('button', { name: `Xem lịch sử nhập xuất ${item.name}` }), page.getByRole('dialog', { name: `Lịch sử nhập xuất ${item.name}` }));
-      await page.goto('/admin/issues');
+      await page.goto('/admin/stock');
       await enterThenEsc(page, page.getByRole('button', { name: 'Xuất lẻ một món' }), page.getByRole('dialog', { name: /^Xuất lẻ/ }));
     } finally {
       await removeTestItem(page.request, item.id);

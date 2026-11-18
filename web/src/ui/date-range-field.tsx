@@ -58,7 +58,12 @@ function useOutside(open: boolean, inside: () => (HTMLElement | null)[], onOutsi
 
 // Một ô khoảng ngày cho thanh lọc: nút cùng dáng ô chọn, bấm ra lịch tháng (chọn ngày đầu rồi ngày cuối).
 // Lịch tự dựng thay <input type="date">: ô ngày của trình duyệt hiện theo locale máy (mm/dd ở máy tiếng Anh)
-export function DateRangeField({ label, value, error, onChange }: { label: string; value: DayRange; error?: string; onChange: (r: DayRange) => void }) {
+export interface RangePreset {
+  label: string;
+  range: DayRange;
+}
+
+export function DateRangeField({ label, value, error, presets, onChange }: { label: string; value: DayRange; error?: string; presets?: RangePreset[]; onChange: (r: DayRange) => void }) {
   const { t } = useTranslation();
   const id = useId();
   const [open, setOpen] = useState(false);
@@ -124,6 +129,24 @@ export function DateRangeField({ label, value, error, onChange }: { label: strin
             if (to && !e.currentTarget.contains(to) && to !== button.current) setOpen(false);
           }}
         >
+          {presets && presets.length > 0 && (
+            <div className="cal-presets" role="group" aria-label={t('common.dateRange.presets')}>
+              {presets.map((p) => (
+                <button
+                  key={p.label}
+                  type="button"
+                  className="cal-preset"
+                  aria-pressed={value.from === p.range.from && value.to === p.range.to}
+                  onClick={() => {
+                    onChange(p.range);
+                    close(true);
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
           <RangeCalendar
             value={value}
             onPick={(r) => {

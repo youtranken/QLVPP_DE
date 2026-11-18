@@ -62,11 +62,13 @@ export function CategoriesPage() {
   const tools = !sort.on && list.length > 0 && (
     <div className="cg-search setup-tools">
       <Toolbar search={{ value: q, onChange: setQ, label: t('catalog.categories.search'), placeholder: t('catalog.categories.search'), maxLength: 100 }} />
-      <ListMeta>
-        <p className="setup-shown" role="status">
-          {t('catalog.categories.shown', { shown, total: list.length })}
-        </p>
-      </ListMeta>
+      {query && (
+        <ListMeta>
+          <p className="setup-shown" role="status">
+            {t('catalog.categories.shown', { shown, total: list.length })}
+          </p>
+        </ListMeta>
+      )}
       <ReorderToggle count={list.length} onStart={sort.start} />
     </div>
   );

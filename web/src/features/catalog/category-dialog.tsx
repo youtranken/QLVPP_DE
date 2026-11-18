@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toneAtRank } from '@/lib/group-tone';
 import { useMe } from '@/lib/me';
-import { Dialog, DialogClose, DialogCloseButton, DialogTitle } from '@/ui/dialog';
+import { DialogClose } from '@/ui/dialog';
+import { OverlayPanel } from '@/ui/overlay-panel';
 import { FormField } from '@/ui/form-field';
 import { useToast } from '@/ui/toast-context';
 import { createCategory, patchCategory, useRefreshCatalog, type Category, type CategoryPayload } from './catalog.api';
@@ -34,6 +35,7 @@ function NewPosition({ categories }: { categories: Category[] }) {
 export function CategoryDialog({ categories, category, onClose }: { categories: Category[]; category?: Category; onClose: () => void }) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
+  const formId = useId();
   const refresh = useRefreshCatalog();
   const toast = useToast();
   const [name, setName] = useState(category?.name ?? '');
@@ -68,19 +70,28 @@ export function CategoryDialog({ categories, category, onClose }: { categories: 
   };
 
   const title = t(category ? 'catalog.categories.editTitle' : 'catalog.categories.addTitle');
+  const footer = (
+    <>
+      <DialogClose asChild>
+        <button type="button" className="btn btn--ghost" disabled={saving}>
+          {t('common.cancel')}
+        </button>
+      </DialogClose>
+      <button type="submit" form={formId} className="btn btn--primary" disabled={saving || name.trim() === ''}>
+        {saving ? t('catalog.form.saving') : t(category ? 'catalog.categories.submitEdit' : 'catalog.categories.submitAdd')}
+      </button>
+    </>
+  );
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()} dirty={dirty} dismissible={!saving} className="sheet a-form" maxWidth={520}>
-      <form onSubmit={submit} noValidate>
-        <div className="sheet-header">
-          <DialogTitle className="sheet-title">{title}</DialogTitle>
-          <DialogCloseButton disabled={saving} />
-        </div>
-        <div className="sheet-body">
-          {errors.form && (
-            <p role="alert" className="alert alert--danger">
-              {t(errors.form)}
-            </p>
-          )}
+    <OverlayPanel open wide onClose={onClose} title={title} dirty={dirty} saving={saving} footer={footer}>
+      <form id={formId} className="ct-panel-form" onSubmit={submit} noValidate>
+        {errors.form && (
+          <p role="alert" className="alert alert--danger">
+            {t(errors.form)}
+          </p>
+        )}
+        <section className="ct-panel-sec">
+          <h3 className="ct-panel-sec__title">{t('catalog.panel.info')}</h3>
           <FormField label={t('catalog.categories.name')} required error={err('name')}>
             {(p) => <input {...p} value={name} maxLength={NAME_MAX} onChange={(e) => setName(e.target.value)} />}
           </FormField>
@@ -88,18 +99,8 @@ export function CategoryDialog({ categories, category, onClose }: { categories: 
             {(p) => <input {...p} value={nameEn} maxLength={NAME_MAX} onChange={(e) => setNameEn(e.target.value)} />}
           </FormField>
           {!category && <NewPosition categories={categories} />}
-        </div>
-        <div className="sheet-footer">
-          <DialogClose asChild>
-            <button type="button" className="btn btn--ghost" disabled={saving}>
-              {t('common.cancel')}
-            </button>
-          </DialogClose>
-          <button type="submit" className="btn btn--primary" disabled={saving || name.trim() === ''}>
-            {saving ? t('catalog.form.saving') : t(category ? 'catalog.categories.submitEdit' : 'catalog.categories.submitAdd')}
-          </button>
-        </div>
+        </section>
       </form>
-    </Dialog>
+    </OverlayPanel>
   );
 }
