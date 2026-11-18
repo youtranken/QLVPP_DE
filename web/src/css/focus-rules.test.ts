@@ -102,6 +102,14 @@ describe('luật vòng focus', () => {
     expect(phone).toMatch(/\.ar-scroll\s*\{\s*overflow:\s*visible/);
   });
 
+  it('bảng thành thẻ (TC-16, ≤680): dòng bấm được có luật :focus-visible đặt sau và thắng bóng viền của thẻ', () => {
+    const css = read('css/m1/table.css');
+    const card = css.indexOf(".table--cards tbody tr:not(.dt-group):not(.dt-expanded) {");
+    const ring = css.search(/\.table--cards tbody tr\.clickable:focus-visible\s*\{[^}]*box-shadow:[^}]*var\(--focus\)/);
+    expect(card).toBeGreaterThan(-1);
+    expect(ring).toBeGreaterThan(card);
+  });
+
   it('khung cuộn/khung cắt: một luật chung vẽ vòng focus vào trong, nạp sau mọi CSS chung', () => {
     const focus = read('css/focus.css');
     for (const box of ['.rv-tabs', '.month-switch', '.flt-chips', '.seg-m1', '.ct-chips', '.ct-seg-scroll', '.ct-gchips-scroll', '.rq-f-scroll']) expect(focus).toContain(box);
