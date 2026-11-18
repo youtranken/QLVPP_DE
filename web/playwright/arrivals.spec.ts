@@ -16,7 +16,7 @@ async function receivePicked(page: Page) {
 }
 
 test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
-  test('Vòng3-HV lưu thiếu rồi lưu nốt: gõ thiếu ra hai dòng "Nhập: n" / "NCC còn nợ: m", chip theo số đã lưu, cột Còn thiếu luôn có; nút nhóm "Nhận theo số đã nhập"/"Nhận đủ hàng", một hộp xác nhận', async ({ page, request }, info) => {
+  test('Vòng3-HV lưu thiếu rồi lưu nốt: gõ thiếu ra hai dòng "Nhập: n" / "NCC còn nợ: m", chip theo số đã lưu, không cột Còn thiếu, đầu nhóm không nút (AD-23, AD-25); một hộp xác nhận', async ({ page, request }, info) => {
     // Kỳ riêng của PW: bản in thật của server (chỉ món PW), không ghi vào kỳ trước thật trên dev
     const release = await acquireLock('prev-period');
     clearPrivateSnapshots();
@@ -47,14 +47,13 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
       await expect(boxB).toHaveValue('3');
 
       const rowA = page.getByRole('row').filter({ hasText: a.name });
-      await expect(page.getByRole('columnheader', { name: 'Còn thiếu' })).toBeVisible();
+      await expect(page.getByRole('columnheader', { name: 'Còn thiếu' })).toHaveCount(0);
       await expect(rowA.getByText('Thiếu 5', { exact: true })).toBeVisible();
       await boxA.fill('2');
       await boxB.fill('0');
-      await expect(page.getByRole('columnheader', { name: 'Còn thiếu' })).toBeVisible();
       await expect(rowA.getByText('Nhập: 2', { exact: true })).toBeVisible();
       await expect(rowA.getByText('NCC còn nợ: 3', { exact: true })).toBeVisible();
-      await expect(page.getByRole('button', { name: /^Nhận theo số đã nhập: / })).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Nhận (đủ hàng|theo số đã nhập): / })).toHaveCount(0);
       await settled(page);
       await shot(page, info, 'arrivals-partial');
       if (isMobile(info)) {
@@ -89,7 +88,7 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
       await expect(boxA).toHaveValue('3');
 
       await expect(rowA.getByText('Thiếu 3', { exact: true })).toBeVisible();
-      await expect(page.getByRole('button', { name: /^Nhận đủ hàng: / })).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Nhận đủ hàng: / })).toHaveCount(0);
       await expect(page.getByRole('button', { name: 'Đủ hàng', exact: true })).toHaveCount(0);
       await settled(page);
       await shot(page, info, 'arrivals-after-first-save');
@@ -135,6 +134,36 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
       expect(stockOf(a.id)).toBe(0);
       await settled(page);
       await shot(page, info, 'arrivals-not-sent');
+    } finally {
+      clearPrivateSnapshots();
+      seed.cleanup();
+      release();
+    }
+  });
+});
+
+test.describe('Nhận hàng theo bản Sau (AD-23…26)', () => {
+  test('AD-23 AD-24 tick nhóm thì nút trên thanh hiện, bấm "Nhận đủ hàng (n nhóm)" ghi vào tủ, dòng ghi "Đủ"', async ({ page, request }, info) => {
+    const release = await acquireLock('prev-period');
+    clearPrivateSnapshots();
+    const seed = await seedLockedRequest(request, info, [{ stock: 0, qty: 2 }], { ym: PRIVATE_YM });
+    const [a] = seed.items;
+    try {
+      const made = await request.post(`/api/admin/reports/${PRIVATE_YM}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print', ...(await pendingConfirm(request, PRIVATE_YM)) } });
+      expect(made.status()).toBe(201);
+      await openOnPrivatePeriod(page);
+      await page.goto(`/admin/arrivals?q=${encodeURIComponent(seed.tag)}`);
+      await expect(page.getByRole('spinbutton', { name: `Nhận đợt này: ${a.name}` })).toHaveValue('2');
+      await expect(page.getByRole('button', { name: /^Nhận đủ hàng \(\d+ nhóm\)$/ })).toHaveCount(0);
+      await page.getByRole('checkbox', { name: /^Chọn nhóm / }).first().check();
+      const bar = page.getByRole('button', { name: /^Nhận đủ hàng \(1 nhóm\)$/ });
+      await expect(bar).toBeVisible();
+      await bar.click();
+      await page.getByRole('dialog', { name: /vào tủ\?$/ }).getByRole('button', { name: 'Ghi vào tủ' }).click();
+      await expect(page.getByText('Đã nhập 1 món vào tủ.')).toBeVisible();
+      expect(stockOf(a.id)).toBe(2);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await shot(page, info, 'arrivals-after-ad23');
     } finally {
       clearPrivateSnapshots();
       seed.cleanup();

@@ -71,9 +71,11 @@ export async function type(el: HTMLElement, text: string) {
 // Nút trên thanh: "Nhận đủ hàng (n nhóm)" hoặc "Nhận hàng (n nhóm)" khi có nhóm không nhận đủ được
 export const pickedBtn = () => screen.getByRole('button', { name: /^Nhận (đủ hàng|theo số đã nhập) \(\d+ nhóm\)$/ });
 export const pickBox = (group: string) => screen.getByRole('checkbox', { name: `Chọn nhóm ${group}` });
-// Nút đầu nhóm: chữ "Nhận đủ hàng"/"Nhận hàng", aria-label kèm tên nhóm
-export const GROUP_BTN = /^Nhận (đủ hàng|theo số đã nhập): /;
-export const groupBtn = (group: string) => within(screen.getByRole('rowgroup', { name: group })).getByRole('button', { name: GROUP_BTN });
+// Nhận một nhóm: tick ô nhóm (chỉ tick nhóm đó) rồi bấm nút trên thanh
+export async function receiveGroup(group: string) {
+  if (!(pickBox(group) as HTMLInputElement).checked) await userEvent.click(pickBox(group));
+  await userEvent.click(pickedBtn());
+}
 // Tick mọi nhóm rồi bấm nút trên thanh: lưu mọi dòng còn nhận được
 export async function receiveAll(groups = ['Bút', 'Kẹp & dán']) {
   for (const g of groups) await userEvent.click(pickBox(g));

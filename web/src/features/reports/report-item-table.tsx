@@ -157,7 +157,7 @@ export function ReportItemTable({ rows, cats, loading, empty, editable, value, e
         groupBy={{
           key: (r) => r.group,
           header: (key, list) => (
-            <span className="bc-group" data-tone={list[0]?.tone ?? 'g0'}>
+            <span className="bc-group">
               <b>{groupName(key)}</b>
               <span className="bc-group__meta">{t('reports.part1.groupItems', { count: list.length })}</span>
             </span>

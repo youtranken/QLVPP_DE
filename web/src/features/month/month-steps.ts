@@ -8,7 +8,6 @@ export interface StepState {
   done: boolean;
   current: boolean;
   value: string;
-  to: string;
 }
 
 export interface SendInput {
@@ -29,7 +28,6 @@ export interface MonthStepsInput {
   plan: PlanInput | null;
   // Phiếu có gì để giao: xong khi giao + hủy nợ đủ số đăng ký; 'loading' = danh sách người chưa nạp xong → "—", chưa xong
   deliver: { done: number; total: number } | null | 'loading';
-  ym: string;
 }
 
 // Hàng ADM hết hàng không chờ về nữa nên tính là xong; món ngừng đã đặt vẫn chờ
@@ -56,12 +54,12 @@ export function monthSteps(i: MonthStepsInput, t: TFunction): StepState[] {
   const known = i.headcount !== null && i.headcount > 0;
   const deliver = i.deliver === 'loading' ? null : (i.deliver ?? { done: 0, total: 0 });
   const steps: Omit<StepState, 'current'>[] = [
-    { key: 'register', done: !i.isOpen, value: known ? `${i.registered}/${i.headcount}` : String(i.registered), to: `/admin/month?ym=${i.ym}` },
-    { key: 'send', to: `/admin/reports?ym=${i.ym}`, ...sendValue(i.send, t) },
-    { key: 'arrive', to: '/admin/arrivals', ...arriveValue(i.send, i.plan, t) },
+    { key: 'register', done: !i.isOpen, value: known ? `${i.registered}/${i.headcount}` : String(i.registered) },
+    { key: 'send', ...sendValue(i.send, t) },
+    { key: 'arrive', ...arriveValue(i.send, i.plan, t) },
     deliver
-      ? { key: 'deliver', done: deliver.done === deliver.total, value: t('month.value.deliver', deliver), to: '/admin/delivery' }
-      : { key: 'deliver', done: false, value: t('month.value.none'), to: '/admin/delivery' },
+      ? { key: 'deliver', done: deliver.done === deliver.total, value: t('month.value.deliver', deliver) }
+      : { key: 'deliver', done: false, value: t('month.value.none') },
   ];
   const first = steps.findIndex((s) => !s.done);
   return steps.map((s, idx) => ({ ...s, current: idx === first }));

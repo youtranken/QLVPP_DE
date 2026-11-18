@@ -40,7 +40,7 @@ test.describe('Vòng3-BC Báo cáo & gửi NCC', () => {
     run.release();
   });
 
-  test('Vòng3-BC sửa Đề nghị trong bảng → Xem tổng kết → Đồng ý và in → bản mới trong "Các bản đã in / xuất"; bản thay thế liệt kê món đổi', async ({ page, request }, info) => {
+  test('Vòng3-BC sửa Đề nghị trong bảng → In trình ký → Đồng ý và in → bản mới trong "Các bản đã in / xuất"; bản thay thế liệt kê món đổi', async ({ page, request }, info) => {
     const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 0, qty: 13 }], { ym: PRIVATE_YM }));
     const [item] = seed.items;
     await openOnPrivatePeriod(page);
@@ -66,7 +66,7 @@ test.describe('Vòng3-BC Báo cáo & gửi NCC', () => {
     await expect(page.getByText('Tối đa 1.000')).toHaveCount(0);
     await qty().fill('1001');
     await expect(page.getByText('Tối đa 1.000')).toBeVisible();
-    await page.getByRole('button', { name: 'Xem tổng kết' }).click();
+    await page.getByRole('button', { name: 'In trình ký' }).click();
     await expect(qty()).toBeFocused();
     await qty().fill('10');
     await expect(page.getByText('Tối đa 1.000')).toHaveCount(0);
@@ -79,7 +79,7 @@ test.describe('Vòng3-BC Báo cáo & gửi NCC', () => {
 
     // Hủy trong hộp xem trước: không thêm dòng nào vào "Các bản đã in / xuất"
     const before = await page.locator('details.bc-snaps-box summary').textContent();
-    await page.getByRole('button', { name: 'Xem tổng kết' }).click();
+    await page.getByRole('button', { name: 'In trình ký' }).click();
     const preview = page.getByRole('dialog', { name: /^Xem tổng kết tháng/ });
     await expect(preview.getByRole('heading', { name: 'Phiếu đề xuất văn phòng phẩm' })).toBeVisible();
     await preview.getByRole('button', { name: 'Hủy' }).click();
@@ -94,7 +94,7 @@ test.describe('Vòng3-BC Báo cáo & gửi NCC', () => {
     await expect(page.locator('details.bc-snaps-box summary')).toContainText('Các bản đã in / xuất (1)');
 
     await qty().fill('13');
-    await page.getByRole('button', { name: 'Xem tổng kết' }).click();
+    await page.getByRole('button', { name: 'In trình ký' }).click();
     const replace = page.getByRole('dialog', { name: /^Xem tổng kết tháng/ });
     await expect(replace.getByRole('listitem').filter({ hasText: item.name })).toHaveText(`${item.name} 10 → 13`);
     await replace.getByRole('button', { name: 'Đồng ý và in' }).click();
@@ -102,8 +102,10 @@ test.describe('Vòng3-BC Báo cáo & gửi NCC', () => {
     await expect(rowOf().getByRole('spinbutton')).toHaveValue('13');
     const printed = () => page.evaluate(() => (window as unknown as { __printed: number }).__printed);
     await expect.poll(printed).toBe(2);
-    await page.getByRole('button', { name: 'In lại' }).click();
+    // In lại bản vừa gửi: In trình ký → Đồng ý và in dùng lại bản có sẵn (reuse_if_unchanged), không tạo bản mới
+    await previewAndPrint(page);
     await expect.poll(printed).toBe(3);
+    await expect(page.locator('details.bc-snaps-box summary')).toContainText('Các bản đã in / xuất (2)');
     await expect(page).toHaveURL(/\/admin\/reports/);
   });
 
@@ -175,5 +177,23 @@ test.describe('Vòng3-BC Báo cáo & gửi NCC', () => {
 
     await page.goto(`/admin/send-adm?ym=${PRIVATE_YM}`);
     await expect(page).toHaveURL(new RegExp(`/admin/reports\\?ym=${PRIVATE_YM}$`));
+  });
+});
+
+test.describe('Báo cáo theo bản Sau (AD-15…22)', () => {
+  test('AD-15 AD-16 AD-17 AD-19 thanh công cụ: tháng ở đầu, › tắt có chú thích, không "In lại", nút chính "In trình ký"', async ({ page }, info) => {
+    await page.goto('/admin/reports');
+    const bar = page.getByRole('toolbar', { name: 'Thanh công cụ Báo cáo' });
+    await expect(bar.getByRole('group', { name: 'Chọn tháng báo cáo' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /đang đăng ký —/ })).toHaveCount(0);
+    const next = bar.getByRole('button', { name: 'Tháng sau' });
+    await expect(next).toBeDisabled();
+    await expect(next).toHaveAccessibleDescription(/đang đăng ký — báo cáo sau/);
+    await expect(bar.getByRole('button', { name: /^In lại/ })).toHaveCount(0);
+    await expect(bar.getByRole('button', { name: 'In trình ký' })).toBeVisible();
+    if (!isMobile(info)) await expect(page.getByRole('columnheader', { name: 'Tủ', exact: true })).toBeVisible();
+    expect(await fitsWidth(page), 'không cuộn ngang').toBe(true);
+    if (isMobile(info)) await expectNoContrastViolations(page);
+    await shot(page, info, 'reports-toolbar');
   });
 });

@@ -9,8 +9,9 @@ import { calledUrls, stubSummaryApi } from './summary-fixtures';
 const openDialog = async (name = 'Nhân viên A') => {
   mockViewport(1280);
   renderApp(makeMe('admin'), '/admin/summary?ym=2026-11');
-  const opener = await screen.findByRole('button', { name: `Xem phiếu của ${name}` });
+  const opener = await screen.findByRole('button', { name: `Thao tác cho ${name}` });
   await userEvent.click(opener);
+  await userEvent.click(screen.getByRole('menuitem', { name: 'Xem phiếu' }));
   return { opener, dialog: await screen.findByRole('dialog', { name: `Phiếu của ${name}` }) };
 };
 
@@ -75,11 +76,10 @@ describe('RegistrationDialog — phiếu một người, chỉ xem', () => {
     expect(within(last).getByRole('button', { name: 'Người trước' })).toBeEnabled();
   });
 
-  it('chân hộp: "Đóng" là nút outline (không btn--primary); Esc đóng, focus về nút "Xem" đã mở', async () => {
+  it('AD-13 không có nút "Đóng" ở chân (chỉ ✕ ở đầu); Esc đóng, focus về nút ⋯ đã mở', async () => {
     stubSummaryApi(registrationRoute());
     const { opener, dialog } = await openDialog();
-    const footer = within(dialog).getAllByRole('button', { name: 'Đóng' }).find((b) => b.classList.contains('btn'))!;
-    expect(footer).not.toHaveClass('btn--primary');
+    expect(within(dialog).getAllByRole('button', { name: 'Đóng' })).toHaveLength(1);
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(opener).toHaveFocus();
@@ -94,14 +94,14 @@ describe('RegistrationDialog — phiếu một người, chỉ xem', () => {
     expect(within(last).getByRole('button', { name: 'Người trước' })).toHaveFocus();
   });
 
-  it('đã bấm ‹ › sang người khác: Esc trả focus về "Xem" của người đang hiện, không phải người mở đầu', async () => {
+  it('đã bấm ‹ › sang người khác: Esc trả focus về ⋯ của người đang hiện, không phải người mở đầu', async () => {
     stubSummaryApi(registrationRoute());
     const { dialog } = await openDialog();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Người sau' }));
     await screen.findByRole('dialog', { name: 'Phiếu của Nhân viên B' });
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Xem phiếu của Nhân viên B' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Thao tác cho Nhân viên B' })).toHaveFocus();
   });
 
   it('Xem phiếu là panel phủ từ phải như ngăn Giao (lớp ovp), dòng phụ kỳ · tổ nằm trong đầu panel; ˄ ˅ là nút ovp-icon (44 ở điện thoại)', async () => {

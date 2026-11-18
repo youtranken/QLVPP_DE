@@ -29,9 +29,9 @@
 /* min-height: lúc đang tải (chỉ có h1) cao bằng lúc có hàng nút, tiêu đề không nhảy */
 [data-shell='admin'] .bc-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s-3) var(--s-4); min-height: var(--hit); }
 [data-shell='admin'] .bc-head h1 { margin: 0; font: var(--t-h1); letter-spacing: -0.02em; }
-/* Hàng nút co trước (dòng trạng thái tự xuống dòng bên trong) để không rớt cả cụm xuống hàng mới làm bảng tụt */
-[data-shell='admin'] .bc-head__actions { display: flex; flex: 1 1 24rem; flex-wrap: nowrap; justify-content: flex-end; align-items: center; gap: var(--s-2); min-width: 0; margin-left: auto; }
-[data-shell='admin'] .bc-head__actions > .bc-status--inline { flex: 0 1 auto; min-width: 0; }
+/* Thanh công cụ trong khung trắng như Kỳ tháng: tháng · công tắc · trạng thái · chip đổi … nút về mép phải */
+[data-shell='admin'] .bc-page > .toolbar { padding: var(--s-3); border-radius: var(--r-md); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); }
+[data-shell='admin'] .bc-page > .toolbar > .bc-status--inline { flex: 0 1 auto; min-width: 0; }
 /* Chuột (không chạm): link trong dòng trạng thái cao theo chữ để dòng co thành hai hàng vẫn ≤ 44px như nút bên cạnh */
 @media (pointer: fine) and (min-width: 768px) {
   [data-shell='admin'] .bc-status--inline a, [data-shell='admin'] .bc-status--inline button { min-height: 0; }
@@ -56,7 +56,7 @@
   [data-shell='admin'] .bc-table td:last-child { padding-right: var(--s-4); }
 }
 @media (max-width: 767px) {
-  [data-shell='admin'] .bc-head__actions { flex-wrap: wrap; margin-left: 0; width: 100%; }
+  [data-shell='admin'] .bc-page > .toolbar .toolbar__end { flex-wrap: wrap; }
   [data-shell='admin'] .bc-status a { display: inline-flex; align-items: center; min-width: var(--hit); min-height: var(--hit); }
   /* Xuống dòng thì dấu "·" đứng lẻ đầu dòng: bỏ dấu, tách bằng khoảng cách */
   [data-shell='admin'] .bc-status__sep { display: none; }
@@ -81,7 +81,6 @@
   [data-shell='admin'] .bc-preview__body { padding: var(--s-3); }
   [data-shell='admin'] .bc-preview__sheet .pp-sheet { zoom: 0.45; }
 }
-[data-shell='admin'] .bc-reprint { display: inline-flex; align-items: center; gap: var(--s-1); }
 /* Hộp "Ai đăng ký" dạng thẻ: dòng tổng là một hàng chữ, không phải tiêu đề cột dính đầu */
 @media (max-width: 767px) {
   [data-shell='admin'] .bc-people .bc-people__total th { position: static; height: auto; padding: 0; border: 0; background: none; color: var(--c-ink); font: var(--t-label); white-space: normal; }

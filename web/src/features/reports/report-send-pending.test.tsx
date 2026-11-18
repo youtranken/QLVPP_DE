@@ -42,7 +42,7 @@ describe('Báo cáo & gửi NCC: món ngoài danh mục chờ khi chốt bản',
     const f = setupSendAdm({ report: sendReport([PEN, PAPER], { pending_custom_count: 6, pending_custom: PENDING6 }) });
     open();
     await qtyBox('Bút bi');
-    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    await userEvent.click(screen.getByRole('button', { name: 'In trình ký' }));
     const dialog = await screen.findByRole('dialog', { name: /Xem tổng kết tháng/ });
     expect(within(dialog).getByText('Còn 6 món ngoài danh mục chưa duyệt. Chốt bản này sẽ ghi Không mua cho:')).toBeInTheDocument();
     const names = within(within(dialog).getByRole('list')).getAllByRole('listitem').map((li) => li.textContent);
@@ -63,7 +63,7 @@ describe('Báo cáo & gửi NCC: món ngoài danh mục chờ khi chốt bản',
     const f = setupSendAdm({ report: REPORT });
     open();
     await qtyBox('Bút bi');
-    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    await userEvent.click(screen.getByRole('button', { name: 'In trình ký' }));
     const dialog = await screen.findByRole('dialog', { name: /Xem tổng kết tháng/ });
     expect(within(dialog).queryByText(/chưa duyệt/)).toBeNull();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Đồng ý và in' }));
@@ -78,7 +78,7 @@ describe('Báo cáo & gửi NCC: món ngoài danh mục chờ khi chốt bản',
     await qtyBox('Bút bi');
     const loads = () => f.mock.calls.filter((c) => c[0] === `/api/admin/reports/${YM}`).length;
     const before = loads();
-    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    await userEvent.click(screen.getByRole('button', { name: 'In trình ký' }));
     const dialog = await screen.findByRole('dialog', { name: /Xem tổng kết tháng/ });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Đồng ý và in' }));
     expect(await screen.findByText('Danh sách món chờ duyệt vừa thay đổi, xem lại rồi xác nhận.')).toBeInTheDocument();
@@ -89,7 +89,7 @@ describe('Báo cáo & gửi NCC: món ngoài danh mục chờ khi chốt bản',
     setupSendAdm({ report: REPORT, stub: { preview: () => errorResponse(409, 'ORDER_EMPTY') } });
     open();
     await qtyBox('Bút bi');
-    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    await userEvent.click(screen.getByRole('button', { name: 'In trình ký' }));
     expect(await screen.findByText('Chưa có món nào để đề nghị.')).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).toBeNull();
   });

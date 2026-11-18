@@ -5,6 +5,13 @@ import { renderWithI18n, screen, userEvent, fireEvent } from '@/test/test-utils'
 const search = (over = {}) => ({ value: '', onChange: () => {}, label: 'Tìm món', ...over });
 
 describe('Toolbar', () => {
+  it('có label → role=toolbar mang tên đó; không label → không role (trang có thanh chọn hàng loạt role=toolbar riêng)', () => {
+    const { unmount } = renderWithI18n(<Toolbar label="Thanh công cụ" search={search()} />);
+    expect(screen.getByRole('toolbar', { name: 'Thanh công cụ' })).toContainElement(screen.getByRole('searchbox'));
+    unmount();
+    renderWithI18n(<Toolbar search={search()} />);
+    expect(screen.queryByRole('toolbar')).toBeNull();
+  });
   it('"/" khi focus ở body → focus vào ô tìm, ký tự "/" không bị gõ vào', async () => {
     renderWithI18n(<Toolbar search={search()} />);
     await userEvent.keyboard('/');

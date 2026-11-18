@@ -24,3 +24,8 @@ export function chipCounts(rows: ChipRow[]): Record<MonthChip, number> {
   const count = (c: Exclude<MonthChip, 'all'>) => rows.filter((r) => chipOf(r)[c]).length;
   return { all: rows.length, noted: count('noted'), undelivered: count('undelivered'), pending: count('pending') };
 }
+
+type LeftRow = Pick<PersonRow, 'user_status' | 'total_qty' | 'delivered_qty' | 'cancelled_qty'>;
+
+// Người đã nghỉ còn phần chưa nhận: cùng một luật cho băng nhắc, chip và lọc ?left=1
+export const isLeftOwing = (r: LeftRow) => r.user_status !== 'active' && r.delivered_qty + r.cancelled_qty < r.total_qty;

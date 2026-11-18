@@ -2,6 +2,7 @@ const month = {
   month: {
     title: 'Kỳ tháng {{month}}',
     search: 'Tìm người hoặc phòng',
+    toolbar: 'Thanh công cụ Kỳ tháng',
     period: {
       label: 'Chọn kỳ',
       month: 'Tháng {{month}}/{{year}}',
@@ -31,6 +32,7 @@ const month = {
       noted: 'Có ghi chú',
       undelivered: 'Chưa giao xong',
       pending: 'Có món chờ duyệt',
+      left: 'Người đã nghỉ',
     },
     table: {
       noDepartment: 'Chưa có phòng',
@@ -48,18 +50,15 @@ const month = {
       view: 'Xem phiếu',
       adjust: 'Điều chỉnh phiếu',
       meta: 'Đang hiện {{shown}}/{{total}} người',
-      metaAreas_one: 'Đang hiện {{shown}}/{{total}} người · {{count}} khu',
-      metaAreas_other: 'Đang hiện {{shown}}/{{total}} người · {{count}} khu',
+      saved: 'Đã lưu',
     },
     view: { label: 'Xem theo', people: 'Theo người', items: 'Theo món' },
     area: {
-      add: '+ Thêm khu',
-      title: 'Chọn khu',
+      button: 'Lọc phòng',
+      buttonWith: 'Lọc phòng: {{names}}',
       all: 'Chọn tất cả',
       apply: 'Áp dụng',
       cancel: 'Hủy',
-      remove: 'Bỏ khu {{name}}',
-      label: 'Khu đang lọc',
     },
     items: {
       label: 'Theo món',
@@ -79,8 +78,10 @@ const month = {
       custom: 'Món ngoài danh mục',
     },
     left: {
-      action: 'Xử lý',
-      debt: 'Xem nợ tháng trước',
+      banner_one: '{{count}} người đã nghỉ còn phần chưa nhận.',
+      banner_other: '{{count}} người đã nghỉ còn phần chưa nhận.',
+      action_one: 'Lọc {{count}} người này',
+      action_other: 'Lọc {{count}} người này',
     },
   },
 };

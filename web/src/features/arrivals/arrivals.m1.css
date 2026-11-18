@@ -35,7 +35,6 @@
 [data-shell='admin'] .ar-ghead__in span { color: var(--c-muted); font: var(--t-sm); }
 [data-shell='admin'] .ar-ghead__in .btn { margin-left: auto; }
 /* Một bề rộng cho cả "Nhận hàng" lẫn "Nhận đủ hàng": đổi chữ không đẩy đầu nhóm */
-[data-shell='admin'] .ar-ghead__btn { min-width: 8.75rem; justify-content: center; }
 [data-shell='admin'] .ar-bar { container: ar-bar / inline-size; display: grid; gap: var(--s-3); min-width: 0; }
 [data-shell='admin'] .ar-note-line { color: var(--c-ink-2); }
 [data-shell='admin'] .ar-warn-text { margin: 0; color: var(--c-warn); font: var(--t-label); }
@@ -87,7 +86,6 @@
      phần bớt ra trả cho cột Món để tên món thường còn 1–2 dòng ở 1280 */
   [data-shell='admin'] .ar-col-qty { width: 13.75rem; }
   [data-shell='admin'] .ar-table .ar-qty__in input { width: 4.5rem; }
-  [data-shell='admin'] .ar-col-short { width: 5.5rem; }
   [data-shell='admin'] .ar-col-status { width: 9rem; }
   [data-shell='admin'] .ar-col-after { width: 5.5rem; }
   /* Nhãn "NCC hết hàng · đã xử lý xong" dài hơn nút thường: xuống dòng trong cột thay vì tràn */

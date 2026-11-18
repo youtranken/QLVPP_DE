@@ -31,7 +31,7 @@ describe('Báo cáo & gửi NCC: ô Đề nghị', () => {
     await userEvent.type(box, '1001');
     expect(await screen.findByText('Tối đa 1.000')).toBeInTheDocument();
     expect(box).toHaveAttribute('aria-invalid', 'true');
-    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    await userEvent.click(screen.getByRole('button', { name: 'In trình ký' }));
     await waitFor(() => expect(box).toHaveFocus());
     expect(callsTo(f, 'POST', `/api/admin/reports/${YM}/snapshots/preview`)).toHaveLength(0);
     await userEvent.click(screen.getByRole('button', { name: 'Xuất Excel' }));
@@ -54,7 +54,7 @@ describe('Báo cáo & gửi NCC: ô Đề nghị', () => {
     expect(box).not.toHaveAttribute('aria-invalid');
     expect(screen.getByText('Vượt 1.000, kiểm lại')).toBeInTheDocument();
     expect(screen.queryByText('Tối đa 1.000')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'In trình ký' })).toBeEnabled();
   });
 
   it('ô Đề nghị là Stepper − / + (nút không nhận Tab), + ở 1000 tắt', async () => {
@@ -78,7 +78,7 @@ describe('Báo cáo & gửi NCC: ô Đề nghị', () => {
     expect(box).toHaveAttribute('aria-invalid', 'true');
     expect(box).toHaveAccessibleDescription('Bản đã gửi ghi số này; nay tối đa 1.000, sửa lại');
     expect(screen.queryByText('Vượt 1.000, kiểm lại')).toBeNull();
-    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    await userEvent.click(screen.getByRole('button', { name: 'In trình ký' }));
     await waitFor(() => expect(box).toHaveFocus());
     expect(callsTo(f, 'POST', `/api/admin/reports/${YM}/snapshots/preview`)).toHaveLength(0);
     await userEvent.clear(box);
@@ -94,7 +94,7 @@ describe('Báo cáo & gửi NCC: ô Đề nghị', () => {
     await userEvent.type(clip, '1001');
     await userEvent.click(screen.getByRole('switch', { name: 'Chỉ món có Tổng cần' }));
     expect(screen.queryByRole('spinbutton', { name: 'Đề nghị: Kẹp giấy' })).toBeNull();
-    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    await userEvent.click(screen.getByRole('button', { name: 'In trình ký' }));
     expect(screen.getByRole('switch', { name: 'Chỉ món có Tổng cần' })).toHaveAttribute('aria-checked', 'false');
     await waitFor(() => expect(screen.getByRole('spinbutton', { name: 'Đề nghị: Kẹp giấy' })).toHaveFocus());
     expect(callsTo(f, 'POST', `/api/admin/reports/${YM}/snapshots/preview`)).toHaveLength(0);

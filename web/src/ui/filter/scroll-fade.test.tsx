@@ -6,7 +6,7 @@ import { act, renderWithI18n as render, screen, waitFor } from '@/test/test-util
 import { ScrollFade } from './scroll-fade';
 import { StockFilterTabs } from '@/features/stock/stock-filter-tabs';
 import { AuditQuick } from '@/features/admin/audit-quick';
-import { MonthChips } from '@/features/month/month-chips-bar';
+import { MonthFilters } from '@/features/month/month-filters';
 import { GroupChips } from './group-chips';
 import { fadeEdges } from './use-scroll-fade';
 
@@ -35,8 +35,10 @@ describe('các hàng chip dùng chung mờ mép', () => {
 
   it('Tủ/Kho và Kỳ tháng: nhóm lọc chung (radiogroup), không còn hàng chip cuộn mờ mép', () => {
     render(<StockFilterTabs stats={{ all: 5, incoming: 1, low: 2, none: 0 } as never} filter={null} onFilter={() => {}} onClear={() => {}} />);
-    render(<MonthChips rows={[]} chip="all" q="" onChip={() => {}} onQ={() => {}} />);
-    expect(screen.getAllByRole('radiogroup')).toHaveLength(2);
+    const noop = () => {};
+    render(<MonthFilters switcher={null} view="people" onView={noop} rows={[]} loading={false} chip="all" q="" left={false} areas={[]} areaOptions={[]} shown={0} total={0} onChip={noop} onQ={noop} onLeft={noop} onAreas={noop} onClear={noop} />);
+    // Tủ/Kho 1 + Kỳ tháng 2 (Theo người/Theo món và chip lọc phiếu)
+    expect(screen.getAllByRole('radiogroup')).toHaveLength(3);
     expect(document.querySelector('.flt-chips')).toBeNull();
   });
 

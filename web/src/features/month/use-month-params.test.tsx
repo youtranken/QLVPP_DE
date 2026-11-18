@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { MemoryRouter, useLocation } from 'react-router-dom';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { pickDefaultYm, useMonthParams } from './use-month-params';
 
 function wrapper(initial: string) {
@@ -84,12 +84,22 @@ describe('useMonthParams', () => {
     expect(setup('/admin/month?ym=2026-10&filter=custom_pending').result.current.p.chip).toBe('noted');
   });
 
-  it('left=1 → left=true và chip undelivered, giữ left trên URL', async () => {
+  it('left=1 → left=true, chip vẫn Tất cả (chip Người đã nghỉ đã tự lọc phần chưa nhận), giữ left trên URL', async () => {
     const { result } = setup('/admin/month?ym=2026-10&left=1');
     expect(result.current.p.left).toBe(true);
     expect(result.current.p.presetReason).toBe('user_left');
-    expect(result.current.p.chip).toBe('undelivered');
+    expect(result.current.p.chip).toBe('all');
     expect(result.current.search).toBe('?ym=2026-10&left=1');
+  });
+
+  it('setLeft(true) thêm left=1, setLeft(false) bỏ; đổi chip không gỡ left', async () => {
+    const { result } = setup('/admin/month?ym=2026-10');
+    act(() => result.current.p.setLeft(true));
+    await waitFor(() => expect(result.current.search).toBe('?ym=2026-10&left=1'));
+    act(() => result.current.p.setChip('noted'));
+    await waitFor(() => expect(result.current.search).toBe('?ym=2026-10&left=1&chip=noted'));
+    act(() => result.current.p.setLeft(false));
+    await waitFor(() => expect(result.current.search).toBe('?ym=2026-10&chip=noted'));
   });
 
   it('view=item, item=…, filter=unregistered/low bị bỏ khỏi URL', async () => {

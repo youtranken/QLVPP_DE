@@ -155,22 +155,16 @@ function ArrivalsBoard({ ym }: { ym: string }) {
       setPicked((prev) => new Set([...prev].filter((id) => !groupIds.has(id))));
     });
   };
-  const pickOf = (id: string) => {
-    const rs = rowsOfGroups(new Set([id]));
-    const lines = receivableLines(rs, draft.qtyOf);
-    return {
-      picked: picked.has(id),
-      canReceive: lines.length > 0 && !hasError(rs) && !saver.pending,
-      onPick: (on: boolean) =>
-        setPicked((prev) => {
-          const next = new Set(prev);
-          if (on) next.add(id);
-          else next.delete(id);
-          return next;
-        }),
-      onReceive: () => void receive(new Set([id]), lines),
-    };
-  };
+  const pickOf = (id: string) => ({
+    picked: picked.has(id),
+    onPick: (on: boolean) =>
+      setPicked((prev) => {
+        const next = new Set(prev);
+        if (on) next.add(id);
+        else next.delete(id);
+        return next;
+      }),
+  });
   const toggleAdm = async (key: string, on: boolean) => {
     if (on && !(await ask.admOut(nameOf(key)))) return;
     const code = await adm.toggle(key, on);
@@ -187,6 +181,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
         counts={counts}
         total={rows.length}
         shown={visible.length}
+        filtering={Boolean(filter.q) || filter.short || filter.g !== null}
         shortCount={rows.filter(isShort).length}
         reducedCount={rows.filter((r) => r.reduced > 0).length}
         batch={{ groups: pickedIds.size, items: toSend.length, partial: partialReceive(pickedRows, draft.qtyOf) }}

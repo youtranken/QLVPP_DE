@@ -10,24 +10,31 @@ afterEach(() => {
 });
 
 describe('Báo cáo & gửi NCC: đầu trang và trạng thái', () => {
-  it('một hàng đầu trang: h1, ‹ Tháng 10/2026 ›, công tắc "Chỉ món có Tổng cần", Xuất Excel, Xem tổng kết (không còn "In trình ký")', async () => {
+  it('AD-16 AD-19 đầu trang chỉ h1; thanh công cụ có ‹ Tháng 10/2026 ›, công tắc "Chỉ món có Tổng cần", Xuất Excel, nút chính "In trình ký"', async () => {
     setupSendAdm({ report: REPORT });
     open();
     expect(await screen.findByRole('heading', { level: 1, name: 'Báo cáo & gửi NCC' })).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-    expect(await screen.findByText('Tháng 10/2026')).toBeInTheDocument();
-    // Công tắc Switch dùng chung (giống Nhận hàng), không còn checkbox trình duyệt
-    const only = screen.getByRole('switch', { name: 'Chỉ món có Tổng cần' });
+    const bar = await screen.findByRole('toolbar', { name: 'Thanh công cụ Báo cáo' });
+    expect(within(within(bar).getByRole('group', { name: 'Chọn tháng báo cáo' })).getByText('Tháng 10/2026')).toBeInTheDocument();
+    const only = within(bar).getByRole('switch', { name: 'Chỉ món có Tổng cần' });
     expect(only).toHaveAttribute('aria-checked', 'false');
-    expect(screen.queryByRole('checkbox', { name: 'Chỉ món có Tổng cần' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Xuất Excel' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'In trình ký' })).toBeNull();
-    // Cạnh nút › (tắt): kỳ đang mở ghi rõ còn đăng ký, báo cáo sau khi khóa — không còn "Đang mở" dễ hiểu nhầm là báo cáo được
-    const beyond = screen.getByRole('button', { name: /đang đăng ký/ });
-    expect(beyond).toHaveTextContent('Tháng 11 đang đăng ký — báo cáo sau 00:00 ngày 11/11');
-    expect(beyond).toBeDisabled();
-    expect(screen.queryByText('Đang mở')).toBeNull();
+    expect(within(bar).getByRole('button', { name: 'Xuất Excel' })).toBeInTheDocument();
+    expect(within(bar).getByRole('button', { name: 'In trình ký' })).toHaveClass('btn--primary');
+    expect(screen.queryByRole('button', { name: 'Xem tổng kết' })).toBeNull();
+    expect(screen.getByRole('heading', { level: 1 }).closest('.bc-head')).not.toContainElement(bar);
+  });
+
+  it('AD-15 không còn nút tắt dài "Tháng 11 đang đăng ký — …"; nút › tắt, lý do nằm ở chú thích (aria-describedby)', async () => {
+    setupSendAdm({ report: REPORT });
+    open();
+    const bar = await screen.findByRole('toolbar', { name: 'Thanh công cụ Báo cáo' });
+    expect(screen.queryByRole('button', { name: /đang đăng ký/ })).toBeNull();
+    const next = within(bar).getByRole('button', { name: 'Tháng sau' });
+    expect(next).toBeDisabled();
+    const why = /^Tháng 11 đang đăng ký — báo cáo sau 00:00\sngày\s11\/11$/;
+    expect(next).toHaveAccessibleDescription(why);
+    expect(next.getAttribute('title')).toMatch(why);
   });
 
   it('bật "Chỉ món có Tổng cần" → chỉ còn hàng có Tổng cần > 0', async () => {
@@ -41,7 +48,7 @@ describe('Báo cáo & gửi NCC: đầu trang và trạng thái', () => {
   });
 
   it('dấu "·" giữa các phần trạng thái chỉ để nhìn (aria-hidden), không đứng lẻ đầu dòng khi xuống dòng', async () => {
-    setupSendAdm({ report: REPORT, state: SENT });
+    setupSendAdm({ report: sendReport([PEN, PAPER], { pending_custom_count: 1 }), state: SENT });
     open();
     await qtyBox('Bút bi');
     const status = statuses()[0]!;
@@ -50,7 +57,7 @@ describe('Báo cáo & gửi NCC: đầu trang và trạng thái', () => {
     seps.forEach((s) => expect(s).toHaveAttribute('aria-hidden', 'true'));
   });
 
-  it('lúc đang tải: đầu trang cùng khung h1 + đường dẫn "Hằng tháng › Báo cáo & gửi NCC" với lúc tải xong để tiêu đề không nhảy', async () => {
+  it('lúc đang tải: đầu trang cùng khung h1 + đường dẫn với lúc tải xong để tiêu đề không nhảy', async () => {
     setupSendAdm({ report: REPORT });
     open();
     const h1 = screen.getByRole('heading', { level: 1, name: 'Báo cáo & gửi NCC' });
@@ -62,47 +69,47 @@ describe('Báo cáo & gửi NCC: đầu trang và trạng thái', () => {
     expect(loaded.previousElementSibling).toHaveTextContent('Hằng thángBáo cáo & gửi NCC');
   });
 
-  it('đã gửi: đúng một dòng trạng thái "Đã gửi NCC 09:02 12/12" kèm "In lại"; không có "21 món, 143 đơn vị"', async () => {
+  it('AD-17 đã gửi: đúng một dòng trạng thái "Đã gửi NCC 09:02 12/12", thanh công cụ không có "In lại"', async () => {
     setupSendAdm({ report: REPORT, state: SENT });
     open();
     await screen.findByRole('spinbutton', { name: 'Đề nghị: Bút bi' });
     const status = statuses();
     expect(status).toHaveLength(1);
     expect(status[0]).toHaveTextContent('Đã gửi NCC 09:02 12/12');
-    expect(within(status[0]!).getByRole('button', { name: 'In lại' })).toBeInTheDocument();
+    expect(within(screen.getByRole('toolbar', { name: 'Thanh công cụ Báo cáo' })).queryByRole('button', { name: /In lại/ })).toBeNull();
     expect(screen.queryByText(/\d+ món, \d+ đơn vị/)).toBeNull();
   });
 
-  it('trạng thái nằm trên hàng tiêu đề, ngay trước nút Xuất Excel; không còn dòng "Không in kèm phụ lục" / hướng dẫn hộp in', async () => {
+  it('trạng thái nằm trên thanh công cụ, trước nút Xuất Excel; không còn dòng "Không in kèm phụ lục" / hướng dẫn hộp in', async () => {
     setupSendAdm({ report: REPORT, state: SENT });
     open();
     await qtyBox('Bút bi');
     const status = statuses()[0]!;
-    const head = screen.getByRole('heading', { level: 1, name: 'Báo cáo & gửi NCC' }).closest('.bc-head')!;
-    expect(head).toContainElement(status);
+    expect(screen.getByRole('toolbar', { name: 'Thanh công cụ Báo cáo' })).toContainElement(status);
     const excel = screen.getByRole('button', { name: 'Xuất Excel' });
     expect(status.compareDocumentPosition(excel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.queryByText('Không in kèm phụ lục')).toBeNull();
     expect(screen.queryByText(/Trong hộp in/)).toBeNull();
   });
 
-  it('có món đổi sau bản đã gửi → dòng trạng thái "có 1 món đổi sau bản này" và nhãn "Đổi sau bản in" ở đúng hàng', async () => {
+  it('AD-18 có 1 món đổi sau bản đã gửi → chip "Đã đổi sau bản in (1)" và nhãn "Đổi sau bản in" ở đúng hàng', async () => {
     const changed = sendReport([PEN, itemRow({ key: 'kB', name: 'Giấy A4', requested: 4, need: 4 })]);
     setupSendAdm({ report: changed, state: sentState(sentData(REPORT, { kA: 5, kB: 3 })) });
     open();
     await screen.findByRole('spinbutton', { name: 'Đề nghị: Bút bi' });
-    expect(statuses()[0]).toHaveTextContent('có 1 món đổi sau bản này');
+    expect(screen.queryByText(/món đổi sau bản này/)).toBeNull();
+    expect(screen.getByRole('button', { name: 'Đã đổi sau bản in (1)' })).toHaveClass('flt-chip');
     const rows = screen.getAllByRole('row');
     expect(within(rows.find((r) => r.textContent?.includes('Giấy A4'))!).getByText('Đổi sau bản in: 3 → 4')).toBeInTheDocument();
     expect(within(rows.find((r) => r.textContent?.includes('Bút bi'))!).queryByText(/Đổi sau bản in/)).toBeNull();
   });
 
-  it('"có 1 món đổi sau bản này" là nút: bấm → bảng chỉ còn dòng có nhãn "Đổi sau bản in"; bấm lại → đủ dòng', async () => {
+  it('AD-18 chip có aria-pressed: bấm → bảng chỉ còn dòng đổi; bấm lại → đủ dòng; không đổi gì (0) → không có chip', async () => {
     const changed = sendReport([PEN, itemRow({ key: 'kB', name: 'Giấy A4', requested: 4, need: 4 })]);
     setupSendAdm({ report: changed, state: sentState(sentData(REPORT, { kA: 5, kB: 3 })) });
     open();
     await screen.findByRole('spinbutton', { name: 'Đề nghị: Bút bi' });
-    const only = screen.getByRole('button', { name: 'có 1 món đổi sau bản này' });
+    const only = screen.getByRole('button', { name: 'Đã đổi sau bản in (1)' });
     expect(only).toHaveAttribute('aria-pressed', 'false');
     await userEvent.click(only);
     expect(only).toHaveAttribute('aria-pressed', 'true');
@@ -110,6 +117,13 @@ describe('Báo cáo & gửi NCC: đầu trang và trạng thái', () => {
     expect(screen.getByRole('spinbutton', { name: 'Đề nghị: Giấy A4' })).toBeInTheDocument();
     await userEvent.click(only);
     expect(screen.getByRole('spinbutton', { name: 'Đề nghị: Bút bi' })).toBeInTheDocument();
+  });
+
+  it('AD-18 đã gửi, không món nào đổi → không có chip "Đã đổi sau bản in"', async () => {
+    setupSendAdm({ report: REPORT, state: SENT });
+    open();
+    await qtyBox('Bút bi');
+    expect(screen.queryByRole('button', { name: /^Đã đổi sau bản in/ })).toBeNull();
   });
 
   it('chưa gửi: "Chưa gửi NCC"; có món ngoài DM chờ duyệt → không ghi "n món … chờ duyệt", chỉ còn link "Xem" (nhãn đủ nghĩa)', async () => {
@@ -120,14 +134,6 @@ describe('Báo cáo & gửi NCC: đầu trang và trạng thái', () => {
     expect(status).toHaveTextContent('Chưa gửi NCC');
     expect(status).not.toHaveTextContent('chờ duyệt');
     expect(within(status).getByRole('link', { name: 'Xem 2 món ngoài danh mục chờ duyệt' })).toHaveAttribute('href', `/admin/review?status=pending&ym=${YM}`);
-  });
-
-  it('"In lại" là link nhỏ trong dòng trạng thái có icon SVG cạnh chữ', async () => {
-    setupSendAdm({ report: REPORT, state: SENT });
-    open();
-    await qtyBox('Bút bi');
-    const reprint = within(statuses()[0]!).getByRole('button', { name: 'In lại' });
-    expect(reprint.querySelector('svg')).not.toBeNull();
   });
 });
 

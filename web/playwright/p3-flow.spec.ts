@@ -27,7 +27,7 @@ async function axe390(page: Page, info: TestInfo) {
 const PRINT_URL = /\/admin\/reports\/snapshots\/[0-9a-f-]{36}\/print(\?.*)?$/;
 const month = (ym: string) => Number(ym.slice(5, 7));
 const reportRow = (page: Page, name: string) => page.getByRole('table').first().getByRole('row').filter({ hasText: name });
-// Cột: Món · ĐVT · Đăng ký · Nợ tháng trước · Tủ hiện có · Tổng cần · Đề nghị · [Đã về] · [Đã giao]
+// Cột: Món · ĐVT · Đăng ký · Nợ tháng trước · Tủ · Tổng cần · Đề nghị · [Đã về] · [Đã giao]
 const needCell = (row: Locator) => row.getByRole('cell').nth(5);
 
 async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
@@ -102,8 +102,8 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
   const owed = detail.getRows(1, detail.rowCount)!.find((r) => r.getCell(2).value === s.b.name);
   expect([owed?.getCell(3).value, owed?.getCell(4).value]).toEqual([s.clip.name, 3]);
 
-  // Đ5: "In lại" mở hộp in ngay tại trang, không chuyển trang; trang in riêng mở từ "Các bản đã in / xuất"
-  await admin.getByRole('button', { name: 'In lại' }).click();
+  // Đ5: in lại bản đã gửi qua "In trình ký" (dùng lại bản, mở hộp in tại trang); trang in riêng mở từ "Các bản đã in / xuất"
+  await previewAndPrint(admin);
   await expect(admin).toHaveURL(/\/admin\/reports/);
   await (await openCopies(admin)).getByRole('link', { name: /^In lại bản lập/ }).first().click();
   await expect(admin).toHaveURL(PRINT_URL);

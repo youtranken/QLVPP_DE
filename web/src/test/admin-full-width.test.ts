@@ -176,16 +176,17 @@ describe('Bố cục theo route', () => {
     expect(css).toMatch(/\.table--fixed \{ table-layout: fixed; min-width: var\(--dt-min, 0\); \}/);
   });
 
-  it('Kỳ tháng: dải 4 bước một hàng bốn cột, 390 px hai cột; bảng dùng hết bề ngang', () => {
+  // TC-05: dải chấm nối là tiến trình nên giữ một hàng cả ở 390 (hai hàng thì đường nối gãy)
+  it('Kỳ tháng: dải 4 bước một hàng bốn cột ở mọi bề rộng; bảng dùng hết bề ngang', () => {
     const css = readFileSync(join(SRC, 'features/month/month.m1.css'), 'utf8');
     expect(css).toMatch(/\.mk-strip \{[^}]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
-    expect(css).toMatch(/@media \(max-width: 767px\) \{[^}]*\.mk-strip \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+    expect(css).not.toMatch(/\.mk-strip \{[^}]*grid-template-columns: repeat\(2,/);
   });
 
-  it('Báo cáo & gửi NCC: đầu trang một hàng wrap (h1, tháng, công tắc, nút), 390 nút chiếm cả hàng', () => {
+  it('Báo cáo & gửi NCC: đầu trang wrap; thanh công cụ (tháng, công tắc, nút) trong khung, 390 hàng nút tự xuống dòng', () => {
     const css = readFileSync(join(SRC, 'features/reports/reports.m1.css'), 'utf8');
     expect(css).toMatch(/\.bc-head \{[^}]*display: flex; flex-wrap: wrap/);
-    expect(css).toMatch(/@media \(max-width: 767px\) \{[^}]*\.bc-head__actions \{ flex-wrap: wrap; margin-left: 0; width: 100%; \}/);
+    expect(css).toMatch(/@media \(max-width: 767px\) \{[^}]*\.bc-page > \.toolbar \.toolbar__end \{ flex-wrap: wrap; \}/);
   });
 });
 

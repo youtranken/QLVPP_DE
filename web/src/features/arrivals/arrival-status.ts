@@ -41,10 +41,3 @@ export const partialReceive = (rows: ArrivalRow[], qtyOf: (r: ArrivalRow) => num
 export function groupCounts(rows: ArrivalRow[]): { done: number; total: number } {
   return { total: rows.length, done: rows.filter((r) => FINISHED.has(savedState(r).state)).length };
 }
-
-// Cột Còn thiếu đọc cùng số với ô Tình trạng bên cạnh (chip đã lưu "Thiếu n" hoặc "NCC còn nợ: n" khi gõ thiếu)
-export function shortOf(r: ArrivalRow, qty: number): number {
-  const cell = statusCell(r, qty);
-  if (cell.kind === 'owe') return cell.n;
-  return cell.status.state === 'short' ? cell.status.n : 0;
-}

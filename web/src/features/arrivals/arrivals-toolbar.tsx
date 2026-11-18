@@ -15,6 +15,8 @@ interface Props {
   counts: ReadonlyMap<string, number>;
   total: number;
   shown: number;
+  // Đang tìm/lọc: "Đang hiện x/y" chỉ có nghĩa khi vừa lọc vừa bớt dòng (trùng chip Tất cả nếu không)
+  filtering: boolean;
   shortCount: number;
   reducedCount: number;
   // partial: có nhóm đã tick không nhận đủ được → nút ghi "Nhận hàng"
@@ -34,7 +36,7 @@ export function ArrivalsSource({ snapshot }: { snapshot: NonNullable<ArrivalsPla
   );
 }
 
-export function ArrivalsToolbar({ filter, groups, counts, total, shown, shortCount, reducedCount, batch, saveDisabled, onFilter, onSave }: Props) {
+export function ArrivalsToolbar({ filter, groups, counts, total, shown, filtering, shortCount, reducedCount, batch, saveDisabled, onFilter, onSave }: Props) {
   const { t } = useTranslation();
   return (
     <div className="ar-bar">
@@ -46,9 +48,11 @@ export function ArrivalsToolbar({ filter, groups, counts, total, shown, shortCou
         <Switch checked={filter.short} text={t('arrivals.filter.short', { n: shortCount })} onChange={(on) => onFilter({ short: on ? '1' : null })} />
         <ListMeta>
           {/* Màn rộng: ô này chỉ hiện một trong hai. Màn điện thoại thanh nhận hàng loạt nổi ở đáy nên dòng đếm vẫn ở lại, khỏi để trống một hàng */}
-          <p className={batch.groups > 0 ? 'ar-count ar-count--picked' : 'ar-count'} aria-live="polite">
-            {t('arrivals.filter.count', { x: shown, y: total })}
-          </p>
+          {filtering && shown < total && (
+            <p className={batch.groups > 0 ? 'ar-count ar-count--picked' : 'ar-count'} aria-live="polite">
+              {t('arrivals.filter.count', { x: shown, y: total })}
+            </p>
+          )}
           {batch.groups > 0 && (
             <div className="ar-save">
               <span className="ar-batch" aria-live="polite">

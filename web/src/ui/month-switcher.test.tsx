@@ -18,6 +18,15 @@ describe('MonthSwitcher', () => {
     expect(screen.getByRole('button', { name: 'Tháng sau' })).toBeEnabled();
   });
 
+  it('nextReason: ở trần › mang chú thích lý do; dưới trần (bấm được) không có chú thích', () => {
+    const { unmount } = renderWithI18n(<MonthSwitcher value="2026-11" max="2026-11" nextReason="Tháng 12 đang đăng ký" onChange={() => {}} formatLabel={fmt} labels={labels} />);
+    expect(screen.getByRole('button', { name: 'Tháng sau' })).toHaveAccessibleDescription('Tháng 12 đang đăng ký');
+    unmount();
+    renderWithI18n(<MonthSwitcher value="2026-10" max="2026-11" nextReason="Tháng 12 đang đăng ký" onChange={() => {}} formatLabel={fmt} labels={labels} />);
+    expect(screen.getByRole('button', { name: 'Tháng sau' })).toHaveAccessibleDescription('');
+    expect(screen.getByRole('button', { name: 'Tháng sau' })).not.toHaveAttribute('title');
+  });
+
   it('bấm › đi tháng kế', async () => {
     const onChange = vi.fn();
     renderWithI18n(<MonthSwitcher value="2026-10" onChange={onChange} formatLabel={fmt} labels={labels} />);

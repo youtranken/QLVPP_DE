@@ -24,3 +24,4 @@
   [data-shell='admin'] .ajd-row__how { padding-left: 0; }
   [data-shell='admin'] .ajd-row__input { height: var(--hit); }
 }
+[data-shell='admin'] .ovp-foot > .disabled-reason { flex: 1 1 auto; margin: 0; }

@@ -10,19 +10,14 @@ const plan = (rows: { remaining: number; adm_out?: boolean }[], custom: { remain
   rows: rows.map((r) => ({ adm_out: false, ...r })),
   custom: custom.map((c) => ({ adm_out: false, ...c })),
 });
-const base: MonthStepsInput = { registered: 4, headcount: 5, isOpen: false, send: sent, plan: plan([{ remaining: 0 }]), deliver: { done: 4, total: 4 }, ym: '2026-11' };
+const base: MonthStepsInput = { registered: 4, headcount: 5, isOpen: false, send: sent, plan: plan([{ remaining: 0 }]), deliver: { done: 4, total: 4 } };
 const steps = (o: Partial<MonthStepsInput> = {}) => monthSteps({ ...base, ...o }, i18n.t);
 const step = (o: Partial<MonthStepsInput>, key: string) => steps(o).find((s) => s.key === key)!;
 const currentOf = (s: ReturnType<typeof monthSteps>) => s.filter((x) => x.current).map((x) => x.key);
 
 describe('monthSteps (dải gọn của Kỳ tháng)', () => {
-  it('đúng 4 bước theo thứ tự, mỗi bước là link sang trang của nó', () => {
-    expect(steps().map((s) => [s.key, s.to])).toEqual([
-      ['register', '/admin/month?ym=2026-11'],
-      ['send', '/admin/reports?ym=2026-11'],
-      ['arrive', '/admin/arrivals'],
-      ['deliver', '/admin/delivery'],
-    ]);
+  it('đúng 4 bước theo thứ tự', () => {
+    expect(steps().map((s) => s.key)).toEqual(['register', 'send', 'arrive', 'deliver']);
   });
 
   it('kỳ khóa: Đăng ký "4/5", Gửi NCC "11:50 08/11", Hàng về "19/21 món", Giao "0/4 phiếu"', () => {

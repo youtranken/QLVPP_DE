@@ -47,6 +47,7 @@ function Footer({ a }: { a: AdjustDialogState }) {
   const lock = useDisabledReason(a.saving ? null : a.blocked);
   return (
     <>
+      {lock.node}
       <DialogClose asChild>
         <button type="button" className="btn btn--ghost" disabled={a.saving}>
           {t('common.cancel')}
@@ -55,7 +56,6 @@ function Footer({ a }: { a: AdjustDialogState }) {
       <button type="button" className="btn btn--primary" disabled={!!a.blocked || a.saving} aria-describedby={lock.describedBy} onClick={() => void a.save()}>
         {a.saving ? t('summary.adjust.saving') : t('summary.adjust.saveCount', { count: a.count })}
       </button>
-      {lock.node}
     </>
   );
 }

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { customRow, plan, planRow } from './arrivals-fixtures';
-import { CUSTOM_URL, PLAN, PLAN_URL, RECEIPT_URL, bodiesOf, box, callsTo, groupBtn, open, receiveAll, stub, type, confirmReceive, confirmAdmOut } from './arrivals-test-fixtures';
+import { CUSTOM_URL, PLAN, PLAN_URL, RECEIPT_URL, bodiesOf, box, callsTo, open, pickBox, pickedBtn, receiveAll, receiveGroup, stub, type, confirmReceive, confirmAdmOut } from './arrivals-test-fixtures';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -11,7 +11,7 @@ describe('Nhận đủ hàng — một hộp xác nhận rồi lưu', () => {
     await open();
     await screen.findByDisplayValue('7');
     await type(box('Bút bi'), '3');
-    await userEvent.click(groupBtn('Bút'));
+    await receiveGroup('Bút');
     await confirmReceive();
     await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -62,15 +62,15 @@ describe('Nhận đủ hàng — một hộp xác nhận rồi lưu', () => {
     expect(box('Bút bi')).toHaveValue(4);
   });
 
-  it('mọi ô của nhóm 0 → "Nhận đủ hàng" của nhóm vô hiệu; một ô 1 → bật (hai phía mốc)', async () => {
+  it('tick nhóm có mọi ô 0 → nút trên thanh vô hiệu; một ô 1 → bật (hai phía mốc)', async () => {
     stub();
     await open();
     await screen.findByDisplayValue('6');
+    await userEvent.click(pickBox('Kẹp & dán'));
     await type(box('Kẹp giấy'), '0');
-    expect(groupBtn('Kẹp & dán')).toBeDisabled();
-    expect(groupBtn('Bút')).toBeEnabled();
+    expect(pickedBtn()).toBeDisabled();
     await type(box('Kẹp giấy'), '1');
-    expect(groupBtn('Kẹp & dán')).toBeEnabled();
+    expect(pickedBtn()).toBeEnabled();
   });
 
   it('404 ITEM_NOT_FOUND → báo tên món', async () => {
