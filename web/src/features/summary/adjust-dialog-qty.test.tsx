@@ -54,17 +54,23 @@ describe('AdjustDialog — Chọn tất cả, nút − / +, câu lỗi số lư�
     expect(plus).toBeEnabled();
   });
 
-  it('gõ 3 (= số đã đặt) → "Điều chỉnh không đúng — vượt số đã đặt là 3"; gõ 0 → "Nhập ít nhất 1"; gõ 2 → hết lỗi', async () => {
+  it('đã đặt 3: gõ 2 (max) được; gõ 3 (max + 1) → "Giảm còn tối đa 2 (đã đặt 3)"; gõ 1 được, 0 → "Nhập ít nhất 1"; gõ 1.5 → "Nhập số nguyên"', async () => {
     stubAdjust({ views: [REQ] });
     const { dialog } = await renderAdjust();
     await tick(dialog, 'Băng keo');
     const box = qty(dialog, 'Băng keo');
     await userEvent.clear(box);
     await userEvent.type(box, '3');
-    expect(box).toHaveAccessibleDescription('Điều chỉnh không đúng — vượt số đã đặt là 3');
+    expect(box).toHaveAccessibleDescription('Giảm còn tối đa 2 (đã đặt 3)');
     await userEvent.clear(box);
     await userEvent.type(box, '0');
     expect(box).toHaveAccessibleDescription('Nhập ít nhất 1');
+    await userEvent.clear(box);
+    await userEvent.type(box, '1.5');
+    expect(box).toHaveAccessibleDescription('Nhập số nguyên');
+    await userEvent.clear(box);
+    await userEvent.type(box, '1');
+    expect(box).not.toHaveAttribute('aria-invalid');
     await userEvent.clear(box);
     await userEvent.type(box, '2');
     expect(box).not.toHaveAttribute('aria-invalid');

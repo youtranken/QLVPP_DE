@@ -17,12 +17,14 @@ export const reduceRange = (l: LineView) => ({ min: Math.max(1, floorOf(l)), max
 
 export const canReduce = (l: LineView) => reduceRange(l).min <= reduceRange(l).max;
 
-export type ReduceError = { kind: 'under'; min: number } | { kind: 'over'; ordered: number };
+export type ReduceError = { kind: 'under'; min: number } | { kind: 'over'; max: number; ordered: number } | { kind: 'notInt' };
 
 export function reduceError(l: LineView, qty: number | null): ReduceError | null {
   const r = reduceRange(l);
-  if (qty !== null && Number.isInteger(qty) && qty > r.max) return { kind: 'over', ordered: l.qty };
-  return qty !== null && Number.isInteger(qty) && qty >= r.min ? null : { kind: 'under', min: r.min };
+  if (qty === null) return { kind: 'under', min: r.min };
+  if (!Number.isInteger(qty)) return { kind: 'notInt' };
+  if (qty > r.max) return { kind: 'over', max: r.max, ordered: l.qty };
+  return qty >= r.min ? null : { kind: 'under', min: r.min };
 }
 
 // Mỗi dòng chọn mới bắt đầu ở "Giảm còn qty − 1"; dòng không giảm được thì Từ chối

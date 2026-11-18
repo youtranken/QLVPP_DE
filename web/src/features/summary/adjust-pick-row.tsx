@@ -19,8 +19,10 @@ interface Props {
 
 const parseQty = (raw: string) => (raw.trim() === '' ? null : Number(raw));
 
-const qtyMessage = (t: TFunction, e: ReduceError) =>
-  e.kind === 'over' ? t('summary.adjust.reduceOver', { ordered: e.ordered }) : t('summary.adjust.reduceUnder', { min: e.min });
+const qtyMessage = (t: TFunction, e: ReduceError) => {
+  if (e.kind === 'over') return t('summary.adjust.reduceOver', { max: e.max, ordered: e.ordered });
+  return e.kind === 'notInt' ? t('summary.adjust.reduceNotInt') : t('summary.adjust.reduceUnder', { min: e.min });
+};
 
 // Một dòng phiếu: tick để chọn, rồi "Giảm còn n" hoặc "Từ chối" (về số đã giao)
 export function AdjustPickRow({ line, pick, error, sentAt, onToggle, onPick }: Props) {

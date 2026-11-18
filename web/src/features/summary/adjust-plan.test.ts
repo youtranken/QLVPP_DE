@@ -25,11 +25,18 @@ describe('adjust-plan — biên Giảm còn', () => {
   it('A6 loại lỗi: dưới sàn → under (min); từ số đã đặt trở lên → over (ordered = qty); max được, max+1 over; 1 được, 0 under', () => {
     const fresh = lineView({ id: 'f', item_id: 'i', qty: 5 });
     expect(reduceError(fresh, 4)).toBeNull();
-    expect(reduceError(fresh, 5)).toEqual({ kind: 'over', ordered: 5 });
+    expect(reduceError(fresh, 5)).toEqual({ kind: 'over', max: 4, ordered: 5 });
     expect(reduceError(fresh, 1)).toBeNull();
     expect(reduceError(fresh, 0)).toEqual({ kind: 'under', min: 1 });
     expect(reduceError(fresh, null)).toEqual({ kind: 'under', min: 1 });
     expect(reduceError(line, 3)).toEqual({ kind: 'under', min: 4 });
+  });
+
+  it('số không nguyên → notInt ("Nhập số nguyên"): 2.5 và 4.5 (giữa max và max+1) đều notInt, không phải over/under', () => {
+    const fresh = lineView({ id: 'f', item_id: 'i', qty: 5 });
+    expect(reduceError(fresh, 2.5)).toEqual({ kind: 'notInt' });
+    expect(reduceError(fresh, 4.5)).toEqual({ kind: 'notInt' });
+    expect(reduceError(fresh, 0.5)).toEqual({ kind: 'notInt' });
   });
 
   it('canReduce: qty 2 giao 0 hoặc 1 → còn giảm về 1; giao 2 → không; qty 1 → không', () => {
