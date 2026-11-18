@@ -2,6 +2,7 @@ import { keepPreviousData, queryOptions, useQuery, useQueryClient } from '@tanst
 import { ApiError, apiFetch } from '@/lib/api-client';
 import { apiErrorCode } from '@/lib/api-error';
 import type { Category } from '@/features/catalog/catalog.api';
+import { NOTIFICATIONS_KEY } from '@/features/notifications/notifications.api';
 
 export interface CurrentPeriod {
   ym: string;
@@ -173,6 +174,8 @@ export function useSetMyRequest() {
     qc.setQueryData(ownRequestKey(ym), view);
     // Danh sách lịch sử có kỳ này (tổng dòng/đơn vị) → phải tải lại
     void qc.invalidateQueries({ queryKey: HISTORY_KEY });
+    // Server vừa đánh dấu đọc chuông nhắc của kỳ này (NV-03)
+    void qc.invalidateQueries({ queryKey: NOTIFICATIONS_KEY });
   };
 }
 
