@@ -50,10 +50,13 @@ export function resizeCrop(r: Rect, handle: Handle, dx: number, dy: number, boun
   let top = r.y;
   let right = r.x + r.w;
   let bottom = r.y + r.h;
-  if (handle.includes('w')) left = clamp(left + dx, 0, right - MIN_CROP);
-  if (handle.includes('e')) right = clamp(right + dx, left + MIN_CROP, bounds.width);
-  if (handle.includes('n')) top = clamp(top + dy, 0, bottom - MIN_CROP);
-  if (handle.includes('s')) bottom = clamp(bottom + dy, top + MIN_CROP, bounds.height);
+  // Ảnh nhỏ hơn MIN_CROP: khung tối thiểu là cả ảnh, không để cạnh chạy ra ngoài (x/y âm)
+  const minW = Math.min(MIN_CROP, bounds.width);
+  const minH = Math.min(MIN_CROP, bounds.height);
+  if (handle.includes('w')) left = clamp(left + dx, 0, right - minW);
+  if (handle.includes('e')) right = clamp(right + dx, left + minW, bounds.width);
+  if (handle.includes('n')) top = clamp(top + dy, 0, bottom - minH);
+  if (handle.includes('s')) bottom = clamp(bottom + dy, top + minH, bounds.height);
   return { x: left, y: top, w: right - left, h: bottom - top };
 }
 

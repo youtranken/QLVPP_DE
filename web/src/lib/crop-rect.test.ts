@@ -100,3 +100,20 @@ describe('nudgeCrop — bàn phím', () => {
     expect(nudgeCrop(r, 'Enter', false, B)).toBeNull();
   });
 });
+
+describe('resizeCrop — ảnh nhỏ hơn MIN_CROP', () => {
+  const tiny = { width: 10, height: 8 };
+  const whole = { x: 0, y: 0, w: 10, h: 8 };
+
+  it('ảnh 10×8: kéo góc nw/se vào trong → không x/y âm, khung giữ cả ảnh (min hiệu dụng = cỡ ảnh)', () => {
+    expect(resizeCrop(whole, 'nw', 5, 5, tiny)).toEqual(whole);
+    expect(resizeCrop(whole, 'se', -5, -5, tiny)).toEqual(whole);
+  });
+
+  it('biên min hiệu dụng: ảnh rộng đúng MIN_CROP → không co được; rộng MIN_CROP + 1 → co được đúng 1', () => {
+    const at = { x: 0, y: 0, w: MIN_CROP, h: MIN_CROP };
+    expect(resizeCrop(at, 'w', 3, 0, { width: MIN_CROP, height: MIN_CROP })).toEqual(at);
+    const wide = { x: 0, y: 0, w: MIN_CROP + 1, h: MIN_CROP };
+    expect(resizeCrop(wide, 'w', 3, 0, { width: MIN_CROP + 1, height: MIN_CROP })).toEqual({ x: 1, y: 0, w: MIN_CROP, h: MIN_CROP });
+  });
+});
