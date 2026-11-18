@@ -2,7 +2,7 @@
  "schema_version": 3,
  "diagram_type": "lifecycle",
  "meta": {
-  "title": "VPP — vòng đời phần chưa giao của một dòng (giao diện A)",
+  "title": "VPP — vòng đời phần chưa giao của một dòng (họ app PMH)",
   "output": "docs/diagrams/vpp-vong-thang.html",
   "locale": "vi",
   "quality_profile": "showcase",
@@ -10,7 +10,7 @@
    "url": "https://github.com/youtranken/QLVPP_DE.git",
    "provider": "github",
    "link_mode": "local-only",
-   "revision": "e86f6443ca655e2f06ab1012cd555c36820a50ab"
+   "revision": "79ca9f6ba31127cbff163e6467240d342242e425"
   }
  },
  "mainPath": [
@@ -286,7 +286,7 @@
    "title": "Không có",
    "items": [
     "Tăng số hoặc thêm món sau khóa sổ (LINE_ADD_FORBIDDEN, QTY_INCREASE_FORBIDDEN)",
-    "Hoàn tác một đợt giao",
+    "Hoàn tác đợt giao / hủy nợ lúc bất kỳ (FR-44 đã bỏ) — chỉ có Hoàn tác 5 giây ngay sau thao tác, chỉ người vừa làm (undo_actions, UNDO_EXPIRED)",
     "Hủy Chưa nhận của K* bằng Hủy nợ (trừ dòng NCC hết hàng từ hộp giao)"
    ]
   }

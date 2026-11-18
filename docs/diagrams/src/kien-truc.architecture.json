@@ -2,7 +2,7 @@
  "schema_version": 1,
  "diagram_type": "architecture",
  "meta": {
-  "title": "VPP Công trình — kiến trúc thành phần (hết Plan giao diện A)",
+  "title": "VPP Công trình — kiến trúc thành phần (hết Plan giao diện họ app PMH)",
   "output": "docs/diagrams/vpp-kien-truc.html",
   "locale": "vi",
   "quality_profile": "showcase",
@@ -10,7 +10,7 @@
    "url": "https://github.com/youtranken/QLVPP_DE.git",
    "provider": "github",
    "link_mode": "local-only",
-   "revision": "e86f6443ca655e2f06ab1012cd555c36820a50ab"
+   "revision": "79ca9f6ba31127cbff163e6467240d342242e425"
   }
  },
  "components": [
@@ -203,16 +203,16 @@
      "label": "PUT admin/requests/:id/lines"
     },
     {
-     "path": "api/src/modules/requests/admin-user-history.controller.ts",
-     "line": 18,
-     "end_line": 36,
-     "label": "users/:sub/requests"
-    },
-    {
      "path": "api/src/modules/catalog/stock.controller.ts",
      "line": 56,
      "end_line": 95,
      "label": "stock · movements · issues"
+    },
+    {
+     "path": "api/src/modules/catalog/items-admin.controller.ts",
+     "line": 61,
+     "end_line": 69,
+     "label": "DELETE items → undo_id"
     }
    ]
   },
@@ -220,7 +220,7 @@
    "id": "delivery",
    "type": "backend",
    "label": "delivery",
-   "sublabel": "giao dòng · giao n phiếu · hủy nợ",
+   "sublabel": "giao · giao n phiếu · hủy nợ · hoàn tác",
    "pos": [
     340,
     380
@@ -233,8 +233,9 @@
    "sources": [
     {
      "path": "api/src/modules/delivery/delivery.service.ts",
-     "line": 36,
-     "end_line": 70
+     "line": 39,
+     "end_line": 63,
+     "label": "deliver + undo.record"
     },
     {
      "path": "api/src/modules/delivery/bulk-delivery.service.ts",
@@ -243,9 +244,10 @@
      "label": "bulk + reject_line_ids"
     },
     {
-     "path": "api/src/modules/delivery/cancel-remaining.service.ts",
-     "line": 40,
-     "end_line": 97
+     "path": "api/src/modules/delivery/delivery-undo.service.ts",
+     "line": 35,
+     "end_line": 67,
+     "label": "POST admin/undo/delivery"
     }
    ]
   },
@@ -285,7 +287,7 @@
    "id": "notifications",
    "type": "backend",
    "label": "notifications",
-   "sublabel": "notifyWithin trong SAVEPOINT",
+   "sublabel": "notifyWithin · đọc · gỡ theo event",
    "pos": [
     340,
     560
@@ -306,6 +308,12 @@
      "line": 1,
      "end_line": 24,
      "label": "event_id"
+    },
+    {
+     "path": "api/src/modules/notifications/notifications.service.ts",
+     "line": 121,
+     "end_line": 140,
+     "label": "markReadByEvent · removeByEvent"
     }
    ]
   },
@@ -337,13 +345,48 @@
    ]
   },
   {
-   "id": "postgres",
-   "type": "database",
-   "label": "PostgreSQL 18",
-   "sublabel": "pgdata · migrations 0001–0130",
+   "id": "undo",
+   "type": "backend",
+   "label": "undo",
+   "sublabel": "sổ Hoàn tác 5 giây · UNDO_*",
    "pos": [
     640,
     560
+   ],
+   "size": [
+    220,
+    62
+   ],
+   "tag": "container api",
+   "sources": [
+    {
+     "path": "api/src/modules/undo/undo-ledger.service.ts",
+     "line": 17,
+     "end_line": 45,
+     "label": "record · claimWithin FOR UPDATE"
+    },
+    {
+     "path": "api/src/modules/undo/undo-window.ts",
+     "line": 1,
+     "end_line": 39,
+     "label": "UNDO_WINDOW_MS 5000 · chỉ người làm"
+    },
+    {
+     "path": "api/src/migrations/0131_undo_actions.sql",
+     "line": 1,
+     "end_line": 15,
+     "label": "undo_actions · line_deliveries.undo_id"
+    }
+   ]
+  },
+  {
+   "id": "postgres",
+   "type": "database",
+   "label": "PostgreSQL 18",
+   "sublabel": "pgdata · migrations 0001–0131",
+   "pos": [
+    640,
+    740
    ],
    "size": [
     220,
@@ -361,9 +404,9 @@
      "end_line": 28
     },
     {
-     "path": "api/src/migrations/0130_adjust_reason_cannot_buy.sql",
+     "path": "api/src/migrations/0131_undo_actions.sql",
      "line": 1,
-     "end_line": 5
+     "end_line": 15
     }
    ]
   },
@@ -431,7 +474,8 @@
     "reminders",
     "postgres",
     "files",
-    "backup"
+    "backup",
+    "undo"
    ],
    "pad": 22
   }
@@ -496,17 +540,32 @@
   {
    "from": "delivery",
    "to": "notifications",
-   "label": "giao đủ · hủy · NCC hết"
+   "label": "giao đủ · hủy · gỡ khi hoàn tác"
   },
   {
    "from": "core",
    "to": "notifications",
-   "label": "điều chỉnh · duyệt ngoài DM"
+   "label": "điều chỉnh · đọc chuông nhắc"
   },
   {
    "from": "reminders",
    "to": "notifications",
    "label": "kỳ mở · nhắc · khóa · sắp hết"
+  },
+  {
+   "from": "delivery",
+   "to": "undo",
+   "label": "undo_id · claim"
+  },
+  {
+   "from": "core",
+   "to": "undo",
+   "label": "xóa món"
+  },
+  {
+   "from": "undo",
+   "to": "postgres",
+   "label": "undo_actions"
   },
   {
    "from": "notifications",
@@ -571,26 +630,28 @@
    "items": [
     "auth · users: AuthModule import UsersModule (directory sync 60′ gọi Directory API)",
     "delivery ghi request_lines qua LineDeliveryStore, trừ tủ qua StockService; giao n phiếu ghi Không mua món ngoài DM chờ (reject_line_ids) qua ReviewWriter trong cùng tx",
+    "undo không tự đảo dữ liệu: delivery (DeliveryUndoService, CancelUndoService) và catalog (ItemUndoService) gọi claimWithin rồi đảo bảng của mình trong cùng tx; khóa undo_actions trước requests → request_lines → items",
     "requests: AdminRequestService giảm/từ chối có lý do (hộp Điều chỉnh ở Kỳ tháng và hộp Giao); duyệt món ngoài DM trong hộp Xem phiếu",
-    "reminders lúc khóa sổ: ghi headcount_subs, AdmOutSettlement hủy phần chưa giao của món NCC hết hàng mọi kỳ trước"
+    "reminders lúc khóa sổ: ghi headcount_subs, AdmOutSettlement hủy phần chưa giao của món NCC hết hàng mọi kỳ trước",
+    "Lưu phiếu có dòng (MeRequestService.saveLines) đánh dấu đã đọc chuông reminder:<ym> của chính người đó trong cùng tx"
    ]
   },
   {
    "dot": "violet",
-   "title": "Migration của Plan giao diện A",
+   "title": "Migration của Plan giao diện họ app PMH",
    "items": [
-    "0129 bỏ items.admin_only (dừng nếu còn món bật cờ) — G7",
-    "0130 request_line_adjustments.reason_code thêm cannot_buy (Không mua được) — G2",
+    "0131 undo_actions (id, kind delivery|cancel|item_delete, actor_sub, created_at, undone_at, payload) + line_deliveries.undo_id",
+    "Trước đó (Plan giao diện A): 0129 bỏ items.admin_only · 0130 reason_code cannot_buy",
     "Bảng/cột v2-D vẫn giữ: 0113 request_line_adjustments · 0114 period_adm_out · 0115 receipt_ym · 0117 custom_receipts · 0118 no_order"
    ]
   },
   {
    "dot": "emerald",
-   "title": "Endpoint đổi trong Plan giao diện A",
+   "title": "Endpoint đổi trong Plan giao diện họ app PMH",
    "items": [
-    "Mới: GET admin/users/:sub/requests?year (popup Lịch sử đặt hàng) · GET admin/stock/movements (tab Lịch sử nhập xuất) · GET admin/issues thêm actor_name (trang Xuất lẻ)",
-    "Thêm trường: periods/:ym/registrations/:id có lines[].adjustments + removed_lines; periods/:ym/requests?by=person có short_items",
-    "Đã gỡ: POST admin/items/:id/stock/count (Kiểm kê). GET admin/review còn — web chỉ dùng để chuyển /admin/review sang Kỳ tháng"
+    "Mới: POST admin/undo/delivery · admin/undo/cancel · admin/undo/item-delete {ids 1…100} → {undone}; quá 5 000 ms → 409 UNDO_EXPIRED, đã làm → 409 UNDO_ALREADY_DONE, không có / người khác → 404 UNDO_NOT_FOUND",
+    "Trả thêm undo_id: lines/:id/deliver · deliveries/bulk (null khi có reject_line_ids) · cancel-remaining; DELETE admin/items/:id đổi 204 → 200 {undo_id}",
+    "Web: Việc hôm nay /admin/today và Tìm nhanh đọc lại API sẵn có, không endpoint mới; GET admin/issues giữ cho tab Lịch sử của Tủ / Kho"
    ]
   }
  ]

@@ -2,7 +2,7 @@
  "schema_version": 1,
  "diagram_type": "architecture",
  "meta": {
-  "title": "VPP — giao diện Adm D&E: 3 nhóm 12 mục, chuyển hướng, panel và hộp thoại (giao diện A)",
+  "title": "VPP — giao diện Adm D&E: Việc hôm nay, 3 nhóm 12 mục, chuyển hướng, panel và hộp thoại (họ app PMH)",
   "output": "docs/diagrams/vpp-hanh-chinh.html",
   "locale": "vi",
   "quality_profile": "showcase",
@@ -10,7 +10,7 @@
    "url": "https://github.com/youtranken/QLVPP_DE.git",
    "provider": "github",
    "link_mode": "local-only",
-   "revision": "e86f6443ca655e2f06ab1012cd555c36820a50ab"
+   "revision": "79ca9f6ba31127cbff163e6467240d342242e425"
   }
  },
  "components": [
@@ -40,7 +40,7 @@
    "id": "guard",
    "type": "security",
    "label": "RequireRole",
-   "sublabel": "admin, sa → /admin",
+   "sublabel": "admin, sa → /admin/today",
    "pos": [
     230,
     300
@@ -58,8 +58,9 @@
     },
     {
      "path": "web/src/shell/app-routes.tsx",
-     "line": 95,
-     "end_line": 104
+     "line": 104,
+     "end_line": 113,
+     "label": "index → ADMIN_HOME"
     }
    ]
   },
@@ -87,31 +88,33 @@
   {
    "id": "sidebar",
    "type": "frontend",
-   "label": "AdminSidebar ≥ 768",
-   "sublabel": "3 nhóm · 12 mục · thẻ kỳ · đếm",
+   "label": "Sidebar + thanh trên ≥ 768",
+   "sublabel": "12 mục · Tìm nhanh Ctrl K · chuông",
    "pos": [
     450,
     120
    ],
    "size": [
-    190,
+    200,
     64
    ],
    "sources": [
     {
-     "path": "web/src/shell/admin-sidebar.tsx",
-     "line": 52,
-     "end_line": 80
-    },
-    {
      "path": "web/src/shell/admin-nav.ts",
      "line": 17,
-     "end_line": 45
+     "end_line": 47,
+     "label": "ADMIN_NAV · ADMIN_HOME"
     },
     {
-     "path": "web/src/shell/use-admin-badges.ts",
-     "line": 17,
-     "end_line": 30
+     "path": "web/src/shell/admin-header.tsx",
+     "line": 20,
+     "end_line": 28,
+     "label": "QuickSearch field"
+    },
+    {
+     "path": "web/src/shell/quick-search.tsx",
+     "line": 13,
+     "end_line": 62
     }
    ]
   },
@@ -119,7 +122,7 @@
    "id": "topbar",
    "type": "frontend",
    "label": "AdminTopbar < 768",
-   "sublabel": "Mở menu → AdminMenuSheet",
+   "sublabel": "menu sheet · nút Tìm nhanh",
    "pos": [
     450,
     480
@@ -132,23 +135,55 @@
     {
      "path": "web/src/shell/admin-topbar.tsx",
      "line": 26,
-     "end_line": 63
+     "end_line": 40
     },
     {
      "path": "web/src/shell/admin-menu-sheet.tsx",
-     "line": 6,
-     "end_line": 20
+     "line": 6
+    }
+   ]
+  },
+  {
+   "id": "today",
+   "type": "frontend",
+   "label": "Việc hôm nay",
+   "sublabel": "/admin/today · 7 ô · Cần chú ý",
+   "pos": [
+    700,
+    320
+   ],
+   "size": [
+    240,
+    64
+   ],
+   "sources": [
+    {
+     "path": "web/src/features/today/today-tiles.ts",
+     "line": 86,
+     "end_line": 98,
+     "label": "todayTiles 7 ô"
+    },
+    {
+     "path": "web/src/features/today/use-today-data.ts",
+     "line": 20,
+     "end_line": 40,
+     "label": "đọc API sẵn có"
+    },
+    {
+     "path": "web/src/features/today/today-page.tsx",
+     "line": 95,
+     "end_line": 137
     }
    ]
   },
   {
    "id": "monthly",
    "type": "frontend",
-   "label": "Hằng tháng · 5 mục",
+   "label": "Hằng tháng · 5 trang",
    "sublabel": "Kỳ tháng → Báo cáo → … → Còn nợ",
    "pos": [
     700,
-    214
+    190
    ],
    "size": [
     240,
@@ -175,11 +210,11 @@
   {
    "id": "stockpages",
    "type": "frontend",
-   "label": "Danh mục và tủ · 4 trang",
-   "sublabel": "catalog · stock · issues · categories",
+   "label": "Danh mục và tủ · 3 trang",
+   "sublabel": "catalog · stock (+ Xuất lẻ) · categories",
    "pos": [
     700,
-    428
+    450
    ],
    "size": [
     240,
@@ -188,18 +223,20 @@
    "sources": [
     {
      "path": "web/src/shell/app-routes.tsx",
-     "line": 115,
-     "end_line": 121
+     "line": 44,
+     "end_line": 49,
+     "label": "IssuesRedirect"
     },
     {
      "path": "web/src/features/stock/stock-page.tsx",
      "line": 14,
-     "end_line": 30
+     "end_line": 47,
+     "label": "Trong tủ / Lịch sử · Xuất lẻ một món"
     },
     {
-     "path": "web/src/features/issues/issues-page.tsx",
-     "line": 21,
-     "end_line": 66
+     "path": "web/src/shell/app-routes.tsx",
+     "line": 124,
+     "end_line": 128
     }
    ]
   },
@@ -210,7 +247,7 @@
    "sublabel": "users audit config",
    "pos": [
     700,
-    548
+    570
    ],
    "size": [
     240,
@@ -449,7 +486,8 @@
     "monthly",
     "stockpages",
     "syspages",
-    "panel"
+    "panel",
+    "today"
    ],
    "pad": 22
   },
@@ -494,11 +532,17 @@
    "label": "< 768 px"
   },
   {
+   "id": "shell-today",
+   "from": "shell",
+   "to": "today",
+   "label": "trang đầu",
+   "variant": "emphasis"
+  },
+  {
    "id": "shell-monthly",
    "from": "shell",
    "to": "monthly",
-   "label": "Outlet",
-   "variant": "emphasis"
+   "label": "Outlet"
   },
   {
    "id": "shell-stock",
@@ -578,6 +622,18 @@
    "from": "monthly",
    "to": "panel",
    "label": "mở panel/hộp trong URL"
+  },
+  {
+   "id": "today-month",
+   "from": "today",
+   "to": "monthly",
+   "label": "ô → trang lọc sẵn"
+  },
+  {
+   "id": "today-stock",
+   "from": "today",
+   "to": "stockpages",
+   "label": "Tủ sắp hết"
   }
  ],
  "cards": [
@@ -585,9 +641,18 @@
    "dot": "cyan",
    "title": "Menu (ADMIN_NAV, một nguồn cho sidebar và menu sheet)",
    "items": [
-    "Hằng tháng (5): Kỳ tháng /admin/month · Báo cáo & gửi NCC /admin/reports · Nhận hàng /admin/arrivals · Giao hàng · Còn nợ",
-    "Danh mục và tủ (4): Sản phẩm /admin/catalog · Tủ / Kho /admin/stock · Xuất lẻ /admin/issues · Danh mục (nhóm + đơn vị tính) /admin/categories",
+    "Hằng tháng (6): Việc hôm nay /admin/today · Kỳ tháng /admin/month · Báo cáo & gửi NCC /admin/reports · Nhận hàng /admin/arrivals · Giao hàng · Còn nợ",
+    "Danh mục và tủ (3): Sản phẩm /admin/catalog · Tủ / Kho /admin/stock (nút Xuất lẻ một món; tab Lịch sử lọc Xuất lẻ) · Danh mục (nhóm + đơn vị tính) /admin/categories",
     "Quản lý (3): Danh bạ · Nhật ký · Cấu hình; đếm (useAdminBadges): Kỳ tháng = món ngoài DM chờ duyệt, Giao hàng, Tủ / Kho"
+   ]
+  },
+  {
+   "dot": "violet",
+   "title": "Việc hôm nay và Tìm nhanh",
+   "items": [
+    "7 ô: món ngoài DM chờ duyệt · Giao được ngay · Hàng NCC chưa về · Còn nợ · kỳ đang đăng ký · Tủ sắp hết · Người đã nghỉ; mỗi ô mở đúng danh sách (?tab=ready, ?short=1, ?filter=low, ?tab=left…)",
+    "Cần chú ý: ≤ 5 món chờ duyệt cũ nhất (Duyệt → Kỳ tháng ?request=) và người đã nghỉ còn phần (Mở phiếu → Giao hàng ?person=); không endpoint mới",
+    "Tìm nhanh ở thanh trên (≥ 768 ô, < 768 nút icon), Ctrl K / ⌘K: nhóm Món / Người / Kỳ / Đi tới, không dấu, < 2 ký tự không tìm"
    ]
   },
   {
@@ -612,9 +677,9 @@
    "dot": "rose",
    "title": "Chuyển hướng (giữ query, thay mục lịch sử)",
    "items": [
-    "/admin → /admin/month; /admin/home, /admin/summary → /admin/month; /admin/send-adm → /admin/reports; /admin/units → /admin/categories/units",
+    "/admin → /admin/today (ADMIN_HOME); /admin/home, /admin/summary → /admin/month; /admin/send-adm → /admin/reports; /admin/units → /admin/categories/units",
     "/admin/review → /admin/month?ym=<kỳ cũ nhất còn món chờ>&chip=pending (ReviewRedirect; trang Món ngoài danh mục đã bỏ)",
-    "/admin/stock?tab=issues&ym= → /admin/issues?ym=; /admin/delivery/classic → /admin/delivery"
+    "/admin/issues?ym= và /admin/stock?tab=issues&ym= → /admin/stock?tab=history&kind=issue&ym= (trang Xuất lẻ đã gộp vào Tủ / Kho); /admin/delivery/classic → /admin/delivery"
    ]
   }
  ]

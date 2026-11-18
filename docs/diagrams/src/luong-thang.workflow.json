@@ -2,7 +2,7 @@
  "schema_version": 2,
  "diagram_type": "workflow",
  "meta": {
-  "title": "VPP — một tháng chuẩn (11 bước, giao diện A)",
+  "title": "VPP — một tháng chuẩn (11 bước, họ app PMH)",
   "output": "docs/diagrams/vpp-luong-thang.html",
   "locale": "vi",
   "quality_profile": "showcase",
@@ -10,7 +10,7 @@
    "url": "https://github.com/youtranken/QLVPP_DE.git",
    "provider": "github",
    "link_mode": "local-only",
-   "revision": "e86f6443ca655e2f06ab1012cd555c36820a50ab"
+   "revision": "79ca9f6ba31127cbff163e6467240d342242e425"
   },
   "legend": {
    "entries": {
@@ -517,7 +517,7 @@
    "dot": "slate",
    "title": "Endpoint từng bước",
    "items": [
-    "1 PUT me/request/lines · 3 PUT admin/requests/:id/lines (giảm/từ chối), POST admin/lines/:id/review (duyệt ngoài DM trong hộp Xem phiếu) · 4 POST admin/reports/:ym/snapshots, POST|DELETE admin/periods/:ym/no-order",
+    "1 PUT me/request/lines (lưu có dòng → chuông nhắc reminder:<ym> tự đọc) · 3 PUT admin/requests/:id/lines (giảm/từ chối), POST admin/lines/:id/review (duyệt ngoài DM trong hộp Xem phiếu) · 4 POST admin/reports/:ym/snapshots, POST|DELETE admin/periods/:ym/no-order",
     "5 PUT|DELETE admin/periods/:ym/adm-out/:line_key · 6 POST admin/stock/receipts, PUT|DELETE …/adm-owed-closed/:line_key, POST …/custom-receipts",
     "7 GET admin/stock · 8 POST admin/lines/:id/deliver, POST admin/deliveries/bulk (reject_line_ids), POST …/cancel-remaining (adm_out_of_stock) · 10 POST admin/lines/:id/cancel-remaining",
     "2 và 9: NotificationScheduler.runHourly (khóa sổ = 00:00 ngày lastDay+1 giờ VN)"
@@ -549,7 +549,8 @@
    "items": [
     "Đang giữ = phần chưa giao của kỳ đã khóa, chỉ người còn làm; còn trống = max(0, tủ − giữ); Tủ / Kho tách Sắp hết và Thiếu kỳ này, tab Lịch sử nhập xuất",
     "Hộp giao: nợ cũ trước, rồi theo thứ tự đăng ký; người đã nghỉ gợi ý 0; nút Điều chỉnh mở hộp giảm/từ chối",
-    "Dòng NCC hết hàng: giao phần tủ có, hủy phần thiếu (adm_out_of_stock), không thành nợ; món chờ duyệt ghi Không mua cùng tx giao"
+    "Dòng NCC hết hàng: giao phần tủ có, hủy phần thiếu (adm_out_of_stock), không thành nợ; món chờ duyệt ghi Không mua cùng tx giao",
+    "Giao, Giao n phiếu, hủy thiếu có Hoàn tác 5 giây (POST admin/undo/delivery|cancel, chỉ người vừa làm); Adm D&E mở app vào Việc hôm nay /admin/today, mỗi ô mở đúng bước"
    ]
   },
   {
@@ -558,7 +559,7 @@
    "items": [
     "Không có job đổi trạng thái: dòng kỳ < K* (kỳ khóa mới nhất) là Còn nợ khi đọc",
     "Cron khóa sổ hủy phần chưa giao của món đánh NCC hết hàng ở mọi kỳ trước (arrival.adm_out_settled)",
-    "Hủy nợ: dòng của K* → 409 NOT_DEBT_YET; lý do không cần nữa · người đã nghỉ · NCC hết hàng · khác (≥ 3 chữ)"
+    "Hủy nợ: dòng của K* → 409 NOT_DEBT_YET; lý do không cần nữa · người đã nghỉ · NCC hết hàng · khác (≥ 3 chữ); Hủy nợ có Hoàn tác 5 giây"
    ]
   },
   {
