@@ -117,7 +117,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 - FR-41 Giao trừ tồn kho cùng lúc; nếu tồn không đủ → từ chối với số tồn hiện có; không bao giờ âm kho. Món ngoài danh mục đã chấp nhận giao không trừ tồn. Dòng bị từ chối / chờ xem không giao được.
 - FR-42 Màn **Còn nợ**: mọi dòng chưa đủ (`delivered_qty < qty`, không tính dòng từ chối/chờ xem/đã hủy nợ) của các kỳ **trước tháng đang giao**, nhóm theo món và theo người; nút giao bổ sung; Hủy nợ trong menu ⋯; lịch sử từng đợt giao của một dòng. Màn Còn nợ nhóm theo **tháng → người → món** (đăng ký, đã giao, còn nợ, tủ còn), đầu trang một hàng: chọn tháng, tìm, "Chỉ người đã nghỉ"; không thẻ số liệu.
 - FR-43 Chuông cho người nhận khi phiếu giao đủ (một lần khi phiếu giao đủ).
-- FR-44 ~~Hoàn tác đợt giao~~ — **bỏ khỏi GĐ1** (chủ dự án 2026-10-28: ghi giao nhầm thì Hành chính tự đưa bù ngoài hệ thống).
+- FR-44 ~~Hoàn tác đợt giao~~ — **bỏ khỏi GĐ1** (chủ dự án 2026-10-28: ghi giao nhầm thì Hành chính tự đưa bù ngoài hệ thống). 18/11/2026 (TC-18): chỉ có Hoàn tác 5 giây ngay sau thao tác giao/hủy nợ/xóa món (`review-spec.md` mục I).
 
 ### 6.6 Kho (Admin)
 - FR-50 Tồn hiện tại từng món. **Sắp hết** khi đã dùng hết 80 % lượng tồn tính từ lần nhập mua gần nhất: mốc = ⌊20 % × tồn ngay sau lần nhập đó⌋ (hoặc lần điều chỉnh tồn đầu kỳ khi món chưa có mốc), sắp hết khi `0 < tồn ≤ mốc`; tồn = 0 là **Hết hàng** (kể cả món chưa có mốc). Món chưa từng nhập mua mà còn tồn không cảnh báo. Mỗi lần nhập mua tính lại mốc (ví dụ tồn 0 → nhập 30: mốc 6; còn 6 thì sắp hết; nhập thêm 20 lúc còn 6 → tồn 26, mốc 5). Không còn ô "mức tồn tối thiểu" nhập tay.
