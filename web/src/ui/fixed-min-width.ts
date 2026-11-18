@@ -1,8 +1,10 @@
 // Hẹp hơn tổng tối thiểu (rem/px đủ, cột % 6rem, cột chữ chính 12rem, cột chọn 2.75rem = vùng bấm 44px) thì bảng cuộn ngang, không ép chữ và nút tràn sang cột bên.
+// clamp(min, …, max): cột rộng theo màn, sàn là min.
 // autoMins: cột chữ chính cần sàn khác 12rem (rem) — ở màn chạm sàn, cột đó chỉ còn đúng sàn của nó
 export function fixedMinWidth(widths: (string | undefined)[], selection: boolean, autoMins: (string | undefined)[] = []): number {
-  const rem = widths.reduce((sum, w, i) => {
-    if (!w) return sum + (parseFloat(autoMins[i] ?? '') || 12);
+  const rem = widths.reduce((sum, raw, i) => {
+    if (!raw) return sum + (parseFloat(autoMins[i] ?? '') || 12);
+    const w = raw.match(/^clamp\(\s*([^,]+),/)?.[1]?.trim() ?? raw;
     const n = parseFloat(w);
     if (w.endsWith('rem')) return sum + n;
     if (w.endsWith('px')) return sum + n / 16;

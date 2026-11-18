@@ -51,8 +51,8 @@ function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
         {
           id: 'name',
           header: t('users.page.colName'),
-          // Sàn 13rem (208px): ở 768 bảng chạm sàn, tên "Hoàng Nộp Hồ Sơ 1" vẫn một dòng
-          meta: { minWidth: '13rem' },
+          // Sàn 12rem: ở 1024 bảng chạm sàn, tên "Hoàng Nộp Hồ Sơ 1" vẫn một dòng; phần dư nhường cột Mã NV
+          meta: { minWidth: '12rem' },
           cell: ({ row: { original: u } }) => (
             <span className="dr-person">
               <span className="dr-person__text">
@@ -83,10 +83,11 @@ function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
             </span>
           ),
         },
-        { id: 'code', header: t('users.page.colCode'), meta: { width: '5.5rem' }, cell: ({ row }) => <Clip text={row.original.employeeCode} line /> },
-        { id: 'department', header: t('users.page.colDepartment'), meta: { width: '6.5rem' }, cell: ({ row }) => <Clip text={row.original.department} /> },
-        // Ở 1024 bảng chỉ rộng 54rem nên mỗi px cột khác lấy từ cột Họ tên; tiêu đề "Phiếu tháng 11" xuống hai dòng được, ô chỉ cần vừa "Chưa đặt"
-        ...(regMonth === null ? [] : [{ id: 'reg', header: t('users.reg.col', { month: regMonth }), meta: { width: '6.75rem' }, cell: ({ row }: { row: { original: UserRow } }) => <RegCell reg={row.original.reg} /> }]),
+        // Mã thật dài nhất (KIEM-QLVPP-QUENMK) cần ~174px: đủ ở 1280, 1024 cắt "…" kèm title
+        { id: 'code', header: t('users.page.colCode'), meta: { width: 'clamp(7.5rem, 13.6vw, 11rem)' }, cell: ({ row }) => <Clip text={row.original.employeeCode} line /> },
+        { id: 'department', header: t('users.page.colDepartment'), meta: { width: '6.25rem' }, cell: ({ row }) => <Clip text={row.original.department} /> },
+        // Tiêu đề "Phiếu tháng 11" xuống hai dòng được, ô chỉ cần vừa "Chưa đặt" / "Not ordered"
+        ...(regMonth === null ? [] : [{ id: 'reg', header: t('users.reg.col', { month: regMonth }), meta: { width: '7.75rem' }, cell: ({ row }: { row: { original: UserRow } }) => <RegCell reg={row.original.reg} /> }]),
         { id: 'team', header: t('users.page.colTeam'), meta: { width: '5.25rem' }, cell: ({ row }) => <Clip text={row.original.team} line /> },
         {
           id: 'status',

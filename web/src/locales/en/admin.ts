@@ -65,8 +65,8 @@ const admin: Messages<typeof vi> = {
       status: 'Status',
       lastLogin: 'Last sign-in',
       readonly: 'Data from D&E Account, not editable in this app.',
-      lockedWarning: 'This person\'s D&E Account is locked — they cannot sign in. Anything they still owe shows the "No longer with the company" label under Owed.',
-      noAccessWarning: 'This person\'s access to VPP has been revoked in D&E Account. Anything they still owe shows the "No longer with the company" label under Owed.',
+      lockedWarning: 'This person\'s D&E Account is locked — they cannot sign in. Anything they still owe shows the "Left the company" label under Owed.',
+      noAccessWarning: 'This person\'s access to VPP has been revoked in D&E Account. Anything they still owe shows the "Left the company" label under Owed.',
       audit: 'View audit log',
     },
     status: {

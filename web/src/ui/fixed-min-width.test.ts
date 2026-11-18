@@ -11,4 +11,9 @@ describe('fixedMinWidth', () => {
     expect(fixedMinWidth([undefined, '5.5rem'], false, ['13rem', undefined])).toBe(18.5);
     expect(fixedMinWidth([undefined, '5.5rem'], false, [undefined, undefined])).toBe(17.5);
   });
+
+  it('cột co giãn theo màn clamp(min, …, max) cộng phần min (sàn thật khi bảng chạm sàn)', () => {
+    expect(fixedMinWidth([undefined, 'clamp(7.5rem, 13.6vw, 11rem)'], false)).toBe(19.5);
+    expect(fixedMinWidth(['clamp(7.5rem, 13.6vw, 11rem)', 'clamp(7.25rem, 10vw, 9rem)'], false)).toBe(15);
+  });
 });

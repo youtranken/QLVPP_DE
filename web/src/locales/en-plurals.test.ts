@@ -167,3 +167,14 @@ describe('EN: chặn số đếm thiếu _one/_other', () => {
     expect([...PLURAL_DEBT].filter((k) => !counted.includes(k))).toEqual([]);
   });
 });
+
+describe('EN: nhãn người đã nghỉ ngắn, cùng chữ với chip Kỳ tháng và tab Giao hàng', () => {
+  it.each(['summary.table.leftCompany', 'summary.adjust.leftCompany', 'delivery.people.tabs.left'])('%s = "Left the company"', (key) => {
+    expect(EN(key)).toBe(EN('month.chips.left'));
+    expect(EN(key)).toBe('Left the company');
+  });
+
+  it('cảnh báo Danh bạ gọi đúng tên nhãn', () => {
+    expect(EN('users.drawer.lockedWarning')).toContain('"Left the company"');
+  });
+});

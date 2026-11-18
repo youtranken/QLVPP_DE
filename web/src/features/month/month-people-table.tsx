@@ -86,7 +86,7 @@ function useColumns(busy: boolean, onView: Props['onView'], onAdjust: Props['onA
       { id: 'order', header: t('month.table.order'), meta: { minWidth: '8rem' }, cell: ({ row }) => <OrderCell row={row.original} /> },
       { id: 'stock', header: t('month.table.stock'), meta: { minWidth: '7rem' }, cell: ({ row }) => <StockCell row={row.original} /> },
       { id: 'note', header: t('month.table.note'), meta: { minWidth: '7rem' }, cell: ({ row }) => <Notes row={row.original} /> },
-      { id: 'status', header: t('month.table.status'), meta: { width: '8rem' }, cell: ({ row }) => <StatusCell row={row.original} /> },
+      { id: 'status', header: t('month.table.status'), meta: { width: '9.5rem' }, cell: ({ row }) => <StatusCell row={row.original} /> },
       {
         id: 'actions',
         header: () => <span className="sr-only">{t('summary.table.actions')}</span>,
