@@ -2,17 +2,19 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { categoryLabel, useAdminItems, useAllCategories } from '@/features/catalog/catalog.api';
 import { userLabel } from '@/features/directory/directory.api';
+import { useCurrentPeriod } from '@/features/request/request.api';
 import { useDirectoryUsers } from '@/features/directory/use-all-users';
 import { ADMIN_NAV } from '@/shell/admin-nav';
-import type { QuickEntry, QuickSources } from '@/shell/quick-search-index';
+import { periodEntries, type QuickEntry, type QuickSources } from '@/shell/quick-search-index';
 
-// Chỉ dùng dữ liệu web đã có (món, danh bạ, menu): không có endpoint tìm riêng
+// Chỉ dùng dữ liệu web đã có (món, danh bạ, kỳ hiện tại, menu): không có endpoint tìm riêng
 export function useQuickSources(q: string): { sources: QuickSources; loading: boolean } {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
   const items = useAdminItems();
   const categories = useAllCategories();
   const dir = useDirectoryUsers(q.trim());
+  const openYm = useCurrentPeriod().data?.ym;
 
   const itemEntries = useMemo<QuickEntry[]>(() => {
     const groupName = new Map((categories.data ?? []).map((c) => [c.id, categoryLabel(c, lang)]));
@@ -48,17 +50,20 @@ export function useQuickSources(q: string): { sources: QuickSources; loading: bo
     [t],
   );
 
+  const periods = useMemo(() => (openYm ? periodEntries(openYm, (month, year) => t('nav.quickSearch.period', { month, year })) : []), [openYm, t]);
+
   const sources = useMemo<QuickSources>(
     () => ({
       items: itemEntries,
       people: peopleEntries,
       pages: pageEntries,
+      periods,
       shortcuts: [
         { when: 'items', make: (text) => ({ id: 'filter-stock', label: t('nav.quickSearch.filterStock', { q: text }), to: `/admin/stock?q=${encodeURIComponent(text)}`, terms: [] }) },
         { when: 'people', make: (text) => ({ id: 'filter-users', label: t('nav.quickSearch.filterUsers', { q: text }), to: `/admin/users?q=${encodeURIComponent(text)}`, terms: [] }) },
       ],
     }),
-    [itemEntries, peopleEntries, pageEntries, t],
+    [itemEntries, peopleEntries, pageEntries, periods, t],
   );
   return { sources, loading: items.isPending || dir.loading };
 }
