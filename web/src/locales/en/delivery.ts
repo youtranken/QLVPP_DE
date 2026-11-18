@@ -138,7 +138,7 @@ const delivery: Messages<typeof vi> = {
       },
     },
     confirm: {
-      adjust: 'Reject / reduce lines…',
+      adjust: 'Reject / reduce qty…',
       title: 'Deliver to {{name}}?',
       cols: { item: 'Item', need: 'To deliver', now: 'Deliver now', left: 'Left after this' },
       leftTag: 'Not yet received {{n}}',

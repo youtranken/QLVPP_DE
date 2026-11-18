@@ -136,7 +136,7 @@ const delivery = {
       },
     },
     confirm: {
-      adjust: 'Từ chối / giảm dòng…',
+      adjust: 'Từ chối / giảm S/Lượng…',
       title: 'Giao cho {{name}}?',
       cols: { item: 'Món', need: 'Cần giao', now: 'Giao lần này', left: 'Còn lại sau lần này' },
       leftTag: 'Chưa nhận {{n}}',
