@@ -228,6 +228,21 @@ describe('POST admin/users/:sub/cancel-remaining: hủy mọi phiếu còn nợ 
     expect(late.body.code).toBe('UNDO_EXPIRED');
   });
 
+  it('biên expected_lines: 1000 dòng qua kiểm dạng (409 STALE_UPDATE vì không khớp), 1001 → 400 VALIDATION', async () => {
+    await twoLines();
+    await setStatus('locked');
+    const many = (n: number) => ({
+      expected_lines: Array.from({ length: n }, (_, k) => ({
+        line_id: `00000000-0000-4000-8000-${String(k).padStart(12, '0')}`,
+        remaining: 1,
+      })),
+    });
+    const ok = await cancelReq(A, many(1000));
+    expect([ok.status, ok.body.code]).toEqual([409, 'STALE_UPDATE']);
+    const over = await cancelReq(A, many(1001));
+    expect([over.status, over.body.code]).toEqual([400, 'VALIDATION']);
+  });
+
   describe('người có phiếu nợ tháng 11 và phiếu tháng 12 đang giao', () => {
     const twoRequests = async () => {
       const i1 = await f.stockItem(10);

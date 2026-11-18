@@ -179,4 +179,80 @@ describe('Hủy mọi phiếu người đã nghỉ song song (Postgres thật, h
       }
     }
   });
+
+  const setOwner = (status: string) =>
+    pool.query('UPDATE users SET status = $2 WHERE sub = $1', [OWNER, status]);
+  const bodyOf = (lineIds: string[]) => ({
+    expected_lines: lineIds.map((id, k) => ({
+      line_id: id,
+      remaining: k === 0 ? 3 : 4,
+    })),
+  });
+  const within = <T>(p: Promise<T>, ms: number) =>
+    Promise.race([
+      p,
+      new Promise<'timeout'>((r) => setTimeout(() => r('timeout'), ms)),
+    ]);
+
+  it('phiếu kỳ chưa khóa đang bị giữ khóa (FOR UPDATE ở tx khác) → hủy theo người vẫn xong, không chờ khóa phiếu đó', async () => {
+    await reset();
+    const { requestIds, lineIds } = await seedRequest();
+    await pool.query(
+      "INSERT INTO periods (ym, deadline) VALUES ('2099-01-01', '2099-01-10T17:00:00Z') ON CONFLICT (ym) DO NOTHING",
+    );
+    const future = await pool.query<{ id: string }>(
+      "INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('2099-01-01', $1, $1) RETURNING id",
+      [OWNER],
+    );
+    const holder = await pool.connect();
+    try {
+      await holder.query('BEGIN');
+      await holder.query('SELECT 1 FROM requests WHERE id = $1 FOR UPDATE', [
+        future.rows[0].id,
+      ]);
+      const res = await within(
+        post(`/api/admin/users/${OWNER}/cancel-remaining`, bodyOf(lineIds)),
+        3000,
+      );
+      expect(res === 'timeout' ? 'timeout' : outcome(res)).toBe('200');
+      expect(await linesOf(requestIds)).toEqual([
+        { qty: 3, d: 0, c: 3 },
+        { qty: 4, d: 0, c: 4 },
+      ]);
+    } finally {
+      await holder.query('ROLLBACK');
+      holder.release();
+      await pool.query('DELETE FROM requests WHERE id = $1', [
+        future.rows[0].id,
+      ]);
+      await pool.query("DELETE FROM periods WHERE ym = '2099-01-01'");
+    }
+  });
+
+  it('khôi phục quyền (tx khác đang UPDATE users → active) cùng lúc hủy → hủy chờ rồi 409 USER_NOT_LEFT, không dòng nào bị hủy', async () => {
+    await reset();
+    const { requestIds, lineIds } = await seedRequest();
+    const restore = await pool.connect();
+    try {
+      await restore.query('BEGIN');
+      await restore.query(
+        "UPDATE users SET status = 'active' WHERE sub = $1",
+        [OWNER],
+      );
+      const [cancelled] = await Promise.all([
+        post(`/api/admin/users/${OWNER}/cancel-remaining`, bodyOf(lineIds)),
+        new Promise((r) => setTimeout(r, 300)).then(() =>
+          restore.query('COMMIT'),
+        ),
+      ]);
+      expect(outcome(cancelled)).toBe('409 USER_NOT_LEFT');
+      expect(await linesOf(requestIds)).toEqual([
+        { qty: 3, d: 0, c: 0 },
+        { qty: 4, d: 0, c: 0 },
+      ]);
+    } finally {
+      restore.release();
+      await setOwner('locked');
+    }
+  });
 });

@@ -4,7 +4,7 @@ import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
-import { lockState } from '../periods/period-lock';
+import { periodNotLocked } from '../periods/period-lock';
 import { PeriodsService } from '../periods/periods.service';
 import { LineDeliveryStore } from '../requests/line-delivery.store';
 import type { OpenLine, RequestHead } from '../requests/line-delivery.store';
@@ -71,49 +71,40 @@ export class CancelRequestService {
     });
     const now = this.clock.now();
     return this.db.transaction(async (tx) => {
-      const status = await this.notifier.ownerStatus(userSub);
+      // Thứ tự khóa: users (FOR SHARE) → requests → request_lines; khôi phục quyền song song phải chờ
+      const status = await this.notifier.lockOwnerStatus(tx, userSub);
       if (status === null) throw userNotFound();
-      const { heads, lines } = await this.lines.lockUserOpenLines(tx, userSub);
-      const locked = await this.lockedRequests(tx, heads, lines, body, now);
-      if (status === 'active') throw userNotLeft();
-      const open = lines.filter(
-        (l) => l.remaining > 0 && locked.has(l.request_id),
+      const sent = body.expected_lines.map((e) => e.line_id);
+      const open = await this.periods.openPeriod(tx, now);
+      const unlocked = await this.lines.unlockedLineIds(
+        tx,
+        userSub,
+        open.ym,
+        sent,
       );
-      if (open.length === 0)
+      if (unlocked.length > 0) throw periodNotLocked(open);
+      if (status === 'active') throw userNotLeft();
+      const { heads, lines } = await this.lines.lockUserOpenLines(
+        tx,
+        userSub,
+        open.ym,
+        sent,
+      );
+      const owed = lines.filter((l) => l.remaining > 0);
+      if (owed.length === 0)
         return {
           user_sub: userSub,
           cancelled_now: 0,
           lines: [],
           undo_id: null,
         };
-      assertExpected(open, body.expected_lines);
-      const done = await this.cancelAll(tx, open, note, now);
+      assertExpected(owed, body.expected_lines);
+      const done = await this.cancelAll(tx, owed, note, now);
       const touched = heads.filter((h) =>
         done.some((d) => d.line.request_id === h.id),
       );
       return this.afterCancel(tx, userSub, touched, done, { actor, now, note });
     });
-  }
-
-  // Phiếu kỳ còn mở không bị hủy; gửi dòng của kỳ đó lên → PERIOD_NOT_LOCKED như các route theo kỳ
-  private async lockedRequests(
-    tx: Tx,
-    heads: RequestHead[],
-    lines: OpenLine[],
-    body: CancelRequestBody,
-    now: Date,
-  ): Promise<Set<string>> {
-    const openYm = (await this.periods.openPeriod(tx, now)).ym;
-    const locked = new Set(
-      heads
-        .filter((h) => lockState(h.period_ym, openYm) === 'locked')
-        .map((h) => h.id),
-    );
-    const sent = new Set(body.expected_lines.map((e) => e.line_id));
-    for (const l of lines)
-      if (sent.has(l.id) && !locked.has(l.request_id))
-        await this.periods.assertLocked(l.period_ym, now, tx);
-    return locked;
   }
 
   private async cancelAll(

@@ -52,11 +52,11 @@ export class LineNotifier {
 
   // Người đã nghỉ không đọc chuông nữa: mọi chuông điều chỉnh/hủy bỏ qua họ
   async ownerActive(userSub: string): Promise<boolean> {
-    return (await this.ownerStatus(userSub)) === 'active';
+    return (await this.users.findBySub(userSub))?.status === 'active';
   }
 
-  async ownerStatus(userSub: string): Promise<string | null> {
-    return (await this.users.findBySub(userSub))?.status ?? null;
+  lockOwnerStatus(tx: Tx, userSub: string): Promise<string | null> {
+    return this.users.lockStatusWithin(tx, userSub);
   }
 
   // Gộp theo ngày: params tính lại từ mọi bản ghi trong ngày; lần lưu chỉ có user_left hoặc chủ phiếu đã nghỉ thì không chuông
