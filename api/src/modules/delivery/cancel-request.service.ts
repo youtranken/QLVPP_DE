@@ -80,7 +80,12 @@ export class CancelRequestService {
         (l) => l.remaining > 0 && locked.has(l.request_id),
       );
       if (open.length === 0)
-        return { user_sub: userSub, cancelled_now: 0, lines: [], undo_id: null };
+        return {
+          user_sub: userSub,
+          cancelled_now: 0,
+          lines: [],
+          undo_id: null,
+        };
       assertExpected(open, body.expected_lines);
       const done = await this.cancelAll(tx, open, note, now);
       const touched = heads.filter((h) =>

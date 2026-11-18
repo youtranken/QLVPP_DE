@@ -33,7 +33,12 @@ describe('POST admin/users/:sub/cancel-remaining: hủy mọi phiếu còn nợ 
 
   const setStatus = (status: string) =>
     pool().query('UPDATE users SET status = $2 WHERE sub = $1', [A, status]);
-  const cancelReq = (owner: string, body: object, role = 'admin', sub = ADMIN) =>
+  const cancelReq = (
+    owner: string,
+    body: object,
+    role = 'admin',
+    sub = ADMIN,
+  ) =>
     as(
       http().post(`/api/admin/users/${owner}/cancel-remaining`),
       sub,
@@ -73,7 +78,7 @@ describe('POST admin/users/:sub/cancel-remaining: hủy mọi phiếu còn nợ 
   });
 
   it('chủ phiếu đang làm (active) → 409 USER_NOT_LEFT, không dòng nào bị hủy', async () => {
-    const { request, l1, l2 } = await twoLines();
+    const { l1, l2 } = await twoLines();
     const res = await cancelReq(A, expectedOf([l1, l2], [3, 4]));
     expect(res.status).toBe(409);
     expect(res.body.code).toBe('USER_NOT_LEFT');
@@ -83,15 +88,12 @@ describe('POST admin/users/:sub/cancel-remaining: hủy mọi phiếu còn nợ 
   it.each(['locked', 'deleted', 'no_access'])(
     'chủ phiếu %s → 200: hủy hết phần còn lại mọi dòng với "Người đã nghỉ", Tủ trống tăng đúng 2 + 4 so với lúc còn làm',
     async (status) => {
-      const { request, i1, i2, l1, l2 } = await twoLines();
+      const { i1, i2, l1, l2 } = await twoLines();
       await deliver(l1.id, { qty: 1, expected_delivered_qty: 0 }).expect(200);
       // Tủ trống tính lúc người còn làm: người đã nghỉ vốn không giữ hàng (heldSql), sau hủy phần đó không quay lại khi mở khóa
       const freeBefore = [await freeOf(i1), await freeOf(i2)];
       await setStatus(status);
-      const res = await cancelReq(
-        A,
-        expectedOf([l1, l2], [2, 4]),
-      ).expect(200);
+      const res = await cancelReq(A, expectedOf([l1, l2], [2, 4])).expect(200);
       const body = res.body as RequestCancelBody;
       expect(body.cancelled_now).toBe(6);
       expect(body.undo_id).toEqual(expect.any(String));
@@ -118,7 +120,7 @@ describe('POST admin/users/:sub/cancel-remaining: hủy mọi phiếu còn nợ 
     },
   );
 
-  it('audit một bản ghi cha request.cancel_remaining + line.cancel_remaining từng dòng có before/after', async () => {
+  it('audit một bản ghi cha users.cancel_remaining + line.cancel_remaining từng dòng có before/after', async () => {
     const { request, l1, l2 } = await twoLines();
     await setStatus('locked');
     await cancelReq(A, expectedOf([l1, l2], [3, 4])).expect(200);
@@ -144,7 +146,7 @@ describe('POST admin/users/:sub/cancel-remaining: hủy mọi phiếu còn nợ 
   });
 
   it('gọi lại khi phiếu không còn nợ → 200 cancelled_now 0, undo_id null, không audit thêm', async () => {
-    const { request, l1, l2 } = await twoLines();
+    const { l1, l2 } = await twoLines();
     await setStatus('locked');
     const body = expectedOf([l1, l2], [3, 4]);
     await cancelReq(A, body).expect(200);
@@ -158,7 +160,7 @@ describe('POST admin/users/:sub/cancel-remaining: hủy mọi phiếu còn nợ 
   });
 
   it('expected lệch (remaining 3 trong khi DB còn 2) → 409 STALE_UPDATE kèm số hiện tại, không hủy', async () => {
-    const { request, l1, l2 } = await twoLines();
+    const { l1, l2 } = await twoLines();
     await deliver(l1.id, { qty: 1, expected_delivered_qty: 0 }).expect(200);
     await setStatus('locked');
     const res = await cancelReq(A, expectedOf([l1, l2], [3, 4]));
@@ -171,7 +173,7 @@ describe('POST admin/users/:sub/cancel-remaining: hủy mọi phiếu còn nợ 
   });
 
   it('expected thiếu một dòng còn nợ → 409 STALE_UPDATE', async () => {
-    const { request, l1 } = await twoLines();
+    const { l1 } = await twoLines();
     await setStatus('locked');
     const res = await cancelReq(A, expectedOf([l1], [3]));
     expect(res.status).toBe(409);
@@ -179,7 +181,7 @@ describe('POST admin/users/:sub/cancel-remaining: hủy mọi phiếu còn nợ 
   });
 
   it('vai nhân viên → 403; người không có → 404 USER_NOT_FOUND; expected_lines sai dạng → 400 VALIDATION', async () => {
-    const { request, l1, l2 } = await twoLines();
+    const { l1, l2 } = await twoLines();
     await setStatus('locked');
     const body = expectedOf([l1, l2], [3, 4]);
     await cancelReq(A, body, 'member', A).expect(403);
@@ -194,7 +196,7 @@ describe('POST admin/users/:sub/cancel-remaining: hủy mọi phiếu còn nợ 
   });
 
   it('kỳ chưa khóa: 16:59:59.999Z ngày 10 → 409 PERIOD_NOT_LOCKED; 17:00:00.000Z → 200', async () => {
-    const { request, l1, l2 } = await twoLines();
+    const { l1, l2 } = await twoLines();
     await setStatus('locked');
     const body = expectedOf([l1, l2], [3, 4]);
     freeze('2026-11-10T16:59:59.999Z');
@@ -206,7 +208,7 @@ describe('POST admin/users/:sub/cancel-remaining: hủy mọi phiếu còn nợ 
   });
 
   it('hoàn tác bằng undo/cancel trong 4 999 ms → mọi dòng về như trước; 5 000 ms → UNDO_EXPIRED', async () => {
-    const { request, l1, l2 } = await twoLines();
+    const { l1, l2 } = await twoLines();
     await setStatus('locked');
     freeze(plus(0));
     const body = expectedOf([l1, l2], [3, 4]);
@@ -247,7 +249,9 @@ describe('POST admin/users/:sub/cancel-remaining: hủy mọi phiếu còn nợ 
     it('một lần gọi hủy cả hai phiếu: một audit cha, một undo_id hoàn tác cả hai', async () => {
       const { nov, dec } = await twoRequests();
       await setStatus('locked');
-      const res = await cancelReq(A, expectedOf([nov, dec], [3, 4])).expect(200);
+      const res = await cancelReq(A, expectedOf([nov, dec], [3, 4])).expect(
+        200,
+      );
       const body = res.body as RequestCancelBody;
       expect([body.user_sub, body.cancelled_now]).toEqual([A, 7]);
       expect((await f.lineRow(nov.id)).cancelled_qty).toBe(3);
