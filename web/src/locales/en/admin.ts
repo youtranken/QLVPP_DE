@@ -115,7 +115,7 @@ const admin: Messages<typeof vi> = {
       category: { created: 'Category added', updated: 'Category edited' },
       config: { updated: 'Settings changed' },
       files: { orphans_deleted: 'Orphan images cleaned', uploaded: 'Image uploaded' },
-      item: { created: 'Item added', updated: 'Item edited', deactivated: 'Item retired', deleted: 'Item deleted' },
+      item: { created: 'Item added', updated: 'Item edited', deactivated: 'Item retired', deleted: 'Item deleted', delete_undone: 'Item deletion undone' },
       line: { review: 'Off-catalog item reviewed', delivered: 'Delivered', cancel_remaining: 'Backlog cancelled', delivery_undone: 'Delivery undone', cancel_undone: 'Backlog cancel undone' },
       period: {
         headcount_recorded: 'Period headcount recorded',

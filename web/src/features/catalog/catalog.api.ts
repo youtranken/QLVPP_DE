@@ -92,7 +92,7 @@ export const patchItem = (id: string, body: ItemPayload, csrf: string | null) =>
   send<AdminItem>('PATCH', `/api/admin/items/${id}`, body, csrf);
 
 export const deleteItem = (id: string, csrfToken: string | null) =>
-  apiFetch<void>(`/api/admin/items/${id}`, { method: 'DELETE', csrfToken });
+  apiFetch<{ undo_id: string }>(`/api/admin/items/${id}`, { method: 'DELETE', csrfToken });
 
 export const createCategory = (body: CategoryPayload, csrf: string | null) =>
   send<Category>('POST', '/api/admin/item-categories', body, csrf);

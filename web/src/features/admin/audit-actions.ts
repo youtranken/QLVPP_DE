@@ -28,6 +28,7 @@ export const AUDIT_ACTIONS: readonly string[] = [
   'item.created',
   'item.deactivated',
   'item.deleted',
+  'item.delete_undone',
   'item.updated',
   'line.cancel_remaining',
   'line.cancel_undone',

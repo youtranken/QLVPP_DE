@@ -315,7 +315,7 @@ describe('catalog: nhóm món, món', () => {
 
     it('DELETE món chưa dùng → 204, biến khỏi GET admin/items; audit item.deleted', async () => {
       const item = (await createItem(itemBody()).expect(201)).body as Item;
-      await admin(http().delete(`/api/admin/items/${item.id}`)).expect(204);
+      await admin(http().delete(`/api/admin/items/${item.id}`)).expect(200);
       expect(
         ids((await admin(http().get('/api/admin/items')).expect(200)).body),
       ).not.toContain(item.id);

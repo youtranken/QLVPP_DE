@@ -215,7 +215,7 @@ describe('me/request: lưu phiếu, kỳ, ảnh dòng, xóa món đã dùng', ()
       http().delete(`/api/admin/items/${unused}`),
       ADMIN,
       'admin',
-    ).expect(204);
+    ).expect(200);
   });
 
   it('SA cục bộ (local:sa, có dòng users active) lưu phiếu qua me/request → 403 FORBIDDEN_ROLE, không tạo phiếu', async () => {

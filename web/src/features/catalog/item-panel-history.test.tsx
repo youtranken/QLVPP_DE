@@ -86,12 +86,11 @@ describe('Panel món trong BrowserRouter — tự đóng không vướng chặn 
     expect(screen.getByTestId('search').textContent).toBe('');
   });
 
-  it('đã sửa → "Xóa món" → xác nhận: không hỏi "Bỏ thay đổi?" thêm lần nữa, panel đóng, URL sạch', async () => {
-    stubDrawerApi((_url, init) => (init.method === 'DELETE' ? jsonResponse(204, null) : undefined));
+  it('đã sửa → "Xóa": không hỏi "Bỏ thay đổi?", panel đóng, URL sạch', async () => {
+    stubDrawerApi((_url, init) => (init.method === 'DELETE' ? jsonResponse(200, { undo_id: 'u-1' }) : undefined));
     const panel = await openPanel(PEN);
     await userEvent.type(within(panel).getByLabelText(/^Tên sản phẩm/), ' X');
     await userEvent.click(within(panel).getByRole('button', { name: 'Xóa' }));
-    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Xóa Bút bi xanh?' })).getByRole('button', { name: 'Xóa' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: `Sửa món ${PEN.name}` })).toBeNull());
     await settle();
     expect(discardDialog()).toBeNull();
