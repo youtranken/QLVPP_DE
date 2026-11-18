@@ -229,6 +229,7 @@ const catalog: Messages<typeof vi> = {
       VALIDATION: 'Some fields are invalid — check the highlighted fields.',
       FIELD_INVALID: 'Check this value.',
       UPLOAD_FAILED: 'Could not upload the photo — try again.',
+      IMAGE_LOAD_FAILED: 'Could not load the photo, try again.',
       UNKNOWN: 'Could not save — try again in a few minutes.',
     },
   },

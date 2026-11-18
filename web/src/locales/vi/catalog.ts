@@ -226,6 +226,7 @@ const catalog = {
       VALIDATION: 'Có ô chưa hợp lệ — kiểm tra lại các ô được đánh dấu.',
       FIELD_INVALID: 'Kiểm tra lại giá trị này.',
       UPLOAD_FAILED: 'Chưa tải được ảnh — thử lại.',
+      IMAGE_LOAD_FAILED: 'Không tải được ảnh, thử lại.',
       UNKNOWN: 'Chưa lưu được — thử lại sau ít phút.',
     },
   },

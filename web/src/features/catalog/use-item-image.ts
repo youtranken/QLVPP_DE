@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ApiError } from '@/lib/api-client';
 import type { Rect } from '@/lib/crop-rect';
 import { loadCropSource } from '@/lib/crop-source';
 import type { CropSource } from '@/lib/crop-source';
@@ -35,8 +36,9 @@ export function useItemImage(onChange: (fileId: string) => void, onBusyChange: (
     setBusyBoth(true);
     try {
       setSource(await loadCropSource(src));
-    } catch {
-      setError(t('catalog.errors.IMAGE_UNSUPPORTED'));
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) return;
+      setError(t(e instanceof ApiError ? 'catalog.errors.IMAGE_LOAD_FAILED' : 'catalog.errors.IMAGE_UNSUPPORTED'));
     } finally {
       setBusyBoth(false);
     }

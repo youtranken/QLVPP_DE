@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, renderWithI18n, screen, userEvent, waitFor } from '@/test/test-utils';
 import { makeMe } from '@/test/fixtures-me';
 import { MeContext } from '@/lib/me';
+import { ApiError } from '@/lib/api-client';
 import { loadCropSource } from '@/lib/crop-source';
 import { ImageField } from './image-field';
 
@@ -97,5 +98,21 @@ describe('ImageField — màn cắt', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Cắt lại' }));
     expect(await screen.findByRole('dialog', { name: 'Cắt ảnh món' })).toBeInTheDocument();
     expect(loadCropSource).toHaveBeenLastCalledWith(expect.stringContaining('abc'));
+  });
+
+  it('Cắt lại: tải ảnh lỗi 500 → "Không tải được ảnh, thử lại.", không mở màn cắt', async () => {
+    vi.mocked(loadCropSource).mockRejectedValueOnce(new ApiError(500, null));
+    setup('abc');
+    await userEvent.click(screen.getByRole('button', { name: 'Cắt lại' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Không tải được ảnh, thử lại.');
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('Cắt lại: 401 → không báo lỗi riêng (luồng hết phiên lo)', async () => {
+    vi.mocked(loadCropSource).mockRejectedValueOnce(new ApiError(401, null));
+    setup('abc');
+    await userEvent.click(screen.getByRole('button', { name: 'Cắt lại' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Cắt lại' })).toBeEnabled());
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });
