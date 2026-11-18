@@ -87,7 +87,6 @@ function RequestEditor({
   const [editing, setEditing] = useState<Editing>(null);
   useLeaveGuard(cart.dirtyCount);
   const openerRef = useRef<HTMLButtonElement>(null);
-  const barSaveRef = useRef<HTMLButtonElement>(null);
   // Bản mới nhất cho các effect bên dưới: ghi trong effect (chỉ lần render đã commit), đứng trước các effect đọc nó
   const sheetOpenRef = useRef(sheetOpen);
   const narrowRef = useRef(narrow);
@@ -100,43 +99,29 @@ function RequestEditor({
   useEffect(() => {
     if (lineFailure && narrowRef.current) setSheetOpen(true);
   }, [lineFailure]);
-  // Chỉ sau khi LƯU thành công: đóng sheet, focus về nút đã dùng (Xem phiếu nếu lưu trong sheet, Lưu của thanh nổi nếu lưu thẳng)
+  // Chỉ sau khi LƯU thành công: đóng sheet, focus về "Xem phiếu" (nút Lưu của thanh nổi biến mất khi không còn thay đổi)
   const savedSeq = flow.savedSeq;
   useEffect(() => {
     if (savedSeq === 0 || !narrowRef.current) return;
-    const target = sheetOpenRef.current ? openerRef : barSaveRef;
     setSheetOpen(false);
     // Lưu phiếu đã bớt hết dòng: thanh nổi đã gỡ (ref null) → focus tiêu đề trang, không rơi về <body>
-    const id = setTimeout(() => (target.current ? target.current.focus() : focusPageHeading()), 0);
+    const id = setTimeout(() => (openerRef.current ? openerRef.current.focus() : focusPageHeading()), 0);
     return () => clearTimeout(id);
   }, [savedSeq]);
   useEffect(() => {
     if (!narrow) setSheetOpen(false);
   }, [narrow]);
 
-  const visible = items;
   const lineByKey = useMemo(() => new Map(cart.lines.map((l) => [l.key, l])), [cart.lines]);
-  // "Hay dùng trước" = món có trong phiếu kỳ trước (GET, không phải chép lại); không có kỳ trước thì thành thứ tự nhóm
-  const previousRequest = useMyRequest(period.previous?.ym);
-  const favIds = useMemo(
-    () => new Set((previousRequest.data?.lines ?? []).flatMap((l) => (l.item_id ? [l.item_id] : []))),
-    [previousRequest.data],
-  );
   const editingLine = editing?.key ? lineByKey.get(editing.key) : undefined;
   const dirty = cart.dirtyCount > 0;
-  // Sửa phiếu chỉ có hiệu lực tới lần lưu kế tiếp (savedSeq đổi thì phiếu về chế độ xem)
-  const [editFrom, setEditFrom] = useState<number | null>(null);
-  useEffect(() => setEditFrom(null), [cart.saved]);
-  const mode: 'view' | 'edit' = cart.saved && !dirty && editFrom !== savedSeq ? 'view' : 'edit';
   const saveLabel = dirty ? t('request.cart.saveDirty', { count: cart.dirtyCount }) : t('request.cart.save');
   const setQty = (key: string, n: number) => {
     flow.touched(key);
-    setEditFrom(savedSeq);
     cart.setQty(key, n);
   };
   const remove = (key: string) => {
     flow.touched(key);
-    setEditFrom(savedSeq);
     cart.remove(key);
   };
   const addCustom = () => setEditing({});
@@ -153,12 +138,8 @@ function RequestEditor({
     lockAt: lockPhrase(period.deadline, langOf(i18n.language)),
     canSave: dirty && !flow.saving,
     panelRef: cartRef,
-    mode,
-    onEditStart: () => setEditFrom(savedSeq),
-    onCancelEdit: () => {
-      cart.discard();
-      setEditFrom(null);
-    },
+    readOnly: !period.is_open,
+    onDiscard: cart.discard,
     onQty: setQty,
     onRemove: remove,
     onSave: flow.openConfirm,
@@ -181,10 +162,9 @@ function RequestEditor({
       <div className="rq-frame">
         <div className="m-panel rq-panel">
           <ItemGrid
-            items={visible}
+            items={items}
             categories={categories}
             lineByKey={lineByKey}
-            favIds={favIds}
             copy={copy.fromYm && <CopyPreviousButton fromYm={copy.fromYm} busy={copy.busy} onClick={() => void copy.run()} />}
             onQty={setQty}
             onAddCustom={addCustom}
@@ -197,10 +177,9 @@ function RequestEditor({
         <MobileSaveBar
           count={cart.lines.length}
           units={cart.lines.reduce((sum, l) => sum + l.qty, 0)}
-          saved={!!cart.saved && !dirty}
+          savedTime={cart.saved && !dirty ? fmt.time(cart.saved.updated_at) : null}
           dirtyCount={cart.dirtyCount}
           openRef={openerRef}
-          saveRef={barSaveRef}
           canSave={dirty && !flow.saving}
           onOpen={() => setSheetOpen(true)}
           onSave={flow.openConfirm}
@@ -226,7 +205,6 @@ function RequestEditor({
           maxQty={me.config.default_max_qty}
           onClose={() => setEditing(null)}
           onSubmit={(line) => {
-            setEditFrom(savedSeq);
             if (editingLine) {
               flow.touched(editingLine.key);
               cart.updateCustom(editingLine.key, line);

@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { lineView } from '@/test/fixtures-request';
 import { NOTE, PAUSED, PEN, facts, stubRequestApi, view } from '@/test/request-api-stub';
 import { mockViewport } from '@/test/viewport';
-import { openPhoneCart, startEditingOrder } from '@/test/request-cart';
+import { openPhoneCart } from '@/test/request-cart';
 
 const grid = () => screen.getByRole('region', { name: 'Danh mục món' });
 const cart = () => screen.queryByRole('complementary', { name: 'Phiếu tháng 11' }) ?? screen.getByRole('dialog', { name: 'Phiếu tháng 11' });
@@ -34,7 +34,7 @@ describe('RequestPage — món ngoài danh mục', () => {
     });
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Bút bi xanh');
-    await userEvent.click(within(grid()).getByRole('button', { name: '+ Thêm món khác' }));
+    await userEvent.click(within(grid()).getByRole('button', { name: /Không thấy món cần\?/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Thêm món khác' });
     await userEvent.type(within(dialog).getByLabelText('Tên món'), 'Bìa còng 7cm');
     await pickOption(within(dialog).getByLabelText('Đơn vị tính'), 'cái');
@@ -70,7 +70,6 @@ describe('RequestPage — món ngoài danh mục', () => {
     renderApp(makeMe('member'), '/');
     const label = await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Bìa còng');
     expect(within(label.closest('li')!).getByText('Adm D&E xem từ 00:00 ngày 11/11')).toBeInTheDocument();
-    await startEditingOrder();
     const name = within(cart()).getByRole('button', { name: 'Sửa Bìa còng' });
     expect(within(name.closest('li')!).getByText('Adm D&E xem từ 00:00 ngày 11/11')).toBeInTheDocument();
     expect(within(name.closest('li')!).queryByText('Sản phẩm ngoài danh mục, chờ phê duyệt')).toBeNull();
@@ -227,7 +226,6 @@ describe('RequestPage — dòng món đã ngừng', () => {
     });
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Bút bi xanh');
-    await startEditingOrder();
     const line = within(cart()).getByText('Bút bi xanh').closest('li')!;
     expect(within(line).getByRole('button', { name: 'Bớt Bút bi xanh' })).toBeDisabled();
     expect(within(line).getByRole('button', { name: 'Thêm Bút bi xanh' })).toBeDisabled();
@@ -264,7 +262,6 @@ describe('RequestPage — món thuộc nhóm đang ngừng (active, usable=false
     });
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Bút dạ quang');
-    await startEditingOrder();
     const line = within(cart()).getByText('Bút dạ quang').closest('li')!;
     expect(within(line).getByRole('button', { name: 'Bớt Bút dạ quang' })).toBeDisabled();
     expect(within(line).getByRole('button', { name: 'Thêm Bút dạ quang' })).toBeDisabled();

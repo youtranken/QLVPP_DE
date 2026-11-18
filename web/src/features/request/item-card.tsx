@@ -14,6 +14,7 @@ export function ItemCard({
   line,
   tone,
   groupLabel,
+  showGroup = false,
   paused = false,
   onQty,
 }: {
@@ -21,6 +22,7 @@ export function ItemCard({
   line: CartLine | undefined;
   tone: Tone;
   groupLabel: string | null;
+  showGroup?: boolean;
   paused?: boolean;
   onQty: (n: number) => void;
 }) {
@@ -45,12 +47,7 @@ export function ItemCard({
       <div className="rq-card-tile">
         <ItemThumb fileId={item.image_file_id} alt="" tone={tone} size="tile" category={groupLabel} />
         {paused && <PausedStamp />}
-        {groupLabel && <span className="rq-card-group">{groupLabel}</span>}
-        {qty > 0 && (
-          <span className="rq-card-badge" data-testid="pick-badge">
-            {qty}
-          </span>
-        )}
+        {showGroup && groupLabel && <span className="rq-card-group">{groupLabel}</span>}
       </div>
       <div className="rq-card-body">
         <div className="rq-card-name" title={name}>

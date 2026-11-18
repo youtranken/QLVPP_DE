@@ -178,16 +178,15 @@ test('Vòng8 Lịch sử: đổi tháng không dời cột bảng chi tiết', a
   try {
     if (isMobile(info)) {
       await page.goto(`/history/${ymA}`);
-      await expect(page.locator('.hs-table')).toBeVisible();
-      // Tháng A không có ghi chú: thẻ không có dòng "Ghi chú:" nào thấy được
-      const shownNotes = await page.locator('.hs-table td.hs-note').evaluateAll((tds) => tds.filter((td) => td.getClientRects().length > 0).length);
-      expect(shownNotes, '390: ô Ghi chú trống bị ẩn khỏi thẻ').toBe(0);
+      // NV-30: 390 mỗi món một dòng, không bảng/thẻ nhiều cặp nhãn
+      await expect(page.getByRole('list', { name: /^Phiếu tháng/ })).toBeVisible();
+      await expect(page.locator('.hs-table')).toHaveCount(0);
       return;
     }
     for (const width of [1440, 1280, 1024]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(`/history/${ymA}`);
-      await expect(page.getByRole('columnheader', { name: 'Ghi chú' }), `${width}px tháng không ghi chú vẫn có cột Ghi chú`).toBeVisible();
+      await expect(page.getByRole('columnheader', { name: 'Nhận lần cuối' }), `${width}px tháng chưa nhận vẫn có cột Nhận lần cuối`).toBeVisible();
       await expect(page.locator('.hs-table td.hs-note').first()).toHaveText(/—/);
       await expect(page.locator('.hs-table')).toBeVisible();
       const base = await tableBox(page, '.hs-table');

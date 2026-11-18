@@ -1,15 +1,12 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ReceiveDialog } from './receive-dialog';
 import { receiveRows, receiveSummary } from './receive-rows';
 import { useMyRequest, type CurrentPeriod } from './request.api';
 import { monthOf } from './request-format';
 
-// Một dải duy nhất: phiếu kỳ trước đang giao (mở popup nhận hàng) + các tháng cũ hơn còn chờ là liên kết (D7)
+// Một dải duy nhất, cùng cách đếm "còn chờ" với Lịch sử; "Xem" mở thẳng Lịch sử tháng đó
 export function ReceiveStrip({ period }: { period: CurrentPeriod }) {
   const { t, i18n } = useTranslation();
-  const [open, setOpen] = useState(false);
   const prev = period.previous?.delivering ? period.previous.ym : undefined;
   const request = useMyRequest(prev);
   const older = (period.owed ?? []).filter((o) => o.ym !== prev && o.items > 0);
@@ -22,7 +19,8 @@ export function ReceiveStrip({ period }: { period: CurrentPeriod }) {
       <p>
         {main && (
           <>
-            <b>{t('request.receive.stripHead', { month: monthOf(prev) })}</b> · {t('request.receive.strip', { ...sum, count: sum.total })}
+            <b>{t('request.receive.stripHead', { month: monthOf(prev) })}</b> ·{' '}
+            {sum.waiting > 0 ? t('request.receive.stripWaiting', { count: sum.waiting }) : t('request.receive.stripDone')}
           </>
         )}
         {older.map((o, i) => (
@@ -33,11 +31,10 @@ export function ReceiveStrip({ period }: { period: CurrentPeriod }) {
         ))}
       </p>
       {main && (
-        <button type="button" className="rq-recv-open" onClick={() => setOpen(true)}>
+        <Link className="rq-recv-open" to={`/history/${prev}`}>
           {t('request.receive.view')}
-        </button>
+        </Link>
       )}
-      {open && prev && <ReceiveDialog ym={prev} onClose={() => setOpen(false)} />}
     </div>
   );
 }

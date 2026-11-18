@@ -1,19 +1,21 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import i18n from '@/lib/i18n';
 import { LoginScreen } from '@/shell/login-screen';
-import { renderWithI18n, screen, within } from '@/test/test-utils';
+import { renderWithI18n, screen, userEvent, within } from '@/test/test-utils';
+
+vi.mock('@/lib/navigate', () => ({ navigateTo: vi.fn() }));
 
 // Trang đăng nhập thống nhất với QLHS/QLTS/Tài khoản D&E (chủ dự án 15/11)
 describe('đăng nhập giống QLHS', () => {
   afterEach(() => i18n.changeLanguage('vi'));
 
-  it('chân trang: trái "Phát triển bởi IT Department", phải bản quyền; không còn dòng "Cần hỗ trợ"', () => {
+  it('chân trang: trái "Phát triển bởi Phòng IT" (NV-32), phải bản quyền; không còn dòng "Cần hỗ trợ"', () => {
     renderWithI18n(<LoginScreen />);
     const spans = within(screen.getByRole('contentinfo')).getAllByText(/./, { selector: 'span' });
     expect(spans.map((s) => s.textContent)).toEqual([
-      'Phát triển bởi IT Department',
+      'Phát triển bởi Phòng IT',
       `© ${new Date().getFullYear()} Phú Mỹ Hưng · Division D&E`,
     ]);
   });
@@ -26,13 +28,30 @@ describe('đăng nhập giống QLHS', () => {
     expect(screen.queryByText(/Need help/)).toBeNull();
   });
 
-  it('câu phụ và nút bước Email theo QLHS (vi/en)', async () => {
+  it('NV-33: nút chính "Đăng nhập bằng Tài khoản D&E" đứng trước ô email; ô ghi "không bắt buộc"; không còn "Tiếp tục" / "nhập email của bạn" (vi/en)', async () => {
     renderWithI18n(<LoginScreen />);
-    expect(screen.getByText('Đăng nhập để bắt đầu — nhập email của bạn.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Tiếp tục' })).toBeInTheDocument();
+    const main = screen.getByRole('button', { name: 'Đăng nhập bằng Tài khoản D&E' });
+    const email = screen.getByLabelText('Email (không bắt buộc, để điền sẵn)');
+    expect(main.compareDocumentPosition(email) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(main).toHaveClass('btn--primary');
+    expect(screen.queryByRole('button', { name: 'Tiếp tục' })).toBeNull();
+    expect(screen.queryByText(/nhập email của bạn/)).toBeNull();
     await i18n.changeLanguage('en');
-    expect(await screen.findByText('Sign in to get started — enter your email.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Sign in with D&E Account' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Email (optional, to prefill)')).toBeInTheDocument();
+  });
+
+  it('NV-33: có email thì gửi login_hint; không ghi login_hint ra console', async () => {
+    const { navigateTo } = await import('@/lib/navigate');
+    const spies = (['log', 'info', 'warn', 'error', 'debug'] as const).map((k) => vi.spyOn(console, k));
+    renderWithI18n(<LoginScreen />);
+    await userEvent.type(screen.getByLabelText(/^Email/), 'an.nguyen@pmh.com.vn');
+    await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập bằng Tài khoản D&E' }));
+    expect(navigateTo).toHaveBeenLastCalledWith('/api/auth/login?login_hint=an.nguyen%40pmh.com.vn&ui_locales=vi');
+    for (const spy of spies) {
+      expect(spy.mock.calls.flat().join(' ')).not.toContain('an.nguyen');
+      spy.mockRestore();
+    }
   });
 
   it('dòng tên app cùng khuôn QLHS: icon VPP + "QLVPP — Quản lý văn phòng phẩm" (en: Office supplies management)', async () => {

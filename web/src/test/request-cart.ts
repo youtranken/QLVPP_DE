@@ -6,7 +6,3 @@ export async function openPhoneCart(month = 11) {
   return screen.findByRole('dialog', { name: `Phiếu tháng ${month}` });
 }
 
-// Phiếu đã lưu mở ở chế độ xem: bấm "Sửa phiếu" (trong phiếu đang hiện) để có ô số lượng và nút Bỏ
-export async function startEditingOrder() {
-  await userEvent.click(await screen.findByRole('button', { name: 'Sửa phiếu' }));
-}

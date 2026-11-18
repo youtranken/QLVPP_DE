@@ -29,6 +29,7 @@
 [data-shell='member'] .hs-year-title { margin: 0; font: var(--t-label); color: var(--c-muted); }
 [data-shell='member'] .hs-m-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
 [data-shell='member'] .hs-m-row { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-3); min-height: 44px; padding: var(--s-2) calc(var(--s-4) + 24px) var(--s-2) var(--s-4); border-radius: var(--r-md); background: var(--c-surface); border: 1px solid var(--c-line); color: var(--c-ink); text-decoration: none; }
+[data-shell='member'] .hs-m-row:not(:has(.hs-m-chev)) { padding-right: var(--s-4); }
 /* Dấu › báo hàng bấm được để mở chi tiết (lề phải của .hs-m-row chừa chỗ cho nó) */
 [data-shell='member'] .hs-m-chev { position: absolute; right: var(--s-3); top: 50%; transform: translateY(-50%); color: var(--c-muted); }
 [data-shell='member'] .hs-m-row:hover .hs-month { text-decoration: underline; text-underline-offset: 3px; }
@@ -42,7 +43,6 @@
 [data-shell='member'] .hs-d-sub { margin: var(--s-1) 0 0; font: var(--t-body); color: var(--c-muted); }
 [data-shell='member'] .hs-note { color: var(--c-ink-2); }
 [data-shell='member'] .hs-note .hs-chip { margin-left: var(--s-1); }
-[data-shell='member'] .hs-note[data-empty] > [aria-hidden='true'] { color: var(--c-muted); }
 [data-shell='member'] .hs-adjust-box { display: grid; gap: var(--s-2); padding: var(--s-4); border-radius: var(--r-md); background: var(--c-warn-soft); }
 [data-shell='member'] .hs-adjust-title { margin: 0; font: var(--t-label); color: var(--c-warn); }
 [data-shell='member'] .hs-owed { font: var(--t-label); color: var(--c-muted); }
@@ -68,8 +68,8 @@
   [data-shell='member'] .hs-c-reg { width: 5.5rem; }
   [data-shell='member'] .hs-c-give { width: 6.25rem; }
   [data-shell='member'] .hs-c-recv { width: 5.75rem; }
-  [data-shell='member'] .hs-c-st { width: 7.5rem; }
-  [data-shell='member'] .hs-c-note { width: 9rem; }
+  [data-shell='member'] .hs-c-wait { width: 7.5rem; }
+  [data-shell='member'] .hs-c-last { width: 9rem; }
 }
 /* ≥1280, bản EN: "Received 5/5" (123px) và "Received 09:35 12/11" (171px) dài hơn bản VI ("Đã nhận 5/5" 114px, "Nhận 09:35 12/11"
    143px) → cột Tình trạng/Ghi chú rộng thêm cho vừa một dòng, lấy lại từ cột số (vừa đúng tiêu đề EN + 2px) và cột Món (189 → 159px).
@@ -78,8 +78,8 @@
 @media (min-width: 1280px) {
   [data-shell='member']:lang(en) .hs-c-reg { width: 5.375rem; }
   [data-shell='member']:lang(en) .hs-c-give { width: 6rem; }
-  [data-shell='member']:lang(en) .hs-c-st { width: 7.875rem; }
-  [data-shell='member']:lang(en) .hs-c-note { width: 10.875rem; }
+  [data-shell='member']:lang(en) .hs-c-wait { width: 7.875rem; }
+  [data-shell='member']:lang(en) .hs-c-last { width: 10.875rem; }
 }
 /* 768–1180: khung hẹp (1024 còn cột danh sách tháng bên trái) — ô bớt padding, cột số vừa đúng tiêu đề, tiêu đề không gãy dòng */
 @media (min-width: 768px) and (max-width: 1180px) {
@@ -89,10 +89,17 @@
   [data-shell='member'] .hs-c-reg { width: 4.75rem; }
   [data-shell='member'] .hs-c-give { width: 5.5rem; }
   [data-shell='member'] .hs-c-recv { width: 5.25rem; }
-  [data-shell='member'] .hs-c-st { width: 7rem; }
-  [data-shell='member'] .hs-c-note { width: 6.5rem; }
+  [data-shell='member'] .hs-c-wait { width: 7rem; }
+  [data-shell='member'] .hs-c-last { width: 6.5rem; }
 }
 /* 901–1180: cột danh sách tháng 340px gần như trống còn bảng chi tiết bị bóp — thu danh sách để nhường chỗ cho bảng */
 @media (min-width: 901px) and (max-width: 1180px) {
   [data-shell='member'] .hs-split { grid-template-columns: minmax(200px, 220px) minmax(0, 1fr); }
 }
+/* Điện thoại: mỗi món một dòng "tên · sl đvt — đã nhận a, còn chờ b" */
+[data-shell='member'] .hs-lines { list-style: none; margin: 0; padding: 0; display: grid; }
+[data-shell='member'] .hs-lines li { padding: var(--s-3) 0; border-top: 1px solid var(--c-line); font: var(--t-body); color: var(--c-ink); overflow-wrap: anywhere; }
+[data-shell='member'] .hs-lines li:first-child { border-top: 0; }
+[data-shell='member'] .hs-lines small { display: block; color: var(--c-muted); font: var(--t-sm); }
+[data-shell='member'] .hs-lines-wait { color: var(--c-warn); font-weight: 600; }
+[data-shell='member'] .hs-lines .hs-chip { margin-left: var(--s-1); }

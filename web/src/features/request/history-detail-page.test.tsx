@@ -12,10 +12,10 @@ const past = (lines: ReturnType<typeof lineView>[], extra: Partial<ReturnType<ty
   stubRequestApi({ others: { '2026-10': view({ period_ym: '2026-10', is_open: false, lines, ...extra }) } });
 
 const L = (id: string, name: string, over: Partial<ReturnType<typeof lineView>> = {}) => lineView({ id, custom_name: name, custom_unit: 'cay', qty: 1, ...over });
-const rowOf = (name: string) => screen.getByRole('rowheader', { name }).closest('tr')!;
+const rowOf = (name: string) => screen.getByRole('rowheader', { name: new RegExp(`^${name}`) }).closest('tr')!;
 
 describe('HistoryDetailPage', () => {
-  it('chi tiết: tiêu đề, phụ đề "5 loại món · 5 đơn vị · lưu lúc 07/11 · 21:38 · Phòng Test", chip "Đã giao 2/5" (đếm đơn vị)', async () => {
+  it('chi tiết: tiêu đề, phụ đề "5 loại món · 5 đơn vị · lưu lúc 07/11 · 21:38" (không "· Phòng"), nhãn "Còn chờ 3 món" như danh sách tháng', async () => {
     past([
       L('1', 'Bút bảng', { delivered_qty: 1, last_delivered_at: '2026-11-08T02:10:00.000Z' }),
       L('2', 'Bút bi', { delivered_qty: 1, last_delivered_at: '2026-11-08T02:10:00.000Z' }),
@@ -30,8 +30,10 @@ describe('HistoryDetailPage', () => {
     });
     renderApp(makeMe('member'), '/history/2026-10');
     expect(await screen.findByRole('heading', { name: 'Phiếu tháng 10/2026' })).toBeInTheDocument();
-    expect(screen.getByText('5 loại món · 5 đơn vị · lưu lúc 07/11 · 21:38 · Phòng Test')).toBeInTheDocument();
-    expect(screen.getByText('Đã giao 2/5')).toBeInTheDocument();
+    expect(screen.getByText('5 loại món · 5 đơn vị · lưu lúc 07/11 · 21:38')).toBeInTheDocument();
+    expect(screen.queryByText(/Phòng Test/)).toBeNull();
+    expect(screen.getByText('Còn chờ 3 món')).toBeInTheDocument();
+    expect(screen.queryByText(/Đã giao \d/)).toBeNull();
   });
 
   it('món ngoài danh mục không cộng vào số món: "1 loại món · 2 đơn vị · 1 sản phẩm ngoài danh mục, chờ phê duyệt"', async () => {
@@ -54,17 +56,43 @@ describe('HistoryDetailPage', () => {
     expect(screen.getByText('Đã nhận đủ')).toBeInTheDocument();
   });
 
-  it('bảng Món · ĐVT · Đăng ký · Được giao · Đã nhận · Tình trạng · Ghi chú; ghi chú "Nhận 09:10 08/11" và "Adm D&E bỏ món · Hết hàng"', async () => {
+  it('bảng Món · ĐVT · Đăng ký · Được giao (vì có món bị bỏ: 1 → 0) · Đã nhận · Còn chờ · Nhận lần cuối (không "Tình trạng", "Ghi chú"); ô nhận lần cuối chỉ giờ ngày; lý do bỏ món dưới tên', async () => {
     past([L('1', 'Bút bảng', { delivered_qty: 1, last_delivered_at: '2026-11-08T02:10:00.000Z' }), L('3', 'Bút dạ')], {
       removed_lines: [{ name: 'Bút ghi đĩa', name_en: null, unit: 'cay', before: 1, reason_code: 'adm_out_of_stock', reason_note: null, at: '2026-11-08T01:30:00.000Z' }],
     });
     renderApp(makeMe('member'), '/history/2026-10');
-    for (const h of ['Món', 'ĐVT', 'Đăng ký', 'Được giao', 'Đã nhận', 'Tình trạng', 'Ghi chú']) expect(await screen.findByRole('columnheader', { name: h })).toBeInTheDocument();
-    expect(within(rowOf('Bút bảng')).getByText('Đã nhận 1/1')).toBeInTheDocument();
-    expect(within(rowOf('Bút bảng')).getByText('Nhận 09:10 08/11')).toBeInTheDocument();
-    expect(within(rowOf('Bút dạ')).getByText('Chờ 1')).toBeInTheDocument();
+    await screen.findByRole('columnheader', { name: 'Món' });
+    expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Món', 'ĐVT', 'Đăng ký', 'Được giao', 'Đã nhận', 'Còn chờ', 'Nhận lần cuối']);
+    expect(within(rowOf('Bút bảng')).getByText('09:10 08/11')).toBeInTheDocument();
+    expect(within(rowOf('Bút bảng')).queryByText(/Nhận 09:10/)).toBeNull();
+    expect(within(rowOf('Bút dạ')).getAllByRole('cell').map((c) => c.textContent)).toEqual(['cây', '1', '1', '0', '1', '—Chưa có']);
     expect(within(rowOf('Bút ghi đĩa')).getByText('Không giao')).toBeInTheDocument();
     expect(within(rowOf('Bút ghi đĩa')).getByText('Adm D&E bỏ món · Hết hàng')).toBeInTheDocument();
+  });
+
+  it('biên "Được giao": bằng số đăng ký ở mọi dòng → không có cột; một dòng lệch 1 (3 → 2) → có cột', async () => {
+    past([L('1', 'Bút bảng', { qty: 3 }), L('2', 'Bút bi', { qty: 2 })]);
+    const first = renderApp(makeMe('member'), '/history/2026-10');
+    await screen.findByRole('columnheader', { name: 'Món' });
+    expect(screen.queryByRole('columnheader', { name: 'Được giao' })).toBeNull();
+    first.unmount();
+    vi.unstubAllGlobals();
+    past([L('1', 'Bút bảng', { qty: 2, adjustments: [{ before: 3, after: 2, reason_code: 'over_quota', reason_note: null, at: '2026-11-08T02:00:00.000Z' }] }), L('2', 'Bút bi', { qty: 2 })]);
+    renderApp(makeMe('member'), '/history/2026-10');
+    expect(await screen.findByRole('columnheader', { name: 'Được giao' })).toBeInTheDocument();
+    expect(within(rowOf('Bút bảng')).getAllByRole('cell').map((c) => c.textContent).slice(0, 3)).toEqual(['cây', '3', '2']);
+  });
+
+  it('390: mỗi món một dòng "{tên} · {sl} {đvt} — đã nhận a, còn chờ b", không bảng 6 cặp nhãn', async () => {
+    mockViewport(390);
+    past([L('1', 'Băng keo 5cm', { qty: 4, delivered_qty: 2 }), L('2', 'Hồ khô', { qty: 3, delivered_qty: 3 })]);
+    renderApp(makeMe('member'), '/history/2026-10');
+    const list = await screen.findByRole('list', { name: 'Phiếu tháng 10/2026' });
+    expect(within(list).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      'Băng keo 5cm · 4 cây — đã nhận 2, còn chờ 2',
+      'Hồ khô · 3 cây — đã nhận 3, còn chờ 0',
+    ]);
+    expect(screen.queryByRole('table')).toBeNull();
   });
 
   it('bảng chi tiết có colgroup khớp số cột, chỉ cột Món không đặt bề rộng: đổi tháng thì cột không co giãn theo chữ', async () => {
@@ -77,23 +105,13 @@ describe('HistoryDetailPage', () => {
     expect(cols[0]!.className).toBe('');
   });
 
-  it('ô Ghi chú trống hiện "—" (bảng) và mang data-empty để dạng thẻ ẩn cả ô, không còn "Ghi chú:" trơ trọi', async () => {
-    past([L('1', 'Bút bảng', { delivered_qty: 1, last_delivered_at: '2026-11-08T02:10:00.000Z' }), L('3', 'Bút dạ')]);
-    renderApp(makeMe('member'), '/history/2026-10');
-    expect(await screen.findByRole('columnheader', { name: 'Ghi chú' })).toBeInTheDocument();
-    const empty = rowOf('Bút dạ').querySelector('td.hs-note')!;
-    expect(empty).toHaveAttribute('data-empty');
-    expect(empty).toHaveTextContent('—');
-    expect(rowOf('Bút bảng').querySelector('td.hs-note')).not.toHaveAttribute('data-empty');
-  });
-
-  it('tháng không có ghi chú nào vẫn giữ cột Ghi chú (cùng số cột, cùng colgroup với tháng có ghi chú → đổi tháng không dời cột)', async () => {
+  it('tháng chưa nhận lần nào vẫn giữ cột "Nhận lần cuối" ("—"), colgroup cố định: đổi tháng không dời cột', async () => {
     past([L('1', 'Bút bảng'), L('3', 'Bút dạ')]);
     renderApp(makeMe('member'), '/history/2026-10');
-    expect(await screen.findByRole('columnheader', { name: 'Ghi chú' })).toBeInTheDocument();
+    expect(await screen.findByRole('columnheader', { name: 'Nhận lần cuối' })).toBeInTheDocument();
     const table = screen.getByRole('columnheader', { name: 'Món' }).closest('table')!;
-    expect([...table.querySelectorAll(':scope > colgroup > col')].map((c) => c.className)).toEqual(['', 'hs-c-unit', 'hs-c-reg', 'hs-c-give', 'hs-c-recv', 'hs-c-st', 'hs-c-note']);
-    expect([...document.querySelectorAll('td.hs-note')].every((td) => td.hasAttribute('data-empty'))).toBe(true);
+    expect([...table.querySelectorAll(':scope > colgroup > col')].map((c) => c.className)).toEqual(['', 'hs-c-unit', 'hs-c-reg', 'hs-c-recv', 'hs-c-wait', 'hs-c-last']);
+    expect(within(rowOf('Bút bảng')).getAllByRole('cell').at(-1)).toHaveTextContent('—');
   });
 
   it('khối "Điều chỉnh của Adm D&E": "08/11 · 08:30 · Bút ghi đĩa 1 thành 0 · Lý do: Hết hàng"; lý do over_quota hiện "Số lượng quá nhiều" (G2)', async () => {
@@ -172,18 +190,18 @@ describe('HistoryDetailPage', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  it('dòng 5 giao 3 hủy 2: "Đã nhận 3/3" và ghi chú "đã hủy 2 — lý do"', async () => {
+  it('dòng 5 giao 3 hủy 2: Được giao 3, Đã nhận 3, Còn chờ 0 và "đã hủy 2 — lý do" dưới tên', async () => {
     past([lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 5, delivered_qty: 3, cancelled_qty: 2, cancel_note: 'Người đã nghỉ' })]);
     renderApp(makeMe('member'), '/history/2026-10');
-    const row = (await screen.findByRole('rowheader', { name: PEN.name })).closest('tr')!;
-    expect(within(row).getByText('Đã nhận 3/3')).toBeInTheDocument();
+    const row = (await screen.findByRole('rowheader', { name: new RegExp(`^${PEN.name}`) })).closest('tr')!;
+    expect(within(row).getAllByRole('cell').map((c) => c.textContent).slice(1, 5)).toEqual(['5', '3', '3', '0']);
     expect(within(row).getByText('đã hủy 2 — Người đã nghỉ')).toBeInTheDocument();
   });
 
   it('hủy hết 5: "Không giao" + "Đã hủy 5 — lý do"', async () => {
     past([lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 5, cancelled_qty: 5, cancel_note: 'Hết hàng' })]);
     renderApp(makeMe('member'), '/history/2026-10');
-    const row = (await screen.findByRole('rowheader', { name: PEN.name })).closest('tr')!;
+    const row = (await screen.findByRole('rowheader', { name: new RegExp(`^${PEN.name}`) })).closest('tr')!;
     expect(within(row).getByText('Không giao')).toBeInTheDocument();
     expect(within(row).getByText('Đã hủy 5 — Hết hàng')).toBeInTheDocument();
   });
@@ -196,6 +214,6 @@ describe('HistoryDetailPage', () => {
     renderApp(makeMe('member'), '/history/2026-10');
     expect(await screen.findByText('đã hủy 2')).toBeInTheDocument();
     expect(screen.getByText('Đã hủy 3')).toBeInTheDocument();
-    expect(screen.queryByText(/—/)).toBeNull();
+    expect(screen.queryByText(/hủy \d —/)).toBeNull();
   });
 });

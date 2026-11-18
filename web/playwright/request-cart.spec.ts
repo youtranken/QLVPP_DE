@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { cartOf, deleteTestUsers, expectNoContrastViolations, isMobile, removeTestItem, pickOption } from './helpers';
+import { cartOf, deleteTestUsers, openCart, expectNoContrastViolations, isMobile, removeTestItem, pickOption } from './helpers';
 import { asNewMember, createItem, createTestGroup, shotTo } from './request-helpers';
 
 // Phiếu cam (1280) và sheet phiếu + thanh nổi (390)
@@ -23,7 +23,6 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       expect(scrolls && bounded).toBe(true);
       const save = cart.getByRole('button', { name: '16 thay đổi chưa lưu · Lưu' });
       await expect(save).toBeInViewport({ ratio: 1 });
-      await expect(cart.getByText('Phiếu chỉ được tính khi bạn bấm Lưu phiếu.')).toBeInViewport();
       expect((await save.boundingBox())!.height).toBeGreaterThanOrEqual(52 - 0.5);
       await shotTo(page, info, 'long-cart', 'task-C5');
     } finally {
@@ -43,12 +42,12 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
     try {
       await page.goto('/');
       const cart = page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
-      await expect(cart.getByText('Chưa lưu', { exact: true })).toBeVisible();
-      await expect(cart.getByText('0 loại món · 0 đơn vị')).toBeVisible();
+      await expect(cart.getByText('Chưa lưu', { exact: true })).toHaveCount(0);
+      await expect(cart.getByText('0 loại món · 0 đơn vị')).toHaveCount(0);
       await shotTo(page, info, 'empty', 'task-C5');
 
       const grid = page.getByRole('region', { name: 'Danh mục món' });
-      await grid.getByRole('button', { name: '+ Thêm món khác' }).click();
+      await grid.getByRole('button', { name: /Không thấy món cần\?/ }).click();
       const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
       await dialog.getByLabel('Tên món').fill(`PW món lạ ${Date.now()}`);
       await pickOption(dialog.getByRole('combobox', { name: 'Đơn vị tính' }), 'hộp');
@@ -63,7 +62,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${shortName}`, exact: true }).click();
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${longName}`, exact: true }).click();
       await expect(cart.getByText('3 loại món · 3 đơn vị')).toBeVisible();
-      await expect(cart.getByText('Chưa lưu', { exact: true })).toBeVisible();
+      await expect(cart.getByText('Chưa lưu', { exact: true })).toHaveCount(0);
       // 3 dòng (tên đủ rộng, stepper dưới tên) → nút Lưu nằm trọn trong màn 1280×800 không cần cuộn, không dòng nào bị cắt
       await expect(cart.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu' })).toBeInViewport({ ratio: 1 });
       const rows = cart.getByRole('listitem');
@@ -89,8 +88,9 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await shotTo(page, info, 'confirm', 'task-C5');
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
       await expect(cart.getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
-      await expect(cart.getByText(/^Phiếu đã lưu\. Thêm, bớt ngay trên thẻ món hoặc bấm Sửa phiếu\. Sửa được tới hết \d{2}\/\d{2}\.$/)).toBeVisible();
-      await expect(cart.getByRole('button', { name: 'Sửa phiếu' })).toBeVisible();
+      await expect(cart.getByRole('button', { name: 'Sửa phiếu' })).toHaveCount(0);
+      await expect(cart.getByRole('button', { name: /Lưu phiếu/ })).toHaveCount(0);
+      await expect(cart.getByRole('spinbutton')).toHaveCount(3);
       await shotTo(page, info, 'after-save', 'task-C5');
     } finally {
       deleteTestUsers(me.sub);
@@ -136,8 +136,12 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await adds.nth(1).click();
       const open = page.getByRole('button', { name: 'Xem phiếu (2 món)' });
       await expect(open).toBeVisible();
-      // số thay đổi chưa lưu hiện bằng chữ trên nút Lưu của thanh nổi
-      await expect(page.getByText('2 thay đổi chưa lưu', { exact: true })).toBeVisible();
+      // NV-21: nút Lưu của thanh nổi ghi đúng "Lưu phiếu" một dòng (số thay đổi chỉ cho trình đọc màn hình)
+      const barSave = page.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu phiếu' }).last();
+      await expect(barSave).toBeVisible();
+      const shown = await barSave.evaluate((el) => [...el.childNodes].filter((n) => !(n instanceof HTMLElement && n.classList.contains('sr-only'))).map((n) => n.textContent).join('').trim());
+      expect(shown).toBe('Lưu phiếu');
+      expect((await barSave.boundingBox())!.height).toBeLessThan(56);
       await expectNoContrastViolations(page);
       await shotTo(page, info, 'grid-bar', 'task-C6');
       await shotTo(page, info, 'phone-bar', 'final');
@@ -166,8 +170,37 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await expect(sheet).toBeHidden();
       await expect(page.getByText(`Đã lưu phiếu tháng ${month}`)).toBeVisible();
       await expect(open).toBeFocused();
-      await expect(page.getByRole('button', { name: 'Lưu phiếu' })).toBeDisabled();
+      // NV-20: đã lưu, không đổi gì → thanh nổi không còn nút "Lưu phiếu" mờ
+      await expect(page.getByRole('button', { name: /Lưu phiếu/ })).toHaveCount(0);
     } finally {
+      await group.cleanup(me.sub);
+    }
+  });
+
+  test('E2-S5 kỳ khóa: giỏ chỉ xem, không −/+ và không nút Lưu (luật server giữ nguyên)', async ({ page, request }, info) => {
+    const me = await asNewMember(page, info);
+    const group = await createTestGroup(request, info, 1);
+    try {
+      await page.goto(`/?g=${group.categoryId}`);
+      const grid = page.getByRole('region', { name: 'Danh mục món' });
+      await grid.getByRole('button', { name: /^Thêm vào phiếu: / }).first().click();
+      await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu phiếu' }).last().click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
+      await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
+      // Giả kỳ đã khóa sổ ở phía đọc (is_open false); PUT vẫn do server chặn PERIOD_LOCKED
+      await page.route('**/api/periods/current', async (route) => {
+        const res = await route.fetch();
+        await route.fulfill({ response: res, json: { ...(await res.json()), is_open: false, days_left: 0 } });
+      });
+      await page.reload();
+      await expect(page.getByText(/đã khóa sổ — phiếu chỉ xem\./)).toBeVisible();
+      await openCart(page, info);
+      const cart = cartOf(page);
+      await expect(cart.getByRole('spinbutton')).toHaveCount(0);
+      await expect(cart.getByRole('button', { name: /^Bỏ |^Thêm |Lưu phiếu/ })).toHaveCount(0);
+      await expect(cart.getByText(/^1 \S+$/)).toBeVisible();
+    } finally {
+      await page.unroute('**/api/periods/current');
       await group.cleanup(me.sub);
     }
   });

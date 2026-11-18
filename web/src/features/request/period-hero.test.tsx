@@ -53,4 +53,16 @@ describe('PeriodHero — năm và trạng thái lưu', () => {
     renderWithI18n(<PeriodHero period={PERIOD} saved={saved} dirty={false} />);
     expect(screen.getByText(/^Đã lưu 18:32/)).toBeInTheDocument();
   });
+
+  it('đã lưu, không sửa → dòng trạng thái đúng "Đã lưu 18:32", hạn sửa chỉ nói ở mô tả (không "sửa tiếp đến hết")', () => {
+    renderWithI18n(<PeriodHero period={PERIOD} saved={{ updated_at: '2026-11-05T11:32:00Z' } as never} dirty={false} />);
+    expect(screen.getByText('Đã lưu 18:32').closest('p')).toHaveTextContent(/^Đã lưu 18:32$/);
+    expect(screen.queryByText(/sửa tiếp/)).toBeNull();
+    expect(screen.getAllByText(/10\/11/)).toHaveLength(1);
+  });
+
+  it('đang sửa → chấm đầu trang vẫn còn cạnh "Có thay đổi chưa lưu"', () => {
+    const { container } = renderWithI18n(<PeriodHero period={PERIOD} saved={{ updated_at: '2026-11-05T11:32:00Z' } as never} dirty />);
+    expect(container.querySelector('.rq-status .rq-dot')).not.toBeNull();
+  });
 });

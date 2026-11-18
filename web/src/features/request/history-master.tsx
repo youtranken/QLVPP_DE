@@ -9,7 +9,7 @@ import { IssuesSection } from './issues-section';
 
 const customSummary = (c: HistoryItem['custom']) => CUSTOM_STATUSES.filter((k) => c[k] > 0).map((k) => ({ key: k, n: c[k] }));
 
-function MasterItem({ item, open, selected }: { item: HistoryItem; open: boolean; selected: boolean }) {
+function MasterItem({ item, open, selected, chevron }: { item: HistoryItem; open: boolean; selected: boolean; chevron: boolean }) {
   const { t } = useTranslation();
   const custom = customSummary(item.custom);
   return (
@@ -19,7 +19,7 @@ function MasterItem({ item, open, selected }: { item: HistoryItem; open: boolean
         <span className="hs-sum">{t('request.history.masterSum', { count: item.catalog.line_count, units: t('request.unitCount', { count: item.catalog.qty }) })}</span>
         {open ? <Chip tone="open">{t('request.history.open')}</Chip> : <DeliveryTag item={item} />}
         {custom.length > 0 && <span className="hs-custom">{custom.map((c) => t(`request.history.customCount.${c.key}`, { count: c.n })).join(' · ')}</span>}
-        <Icon name="chevr" className="hs-m-chev" size={18} />
+        {chevron && <Icon name="chevr" className="hs-m-chev" size={18} />}
       </Link>
     </li>
   );
@@ -29,13 +29,15 @@ interface Props {
   items: HistoryItem[];
   selected: string | undefined;
   isOpen: (ym: string) => boolean;
+  // Màn rộng: chi tiết đã hiện bên phải nên dòng tháng không cần mũi tên "sang trang khác"
+  chevron: boolean;
   hasMore: boolean;
   loadingMore: boolean;
   onMore: () => void;
 }
 
 // Cột trái Lịch sử: năm → tháng có phiếu, rồi Nhận lẻ
-export function HistoryMaster({ items, selected, isOpen, hasMore, loadingMore, onMore }: Props) {
+export function HistoryMaster({ items, selected, isOpen, chevron, hasMore, loadingMore, onMore }: Props) {
   const { t } = useTranslation();
   return (
     <nav className="hs-master" aria-label={t('request.history.title')}>
@@ -46,7 +48,7 @@ export function HistoryMaster({ items, selected, isOpen, hasMore, loadingMore, o
           </h2>
           <ul className="hs-m-list">
             {g.items.map((item) => (
-              <MasterItem key={item.period_ym} item={item} open={isOpen(item.period_ym)} selected={item.period_ym === selected} />
+              <MasterItem key={item.period_ym} item={item} open={isOpen(item.period_ym)} selected={item.period_ym === selected} chevron={chevron} />
             ))}
           </ul>
         </section>

@@ -74,7 +74,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
     } finally {
       deleteTestUsers(me.sub);
     }
-  });  test('V2C-T3 lọc: tìm + Đã chọn + Xóa lọc', async ({ page, request }, info) => {
+  });  test('V2C-T3 lọc: tìm + Xóa lọc; không Sắp xếp/Đã chọn/+ Thêm món khác (NV-09…12, NV-14)', async ({ page, request }, info) => {
     const me = await asNewMember(page, info);
     const stamp = Date.now();
     const name = `PW Bút lọc ${stamp}`;
@@ -84,6 +84,10 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       const grid = page.getByRole('region', { name: 'Danh mục món' });
       const chips = grid.getByRole('group', { name: 'Nhóm món' });
       await expect(chips.getByRole('button', { name: /^Tất cả/ })).toBeVisible();
+      await expect(grid.getByRole('combobox', { name: 'Sắp xếp' })).toHaveCount(0);
+      await expect(grid.getByRole('button', { name: /^Đã chọn/ })).toHaveCount(0);
+      await expect(grid.getByRole('button', { name: '+ Thêm món khác' })).toHaveCount(0);
+      await expect(grid.getByText(/món trong danh mục|món khớp/)).toHaveCount(0);
       const addButtons = grid.getByRole('button', { name: /^Thêm (?!món khác|tại đây)/ });
       if (isMobile(info)) {
         // Review Focus 1: 390 px mặc định nhóm đầu → số thẻ không vượt số món của nhóm
@@ -97,19 +101,14 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await grid.getByRole('searchbox', { name: 'Tìm món' }).fill(`BUT LOC ${stamp}`);
       await expect(addButtons).toHaveCount(1);
       await expect(page).toHaveURL(/q=BUT\+LOC/);
+      await expect(grid.getByText('1 món khớp', { exact: true })).toBeVisible();
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${name}`, exact: true }).click();
-      const picked = grid.getByRole('button', { name: 'Đã chọn 1' });
-      await picked.click();
-      await expect(picked).toHaveAttribute('aria-pressed', 'true');
-      await expect(page).toHaveURL(/picked=1/);
-      await expect(addButtons).toHaveCount(1); // giao của Đã chọn và từ khóa: đúng món này
       await expect(grid.getByRole('spinbutton', { name, exact: true })).toHaveValue('1');
       await grid.getByRole('searchbox', { name: 'Tìm món' }).fill('khong co mon nay');
       await expect(grid.getByText('Không có món phù hợp')).toBeVisible();
       await grid.getByRole('button', { name: 'Xóa lọc' }).click();
       await expect(grid.getByRole('searchbox', { name: 'Tìm món' })).toHaveValue('');
-      await expect(picked).toHaveAttribute('aria-pressed', 'false');
-      await expect(page).not.toHaveURL(/q=|picked=|g=/);
+      await expect(page).not.toHaveURL(/q=|g=/);
       if (isMobile(info)) await expectNoContrastViolations(page);
       await page.evaluate(() => document.fonts.ready);
     } finally {
@@ -117,7 +116,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await removeTestItem(request, itemId);
     }
   });
-  test('V2C-T4 lưới: 1280 ≥ 4 thẻ một hàng, 390 hai cột; stepper 44px; món không nhóm tới được qua chip "Chưa có nhóm"', async ({ page, request }, info) => {
+  test('V2C-T4 lưới: 1280 ≥ 4 thẻ một hàng, 390 hai cột; stepper 44px; món không nhóm tới được qua chip "Khác" (NV-13); thẻ đã chọn không số tròn (NV-15)', async ({ page, request }, info) => {
     const me = await asNewMember(page, info);
     const name = `PW Món không nhóm ${Date.now()}`;
     const itemId = await createItem(request, name);
@@ -143,15 +142,17 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       } else {
         expect(new Set(ys).size).toBe(1);
       }
-      // Món không có nhóm: chip "Chưa có nhóm" → URL g=none → món hiện ra và thêm được
-      await chips.getByRole('button', { name: /^Chưa có nhóm/ }).click();
-      await expect(page).toHaveURL(/g=none/);
+      // Món không có nhóm nằm trong chip "Khác" (gộp vào nhóm tên Khác nếu có), không còn chip "Chưa có nhóm"
+      await expect(chips.getByRole('button', { name: /^Chưa có nhóm/ })).toHaveCount(0);
+      await chips.getByRole('button', { name: /^Khác/ }).click();
+      await expect(page).toHaveURL(/g=/);
       const add = grid.getByRole('button', { name: `Thêm vào phiếu: ${name}`, exact: true });
       await expect(add).toBeVisible();
       await add.click();
       const plus = grid.getByRole('button', { name: `Thêm ${name}`, exact: true });
       const minus = grid.getByRole('button', { name: `Bớt ${name}`, exact: true });
       for (const b of [plus, minus]) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44 - 0.5);
+      await expect(grid.getByRole('article').filter({ hasText: name }).getByText('1', { exact: true })).toHaveCount(0);
       if (isMobile(info)) await expectNoContrastViolations(page);
       await page.evaluate(() => document.fonts.ready);
       await shotTo(page, info, 'order');

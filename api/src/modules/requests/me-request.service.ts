@@ -3,6 +3,8 @@ import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import type { RequestIdentity } from '../auth/identity.types';
+import { eventIds } from '../notifications/notification-events';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PeriodsService } from '../periods/periods.service';
 import { withAdjustments } from './member-adjustments';
 import type { MemberRequestView } from './member-adjustments';
@@ -21,6 +23,7 @@ export class MeRequestService {
     private readonly periods: PeriodsService,
     private readonly writer: RequestLinesWriter,
     private readonly views: RequestViewBuilder,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async get(me: RequestIdentity, ym?: string): Promise<MemberRequestView> {
@@ -51,6 +54,14 @@ export class MeRequestService {
         body,
         now,
       });
+      // Đã đăng ký rồi thì chuông nhắc "chưa đăng ký" của kỳ đó không còn đúng; phiếu trống (bỏ hết) thì vẫn chưa đăng ký
+      if (request_id)
+        await this.notifications.markReadByEvent(
+          me.sub,
+          eventIds.reminder(body.ym),
+          tx,
+          now,
+        );
       // Writer đã chặn kỳ khác kỳ đang mở → phiếu vừa ghi luôn thuộc kỳ mở
       return {
         request: request_id

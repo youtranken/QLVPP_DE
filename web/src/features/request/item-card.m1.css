@@ -1,10 +1,9 @@
-/* Thẻ món + lưới (NhanVienPC.dc.html): ô ảnh 1:1, nhãn nhóm, badge số, nút thêm / stepper */
+/* Thẻ món + lưới: ô ảnh 1:1, nhãn nhóm (chỉ khi tìm), nút thêm / stepper; thẻ đã chọn nền cam (ngoại lệ luật đang chọn) */
 [data-shell='member'] .rq-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 176px), 1fr)); gap: var(--s-4); }
 [data-shell='member'] .rq-card { display: flex; flex-direction: column; gap: var(--s-2); min-width: 0; padding: var(--s-2); border: 0; border-radius: var(--r-md); background: var(--c-surface); box-shadow: 0 4px 16px rgb(var(--sh-ink) / .08); }
-[data-shell='member'] .rq-card.is-picked { box-shadow: inset 0 0 0 2px var(--c-warn-fill), 0 4px 16px rgb(var(--sh-ink) / .08); }
+[data-shell='member'] .rq-card.is-picked { background: var(--c-cart); box-shadow: inset 0 0 0 2px var(--c-cart-line), 0 4px 16px rgb(var(--sh-ink) / .08); }
 [data-shell='member'] .rq-card-tile { position: relative; }
 [data-shell='member'] .rq-card-group { position: absolute; top: 8px; left: 8px; max-width: calc(100% - 56px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: var(--s-1) var(--s-2); border-radius: var(--r-pill); background: var(--c-tile-chip); color: var(--c-ink-2); font: var(--t-micro); font-weight: 700; }
-[data-shell='member'] .rq-card-badge { position: absolute; top: 8px; right: 8px; min-width: 28px; height: 28px; padding: 0 8px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--c-pick); color: var(--c-surface); font-size: 14px; font-weight: 800; }
 [data-shell='member'] .rq-card.is-paused .rq-card-tile::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: var(--c-veil); pointer-events: none; }
 [data-shell='member'] .rq-card-body { padding: 0 4px; flex: 1; }
 [data-shell='member'] .rq-card-name { min-height: 38px; font-size: 14px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

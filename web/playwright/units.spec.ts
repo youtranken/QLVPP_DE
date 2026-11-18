@@ -27,7 +27,7 @@ async function memberOtherItemUnits(browser: Browser, info: TestInfo, sub: strin
   const page = await newPage(browser, info, { 'x-dev-user-sub': sub, 'x-dev-role': 'member' });
   try {
     await page.goto('/');
-    const addOther = page.getByRole('region', { name: 'Danh mục món' }).getByRole('button', { name: '+ Thêm món khác' });
+    const addOther = page.getByRole('region', { name: 'Danh mục món' }).getByRole('button', { name: /Không thấy món cần\?/ });
     await expect(addOther).toBeInViewport();
     await addOther.click();
     const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });

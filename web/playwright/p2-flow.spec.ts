@@ -25,7 +25,7 @@ async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom
     await grid.getByRole('searchbox', { name: 'Tìm món' }).fill(item.name);
     await grid.getByRole('button', { name: `Thêm vào phiếu: ${item.name}`, exact: true }).click();
   }
-  await grid.getByRole('button', { name: '+ Thêm món khác' }).click();
+  await grid.getByRole('button', { name: /Không thấy món cần\?/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
   await dialog.getByLabel('Tên món').fill(custom);
   await pickOption(dialog.getByRole('combobox', { name: 'Đơn vị tính' }), 'cái');
@@ -33,7 +33,7 @@ async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom
   await expect(dialog).toBeHidden();
   await page.getByRole('button', { name: isMobile(info) ? 'Lưu phiếu' : '3 thay đổi chưa lưu · Lưu' }).click();
   await page.getByRole('dialog', { name: /^Lưu phiếu tháng/ }).getByRole('button', { name: 'Lưu phiếu' }).click();
-  await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
+  await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
   await snap(page, info, 'member-a-saved');
 }
 

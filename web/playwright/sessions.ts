@@ -20,8 +20,8 @@ export async function adminPage(browser: Browser, info: TestInfo) {
   if (!SA_PASSWORD) return page;
   await page.goto('/');
   // Một ô như QLTS/QLHS: đúng tên SA (server kiểm) → bước mật khẩu
-  await page.getByLabel('Email', { exact: true }).fill(SA_USERNAME);
-  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+  await page.getByLabel(/^Email/).fill(SA_USERNAME);
+  await page.getByRole('button', { name: 'Đăng nhập bằng Tài khoản D&E', exact: true }).click();
   await page.getByLabel('Mật khẩu', { exact: true }).fill(SA_PASSWORD);
   const login = page.waitForResponse((r) => r.url().endsWith('/api/auth/sa-login'));
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();

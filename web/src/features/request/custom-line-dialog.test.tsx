@@ -160,6 +160,20 @@ describe('CustomLineDialog', () => {
     expect(css).toMatch(/\.rq-custom-input \{[^}]*font-size: 16px/);
   });
 
+  it('TN-14: ô nhập trong hộp dùng chung chiều cao điều khiển (--hit 40/44), viền 1px --c-line-input như ô tìm; ô Ghi chú có viền riêng, không viền mặc định trình duyệt', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/features/request/request.m1.css'), 'utf8');
+    const input = css.match(/\.rq-custom-input \{([^}]*)\}/)?.[1] ?? '';
+    expect(input).toMatch(/min-height: var\(--hit\)/);
+    expect(input).toMatch(/border: 1px solid var\(--c-line-input\)/);
+    expect(input).toMatch(/border-radius: var\(--r-sm\)/);
+    expect(input).not.toMatch(/44px/);
+    const area = css.match(/\.rq-custom-form textarea \{([^}]*)\}/)?.[1] ?? '';
+    expect(area).toMatch(/border: 1px solid var\(--c-line-input\)/);
+    const search = css.match(/\.rq-f-search input \{([^}]*)\}/)?.[1] ?? readFileSync(resolve(process.cwd(), 'src/features/request/filter-bar.m1.css'), 'utf8').match(/\.rq-f-search input \{([^}]*)\}/)?.[1] ?? '';
+    expect(search).toMatch(/min-height: var\(--hit\)/);
+    expect(search).toMatch(/border: 1px solid var\(--c-line-input\)/);
+  });
+
   it('cùng kiểu hộp nhân viên (rq-dialog); nút đóng là icon SVG có tên "Đóng", không còn ký tự ✕', async () => {
     const { onClose } = setup();
     const dialog = await screen.findByRole('dialog', { name: 'Thêm món khác' });

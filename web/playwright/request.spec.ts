@@ -54,23 +54,23 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await confirm.getByRole('button', { name: 'Lưu phiếu' }).click();
       await expect(confirm).toBeHidden();
       await expect(page.getByText(`Đã lưu phiếu tháng ${month}`)).toBeVisible();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp đến hết \d{2}\/\d{2}$/)).toBeVisible();
+      await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
       await snap(page, info, 'after-save');
 
       await page.reload();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
+      await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
       await openCart(page, info);
-      // Phiếu đã lưu mở ở chế độ xem: chưa có ô số lượng cho tới khi bấm "Sửa phiếu"
-      await expect(cart.getByRole('spinbutton')).toHaveCount(0);
-      await cart.getByRole('button', { name: 'Sửa phiếu' }).click();
+      // NV-19: giỏ một chế độ — phiếu đã lưu có ngay ô số lượng, không còn "Sửa phiếu"
+      await expect(cart.getByRole('button', { name: 'Sửa phiếu' })).toHaveCount(0);
       for (const [item, qty] of [[a, 1], [b, 2], [c, 1]] as const) {
         await expect(cart.getByRole('spinbutton', { name: item.name, exact: true })).toHaveValue(String(qty));
       }
-      // Chưa đổi gì: không có nút Lưu vô hiệu, nút chính là "Hủy" → về chế độ xem, focus ở "Sửa phiếu"
-      await expect(cart.getByRole('button', { name: /^Lưu phiếu$/ })).toHaveCount(0);
+      // Chưa đổi gì: không nút Lưu (NV-20), không "Hủy"; đổi rồi thì "Hủy" là nút phụ bỏ thay đổi (NV-22)
+      await expect(cart.getByRole('button', { name: /Lưu phiếu/ })).toHaveCount(0);
+      await expect(cart.getByRole('button', { name: 'Hủy', exact: true })).toHaveCount(0);
+      await cart.getByRole('button', { name: `Thêm ${a.name}`, exact: true }).click();
       await cart.getByRole('button', { name: 'Hủy', exact: true }).click();
-      await expect(cart.getByRole('spinbutton')).toHaveCount(0);
-      await expect(cart.getByRole('button', { name: 'Sửa phiếu' })).toBeFocused();
+      await expect(cart.getByRole('spinbutton', { name: a.name, exact: true })).toHaveValue('1');
       await closeCart(page, info);
       await search.fill(`PW lưu`);
 
@@ -82,7 +82,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       const dialog = await leave;
       expect(dialog.type()).toBe('beforeunload');
       await dialog.accept();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
+      await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
       await search.fill(`PW lưu`);
 
       // Thiết bị khác sửa phiếu → lưu từ tab này bị STALE_UPDATE
@@ -105,7 +105,6 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await stale.getByRole('button', { name: 'Tải bản mới nhất' }).click();
       await expect(stale).toBeHidden();
       await openCart(page, info);
-      await cart.getByRole('button', { name: 'Sửa phiếu' }).click();
       await expect(cart.getByRole('spinbutton', { name: c.name, exact: true })).toHaveValue('3');
       await expect(cart.getByRole('spinbutton', { name: a.name, exact: true })).toHaveValue('1');
     } finally {
@@ -129,7 +128,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${itemName}`, exact: true }).click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
+      await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
 
       const off = await request.patch(`/api/admin/items/${itemId}`, { headers: devHeaders('admin'), data: { active: false } });
       expect(off.status()).toBe(200);

@@ -16,19 +16,32 @@ const view = (l: CartLine | undefined, onQty = vi.fn()) => {
 const ADD = 'Thêm vào phiếu: Bút bi xanh';
 
 describe('ItemCard', () => {
-  it('chưa chọn → nút "Thêm vào phiếu" (tên chứa chữ hiển thị) gọi onChange(1); không stepper, không badge', async () => {
+  it('chưa chọn → nút "Thêm vào phiếu" (tên chứa chữ hiển thị) gọi onChange(1); không stepper; không nhãn nhóm khi không tìm', async () => {
     const onQty = view(undefined);
     expect(screen.queryByRole('spinbutton')).toBeNull();
-    expect(screen.queryByTestId('pick-badge')).toBeNull();
     await userEvent.click(screen.getByRole('button', { name: ADD }));
     expect(onQty).toHaveBeenCalledWith(1);
     expect(screen.getByText('Thêm vào phiếu')).toBeInTheDocument();
+    expect(screen.queryByText('Bút & viết')).toBeNull();
+    expect(screen.getByRole('article')).not.toHaveClass('is-picked');
+  });
+  it('đang tìm (showGroup) → nhãn nhóm "Bút & viết" hiện trên thẻ', () => {
+    renderWithI18n(<ItemCard item={ITEM} line={undefined} tone="g1" groupLabel="Bút & viết" showGroup onQty={vi.fn()} />);
     expect(screen.getByText('Bút & viết')).toBeInTheDocument();
   });
-  it('đã chọn qty = max → "+" vô hiệu; badge = qty', () => {
+  it('đã chọn qty = max → "+" vô hiệu; thẻ có is-picked; không có số tròn trên ảnh (số chỉ ở bộ −/+)', () => {
     view(line(5));
     expect(screen.getByRole('button', { name: 'Thêm Bút bi xanh' })).toBeDisabled();
-    expect(screen.getByTestId('pick-badge')).toHaveTextContent('5');
+    expect(screen.getByRole('article')).toHaveClass('is-picked');
+    expect(screen.getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(5);
+    expect(screen.queryByText('5')).toBeNull();
+  });
+  it('CSS thẻ đã chọn: nền cam --c-cart, viền cam --c-cart-line (không đổi bố cục), không còn lớp số tròn', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/features/request/item-card.m1.css'), 'utf8');
+    const rule = css.match(/\.rq-card\.is-picked \{([^}]*)\}/)?.[1] ?? '';
+    expect(rule).toMatch(/background: var\(--c-cart\)/);
+    expect(rule).toMatch(/box-shadow: inset 0 0 0 \dpx var\(--c-cart-line\)/);
+    expect(css).not.toMatch(/rq-card-badge/);
   });
   it('qty = max − 1 → "+" còn bấm được và gọi onChange(max)', async () => {
     const onQty = view(line(4));

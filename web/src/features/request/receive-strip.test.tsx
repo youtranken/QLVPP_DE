@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { screen, userEvent, within } from '@/test/test-utils';
+import { screen } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { lineView } from '@/test/fixtures-request';
@@ -28,34 +28,43 @@ async function open(period: CurrentPeriod = DELIVERING, width = 1280) {
   renderApp(makeMe('member'), '/');
 }
 
+const ALL_BUT_ONE = { ...PREV, lines: PREV.lines.map((l, i) => (i < 4 ? { ...l, delivered_qty: 1 } : l)) };
+const ALL_DONE = { ...PREV, lines: PREV.lines.map((l) => ({ ...l, delivered_qty: 1 })) };
+
 describe('ReceiveStrip — dải phiếu đang giao', () => {
-  it('đúng một dải "Phiếu tháng 10 đã chốt · đã nhận 2/5 món" + nút Xem; không còn hai băng cũ', async () => {
+  it('một cách đếm: "Phiếu tháng 10 · còn chờ 3 món" + "Xem"; không còn "đã chốt · đã nhận 2/5"', async () => {
     await open();
-    const strip = await screen.findByText('Phiếu tháng 10 đã chốt');
-    expect(strip.tagName).toBe('B');
-    expect(strip.parentElement).toHaveTextContent('Phiếu tháng 10 đã chốt · đã nhận 2/5 món');
-    expect(screen.queryByText(/Bạn còn chờ nhận/)).toBeNull();
-    expect(screen.getByRole('button', { name: 'Xem' })).toBeInTheDocument();
+    const head = await screen.findByText('Phiếu tháng 10');
+    expect(head.tagName).toBe('B');
+    expect(head.parentElement).toHaveTextContent('Phiếu tháng 10 · còn chờ 3 món');
+    expect(screen.queryByText(/đã chốt/)).toBeNull();
+    expect(screen.queryByText(/đã nhận 2\/5/)).toBeNull();
   });
 
-  it('Xem → popup bảng Món · ĐVT · Đăng ký · Được giao · Đã nhận · Tình trạng; "Xem lịch sử các tháng" tới /history/2026-10', async () => {
+  it('biên còn chờ: 1 món → "còn chờ 1 món"; 0 món → "đã nhận đủ"', async () => {
+    mockViewport(1280);
+    stubRequestApi({ period: DELIVERING, others: { '2026-10': ALL_BUT_ONE } });
+    const first = renderApp(makeMe('member'), '/');
+    expect((await screen.findByText('Phiếu tháng 10')).parentElement).toHaveTextContent('Phiếu tháng 10 · còn chờ 1 món');
+    first.unmount();
+    stubRequestApi({ period: DELIVERING, others: { '2026-10': ALL_DONE } });
+    renderApp(makeMe('member'), '/');
+    expect((await screen.findByText('Phiếu tháng 10')).parentElement).toHaveTextContent('Phiếu tháng 10 · đã nhận đủ');
+    expect(screen.queryByText(/còn chờ 0/)).toBeNull();
+  });
+
+  it('"Xem" là liên kết thẳng tới Lịch sử /history/2026-10, không mở hộp "Phiếu tháng 10"', async () => {
     await open();
-    await userEvent.click(await screen.findByRole('button', { name: 'Xem' }));
-    const dlg = await screen.findByRole('dialog', { name: 'Phiếu tháng 10' });
-    expect(within(dlg).getByText('Đã giao 2/5 · lưu lúc 07/10 · 21:38')).toBeInTheDocument();
-    for (const h of ['Món', 'ĐVT', 'Đăng ký', 'Được giao', 'Đã nhận', 'Tình trạng']) expect(within(dlg).getByRole('columnheader', { name: h })).toBeInTheDocument();
-    expect(within(dlg).getAllByText('Đã nhận 1/1')).toHaveLength(2);
-    expect(within(dlg).getAllByText('Chờ 1')).toHaveLength(3);
-    expect(within(dlg).getByText('Không giao')).toBeInTheDocument();
-    expect(within(dlg).getByText('Adm D&E bỏ món: Hết hàng')).toBeInTheDocument();
-    expect(within(dlg).getByText('Món còn chờ sẽ giao khi hàng về, không cần đăng ký lại.')).toBeInTheDocument();
-    expect(within(dlg).getByRole('link', { name: 'Xem lịch sử các tháng' })).toHaveAttribute('href', '/history/2026-10');
+    const link = await screen.findByRole('link', { name: 'Xem' });
+    expect(link).toHaveAttribute('href', '/history/2026-10');
+    expect(screen.queryByRole('button', { name: 'Xem' })).toBeNull();
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('kỳ trước không còn đang giao → không có dải', async () => {
     await open({ ...PERIOD, previous: { ym: '2026-10', delivering: false } });
     await screen.findByRole('region', { name: 'Danh mục món' });
-    expect(screen.queryByRole('button', { name: 'Xem' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Xem' })).toBeNull();
     expect(screen.queryByText(/đang giao/)).toBeNull();
   });
 
@@ -63,18 +72,18 @@ describe('ReceiveStrip — dải phiếu đang giao', () => {
     await open({ ...DELIVERING, owed: [{ ym: '2026-09', items: 2, units: 3, lines: [] }] });
     const link = await screen.findByRole('link', { name: 'Tháng 9 còn chờ 2 món' });
     expect(link).toHaveAttribute('href', '/history/2026-09');
-    expect(await screen.findAllByText('Phiếu tháng 10 đã chốt')).toHaveLength(1);
+    expect(await screen.findAllByText('Phiếu tháng 10')).toHaveLength(1);
   });
 
-  it('chỉ có nợ tháng cũ (kỳ trước đã xong) → dải chỉ gồm liên kết, không có nút Xem', async () => {
+  it('chỉ có nợ tháng cũ (kỳ trước đã xong) → dải chỉ gồm liên kết, không có "Xem"', async () => {
     await open({ ...PERIOD, owed: [{ ym: '2026-09', items: 1, units: 1, lines: [] }] });
     expect(await screen.findByRole('link', { name: 'Tháng 9 còn chờ 1 món' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Xem' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Xem' })).toBeNull();
   });
 
-  it('390: dải có nút Xem thao tác được, thanh dưới giữ nguyên', async () => {
+  it('390: dải có "Xem" thao tác được, thanh dưới giữ nguyên', async () => {
     await open(DELIVERING, 390);
-    expect(await screen.findByRole('button', { name: 'Xem' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Xem' })).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Điều hướng chính' })).toBeInTheDocument();
   });
 });

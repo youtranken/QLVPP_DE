@@ -1,4 +1,4 @@
-import { useId, useRef, type ReactNode, type RefObject } from 'react';
+import { useId, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@/features/catalog/catalog.api';
 import { DialogCloseButton, DialogDescription, DialogTitle } from '@/ui/dialog';
@@ -29,7 +29,7 @@ function CartRow({
   error,
   tone,
   lockAt,
-  view,
+  readOnly,
   onQty,
   onRemove,
   onEdit,
@@ -38,7 +38,7 @@ function CartRow({
   error?: string;
   tone: Tone;
   lockAt?: string;
-  view: boolean;
+  readOnly: boolean;
   onQty: (n: number) => void;
   onRemove: () => void;
   onEdit: () => void;
@@ -50,18 +50,20 @@ function CartRow({
   const name = fmt.name(line.label);
   const lowered = !!line.lowered && !line.readonly && line.qty > line.lowered.max;
   const alert = lowered || !!line.stopped;
+  const editable = !line.readonly && !readOnly;
+  const unit = fmt.unit(line.label.unit);
   return (
     <li className={`rq-line${error ? ' is-error' : alert ? ' is-alert' : ''}`} data-line-key={line.key} tabIndex={-1}>
       <ItemThumb fileId={line.label.image_file_id} alt="" tone={tone} size={42} custom={!line.item_id} />
       <div className="rq-line-main">
-        {!line.item_id && !line.readonly && !view ? (
+        {!line.item_id && editable ? (
           <button type="button" className="rq-line-name rq-line-link" aria-label={t('request.cart.edit', { name })} title={name} onClick={onEdit}>
             {name}
           </button>
         ) : (
           <span className="rq-line-name" title={name}>{name}</span>
         )}
-        <span className="rq-line-qty num">{t('request.cart.qty', { qty: line.qty, unit: fmt.unit(line.label.unit) })}</span>
+        {!editable && <span className="rq-line-qty num">{t('request.cart.qty', { qty: line.qty, unit })}</span>}
         {!line.item_id && <CustomTags line={line} lockAt={lockAt} />}
         {line.review_status === 'converted' && <span className="tag tag--ok">{t('request.cart.review.converted')}</span>}
         {lowered && <span className="rq-line-alert">{t('request.cart.loweredMax', { max: line.lowered!.max, qty: line.qty })}</span>}
@@ -72,18 +74,21 @@ function CartRow({
           </span>
         )}
       </div>
-      {!line.readonly && !view && (
+      {editable && (
         <>
-          <Stepper
-            className="rq-line-stepper"
-            value={line.qty}
-            min={line.min}
-            max={line.max}
-            label={name}
-            onChange={onQty}
-            describedBy={error ? errorId : undefined}
-            invalid={!!error}
-          />
+          <div className="rq-line-qtyrow">
+            <Stepper
+              className="rq-line-stepper"
+              value={line.qty}
+              min={line.min}
+              max={line.max}
+              label={name}
+              onChange={onQty}
+              describedBy={error ? errorId : undefined}
+              invalid={!!error}
+            />
+            <span className="rq-line-unit">{unit}</span>
+          </div>
           <button type="button" className="rq-line-x" aria-label={t('request.cart.remove', { name })} onClick={onRemove}>
             <Icon name="x" size={18} />
           </button>
@@ -130,9 +135,8 @@ export function CartPanel({
   lockAt,
   canSave,
   panelRef,
-  mode = 'edit',
-  onEditStart,
-  onCancelEdit,
+  readOnly = false,
+  onDiscard,
   onQty,
   onRemove,
   onSave,
@@ -154,11 +158,10 @@ export function CartPanel({
   lockAt?: string;
   canSave: boolean;
   panelRef: RefObject<HTMLDivElement | null>;
-  // view = phiếu đã lưu chưa sửa: không ô số lượng, nút chính "Sửa phiếu"
-  mode?: 'view' | 'edit';
-  onEditStart?: () => void;
-  // Đang sửa phiếu đã lưu: bỏ mọi thay đổi, về chế độ xem
-  onCancelEdit?: () => void;
+  // Kỳ đã khóa: giỏ chỉ xem (server vẫn chặn PERIOD_LOCKED)
+  readOnly?: boolean;
+  // Bỏ mọi thay đổi chưa lưu, về phiếu đã lưu
+  onDiscard?: () => void;
   onQty: (key: string, n: number) => void;
   onRemove: (key: string) => void;
   onSave: () => void;
@@ -168,27 +171,20 @@ export function CartPanel({
   const { t } = useTranslation();
   const titleId = useId();
   const units = lines.reduce((sum, l) => sum + l.qty, 0);
-  const isSaved = !!saved && !dirty;
-  const viewSaved = mode === 'view' ? saved : null;
-  const view = !!viewSaved;
-  const mainRef = useRef<HTMLButtonElement>(null);
-  const canCancel = !view && !!saved && !!onCancelEdit;
-  // Chưa đổi gì thì nút chính là "Hủy" (cùng một nút với "Sửa phiếu" để giữ focus), không để nút Lưu vô hiệu làm ngõ cụt
-  const cancelOnly = canCancel && !dirty;
-  const cancel = () => {
-    onCancelEdit?.();
-    mainRef.current?.focus();
+  // Một chế độ: chỉ có nút Lưu khi có thay đổi (không để nút Lưu vô hiệu); "Hủy" phụ chỉ khi có bản đã lưu để quay về
+  const canDiscard = dirty && !!saved && !!onDiscard;
+  const discard = () => {
+    onDiscard?.();
+    panelRef.current?.querySelector<HTMLElement>('[data-line-key] input')?.focus();
   };
   return (
     <Root className={`rq-cart${sheet ? ' rq-cart--sheet' : ''}`} labelledBy={sheet ? undefined : titleId} panelRef={panelRef}>
       <div className="rq-cart-head">
         <div>
           <Title id={titleId} sheet={sheet}>{t('request.cart.title', { month })}</Title>
-          <Summary sheet={sheet}>{t('request.cart.summary', { count: lines.length, units: t('request.unitCount', { count: units }) })}</Summary>
+          {lines.length > 0 && <Summary sheet={sheet}>{t('request.cart.summary', { count: lines.length, units: t('request.unitCount', { count: units }) })}</Summary>}
         </div>
-        <span className={`rq-cart-chip${isSaved ? ' is-saved' : ''}`}>
-          {viewSaved ? t('request.cart.statusSavedAt', { time: viewSaved.time }) : t(isSaved ? 'request.cart.statusSaved' : 'request.cart.statusDirty')}
-        </span>
+        {saved && !dirty && <span className="rq-cart-chip is-saved">{t('request.cart.statusSavedAt', { time: saved.time })}</span>}
         {sheet && <DialogCloseButton />}
       </div>
       {lines.length === 0 ? (
@@ -204,7 +200,7 @@ export function CartPanel({
               error={errors[l.key]}
               tone={groupTone(categories, l.label.category_id)}
               lockAt={lockAt}
-              view={view}
+              readOnly={readOnly}
               onQty={(n) => onQty(l.key, n)}
               onRemove={() => onRemove(l.key)}
               onEdit={() => onEdit(l.key)}
@@ -212,34 +208,21 @@ export function CartPanel({
           ))}
         </ul>
       )}
-      {!view && (
+      {!readOnly && (
         <button type="button" className="rq-ghost" onClick={onAddCustom}>
           + {t('request.cart.addOther')}
         </button>
       )}
-      {showSave && (
-        <button
-          type="button"
-          ref={mainRef}
-          className={`btn btn--primary btn--xl btn--block rq-cart-save${cancelOnly ? ' is-cancel' : ''}`}
-          disabled={!view && !cancelOnly && !canSave}
-          onClick={view ? onEditStart : cancelOnly ? cancel : onSave}
-        >
-          {view ? t('request.cart.editOrder') : cancelOnly ? t('request.cart.cancelEdit') : saveLabel}
+      {showSave && !readOnly && dirty && (
+        <button type="button" className="btn btn--primary btn--xl btn--block rq-cart-save" disabled={!canSave} onClick={onSave}>
+          {saveLabel}
         </button>
       )}
-      {showSave && canCancel && dirty && (
-        <button type="button" className="btn btn--block rq-cart-cancel" onClick={cancel}>
+      {showSave && canDiscard && (
+        <button type="button" className="btn btn--ghost btn--block rq-cart-cancel" onClick={discard}>
           {t('request.cart.cancelEdit')}
         </button>
       )}
-      <p className="rq-cart-note">
-        {viewSaved
-          ? t('request.cart.noteClosed', { date: viewSaved.lastDay })
-          : saved && !dirty
-          ? t('request.cart.noteSaved', { time: saved.time, date: saved.lastDay })
-          : t('request.cart.noteUnsaved')}
-      </p>
     </Root>
   );
 }

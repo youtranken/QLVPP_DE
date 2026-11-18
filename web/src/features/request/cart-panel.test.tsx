@@ -52,12 +52,17 @@ const show = (props: Props = {}) => {
 const aside = () => screen.getByRole('complementary', { name: 'Phiếu tháng 11' });
 
 describe('CartPanel', () => {
-  it('rỗng: khung "Chưa có món nào" nhắc chép lại tháng trước; đầu phiếu "0 loại món · 0 đơn vị" + chip Chưa lưu', () => {
+  it('rỗng: khung "Chưa có món nào" nhắc chép lại tháng trước; không chip "Chưa lưu", không ghi chú dưới nút', () => {
     show();
     expect(within(aside()).getByText(/Chưa có món nào\. Bấm “Thêm vào phiếu” ở món cần dùng, hoặc chép lại danh sách tháng 10\./)).toBeInTheDocument();
-    expect(within(aside()).getByText('0 loại món · 0 đơn vị')).toBeInTheDocument();
-    expect(within(aside()).getByText('Chưa lưu')).toBeInTheDocument();
-    expect(within(aside()).getByText('Phiếu chỉ được tính khi bạn bấm Lưu phiếu.')).toBeInTheDocument();
+    expect(within(aside()).queryByText('Chưa lưu')).toBeNull();
+    expect(within(aside()).queryByText('Phiếu chỉ được tính khi bạn bấm Lưu phiếu.')).toBeNull();
+  });
+
+  it('giỏ trống: chỉ câu "Chưa có món nào…", không "0 loại món · 0 đơn vị", không nút Lưu vô hiệu', () => {
+    show();
+    expect(within(aside()).queryByText(/0 loại món/)).toBeNull();
+    expect(within(aside()).queryByRole('button', { name: /Lưu phiếu/ })).toBeNull();
   });
 
   it('rỗng và không có tháng trước: câu nhắc không nhắc chép lại', () => {
@@ -65,16 +70,17 @@ describe('CartPanel', () => {
     expect(within(aside()).getByText('Chưa có món nào. Bấm “Thêm vào phiếu” ở món cần dùng.')).toBeInTheDocument();
   });
 
-  it('chip "Chưa lưu" khi dirty (kể cả đã có bản lưu); "Đã lưu" + ghi chú giờ khi đã lưu và không dirty', () => {
+  it('đang sửa (dirty, kể cả đã có bản lưu): không nhãn "Chưa lưu", không "Đã lưu" trên giỏ', () => {
     show({ lines: [mk(1)], dirty: true, saved: { time: '09:41', lastDay: '10/11' } });
-    expect(within(aside()).getByText('Chưa lưu')).toBeInTheDocument();
-    expect(within(aside()).queryByText('Đã lưu')).toBeNull();
+    expect(within(aside()).queryByText('Chưa lưu')).toBeNull();
+    expect(within(aside()).queryByText(/Đã lưu/)).toBeNull();
   });
 
-  it('đã lưu, không dirty: chip "Đã lưu", ghi chú "Đã lưu lúc 09:41. Bạn vẫn sửa được tới hết 10/11."', () => {
+  it('đã lưu, không dirty: nhãn "Đã lưu 09:41"; dưới nút giỏ không có ghi chú lặp hạn', () => {
     show({ lines: [mk(1), mk(2)], saved: { time: '09:41', lastDay: '10/11' } });
-    expect(within(aside()).getByText('Đã lưu')).toBeInTheDocument();
-    expect(within(aside()).getByText('Đã lưu lúc 09:41. Bạn vẫn sửa được tới hết 10/11.')).toBeInTheDocument();
+    expect(within(aside()).getByText('Đã lưu 09:41')).toBeInTheDocument();
+    expect(within(aside()).queryByText(/sửa được tới hết/)).toBeNull();
+    expect(within(aside()).queryByText(/Đã lưu lúc/)).toBeNull();
     expect(within(aside()).getByText('2 loại món · 3 đơn vị')).toBeInTheDocument();
   });
 
@@ -86,10 +92,11 @@ describe('CartPanel', () => {
     expect(list.contains(within(aside()).getByRole('button', { name: 'Lưu phiếu' }))).toBe(false);
   });
 
-  it('dòng: tên, "qty đvt", stepper − +, nút bỏ; gọi onQty/onRemove đúng khóa', async () => {
+  it('dòng: tên, stepper − + có ĐVT "cây" cạnh bên, không dòng "2 cây" dưới tên; nút bỏ; gọi onQty/onRemove đúng khóa', async () => {
     const fns = show({ lines: [mk(2)] });
-    expect(within(aside()).getByText('Món 2')).toBeInTheDocument();
-    expect(within(aside()).getByText('2 cây')).toBeInTheDocument();
+    const li = within(aside()).getByText('Món 2').closest('li')!;
+    expect(within(li).queryByText('2 cây')).toBeNull();
+    expect(within(li).getByText('cây')).toHaveClass('rq-line-unit');
     await userEvent.click(within(aside()).getByRole('button', { name: 'Thêm Món 2' }));
     expect(fns.onQty).toHaveBeenCalledWith('k2', 3);
     await userEvent.click(within(aside()).getByRole('button', { name: 'Bỏ Món 2' }));
@@ -135,38 +142,55 @@ describe('CartPanel', () => {
       const a = screen.getByRole('complementary');
       expect(within(a).getByText('Item 1')).toBeInTheDocument();
       expect(within(a).queryByText('Món 1')).toBeNull();
-      expect(within(a).getByText('Unsaved')).toBeInTheDocument();
+      expect(within(a).queryByText('Unsaved')).toBeNull();
     } finally {
       await i18n.changeLanguage('vi');
     }
   });
 
   it('showSave=false (điện thoại): không có nút Lưu phiếu trong phiếu', () => {
-    show({ lines: [mk(1)], showSave: false });
+    show({ lines: [mk(1)], showSave: false, dirty: true, canSave: true });
     expect(within(aside()).queryByRole('button', { name: 'Lưu phiếu' })).toBeNull();
   });
 
-  describe('mode view (phiếu đã lưu, chưa sửa)', () => {
+  describe('một chế độ (NV-19 phương án 1): không còn "Sửa phiếu"', () => {
     const SAVED = { time: '09:41', lastDay: '10/11' };
-    it('không stepper, không nút Bỏ, không "Thêm món khác"; nút chính "Sửa phiếu"; chip "Đã lưu 09:41"; ghi chú đã lưu', async () => {
-      const onEditStart = vi.fn();
-      show({ lines: [mk(1)], mode: 'view', saved: SAVED, onEditStart });
+    it('đã lưu, chưa đổi: vẫn có −/+, nút Bỏ, "Thêm món khác"; không "Sửa phiếu", không nút Lưu vô hiệu, không "Hủy"', () => {
+      show({ lines: [mk(1)], saved: SAVED });
+      expect(within(aside()).getByRole('spinbutton', { name: 'Món 1' })).toBeInTheDocument();
+      expect(within(aside()).getByRole('button', { name: 'Bỏ Món 1' })).toBeInTheDocument();
+      expect(within(aside()).getByRole('button', { name: /Thêm món khác/ })).toBeInTheDocument();
+      expect(within(aside()).queryByRole('button', { name: 'Sửa phiếu' })).toBeNull();
+      expect(within(aside()).queryByRole('button', { name: /Lưu phiếu/ })).toBeNull();
+      expect(within(aside()).queryByRole('button', { name: 'Hủy' })).toBeNull();
+    });
+    it('đã lưu và có thay đổi: nút chính Lưu phiếu bật + "Hủy" là nút phụ (không phải nút chính); Hủy gọi onDiscard', async () => {
+      const onDiscard = vi.fn();
+      show({ lines: [mk(2)], saved: SAVED, dirty: true, canSave: true, saveLabel: '1 thay đổi chưa lưu · Lưu phiếu', onDiscard });
+      const save = within(aside()).getByRole('button', { name: '1 thay đổi chưa lưu · Lưu phiếu' });
+      expect(save).toBeEnabled();
+      expect(save).toHaveClass('btn--primary');
+      const cancel = within(aside()).getByRole('button', { name: 'Hủy' });
+      expect(cancel).not.toHaveClass('btn--primary');
+      expect(cancel).toHaveClass('btn--ghost');
+      await userEvent.click(cancel);
+      expect(onDiscard).toHaveBeenCalledOnce();
+    });
+    it('chưa từng lưu, có món: nút Lưu, không "Hủy"', () => {
+      show({ lines: [mk(1)], dirty: true, canSave: true });
+      expect(within(aside()).getByRole('button', { name: 'Lưu phiếu' })).toBeEnabled();
+      expect(within(aside()).queryByRole('button', { name: 'Hủy' })).toBeNull();
+    });
+    it('kỳ khóa (readOnly): giỏ chỉ xem — không −/+, không Bỏ, không Thêm món khác, không Lưu; số lượng "2 cây" dưới tên', () => {
+      show({ lines: [mk(2)], saved: SAVED, readOnly: true });
       expect(screen.queryByRole('spinbutton')).toBeNull();
       expect(screen.queryByRole('button', { name: /^Bỏ / })).toBeNull();
       expect(screen.queryByRole('button', { name: /Thêm món khác/ })).toBeNull();
-      expect(within(aside()).getByText('Đã lưu 09:41')).toBeInTheDocument();
-      expect(within(aside()).getByText('Phiếu đã lưu. Thêm, bớt ngay trên thẻ món hoặc bấm Sửa phiếu. Sửa được tới hết 10/11.')).toBeInTheDocument();
-      expect(within(aside()).queryByRole('button', { name: 'Lưu phiếu' })).toBeNull();
-      await userEvent.click(screen.getByRole('button', { name: 'Sửa phiếu' }));
-      expect(onEditStart).toHaveBeenCalledOnce();
+      expect(screen.queryByRole('button', { name: /Lưu phiếu/ })).toBeNull();
+      expect(within(aside()).getByText('2 cây')).toBeInTheDocument();
     });
     it('vẫn báo đỏ: món tạm ngưng và tối đa hạ 5 > 2', () => {
-      show({
-        lines: [mk(1, { stopped: true }), mk(2, { qty: 5, lowered: { max: 2, qty: 5 } })],
-        mode: 'view',
-        saved: SAVED,
-        onEditStart: vi.fn(),
-      });
+      show({ lines: [mk(1, { stopped: true }), mk(2, { qty: 5, lowered: { max: 2, qty: 5 } })], saved: SAVED });
       expect(within(aside()).getByText('Sản phẩm này đã tạm ngưng và không thể đặt hàng.')).toBeInTheDocument();
       expect(within(aside()).getByText('Adm D&E đã đổi tối đa còn 2/tháng. Số lượng 5 vẫn được giữ, không thể tăng thêm.')).toBeInTheDocument();
     });
@@ -187,7 +211,7 @@ describe('CartPanel', () => {
   });
 
   it('câu mới không chứa " — "', () => {
-    for (const k of ['request.cart.stopped', 'request.cart.loweredMax', 'request.cart.noteClosed', 'request.cart.editOrder', 'request.grid.paused'])
+    for (const k of ['request.cart.stopped', 'request.cart.loweredMax', 'request.grid.paused'])
       for (const lng of ['vi', 'en']) expect(i18n.t(k, { lng, max: 2, qty: 5, date: '10/11' })).not.toContain(' — ');
   });
 });
