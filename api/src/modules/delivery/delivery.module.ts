@@ -8,6 +8,7 @@ import { BacklogController } from './backlog.controller';
 import { BacklogService } from './backlog.service';
 import { BulkDeliveryService } from './bulk-delivery.service';
 import { CancelRemainingService } from './cancel-remaining.service';
+import { CancelRequestService } from './cancel-request.service';
 import { CancelUndoService } from './cancel-undo.service';
 import { DeliveryController } from './delivery.controller';
 import { DeliveryPeopleController } from './delivery-people.controller';
@@ -34,6 +35,7 @@ import { DeliveryUndoService } from './delivery-undo.service';
     CancelRemainingService,
     DeliveryUndoService,
     CancelUndoService,
+    CancelRequestService,
     BacklogService,
     DeliveryPeopleService,
   ],

@@ -26,6 +26,14 @@ export interface LockedLine {
   review_status: string;
 }
 
+export interface RequestHead {
+  id: string;
+  period_ym: string;
+  user_sub: string;
+}
+
+export type OpenLine = LockedLine & { remaining: number };
+
 export interface CancelledLine {
   id: string;
   qty: number;
@@ -119,6 +127,26 @@ export class LineDeliveryStore {
       ORDER BY l.id FOR UPDATE OF l
     `);
     return rows;
+  }
+
+  // Hủy cả phiếu: khóa phiếu rồi mọi dòng theo id; `remaining` chỉ > 0 ở dòng hiệu lực còn nợ
+  async lockRequestOpenLines(
+    tx: Tx,
+    requestId: string,
+  ): Promise<{ head: RequestHead; lines: OpenLine[] } | null> {
+    const head = await tx.execute<RequestHead & Record<string, unknown>>(sql`
+      SELECT r.id, to_char(r.period_ym, 'YYYY-MM') AS period_ym, r.user_sub
+      FROM requests r WHERE r.id = ${requestId} FOR UPDATE
+    `);
+    if (head.rows.length === 0) return null;
+    const { rows } = await tx.execute<OpenLine & Record<string, unknown>>(sql`
+      SELECT ${LINE_COLUMNS},
+        CASE WHEN ${UNDELIVERED_LINE} THEN ${REMAINING_QTY} ELSE 0 END AS remaining
+      FROM request_lines l JOIN requests r ON r.id = l.request_id
+      WHERE l.request_id = ${requestId}
+      ORDER BY l.id FOR UPDATE OF l
+    `);
+    return { head: head.rows[0], lines: rows };
   }
 
   async addDelivered(

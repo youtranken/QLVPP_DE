@@ -132,6 +132,8 @@ describe('phân loại route /admin/* và guard kỳ khóa (e2e)', () => {
     }
     if (route.endsWith('/deliver'))
       return { qty: 1, expected_delivered_qty: 0 };
+    if (route.endsWith('requests/:id/cancel-remaining'))
+      return { expected_lines: [] };
     if (route.endsWith('/cancel-remaining'))
       return {
         reason_code: 'not_needed',

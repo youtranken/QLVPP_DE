@@ -11,12 +11,18 @@ import { UndoLedgerService } from '../undo/undo-ledger.service';
 import type { UndoRow } from '../undo/undo-window';
 import { staleCancel } from './delivery-errors';
 
-interface CancelPayload {
+export interface CancelPayload {
   line_id: string;
   request_id: string;
   before: { cancelled_qty: number; cancel_note: string | null };
   after: { cancelled_qty: number };
   bell: string | null;
+}
+
+// Hủy cả phiếu ghi một dòng sổ với `lines`; hủy từng dòng ghi thẳng payload một dòng
+function linesOf(payload: unknown): CancelPayload[] {
+  const p = payload as CancelPayload | { lines: CancelPayload[] };
+  return 'lines' in p ? p.lines : [p];
 }
 
 @Injectable()
@@ -42,7 +48,7 @@ export class CancelUndoService {
       // Khóa theo (phiếu, dòng) như mọi đường ghi nhiều dòng: requests → request_lines
       const key = (p: CancelPayload) => `${p.request_id}|${p.line_id}`;
       const payloads = rows
-        .map((r: UndoRow) => r.payload as unknown as CancelPayload)
+        .flatMap((r: UndoRow) => linesOf(r.payload))
         .sort((a, b) => (key(a) < key(b) ? -1 : 1));
       for (const p of payloads) await this.undoOne(tx, p, actor, now);
       return { undone: payloads.length };
