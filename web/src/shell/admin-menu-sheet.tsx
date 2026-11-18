@@ -14,9 +14,7 @@ export function AdminMenuSheet({ open, onOpenChange }: { open: boolean; onOpenCh
       viewportClassName="side-sheet-viewport"
     >
       <div className="side-sheet__head">
-        <span className="side__logo" aria-hidden="true">
-          <Icon name="pkg" />
-        </span>
+        <img src="/vpp-logo.png" alt="" width={30} height={30} />
         <span className="side-sheet__title">
           <DialogTitle asChild>
             <h2>{t('nav.mobile.menuTitle')}</h2>

@@ -3,7 +3,6 @@ const common = {
     title: 'QLVPP',
     shortName: 'QLVPP',
     adminTitle: 'Quản lý VPP',
-    logoLetter: 'V',
   },
   common: {
     requestStatus: { notDelivered: 'Chưa giao', partial: 'Đã giao {{delivered}}/{{total}}', done: 'Đã nhận đủ', owed: 'Còn nợ {{n}}', cancelled: 'Không giao' },

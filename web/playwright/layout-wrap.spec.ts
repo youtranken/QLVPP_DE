@@ -34,15 +34,16 @@ async function wrappedButtons(page: Page) {
       // Nút chính màn đăng nhập được phép 2 dòng cân nhau (kiểm riêng bên dưới). Tên món/người dạng nút (…__name) là chữ dài tự nhiên.
       if (el.matches('.btn--xl, .month-switch__beyond, [class*="__name"]')) continue;
       // Chỉ chữ đang hiện: bỏ chữ trong .sr-only (nhãn ẩn của ô chọn nằm ngoài dòng, không phải gãy dòng)
-      const tops = new Set<number>();
+      // Chữ khác cỡ trên cùng một dòng (nhãn + số đếm) lệch đỉnh 1–2px: chỉ tính là dòng mới khi lệch ≥ 6px
+      const tops: number[] = [];
       const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
       for (let node = walker.nextNode(); node; node = walker.nextNode()) {
         if (!node.textContent!.trim() || node.parentElement!.closest('.sr-only, [hidden]')) continue;
         const range = document.createRange();
         range.selectNodeContents(node);
-        for (const r of range.getClientRects()) if (r.width > 1) tops.add(Math.round(r.top / 4));
+        for (const r of range.getClientRects()) if (r.width > 1) tops.push(r.top);
       }
-      if (tops.size > 1) out.push(`${Math.round(box.width)}w "${text.replace(/\s+/g, ' ').slice(0, 50)}"`);
+      if (tops.length && Math.max(...tops) - Math.min(...tops) >= 6) out.push(`${Math.round(box.width)}w "${text.replace(/\s+/g, ' ').slice(0, 50)}"`);
     }
     return out;
   });

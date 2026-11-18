@@ -6,7 +6,6 @@ const common: Messages<typeof vi> = {
     title: 'QLVPP',
     shortName: 'QLVPP',
     adminTitle: 'VPP Admin',
-    logoLetter: 'V',
   },
   common: {
     requestStatus: { notDelivered: 'Not delivered', partial: 'Delivered {{delivered}}/{{total}}', done: 'Received in full', owed: 'Owed {{n}}', cancelled: 'Not delivered (cancelled)' },

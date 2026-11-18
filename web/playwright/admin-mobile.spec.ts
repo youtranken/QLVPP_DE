@@ -49,7 +49,7 @@ test.describe('E9-S7 Adm D&E 390 px (dev-identity admin)', () => {
       await expect(heading(page, title)).toBeVisible();
       await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
       await expectNoHorizontalScroll(page, path);
-      const sub = page.getByRole('banner').getByText(path === 'delivery' ? /^Tháng \d+\/\d{4} · đã khóa$/ : /^Kỳ hiện tại: tháng \d+ · đang mở$/);
+      const sub = page.getByRole('banner').getByText(/^Kỳ hiện tại: tháng \d+ · đang mở$/);
       expect(await sub.evaluate((el) => el.scrollWidth - el.clientWidth), `dòng phụ thanh trên bị cắt ở ${path}`).toBeLessThanOrEqual(0);
       const [nextPath, nextTitle] = PAGES[(i + 1) % PAGES.length];
       await page.getByRole('button', { name: 'Mở menu quản lý' }).tap();

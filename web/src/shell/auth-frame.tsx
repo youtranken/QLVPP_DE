@@ -17,7 +17,7 @@ export function AuthFrame({ children }: { children: ReactNode }) {
         <header className="auth-panel-head">
           <img className="auth-pmh-logo" src="/logo-pmh-on-light.png" alt={t('auth.pmhLogoAlt')} width={383} height={274} />
           <p className="auth-panel-name">
-            <img src="/vpp.png" alt="" width={24} height={24} />
+            <img src="/vpp-logo.png" alt="" width={24} height={24} />
             <span>{t('app.shortName')} — {t('auth.appTagline')}</span>
           </p>
         </header>

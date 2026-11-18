@@ -40,7 +40,7 @@ describe('đăng nhập giống QLHS', () => {
     const name = container.querySelector('.auth-panel-name') as HTMLElement;
     expect(name).toHaveTextContent('QLVPP — Quản lý văn phòng phẩm');
     const icon = name.querySelector('img') as HTMLImageElement;
-    expect(icon).toHaveAttribute('src', '/vpp.png');
+    expect(icon).toHaveAttribute('src', '/vpp-logo.png');
     expect(icon).toHaveAttribute('alt', '');
     await i18n.changeLanguage('en');
     expect(await screen.findByText('QLVPP — Office supplies management')).toBeInTheDocument();
@@ -51,7 +51,7 @@ describe('đăng nhập giống QLHS', () => {
     expect(html).toMatch(/<title>QLVPP<\/title>/);
     expect(html).toMatch(/<link rel="icon" type="image\/png" sizes="64x64" href="\/favicon.png" \/>/);
     expect(html).toMatch(/<link rel="apple-touch-icon" href="\/apple-touch-icon.png" \/>/);
-    for (const f of ['favicon.png', 'apple-touch-icon.png', 'vpp.png']) {
+    for (const f of ['favicon.png', 'apple-touch-icon.png', 'vpp-logo.png']) {
       expect(existsSync(resolve(process.cwd(), 'public', f))).toBe(true);
     }
     expect(i18n.t('app.shortName')).toBe('QLVPP');

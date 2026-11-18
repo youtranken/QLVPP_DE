@@ -182,3 +182,4 @@ Trang Trước/Sau: https://claude.ai/artifact/9tSeCyKhUDVYcfgUP9sJGA (bản 5).
 - AD-33: nút thoát của hộp Hủy nợ là "Quay lại", không phải "Hủy", để khỏi lẫn với nút "Hủy nợ" cạnh bên. Đây là ngoại lệ của luật "hủy thao tác = Hủy" ở mục H.
 - AD-38: bỏ trang Xuất lẻ riêng (G6 ngày 15/11), gộp vào Tủ / Kho → tab Lịch sử, lọc "Xuất lẻ"; nút "Xuất lẻ một món" ở đầu Tủ / Kho; `/admin/issues` chuyển hướng tới đó.
 - TC-06: Adm D&E mở app vào trang "Việc hôm nay" (`/admin`).
+- **Chiều cao điều khiển (TC-13 "36/40/44")** — chủ dự án giao tự cân đối (18/11): máy tính chuột (≥ 768, `pointer: fine`) nút và ô nhập cao **40** (`--hit` = 40), nút nhỏ 36; cảm ứng hoặc < 768 giữ **44**. Lý do: một biến `--hit` đổi cả nút lẫn ô nhập nên hàng lọc vẫn thẳng; 40 gọn gần QLTS/QLHS (36) mà vẫn dễ bấm; 44 giữ đủ vùng chạm điện thoại.

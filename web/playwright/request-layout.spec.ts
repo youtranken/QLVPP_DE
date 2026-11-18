@@ -20,7 +20,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
         const c = (await cart.boundingBox())!;
         expect(c.x).toBeGreaterThanOrEqual(g.x + g.width);
         expect(c.width).toBeLessThanOrEqual(380);
-        expect(await cart.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(255, 244, 232)');
+        expect(await cart.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(255, 246, 229)');
       } else {
         await grid.getByRole('button', { name: `Thêm vào phiếu: ${a.name}`, exact: true }).click();
         const save = page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' });

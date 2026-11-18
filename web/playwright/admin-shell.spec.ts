@@ -86,13 +86,13 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     await expectNoContrastViolations(page);
   });
 
-  test('v2: bảng thông báo mở vẫn đủ tương phản (chuông trên nền tối)', async ({ page }, info) => {
+  test('v2: bảng thông báo mở vẫn đủ tương phản', async ({ page }, info) => {
     await page.goto('/admin/month');
     await expect(page.getByRole('heading', { level: 1, name: /^Kỳ tháng \d+$/ })).toBeVisible();
     await bellOf(page, isMobile(info)).click();
     const panel = page.getByRole('dialog', { name: 'Thông báo' });
     await expect(panel).toBeVisible();
-    expect(await panel.locator('strong').first().evaluate((el) => getComputedStyle(el).color)).toBe('rgb(14, 42, 51)');
+    expect(await panel.locator('strong').first().evaluate((el) => getComputedStyle(el).color)).toBe('rgb(17, 26, 44)');
     await expectNoContrastViolations(page);
   });
 
@@ -117,7 +117,7 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     for (const [width, expected] of [
       [768, 72],
       [1279, 72],
-      [1280, 252],
+      [1280, 236],
     ] as const) {
       await page.setViewportSize({ width, height: 800 });
       await expect(page.getByRole('button', { name: OPEN_MENU })).toHaveCount(0);
@@ -143,10 +143,10 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     await expect(page.getByRole('radio', { name: 'English' })).toBeVisible();
   });
 
-  test('Q2: đầu sidebar có tên QLVPP; máy tính bảng vẫn bấm được chuông, panel nằm trọn màn hình', async ({ page }, info) => {
+  test('Q2: đầu sidebar có logo + QLVPP; máy tính bảng vẫn bấm được chuông, panel nằm trọn màn hình', async ({ page }, info) => {
     test.skip(isMobile(info), 'chỉ đo ở máy tính');
     await page.goto('/admin/month');
-    await expect(page.getByRole('link', { name: 'QLVPP' })).toBeVisible();
+    await expect(page.locator('.side').getByRole('link', { name: 'QLVPP' })).toBeVisible();
     await page.setViewportSize({ width: 1024, height: 720 });
     await bellOf(page, false).click();
     const panel = page.getByRole('dialog', { name: 'Thông báo' });
@@ -157,19 +157,30 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     expect(box.x).toBeGreaterThanOrEqual(72);
   });
 
-  test('v2: hàng người dùng 252px đọc được: tên >= 100px, vai trò một dòng, công cụ nằm dưới', async ({ page }, info) => {
+  test('TC-01 thanh trên trắng 1280: đường dẫn "QLVPP › Kỳ tháng", tên + vai một dòng, chuông và Đăng xuất bên phải', async ({ page }, info) => {
     test.skip(isMobile(info), 'chỉ đo ở 1280');
     await page.goto('/admin/month');
+    const header = page.locator('.adm-head');
+    await expect(header.getByRole('navigation', { name: 'Đường dẫn' })).toContainText('QLVPP›Kỳ tháng');
+    expect(await header.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(255, 255, 255)');
     const user = page.getByRole('group', { name: 'Tài khoản và ngôn ngữ' });
-    const name = user.locator('b');
-    const role = user.locator('small');
-    await expect(name).toBeVisible();
-    expect((await name.boundingBox())!.width).toBeGreaterThanOrEqual(100);
-    expect((await role.boundingBox())!.height).toBeLessThanOrEqual(20);
+    expect((await user.locator('small').boundingBox())!.height).toBeLessThanOrEqual(20);
     const bell = (await bellOf(page, false).boundingBox())!;
     const logout = (await user.getByRole('button', { name: /^Đăng xuất/ }).boundingBox())!;
-    expect(bell.y).toBeGreaterThanOrEqual((await name.boundingBox())!.y + 10);
-    expect(logout.x + logout.width).toBeLessThanOrEqual(252);
+    for (const b of [bell, logout]) expect(b.y + b.height).toBeLessThanOrEqual(60);
+    expect(bell.x).toBeGreaterThan(1280 / 2);
+  });
+
+  test('TC-01 cuộn Sản phẩm 1280: đầu cột dính ngay dưới thanh trên (không bị che), đầu nhóm dưới đầu cột', async ({ page }, info) => {
+    test.skip(isMobile(info), 'chỉ đo ở 1280');
+    await page.goto('/admin/catalog?view=table');
+    const th = page.locator('.table thead th').first();
+    await expect(th).toBeVisible();
+    await page.mouse.wheel(0, 900);
+    await expect.poll(async () => (await th.boundingBox())!.y).toBeGreaterThanOrEqual(60);
+    expect((await th.boundingBox())!.y).toBeLessThan(62);
+    const head = await th.evaluate((el) => document.elementFromPoint(el.getBoundingClientRect().left + 20, el.getBoundingClientRect().top + 18)?.closest('th') === el);
+    expect(head, 'đầu cột thấy được, không nằm dưới thanh trên').toBe(true);
   });
 
   test('V2D-20 12 mục ở 1280×720: nav cuộn được nếu cần, khối tài khoản vẫn trong màn, mục cuối với tới được', async ({ page }, info) => {
@@ -192,7 +203,9 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
       await expect(crumbs).toBeHidden();
       await page.getByRole('button', { name: OPEN_MENU }).click();
     } else {
-      await expect(crumbs).toBeVisible();
+      // TC-01: đường dẫn nằm ở thanh trên, đầu trang không lặp
+      await expect(crumbs).toBeHidden();
+      await expect(page.getByRole('navigation', { name: 'Đường dẫn' })).toContainText('Tủ / Kho');
     }
     await expect(page.getByRole('button', { name: /^Đăng xuất/ })).toBeInViewport({ ratio: 1 });
     const side = page.getByRole('navigation', { name: 'Menu quản lý' });
@@ -250,7 +263,7 @@ test.describe('V2D-13 toàn màn hình và panel phủ', () => {
         await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
         const m = await panelAndViewport(page);
         if (width === 390) expect(m.scroll, `${path} cuộn ngang ở 390`).toBeLessThanOrEqual(m.vw);
-        else expect(Math.abs(m.panel - (m.vw - 252 - 40)), `${path} ở ${width}: panel ${m.panel}, vw ${m.vw}`).toBeLessThanOrEqual(2);
+        else expect(Math.abs(m.panel - (m.vw - 236)), `${path} ở ${width}: panel ${m.panel}, vw ${m.vw}`).toBeLessThanOrEqual(2);
       }
     }
   });
@@ -336,7 +349,7 @@ test.describe('E9-S1 trang member giữ giao diện cũ', () => {
     await page.goto('/admin');
     await expect(page.getByRole('heading', { level: 1, name: /^Kỳ tháng \d+$/ })).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
-    expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(215, 234, 239)');
+    expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(243, 246, 251)');
     expect(await page.getByRole('heading', { level: 1 }).evaluate((h) => getComputedStyle(h).fontFamily)).toContain('Be Vietnam Pro');
 
     role = 'member';
@@ -344,7 +357,7 @@ test.describe('E9-S1 trang member giữ giao diện cũ', () => {
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByRole('navigation', { name: 'Menu quản lý' })).toHaveCount(0);
     await expect.poll(() => page.evaluate(() => document.body.dataset.shell)).toBe('member');
-    expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(244, 247, 245)');
+    expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(243, 246, 251)');
     expect(await page.evaluate(() => getComputedStyle(document.body).fontFamily)).toContain('Be Vietnam Pro');
   });
 });

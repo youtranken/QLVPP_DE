@@ -47,3 +47,12 @@ describe('AdminHeader ≥ 768 (TC-01)', () => {
     expect(brand).not.toHaveTextContent(/^V/);
   });
 });
+
+describe('logo ở mọi chỗ (TC-01)', () => {
+  it('390: menu điện thoại có ảnh logo QLVPP', async () => {
+    open('/admin/catalog', 390);
+    await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Menu quản lý' });
+    expect(sheet.querySelector('img[src="/vpp-logo.png"]')).not.toBeNull();
+  });
+});

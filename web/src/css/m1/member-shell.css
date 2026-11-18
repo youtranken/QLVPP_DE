@@ -19,16 +19,16 @@
 [data-shell='member'] .m-tabs a:hover { background: var(--c-on-dark-hover); color: var(--c-on-dark); }
 [data-shell='member'] .m-tabs a[aria-current='page'] { background: var(--c-rail-on); color: var(--c-on-dark); box-shadow: inset 0 -2px 0 var(--c-rail-bar); }
 
-[data-shell='member'] .m-top .m-lang { background: var(--c-glass); border: 1px solid var(--c-glass-line); }
+[data-shell='member'] .m-top .m-lang { background: var(--c-rail-on); border: 1px solid var(--c-rail-line); }
 [data-shell='member'] .m-top .m-lang button { min-height: 44px; min-width: 44px; color: var(--c-on-dark-2); box-shadow: none; }
 [data-shell='member'] .m-top .m-lang button[aria-checked='true'] { background: var(--c-acc); color: var(--c-on-acc); }
 [data-shell='member'] .m-top .m-lang button:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
 
-[data-shell='member'] .m-top .notif-btn { width: 44px; height: 44px; border-radius: var(--r-sm); border: 1px solid var(--c-glass-line); background: var(--c-on-dark-fill); color: var(--c-on-dark-2); }
+[data-shell='member'] .m-top .notif-btn { width: 44px; height: 44px; border-radius: var(--r-sm); border: 1px solid var(--c-rail-line); background: var(--c-on-dark-fill); color: var(--c-on-dark-2); }
 [data-shell='member'] .m-top .notif-btn:hover { background: var(--c-on-dark-fill); color: var(--c-on-dark); }
 [data-shell='member'] .m-top .notif-btn:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
 
-[data-shell='member'] .m-avatar { font: inherit; text-align: left; display: flex; align-items: center; gap: var(--s-2); width: auto; height: auto; padding: 4px; border-radius: var(--r-pill); background: var(--c-on-dark-fill); border: 1px solid var(--c-glass-line); color: var(--c-on-dark); }
+[data-shell='member'] .m-avatar { font: inherit; text-align: left; display: flex; align-items: center; gap: var(--s-2); width: auto; height: auto; padding: 4px; border-radius: var(--r-pill); background: var(--c-on-dark-fill); border: 1px solid var(--c-rail-line); color: var(--c-on-dark); }
 [data-shell='member'] button.m-avatar { cursor: pointer; }
 [data-shell='member'] button.m-avatar:hover, [data-shell='member'] button.m-avatar[aria-expanded='true'] { background: var(--c-on-dark-hover); }
 [data-shell='member'] button.m-avatar:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }

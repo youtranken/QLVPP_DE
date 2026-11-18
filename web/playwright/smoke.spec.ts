@@ -27,7 +27,8 @@ test.describe('E0-S9 khung nhân viên (dev-identity member)', () => {
     }
     const account = page.getByRole('dialog', { name: 'Tài khoản' });
     await expect(account).toBeVisible();
-    await expect(account.getByText(/Nhân viên$/)).toBeVisible();
+    // NV-31: nhân viên không thấy chữ "· Nhân viên" dưới tên
+    await expect(account.getByText(/Nhân viên$/)).toHaveCount(0);
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'member-me');
   });

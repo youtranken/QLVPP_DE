@@ -64,7 +64,7 @@ function useColumns(rowErrors: Record<string, string>, actions: CatalogTableActi
           </Stop>
         ),
       },
-      { id: 'stock', header: t('catalog.list.colStock'), meta: { className: 'r', width: '4.5rem' }, cell: ({ row }) => <StockCell row={row.original} /> },
+      { id: 'stock', header: t('catalog.list.colStock'), meta: { className: 'r', width: '5.75rem' }, cell: ({ row }) => <StockCell row={row.original} /> },
       {
         id: 'active',
         header: t('catalog.list.colActive'),
