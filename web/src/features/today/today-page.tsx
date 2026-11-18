@@ -4,18 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { langOf, lockPhrase } from '@/lib/period-text';
 import { PageHeader } from '@/ui/page-header';
+import { greetingKey } from './greeting';
 import { attentionItems, todaySummary, todayTiles, type Text, type Tile } from './today-tiles';
 import { useTodayData, type SourceState } from './use-today-data';
 import '@/features/today/today.m1.css';
 
 const ZONE = 'Asia/Ho_Chi_Minh';
-const HOUR = new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: ZONE });
 const DAY_MONTH = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', timeZone: ZONE });
-
-function greetingKey(now: Date): 'morning' | 'afternoon' | 'evening' {
-  const h = Number(HOUR.format(now));
-  return h < 11 ? 'morning' : h < 18 ? 'afternoon' : 'evening';
-}
 
 const dayLine = (now: Date, lang: string) => {
   const weekday = new Intl.DateTimeFormat(lang === 'en' ? 'en-GB' : 'vi-VN', { weekday: 'long', timeZone: ZONE }).format(now);
