@@ -130,7 +130,7 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await saved(signers);
   });
 
-  test('E9-S6 Cấu hình: không còn khối Quyền truy cập / Thay đổi gần đây; dùng hết bề ngang, ≥1280 hai cột (Kỳ đăng ký cả hàng)', async ({ page }, info) => {
+  test('E9-S6 Cấu hình: không còn khối Quyền truy cập / Thay đổi gần đây; dùng hết bề ngang, hai khối một cột cả hàng (A7)', async ({ page }, info) => {
     await page.goto('/admin/config');
     await expect(block(page, 'Kỳ đăng ký')).toBeVisible();
     await expect(page.getByRole('region', { name: 'Quyền truy cập' })).toHaveCount(0);
@@ -139,13 +139,10 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     const panel = await page.locator('.shell__panel').boundingBox();
     const period = await block(page, 'Kỳ đăng ký').boundingBox();
     const signers = await block(page, 'Ô ký trên phiếu đề xuất').boundingBox();
-    const contact = await block(page, 'Liên hệ Adm D&E và báo sắp hết hàng').boundingBox();
     // Không còn chặn 760px: khối Kỳ đăng ký rộng gần bằng khung trang
     expect(period!.width).toBeGreaterThan(panel!.width * 0.85);
-    if ((page.viewportSize()?.width ?? 0) >= 1280) {
-      expect(Math.round(signers!.y)).toBe(Math.round(contact!.y));
-      expect(contact!.x).toBeGreaterThan(signers!.x + signers!.width - 1);
-    }
+    expect(signers!.width).toBeGreaterThan(panel!.width * 0.85);
+    expect(signers!.y).toBeGreaterThan(period!.y + period!.height - 1);
   });
 
   test('E9-S6 Cấu hình: lỗi tải → "Không tải được dữ liệu — thử lại." + Thử lại', async ({ page }) => {

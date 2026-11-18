@@ -166,7 +166,8 @@ describe('Bố cục theo route', () => {
     const css = readFileSync(join(SRC, 'features/admin/config.m1.css'), 'utf8');
     expect(css).not.toMatch(/\.cf-blocks \{[^}]*max-(?:inline-size|width)/);
     expect(css).toMatch(/\.cf-blocks \{[^}]*grid-template-columns: minmax\(0, 1fr\)/);
-    expect(css).toMatch(/@media \(min-width: 1280px\) \{[^}]*\.cf-blocks \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}[^}]*\.cf-blocks > \.cf-block:first-child \{ grid-column: 1 \/ -1; \}/);
+    // Còn 2 khối (A7 bỏ Liên hệ): một cột ở mọi bề rộng, không để khối Ô ký nằm nửa hàng
+    expect(css).not.toMatch(/\.cf-blocks \{ grid-template-columns: repeat\(2,/);
     expect(css).not.toMatch(/\.cf-layout|\.cf-aside/);
   });
 
