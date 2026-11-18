@@ -11,6 +11,7 @@ export const cropSourceMock = {
       draw: () => {},
       pixels: () => ({ width: 10, height: 10, data: new Uint8ClampedArray(400) }),
       crop: async () => (typeof src === 'string' ? new Blob(['x'], { type: 'image/webp' }) : src),
+      close: () => {},
     }),
   ),
 };

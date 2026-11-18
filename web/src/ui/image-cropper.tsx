@@ -16,12 +16,14 @@ export function ImageCropper({
   title,
   source,
   busy = false,
+  error = null,
   onConfirm,
   onCancel,
 }: {
   title: string;
   source: CropSource;
   busy?: boolean;
+  error?: string | null;
   onConfirm: (rect: Rect) => void;
   onCancel: () => void;
 }) {
@@ -85,6 +87,11 @@ export function ImageCropper({
           </button>
           <span className="crop__size">{t('common.cropper.size', { w: rect.w, h: rect.h })}</span>
         </div>
+        {error && (
+          <p role="alert" className="ff-error">
+            {error}
+          </p>
+        )}
       </div>
       <div className="sheet-footer">
         <button type="button" className="btn btn--ghost" onClick={onCancel}>

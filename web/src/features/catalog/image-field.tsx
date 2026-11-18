@@ -84,7 +84,7 @@ export function ImageField({
       {/* Lỗi tải ảnh xảy ra ngoài lúc bấm Lưu: phần tử mới role=alert để trình đọc màn hình đọc ngay.
           Lỗi từ form (prop error) đã có hộp tóm tắt đầu form báo, không đọc trùng */}
       {shownError ? (
-        <p key="error" id={noteId} role={localError ? 'alert' : undefined} className="ff-error">
+        <p key="error" id={noteId} role={localError && !img.source ? 'alert' : undefined} className="ff-error">
           {shownError}
         </p>
       ) : (
@@ -102,6 +102,7 @@ export function ImageField({
           title={t('catalog.form.cropTitle')}
           source={img.source}
           busy={busy}
+          error={localError}
           onConfirm={(r) => void img.confirm(r)}
           onCancel={img.cancel}
         />

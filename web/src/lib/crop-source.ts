@@ -6,6 +6,7 @@ export interface CropSource {
   draw(canvas: HTMLCanvasElement): void;
   pixels(): Pixels;
   crop(rect: Rect): Promise<Blob>;
+  close(): void;
 }
 
 function canvasOf(width: number, height: number) {
@@ -35,6 +36,9 @@ export async function loadCropSource(src: Blob | string): Promise<CropSource> {
       const { ctx } = canvasOf(width, height);
       ctx.drawImage(bmp, 0, 0);
       return ctx.getImageData(0, 0, width, height);
+    },
+    close() {
+      bmp.close();
     },
     async crop(r) {
       const { c, ctx } = canvasOf(r.w, r.h);

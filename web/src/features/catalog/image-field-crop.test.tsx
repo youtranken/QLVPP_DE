@@ -7,9 +7,15 @@ import { ImageField } from './image-field';
 
 const FIVE_MB = 5 * 1024 * 1024;
 let cropSize = 10;
+let compressedSize: number | null = null;
 
 vi.mock('@/lib/image-compress', () => ({
-  compressImage: vi.fn(async (f: File) => ({ blob: f, mime: 'image/webp', width: 1, height: 1 })),
+  compressImage: vi.fn(async (f: File) => ({
+    blob: compressedSize === null ? f : new Blob([new Uint8Array(compressedSize)], { type: 'image/jpeg' }),
+    mime: 'image/webp',
+    width: 1,
+    height: 1,
+  })),
 }));
 vi.mock('@/lib/crop-source', () => ({
   loadCropSource: vi.fn(async () => ({
@@ -18,10 +24,14 @@ vi.mock('@/lib/crop-source', () => ({
     draw: vi.fn(),
     pixels: () => ({ width: 40, height: 30, data: new Uint8ClampedArray(40 * 30 * 4) }),
     crop: vi.fn(async () => new Blob([new Uint8Array(cropSize)], { type: 'image/webp' })),
+    close: vi.fn(),
   })),
 }));
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  compressedSize = null;
+});
 
 function setup(fileId: string | null = null) {
   const onChange = vi.fn();
@@ -53,13 +63,33 @@ describe('ImageField — màn cắt', () => {
     await waitFor(() => expect(onChange).toHaveBeenCalledWith('f-2'));
   });
 
-  it('ảnh cắt 5 MB + 1 byte → lỗi "Ảnh lớn hơn 5 MB", không tải lên', async () => {
+  it('sau nén còn 5 MB + 1 byte → lỗi "Ảnh lớn hơn 5 MB", không tải lên, màn cắt vẫn mở giữ vùng cắt', async () => {
     cropSize = FIVE_MB + 1;
     const { onChange, fetchMock } = setup();
     await pickAndUse();
     expect(await screen.findByRole('alert')).toHaveTextContent('Ảnh lớn hơn 5 MB — chọn ảnh nhỏ hơn.');
     expect(fetchMock).not.toHaveBeenCalled();
     expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog', { name: 'Cắt ảnh món' })).toBeInTheDocument();
+  });
+
+  it('ảnh cắt 5 MB + 1 byte nhưng nén còn đúng 5 MB → tải lên (kiểm cỡ sau khi nén)', async () => {
+    cropSize = FIVE_MB + 1;
+    compressedSize = FIVE_MB;
+    const { onChange } = setup();
+    await pickAndUse();
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith('f-2'));
+  });
+
+  it('tải lên lỗi mạng → báo lỗi, màn cắt vẫn mở để bấm Dùng ảnh lại', async () => {
+    cropSize = 10;
+    const { onChange, fetchMock } = setup();
+    fetchMock.mockRejectedValueOnce(new TypeError('network'));
+    await pickAndUse();
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Cắt ảnh món' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Dùng ảnh' }));
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith('f-2'));
   });
 
   it('món đã có ảnh: Cắt lại mở màn cắt từ /api/files/:id', async () => {

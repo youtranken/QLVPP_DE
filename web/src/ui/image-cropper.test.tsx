@@ -8,7 +8,7 @@ function fakeSource(): CropSource {
   const height = 100;
   const data = new Uint8ClampedArray(width * height * 4).fill(255);
   for (let y = 10; y < 90; y++) for (let x = 20; x < 180; x++) data.set([0, 0, 0, 255], (y * width + x) * 4);
-  return { width, height, draw: vi.fn(), pixels: () => ({ width, height, data }), crop: vi.fn() };
+  return { width, height, draw: vi.fn(), pixels: () => ({ width, height, data }), crop: vi.fn(), close: vi.fn() };
 }
 
 function setup() {

@@ -15,6 +15,7 @@ vi.mock('@/lib/crop-source', () => ({
     draw: vi.fn(),
     pixels: () => ({ width: 40, height: 30, data: new Uint8ClampedArray(40 * 30 * 4) }),
     crop: vi.fn(async () => new Blob(['x'], { type: 'image/webp' })),
+    close: vi.fn(),
   })),
 }));
 

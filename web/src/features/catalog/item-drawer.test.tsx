@@ -76,11 +76,14 @@ describe('Ngăn kéo Thêm sản phẩm', () => {
   it.each([
     ['FILE_TOO_LARGE', 413, 'Ảnh lớn hơn 5 MB — chọn ảnh nhỏ hơn.'],
     ['FILE_TYPE_INVALID', 400, 'Chọn ảnh JPG, PNG hoặc WebP'],
-  ])('tải ảnh lỗi %s → câu lỗi ở ô ảnh, ô aria-invalid', async (code, status, text) => {
+  ])('tải ảnh lỗi %s → câu lỗi trong màn cắt (màn cắt không đóng); bấm Hủy → câu lỗi ở ô ảnh, ô aria-invalid', async (code, status, text) => {
     stubDrawerApi((url) => (url === '/api/files' ? jsonResponse(status, { code, message: 'x' }) : undefined));
     renderDrawer();
     await uploadCropped(screen.getByLabelText(PICK), png());
-    expect(await screen.findByText(text)).toBeInTheDocument();
+    const cropper = screen.getByRole('dialog', { name: 'Cắt ảnh món' });
+    expect(await within(cropper).findByRole('alert')).toHaveTextContent(text);
+    await userEvent.click(within(cropper).getByRole('button', { name: 'Hủy' }));
+    expect(screen.getByText(text)).toBeInTheDocument();
     expect(screen.getByLabelText(PICK)).toHaveAttribute('aria-invalid', 'true');
     expect(screen.getByLabelText(PICK)).toHaveAccessibleDescription(text);
   });
