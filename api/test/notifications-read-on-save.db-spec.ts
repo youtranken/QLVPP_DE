@@ -2,7 +2,7 @@ import { AFTER_DEADLINE, meRequestFixture } from './me-request.fixture';
 
 // NV-03: lưu phiếu thì chuông "chưa đăng ký tháng X" của đúng người, đúng kỳ tự đọc (Postgres thật, app thật)
 describe('PUT me/request/lines — chuông nhắc chưa đăng ký tự đọc khi lưu phiếu', () => {
-  const { A, B, SUFFIX, at, save, newItem, pool, onCleanup } =
+  const { A, B, SUFFIX, at, freeze, save, newItem, pool, onCleanup } =
     meRequestFixture('read-on-save');
   const created = '2026-11-03T01:00:00Z';
 
@@ -45,6 +45,21 @@ describe('PUT me/request/lines — chuông nhắc chưa đăng ký tự đọc k
   it('lưu sau hạn → 409 PERIOD_LOCKED, chuông reminder:2026-11 của A giữ nguyên chưa đọc', async () => {
     const item = await newItem();
     at(AFTER_DEADLINE);
+    const res = await save([{ item_id: item, qty: 1 }]).expect(409);
+    expect(res.body).toMatchObject({ code: 'PERIOD_LOCKED' });
+    expect(await readAt(A, '2026-11')).toBeNull();
+  });
+
+  it('lưu lúc 23:59:59.999 ngày 10 giờ VN (16:59:59.999Z) → 200, chuông reminder:2026-11 của A đã đọc', async () => {
+    const item = await newItem();
+    freeze('2026-11-10T16:59:59.999Z');
+    await save([{ item_id: item, qty: 1 }]).expect(200);
+    expect(await readAt(A, '2026-11')).toBeInstanceOf(Date);
+  });
+
+  it('lưu lúc 00:00:00.000 ngày 11 giờ VN (17:00:00.000Z) → 409 PERIOD_LOCKED, chuông reminder:2026-11 của A giữ chưa đọc', async () => {
+    const item = await newItem();
+    freeze('2026-11-10T17:00:00.000Z');
     const res = await save([{ item_id: item, qty: 1 }]).expect(409);
     expect(res.body).toMatchObject({ code: 'PERIOD_LOCKED' });
     expect(await readAt(A, '2026-11')).toBeNull();
