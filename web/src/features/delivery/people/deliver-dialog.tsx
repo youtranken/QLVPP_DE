@@ -17,6 +17,7 @@ import { waitingIndex } from './people-filter';
 import { useAskThenSubmit } from './use-ask-reject';
 import { REJECT_SKIPPED } from './with-rejects';
 import { useRefreshAfterLineChange } from './use-refresh-after-flow';
+import { canCancelRequest } from './cancel-request-lines';
 import { useDisabledReason } from '@/ui/disabled-reason';
 
 export interface DeliverDialogProps {
@@ -31,6 +32,8 @@ export interface DeliverDialogProps {
   onOpenPerson: () => void;
   // Giao xong đặt focus ở đâu (ô tìm tên); trả false thì focus về nút mở
   focusAfter?: () => boolean;
+  // Người đã nghỉ còn nợ: nút Hủy phiếu ở chân trái
+  onCancelRequest?: () => void;
 }
 
 const NO_WAIT = { people: 0, qty: 0 };
@@ -70,7 +73,7 @@ function Results({ result, lineOf }: { result: SendResult | null; lineOf: (id: s
   );
 }
 
-export function DeliverDialog({ person, people, initial, next, onNext, onClose, onDone, onOpenPerson, focusAfter }: DeliverDialogProps) {
+export function DeliverDialog({ person, people, initial, next, onNext, onClose, onDone, onOpenPerson, focusAfter, onCancelRequest }: DeliverDialogProps) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
   const toast = useToast();
@@ -195,6 +198,11 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
             </>
           ) : (
             <>
+              {onCancelRequest && canCancelRequest(person) && (
+                <button type="button" className="btn btn--danger-line dd-cancel-request" disabled={sending} onClick={onCancelRequest}>
+                  {t('delivery.cancelRequest.action')}
+                </button>
+              )}
               {person.request_id && (
                 <button
                   type="button"

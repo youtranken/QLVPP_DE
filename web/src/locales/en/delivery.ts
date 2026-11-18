@@ -254,6 +254,21 @@ const delivery: Messages<typeof vi> = {
         next: 'Next person',
       },
     },
+    cancelRequest: {
+      action: 'Cancel request',
+      actionFor: 'Cancel request, {{name}}',
+      title: 'Cancel {{name}}’s request?',
+      lead: 'The undelivered part will be cancelled and returned to the cabinet:',
+      gain: '+{{qty}} {{unit}}',
+      kept: 'What was delivered ({{list}}) stays in the history.',
+      back: 'Close',
+      confirm: 'Cancel request',
+      sending: 'Cancelling…',
+      done_one: 'Cancelled {{name}}’s request, returned {{count}} item to the cabinet.',
+      done_other: 'Cancelled {{name}}’s request, returned {{count}} items to the cabinet.',
+      stale: 'The request just changed elsewhere — reloaded, review it and cancel again.',
+      failed: 'Could not cancel the request — try again.',
+    },
   },
 };
 

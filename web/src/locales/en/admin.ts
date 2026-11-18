@@ -123,7 +123,7 @@ const admin: Messages<typeof vi> = {
         no_order_cleared: 'No-order mark removed',
       },
       report: { snapshot_created: 'Report snapshot taken' },
-      request: { created: 'Request created', updated: 'Request edited', deleted: 'Request deleted' },
+      request: { created: 'Request created', updated: 'Request edited', deleted: 'Request deleted', cancel_remaining: 'Request cancelled (person left)' },
       stock: { adjust: 'Stock adjusted', issue: 'Ad-hoc issue', purchase: 'Stock received', receipt: 'Goods arrived' },
       unit: { created: 'Unit added', updated: 'Unit edited', deleted: 'Unit deleted' },
       users: {

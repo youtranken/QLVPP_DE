@@ -121,7 +121,7 @@ const admin = {
         no_order_cleared: 'Bỏ đánh dấu không cần đề nghị NCC',
       },
       report: { snapshot_created: 'Chốt báo cáo' },
-      request: { created: 'Tạo phiếu', updated: 'Sửa phiếu', deleted: 'Xóa phiếu' },
+      request: { created: 'Tạo phiếu', updated: 'Sửa phiếu', deleted: 'Xóa phiếu', cancel_remaining: 'Hủy phiếu người đã nghỉ' },
       stock: { adjust: 'Điều chỉnh kho', issue: 'Xuất lẻ', purchase: 'Nhập kho', receipt: 'Hàng về' },
       unit: { created: 'Thêm đơn vị tính', updated: 'Sửa đơn vị tính', deleted: 'Xóa đơn vị tính' },
       users: {
