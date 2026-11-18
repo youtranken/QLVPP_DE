@@ -32,9 +32,15 @@ export function Toast({ toast, onAction, onPause, onResume, onUndo, undoLabel, u
           {toast.action.label}
         </button>
       )}
-      {onUndo && <span className="toast__bar" aria-hidden="true" />}
+      {onUndo && <UndoBar until={undoUntil ?? Date.now() + UNDO_MS} />}
     </div>
   );
+}
+
+// Vạch chạy đúng phần còn lại của cửa sổ server (thao tác nhiều bước bắt đầu đếm trước khi toast hiện)
+function UndoBar({ until }: { until: number }) {
+  const [ms] = useState(() => Math.max(0, until - Date.now()));
+  return <span className="toast__bar" aria-hidden="true" style={{ animationDuration: `${ms}ms` }} />;
 }
 
 // Số giây ẩn với trình đọc màn hình: vùng status không đọc lại mỗi giây

@@ -103,6 +103,7 @@ describe('Toast có Hoàn tác 5 giây (TC-18)', () => {
     tick(3000);
     act(() => show({ text: 'Đã giao cho An', undo: vi.fn(), undoSince: t0 }));
     expect(undoButton()).toHaveTextContent('Hoàn tác (2)');
+    expect((document.querySelector('.toast__bar') as HTMLElement).style.animationDuration).toBe('2000ms');
     tick(1999);
     expect(undoButton()).toBeInTheDocument();
     tick(1);
