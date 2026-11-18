@@ -143,7 +143,8 @@
 [data-shell='admin'] .table tr.row--attn-danger td:first-child { box-shadow: inset 3px 0 0 var(--c-danger); }
 /* Bảng thành thẻ ở điện thoại (TC-16): ô đầu là tên dòng cả hàng; dòng cần chú ý vẽ vạch trên cả thẻ vì ô đầu chỉ còn là một hàng */
 @media (max-width: 680px) {
-  [data-shell='admin'] .table-wrap:has(> .table--cards) { overflow: visible; border-radius: 0; background: transparent; box-shadow: none; }
+  /* :is(.table-wrap) nhân đôi độ ưu tiên: thắng ".ct-page .table-wrap { overflow-x: auto }" (≤767) nạp sau — thẻ không nằm trong khung cuộn */
+  [data-shell='admin'] .table-wrap:is(.table-wrap):has(> .table--cards) { overflow: visible; border-radius: 0; background: transparent; box-shadow: none; }
   [data-shell='admin'] .table--cards tbody tr:not(.dt-group):not(.dt-expanded) { position: relative; display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: center; gap: var(--s-1) var(--s-3); margin-bottom: var(--s-3); padding: var(--s-3) var(--s-4); border: 0; border-radius: var(--r-md); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); }
   [data-shell='admin'] .table--cards td { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; align-items: center; justify-items: start; flex: none; margin: 0; background: transparent; }
   [data-shell='admin'] .table--cards td:first-child, [data-shell='admin'] .table--cards td[data-label=''], [data-shell='admin'] .table--cards td:not([data-label]) { display: flex; flex-wrap: wrap; gap: var(--s-2); }

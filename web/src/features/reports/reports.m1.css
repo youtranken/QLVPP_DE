@@ -26,8 +26,8 @@
 }
 [data-shell='admin'] .bc-inline-notice { align-items: center; justify-content: space-between; flex-wrap: wrap; }
 [data-shell='admin'] .bc-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); align-content: start; }
-/* min-height: lúc đang tải (chỉ có h1) cao bằng lúc có hàng nút, tiêu đề không nhảy */
-[data-shell='admin'] .bc-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s-3) var(--s-4); min-height: var(--hit); }
+/* Đầu trang chỉ còn tiêu đề (nút đã xuống thanh công cụ, AD-16/17): không giữ min-height của hàng nút cũ — giữ thì h1 dồn đáy, thấp hơn các trang khác 6px */
+[data-shell='admin'] .bc-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s-3) var(--s-4); }
 [data-shell='admin'] .bc-head h1 { margin: 0; font: var(--t-h1); letter-spacing: -0.02em; }
 /* Thanh công cụ trong khung trắng như Kỳ tháng: tháng · công tắc · trạng thái · chip đổi … nút về mép phải */
 [data-shell='admin'] .bc-page > .toolbar { padding: var(--s-3); border-radius: var(--r-md); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); }

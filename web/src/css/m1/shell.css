@@ -158,8 +158,9 @@
 [data-shell='admin'] .side__brand:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--c-on-dark); }
 
 
-/* Đường dẫn ở thanh trên (≥ 768) hoặc tên app (< 768) — đầu trang không lặp */
-[data-shell='admin'] .page-head__crumbs { display: none; }
+/* Đường dẫn ở thanh trên (≥ 768) hoặc tên app (< 768) — đầu trang không lặp. Ẩn cả <nav> bọc ngoài: nav rỗng vẫn là ô flex
+   ở đầu trang dạng hàng (Kỳ tháng) và ăn một khoảng gap, đẩy h1 lệch 12px so với các trang khác */
+[data-shell='admin'] .page-head__crumbs, [data-shell='admin'] nav:has(> .page-head__crumbs) { display: none; }
 /* Đầu bảng dính đứng dưới thanh trên 60 */
 @media (min-width: 768px) {
   [data-shell='admin'] .shell { --sticky-top: 60px; }
