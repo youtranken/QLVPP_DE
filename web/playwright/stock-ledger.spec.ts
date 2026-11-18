@@ -4,7 +4,7 @@ import { asRole, devHeaders, expectNoContrastViolations, isMobile, pickOption, r
 test.describe('G5 Tủ / Kho (dev-identity admin)', () => {
   asRole('admin');
 
-  test('G5 Tủ / Kho: cột Mức đặt lại · Cần thêm, lọc Thiếu kỳ này/Sắp hết/Hết; tab Lịch sử nhập xuất lọc Nhập, tổng Nhập/Ra', async ({ page }, info) => {
+  test('G5 Tủ / Kho: cột Tồn kho lần nhập trước · Cần thêm, lọc Thiếu kỳ này/Sắp hết/Hết; tab Lịch sử nhập xuất lọc Nhập, tổng Nhập/Ra', async ({ page }, info) => {
     const item = await seedPwItem(page);
     try {
       const buy = await page.request.post(`/api/admin/items/${item.id}/stock`, { headers: devHeaders('admin'), data: { delta: 7, reason: 'purchase', note: 'PW G5 nhập' } });
@@ -14,7 +14,7 @@ test.describe('G5 Tủ / Kho (dev-identity admin)', () => {
       if (isMobile(info)) await expect(page.getByRole('combobox', { name: 'Lọc theo tình trạng tồn' })).toBeVisible();
       else {
         for (const f of [/^Thiếu kỳ này/, /^Sắp hết/, /^Hết/]) await expect(page.getByRole('radio', { name: f })).toBeVisible();
-        for (const h of ['Mức đặt lại', 'Cần thêm']) await expect(page.getByRole('columnheader', { name: h })).toBeVisible();
+        for (const h of ['Tồn kho lần nhập trước', 'Cần thêm']) await expect(page.getByRole('columnheader', { name: new RegExp(h) })).toBeVisible();
       }
 
       await page.getByRole('radio', { name: 'Lịch sử nhập xuất' }).click();
