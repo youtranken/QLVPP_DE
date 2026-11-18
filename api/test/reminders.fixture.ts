@@ -12,11 +12,7 @@ import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
 
 const silent = { log: () => undefined };
-const SAVED_KEYS = [
-  'registration_last_day',
-  'reminder_days_left',
-  'low_stock_notify',
-];
+const SAVED_KEYS = ['registration_last_day', 'reminder_days_left'];
 
 export interface NoteRow {
   user_sub: string;

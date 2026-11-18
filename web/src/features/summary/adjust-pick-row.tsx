@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next';
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatVnStamp } from '@/lib/format-time';
@@ -18,7 +19,7 @@ interface Props {
 
 const parseQty = (raw: string) => (raw.trim() === '' ? null : Number(raw));
 
-const qtyMessage = (t: (k: string, o: object) => string, e: ReduceError) =>
+const qtyMessage = (t: TFunction, e: ReduceError) =>
   e.kind === 'over' ? t('summary.adjust.reduceOver', { ordered: e.ordered }) : t('summary.adjust.reduceUnder', { min: e.min });
 
 // Một dòng phiếu: tick để chọn, rồi "Giảm còn n" hoặc "Từ chối" (về số đã giao)

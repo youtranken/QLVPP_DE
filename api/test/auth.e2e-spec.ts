@@ -94,7 +94,7 @@ describe('auth e2e', () => {
     });
   });
 
-  it('GET auth/me (dev admin) trả shape cho web, có config.admin_contact', async () => {
+  it('GET auth/me (dev admin) trả shape cho web, config không còn admin_contact (A7)', async () => {
     const res = await request(app.getHttpServer())
       .get('/api/auth/me')
       .set('x-dev-user-sub', 'dev-admin')
@@ -107,10 +107,9 @@ describe('auth e2e', () => {
       config: {
         registration_last_day: 10,
         default_max_qty: 20,
-        // config-admin e2e chạy song song có thể tạm đổi giá trị; ở đây chỉ kiểm shape
-        admin_contact: expect.any(String) as string,
       },
     });
+    expect(res.body.config).not.toHaveProperty('admin_contact');
     for (const key of [
       'fullName',
       'email',

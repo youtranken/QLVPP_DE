@@ -5,7 +5,7 @@ const PW_ADMIN = { sub: 'pw-cfg-admin', name: 'PW Cấu hình Adm D&E' };
 
 type Config = Record<string, unknown>;
 // Mọi khóa test này đổi được; ngoài danh sách này không khóa nào bị đổi
-const RESTORED = ['registration_last_day', 'reminder_days_left', 'default_max_qty', 'signature_boxes', 'admin_contact', 'low_stock_notify'];
+const RESTORED = ['registration_last_day', 'reminder_days_left', 'default_max_qty', 'signature_boxes'];
 const TWO_BOXES = [
   { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: '' },
   { title: 'Người yêu cầu', title_en: 'Applicant', name: '' },
@@ -98,20 +98,9 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await period.getByRole('button', { name: 'Hủy' }).click();
     await expect(reminder).toHaveValue('2');
 
-    const contact = block(page, 'Liên hệ Adm D&E và báo sắp hết hàng');
-    const contactBox = page.getByLabel('Tên và cách liên hệ Adm D&E');
-    await contactBox.fill('');
-    await contactBox.pressSequentially(`PW ${info.project.name} `.padEnd(501, 'x'), { delay: 0 });
-    await expect(contactBox).toHaveValue(`PW ${info.project.name} `.padEnd(500, 'x'));
-    await expect(contact.getByText('500/500')).toBeVisible();
-    const before = ((await (await api!.get('/api/admin/audit?action=config.updated&limit=1')).json()) as { items: { id: string }[] }).items[0]?.id;
-    const onlyContact = putBody(page);
-    await contact.getByRole('button', { name: 'Lưu liên hệ' }).click();
-    expect(Object.keys(await onlyContact)).toEqual(['admin_contact']);
-    await saved(contact);
-    const latest = ((await (await api!.get('/api/admin/audit?action=config.updated&limit=1')).json()) as { items: { id: string; objectId: string }[] }).items[0];
-    expect(latest.objectId).toBe('admin_contact');
-    expect(latest.id).not.toBe(before);
+    // A7: không còn khối liên hệ và công tắc chuông sắp hết (chuông luôn bật)
+    await expect(block(page, 'Liên hệ Adm D&E và báo sắp hết hàng')).toHaveCount(0);
+    await expect(page.getByRole('switch', { name: 'Báo Adm D&E khi món sắp hết' })).toHaveCount(0);
     await expect(page.getByRole('region', { name: 'Thay đổi gần đây' })).toHaveCount(0);
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'admin-config-m1');

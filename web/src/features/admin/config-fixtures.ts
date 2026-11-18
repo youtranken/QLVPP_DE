@@ -8,13 +8,11 @@ import type { Me } from '@/lib/me';
 export const CONFIG = {
   registration_last_day: 10,
   default_max_qty: 20,
-  low_stock_notify: true,
   reminder_days_left: 3,
   signature_boxes: [
     { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: '' },
     { title: 'Người yêu cầu', title_en: 'Applicant', name: 'Lê Thị Bình' },
   ],
-  admin_contact: 'chị Bình — Adm D&E',
 };
 
 export const PERIOD = { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 9, previous: null, owed: [] };

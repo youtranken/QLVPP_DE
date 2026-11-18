@@ -1,6 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
 import { Public } from '../auth/public.decorator';
-import { SystemConfigService } from './system-config.service';
 
 // Cổng PMH ID = gốc của issuer (dev → dev-admin, prod → de-admin); thiếu/sai cấu hình → null
 export function pmhPortalUrl(
@@ -14,20 +13,12 @@ export function pmhPortalUrl(
   }
 }
 
-// Trang "Chưa được cấp quyền" khi chưa có phiên cần liên hệ Hành chính và link về PMH ID — chỉ lộ đúng các khóa này
+// Trang "Chưa được cấp quyền" khi chưa có phiên cần link về PMH ID — chỉ lộ đúng khóa này
 @Controller('public-config')
 export class PublicConfigController {
-  constructor(private readonly config: SystemConfigService) {}
-
   @Public()
   @Get()
-  async get(): Promise<{
-    admin_contact: string;
-    pmh_portal_url: string | null;
-  }> {
-    return {
-      admin_contact: await this.config.get<string>('admin_contact'),
-      pmh_portal_url: pmhPortalUrl(),
-    };
+  get(): { pmh_portal_url: string | null } {
+    return { pmh_portal_url: pmhPortalUrl() };
   }
 }

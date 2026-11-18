@@ -7,8 +7,8 @@ import { CONFIG, block, configInvalid, openConfig, putBodies, stubConfigApi } fr
 
 afterEach(() => vi.unstubAllGlobals());
 
-const contact = () => screen.getByLabelText('Tên và cách liên hệ Adm D&E');
-const SAVED_BLOCKS = ['Kỳ đăng ký', 'Ô ký trên phiếu đề xuất', 'Liên hệ Adm D&E và báo sắp hết hàng'];
+const signer = () => screen.getAllByLabelText('Người ký')[0];
+const SAVED_BLOCKS = ['Kỳ đăng ký', 'Ô ký trên phiếu đề xuất'];
 
 async function retype(el: HTMLElement, value: string) {
   await userEvent.clear(el);
@@ -16,7 +16,7 @@ async function retype(el: HTMLElement, value: string) {
 }
 
 describe('Cấu hình · trang', () => {
-  it('đầu trang có đúng một h1, mô tả nói một lần "Mỗi khối lưu riêng và ghi vào Nhật ký." (AD-55), 3 khối sửa được; không còn khối "Lưu thế nào", không lặp câu dưới mỗi nút Lưu', async () => {
+  it('đầu trang có đúng một h1, mô tả nói một lần "Mỗi khối lưu riêng và ghi vào Nhật ký." (AD-55), 2 khối sửa được; không còn khối "Lưu thế nào", không lặp câu dưới mỗi nút Lưu', async () => {
     stubConfigApi();
     await openConfig();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
@@ -51,7 +51,7 @@ describe('Cấu hình · trang', () => {
     expect(screen.getByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
   });
 
-  it('chưa sửa gì → cả 3 nút Lưu ghi "Chưa có thay đổi" và vô hiệu, không gửi PUT; đầu trang không có nhãn "khối chưa lưu"', async () => {
+  it('chưa sửa gì → cả 2 nút Lưu ghi "Chưa có thay đổi" và vô hiệu, không gửi PUT; đầu trang không có nhãn "khối chưa lưu"', async () => {
     const fetchMock = stubConfigApi();
     await openConfig();
     for (const name of SAVED_BLOCKS) {
@@ -63,25 +63,25 @@ describe('Cấu hình · trang', () => {
     expect(screen.queryByText(/khối chưa lưu/)).toBeNull();
   });
 
-  it('sửa một khối → chỉ nút khối đó thành "Lưu liên hệ" (bật), khối khác vẫn "Chưa có thay đổi"; Hủy → về "Chưa có thay đổi"', async () => {
+  it('sửa một khối → chỉ nút khối đó thành "Lưu ô ký" (bật), khối khác vẫn "Chưa có thay đổi"; Hủy → về "Chưa có thay đổi"', async () => {
     stubConfigApi();
     await openConfig();
-    await retype(contact(), 'chị Hoa');
-    expect(within(block('Liên hệ Adm D&E và báo sắp hết hàng')).getByRole('button', { name: 'Lưu liên hệ' })).toBeEnabled();
+    await retype(signer(), 'chị Hoa');
+    expect(within(block('Ô ký trên phiếu đề xuất')).getByRole('button', { name: 'Lưu ô ký' })).toBeEnabled();
     expect(within(block('Kỳ đăng ký')).getByRole('button', { name: 'Chưa có thay đổi' })).toBeDisabled();
     expect(screen.queryByText(/khối chưa lưu/)).toBeNull();
-    await userEvent.click(within(block('Liên hệ Adm D&E và báo sắp hết hàng')).getByRole('button', { name: 'Hủy' }));
-    expect(contact()).toHaveValue(CONFIG.admin_contact);
-    expect(within(block('Liên hệ Adm D&E và báo sắp hết hàng')).getByRole('button', { name: 'Chưa có thay đổi' })).toBeDisabled();
+    await userEvent.click(within(block('Ô ký trên phiếu đề xuất')).getByRole('button', { name: 'Hủy' }));
+    expect(signer()).toHaveValue(CONFIG.signature_boxes[0].name);
+    expect(within(block('Ô ký trên phiếu đề xuất')).getByRole('button', { name: 'Chưa có thay đổi' })).toBeDisabled();
   });
 
   it('rời trang khi bẩn → hỏi "Bỏ thay đổi?" liệt kê khối; Ở lại thì ở lại', async () => {
     stubConfigApi();
     await openConfig();
-    await retype(contact(), 'chị Hoa');
+    await retype(signer(), 'chị Hoa');
     await userEvent.click(screen.getByRole('link', { name: 'Nhật ký' }));
     const dialog = await screen.findByRole('dialog', { name: 'Bỏ thay đổi?' });
-    expect(dialog).toHaveTextContent('Chưa lưu: Liên hệ Adm D&E và báo sắp hết hàng.');
+    expect(dialog).toHaveTextContent('Chưa lưu: Ô ký trên phiếu đề xuất.');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Ở lại' }));
     expect(screen.getByTestId('location')).toHaveTextContent('/admin/config');
     await userEvent.click(screen.getByRole('link', { name: 'Nhật ký' }));
@@ -95,44 +95,21 @@ describe('Cấu hình · trang', () => {
     const clean = new Event('beforeunload', { cancelable: true });
     fireEvent(window, clean);
     expect(clean.defaultPrevented).toBe(false);
-    await retype(contact(), 'chị Hoa');
+    await retype(signer(), 'chị Hoa');
     const dirty = new Event('beforeunload', { cancelable: true });
     fireEvent(window, dirty);
     expect(dirty.defaultPrevented).toBe(true);
   });
 });
 
-describe('Cấu hình · khối Liên hệ Adm D&E và báo sắp hết hàng', () => {
-  it('ô liên hệ maxLength 500, đếm "500/500" khi đủ', async () => {
+describe('Cấu hình · không còn khối Liên hệ và công tắc sắp hết (A7)', () => {
+  it('không có khối "Liên hệ Adm D&E và báo sắp hết hàng", ô liên hệ, công tắc báo sắp hết', async () => {
     stubConfigApi();
     await openConfig();
-    expect(contact()).toHaveAttribute('maxLength', '500');
-    await userEvent.clear(contact());
-    await userEvent.click(contact());
-    await userEvent.paste('a'.repeat(500));
-    expect(within(block('Liên hệ Adm D&E và báo sắp hết hàng')).getByText('500/500')).toBeInTheDocument();
-  });
-
-  it('công tắc báo sắp hết + số món sắp hết; lưu chỉ gửi khóa đã đổi của khối, toast "Đã lưu Liên hệ Adm D&E và báo sắp hết hàng"', async () => {
-    const fetchMock = stubConfigApi((body) => jsonResponse(200, { ...CONFIG, ...body }));
-    await openConfig();
-    expect(await screen.findByText(/Hiện có 2 món sắp hết\./)).toBeInTheDocument();
-    expect(screen.getByRole('switch', { name: 'Báo Adm D&E khi món sắp hết' })).toHaveAccessibleDescription(/Bật thì app gửi thông báo chuông cho Adm D&E/);
-    const toggle = screen.getByRole('switch', { name: 'Báo Adm D&E khi món sắp hết' });
-    expect(toggle).toHaveAttribute('aria-checked', 'true');
-    await userEvent.click(toggle);
-    await userEvent.click(screen.getByRole('button', { name: 'Lưu liên hệ' }));
-    await vi.waitFor(() => expect(putBodies(fetchMock)).toEqual([{ low_stock_notify: false }]));
-    expect(await screen.findByText('Đã lưu Liên hệ Adm D&E và báo sắp hết hàng')).toBeInTheDocument();
-  });
-
-  it('CONFIG_INVALID {field: admin_contact} → lỗi gắn ô liên hệ', async () => {
-    stubConfigApi(() => configInvalid('admin_contact'));
-    await openConfig();
-    await retype(contact(), 'chị Hoa');
-    await userEvent.click(screen.getByRole('button', { name: 'Lưu liên hệ' }));
-    await vi.waitFor(() => expect(contact()).toHaveAttribute('aria-invalid', 'true'));
-    expect(contact()).toHaveAccessibleDescription('Tối đa 500 ký tự.');
+    expect(screen.queryByRole('form', { name: 'Liên hệ Adm D&E và báo sắp hết hàng' })).toBeNull();
+    expect(screen.queryByLabelText('Tên và cách liên hệ Adm D&E')).toBeNull();
+    expect(screen.queryByRole('switch', { name: 'Báo Adm D&E khi món sắp hết' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Lưu liên hệ' })).toBeNull();
   });
 });
 

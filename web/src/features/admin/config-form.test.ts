@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CONFIG } from './config-fixtures';
 import { previewMonth } from './config-calendar';
-import { contactSpec, newBox, periodSpec, signersSpec } from './config-form';
+import { newBox, periodSpec, signersSpec } from './config-form';
 
 const period = (over: Partial<Record<'registration_last_day' | 'reminder_days_left' | 'default_max_qty', string>>) => ({
   ...periodSpec.fromConfig(CONFIG),
@@ -114,13 +114,5 @@ describe('signersSpec', () => {
   it('field signature_boxes (số ô) → lỗi cả khối; signature_boxes.2.name → ô hàng 3', () => {
     expect(signersSpec.errorOf('signature_boxes', [])).toEqual({ form: 'config.errors.boxes' });
     expect(signersSpec.errorOf('signature_boxes.2.name', [])).toEqual({ 'signature_boxes.2.name': 'config.errors.signer' });
-  });
-});
-
-describe('contactSpec', () => {
-  it('liên hệ 500 qua, 501 lỗi; công tắc chỉ gửi khi đổi', () => {
-    expect(contactSpec.validate({ admin_contact: 'a'.repeat(500), low_stock_notify: true })).toEqual({});
-    expect(contactSpec.validate({ admin_contact: 'a'.repeat(501), low_stock_notify: true })).toEqual({ admin_contact: 'config.errors.admin_contact' });
-    expect(contactSpec.patchOf({ admin_contact: CONFIG.admin_contact, low_stock_notify: false }, CONFIG)).toEqual({ low_stock_notify: false });
   });
 });

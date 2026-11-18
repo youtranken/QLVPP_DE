@@ -1,5 +1,6 @@
 /* Trang Tôi v2: thẻ trắng bo 22 trong panel sáng */
 [data-shell='member'] .pf-card { background: var(--c-surface); border-radius: var(--r-md); padding: var(--s-5); display: grid; gap: var(--s-3); }
+[data-shell='member'] .pf-support { margin: var(--s-3) 0 0; color: var(--c-muted); font: var(--t-sm); }
 /* Hộp tài khoản: popover máy tính, sheet 390, và thẻ ở /me */
 [data-shell='member'] .acct-wrap { position: relative; }
 [data-shell='member'] .acct-pop { position: absolute; z-index: 30; top: calc(100% + var(--s-2)); right: 0; width: 340px; max-width: calc(100vw - 32px); box-sizing: border-box; padding: 20px; border-radius: var(--r-md); background: var(--c-surface); color: var(--c-ink); box-shadow: var(--e-5); }

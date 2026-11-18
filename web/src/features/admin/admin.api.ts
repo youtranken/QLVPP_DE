@@ -51,9 +51,7 @@ export interface AdminConfig {
   registration_last_day: number;
   reminder_days_left: number;
   default_max_qty: number;
-  low_stock_notify: boolean;
   signature_boxes: SignatureBox[];
-  admin_contact: string;
 }
 
 export type ConfigPatch = Partial<AdminConfig>;

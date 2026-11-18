@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { useUnitNames } from '@/features/units/units.api';
-import { useMe } from '@/lib/me';
 import type { LineView } from './request.api';
 import type { CartLabel } from './use-cart';
 
@@ -50,10 +49,10 @@ export function useRequestFormat() {
   };
 }
 
-// Tên/cách liên hệ Hành chính lấy từ Cấu hình (_SPEC), chưa đặt thì gọi chung "Hành chính"
+// Chủ dự án chốt 18/11/2026: bỏ cấu hình liên hệ, luôn gọi chung "Adm D&E"
 export function useAdminContact(): string {
   const { t } = useTranslation();
-  return useMe().config.admin_contact.trim() || t('request.contactFallback');
+  return t('request.contactFallback');
 }
 
 export { matchesSearch } from '@/lib/search';

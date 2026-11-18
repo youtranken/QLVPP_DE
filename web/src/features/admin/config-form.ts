@@ -1,6 +1,6 @@
 import type { AdminConfig, ConfigPatch, SignatureBox } from '@/features/admin/admin.api';
 
-export type ConfigBlock = 'period' | 'signers' | 'contact';
+export type ConfigBlock = 'period' | 'signers';
 // Khóa = đường dẫn field của CONFIG_INVALID (vd "signature_boxes.1.title"), giá trị = khóa i18n; 'form' = lỗi cả khối
 export type FieldErrors = Record<string, string>;
 
@@ -14,7 +14,6 @@ export interface BlockSpec<D> {
 
 const UNKNOWN: FieldErrors = { form: 'config.errors.UNKNOWN' };
 const NAME_MAX = 200;
-const CONTACT_MAX = 500;
 const TITLE_MAX = 60;
 
 export const isWhole = (v: string) => /^\d+$/.test(v.trim());
@@ -98,22 +97,6 @@ export const signersSpec: BlockSpec<BoxDraft[]> = {
     if (field?.startsWith('signature_boxes')) return { form: 'config.errors.boxes' };
     return UNKNOWN;
   },
-};
-
-export interface ContactDraft {
-  admin_contact: string;
-  low_stock_notify: boolean;
-}
-
-export const contactSpec: BlockSpec<ContactDraft> = {
-  block: 'contact',
-  fromConfig: (c) => ({ admin_contact: c.admin_contact, low_stock_notify: c.low_stock_notify }),
-  patchOf: (d, c) => ({
-    ...(d.admin_contact.trim() === c.admin_contact ? {} : { admin_contact: d.admin_contact.trim() }),
-    ...(d.low_stock_notify === c.low_stock_notify ? {} : { low_stock_notify: d.low_stock_notify }),
-  }),
-  validate: (d): FieldErrors => (d.admin_contact.trim().length > CONTACT_MAX ? { admin_contact: 'config.errors.admin_contact' } : {}),
-  errorOf: (field) => (field === 'admin_contact' ? { admin_contact: 'config.errors.admin_contact' } : UNKNOWN),
 };
 
 export const boxLabel = (box: SignatureBox, language: string) =>

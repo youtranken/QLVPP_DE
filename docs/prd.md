@@ -139,7 +139,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 ### 6.9 Quản trị
 - FR-80 Danh bạ: đồng bộ từ PMH ID (tự động mỗi 60 phút + nút "Đồng bộ ngay"); hiện người PMH ID cho vào VPP, trạng thái (đang dùng / đã khóa / không còn quyền), Phòng và Nhóm (từ PMH ID); người mất quyền vào VPP được đánh dấu "Không còn quyền" (không xóa lịch sử).
 - FR-81 Nhật ký: mọi thao tác admin và sự kiện xác thực, lọc theo người/hành động/ngày/`self`, chỉ đọc, phân trang.
-- FR-82 Cấu hình: ngày hạn đăng ký (3–28, mặc định 10; **chỉ áp dụng cho kỳ tạo sau**, UI ghi rõ "kỳ đang mở giữ hạn cũ"), số lượng tối đa mặc định (20), khối "Quyền truy cập" chỉ đọc (liệt kê Hành chính hiện tại, do PMH ID cấp), tên 3 người ký báo cáo, tên/cách liên hệ Hành chính (hiện ở trang member và trang từ chối).
+- FR-82 Cấu hình: ngày hạn đăng ký (3–28, mặc định 10; **chỉ áp dụng cho kỳ tạo sau**, UI ghi rõ "kỳ đang mở giữ hạn cũ"), số lượng tối đa mặc định (20), khối "Quyền truy cập" chỉ đọc (liệt kê Hành chính hiện tại, do PMH ID cấp), tên 3 người ký báo cáo. Không còn ô liên hệ Hành chính (18/11/2026): trang Tôi và trang từ chối nói câu cố định "Liên hệ Adm D&E để được hỗ trợ."; chuông sắp hết luôn bật, không có công tắc.
 - FR-83 Nhóm người theo **phòng ban lấy từ PMH ID** (claim `department`, đồng bộ qua Directory API); app không có trường "tổ" riêng, chỉ có cột `users.team` (nullable) điền từ claim `team` nếu PMH ID gửi, dùng cho cột Nhóm ở Tổng hợp kỳ mở; không chụp lên phiếu. Tổng hợp, báo cáo, danh sách nhắc đều nhóm theo phòng ban đã chụp trên phiếu (BR-11); thiếu phòng ban → nhóm "Chưa có phòng ban". Nếu thực tế phòng ban quá thô, cân nhắc thêm "Tổ" ở GĐ2.
 
 ### 6.10 Song ngữ
@@ -169,7 +169,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 
 **Member (thanh trên; điện thoại: thanh dưới 3 mục):** Đăng ký tháng này · Lịch sử · Chuông · Tôi (hồ sơ, ngôn ngữ, đăng xuất).
 **Admin (sidebar):** Kỳ tháng · Báo cáo & gửi ADM · Hàng về · Giao hàng · Còn nợ · Sản phẩm · Tủ / Kho · Món ngoài danh mục · Danh mục · Danh bạ · Nhật ký · Cấu hình. Hành chính đăng nhập vào thẳng Kỳ tháng; không có *Phiếu của tôi*.
-**Đăng nhập:** nút "Đăng nhập bằng tài khoản công ty (PMH ID)"; liên kết nhỏ "Dành cho IT" → SA cục bộ. **Chưa được cấp quyền:** trang riêng (tiêu đề, lý do, liên hệ Hành chính, nút đổi tài khoản).
+**Đăng nhập:** nút "Đăng nhập bằng tài khoản công ty (PMH ID)"; liên kết nhỏ "Dành cho IT" → SA cục bộ. **Chưa được cấp quyền:** trang riêng (tiêu đề, lý do kèm câu cố định "Liên hệ Adm D&E để được hỗ trợ.", nút đổi tài khoản).
 Mockup hiện tại (`final/*.html`) chưa phản ánh các thay đổi sau review (thanh dưới, nhãn đã lưu, vị trí nút thêm món, hộp review riêng, trang từ chối); `_SPEC.md` mục "Thay đổi sau review" là nguồn đúng khi làm FE.
 
 Hệ thị giác: member kiểu app (Nunito, bo tròn, thẻ ảnh, thương hiệu xanh ngọc lục `#059669`; chi tiết `design-preview/_SPEC.md`); Hành chính theo M1/P3 "Navy & cát" (Be Vietnam Pro, sidebar sáng 3 nhóm, bảng nhóm dính, ngăn kéo; chi tiết `docs/specs/2026-10-30-giao-dien-moi-hanh-chinh.md`).

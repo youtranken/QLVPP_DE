@@ -13,20 +13,16 @@ describe('validateConfigPatch', () => {
       validateConfigPatch({
         registration_last_day: 3,
         default_max_qty: 999,
-        low_stock_notify: false,
         signature_boxes: [box({ name: 'B' })],
         reminder_days_left: 2,
-        admin_contact: 'Chị Lan — 0901',
       }),
     ).toEqual({
       ok: true,
       patch: {
         registration_last_day: 3,
         default_max_qty: 999,
-        low_stock_notify: false,
         signature_boxes: [box({ name: 'B' })],
         reminder_days_left: 2,
-        admin_contact: 'Chị Lan — 0901',
       },
     });
   });
@@ -61,16 +57,20 @@ describe('validateConfigPatch', () => {
     },
   );
 
-  it('low_stock_notify phải là boolean, admin_contact phải là chuỗi ≤ 500', () => {
-    expect(validateConfigPatch({ low_stock_notify: 'true' })).toEqual({
-      ok: false,
-      field: 'low_stock_notify',
-    });
-    expect(validateConfigPatch({ admin_contact: 'x'.repeat(501) })).toEqual({
-      ok: false,
-      field: 'admin_contact',
-    });
-  });
+  it.each([
+    ['low_stock_notify', true],
+    ['low_stock_notify', false],
+    ['admin_contact', ''],
+    ['admin_contact', 'Chị Lan — 0901'],
+  ])(
+    '%s=%p không còn là khóa cấu hình (A7) → field là tên khóa',
+    (key, value) => {
+      expect(validateConfigPatch({ [key]: value })).toEqual({
+        ok: false,
+        field: key,
+      });
+    },
+  );
 
   it('authorized_groups không còn, khóa lạ → field là tên khóa', () => {
     expect(validateConfigPatch({ authorized_groups: ['IT'] })).toEqual({
