@@ -126,7 +126,7 @@
 [data-shell='admin'] .btn--primary { --btn-bg: var(--c-acc); --btn-bg-hover: var(--c-acc-hover); --btn-bg-active: var(--c-acc-press); --btn-fg: var(--c-on-acc); --btn-sh: none; --btn-sh-hover: none; --btn-sh-active: none; }
 [data-shell='admin'] .btn--ghost { --btn-bg: transparent; --btn-bg-hover: var(--c-surface-2); --btn-bg-active: var(--c-surface-sunk); --btn-fg: var(--c-ink-2); --btn-sh: none; --btn-sh-hover: none; }
 [data-shell='admin'] .btn--danger { --btn-bg: var(--c-danger-soft); --btn-bg-hover: var(--c-danger-hover); --btn-bg-active: var(--c-danger-press); --btn-fg: var(--c-danger); --btn-fg-active: var(--c-danger-ink-press); --btn-sh: none; --btn-sh-hover: inset 0 0 0 1px var(--c-danger); }
-/* Nút nguy hiểm trong hàng / chân ngăn (TN-04): chữ đỏ, viền đỏ nhạt; đỏ đặc chỉ ở nút xác nhận cuối trong hộp */
+/* Nút nguy hiểm trong hàng / chân ngăn: chữ đỏ, viền đỏ nhạt; đỏ đặc chỉ ở nút xác nhận cuối trong hộp */
 [data-shell='admin'] .btn--danger-line { --btn-bg: var(--c-surface); --btn-bg-hover: var(--c-danger-soft); --btn-bg-active: var(--c-danger-hover); --btn-fg: var(--c-danger); --btn-fg-active: var(--c-danger-ink-press); --btn-sh: inset 0 0 0 1px var(--c-danger-line); --btn-sh-hover: inset 0 0 0 1px var(--c-danger); }
 [data-shell='admin'] .btn--danger.btn--solid { --btn-bg: var(--c-danger); --btn-bg-hover: var(--c-danger-solid-hover); --btn-bg-active: var(--c-danger-solid-press); --btn-fg: var(--c-on-dark); --btn-fg-active: var(--c-on-dark); --btn-sh: none; --btn-sh-hover: none; }
 [data-shell='admin'] .btn--dark { --btn-bg: var(--c-dark); --btn-bg-hover: var(--c-ink-2); --btn-bg-active: var(--c-dark-press); --btn-fg: var(--c-on-dark); --btn-sh: none; --btn-sh-hover: none; }
@@ -158,7 +158,7 @@
 [data-shell='admin'] .tag--danger { background: var(--c-danger-soft); color: var(--c-danger); box-shadow: inset 0 0 0 1px var(--c-danger-line); }
 [data-shell='admin'] .tag--info { background: var(--c-info-soft); color: var(--c-info); box-shadow: inset 0 0 0 1px var(--c-info-line); }
 [data-shell='admin'] .tag--brand { background: var(--c-acc-soft); color: var(--c-acc-ink); box-shadow: inset 0 0 0 1px var(--c-acc-line); }
-/* Nhãn trạng thái có chấm 6px màu chữ (TC-09); nhãn nhóm --g* không có chấm */
+/* Nhãn trạng thái có chấm 6px màu chữ; nhãn nhóm --g* không có chấm */
 [data-shell='admin'] .tag--dot::before, [data-shell='admin'] .tag--ok::before, [data-shell='admin'] .tag--warn::before, [data-shell='admin'] .tag--danger::before, [data-shell='admin'] .tag--info::before, [data-shell='admin'] .tag--brand::before { content: ''; flex: none; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 [data-shell='admin'] .tag--dark { background: var(--c-dark); color: var(--c-on-dark); }
 [data-shell='admin'] .tag--out { background: var(--c-danger-soft); color: var(--c-danger); }

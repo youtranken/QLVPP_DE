@@ -186,7 +186,7 @@ test.describe('E6-S4 song ngữ mọi màn PRD §8', () => {
       const member = await englishPage(browser, info, { 'x-dev-user-sub': sub, 'x-dev-role': 'member' });
       pages.push(member);
       for (const path of MEMBER_SCREENS) await check(member, path, () => expect(member.getByRole('heading', { level: 1 })).toBeVisible());
-      // NV-01: thanh trên không còn VI/EN ở mọi bề rộng — đổi ngôn ngữ ở trang Tôi
+      // thanh trên không còn VI/EN ở mọi bề rộng — đổi ngôn ngữ ở trang Tôi
       await member.goto('/me');
       const en = member.getByRole('main').getByRole('radio', { name: 'English', exact: true });
       await en.click();

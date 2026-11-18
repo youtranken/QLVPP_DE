@@ -158,7 +158,7 @@ test.describe('Bảng quản lý', () => {
 
 // Lịch sử của nhân viên: tháng có ghi chú dài (từ chối, đã hủy) và tháng chỉ có số phải cùng cột (bảng tự co từng lệch 83px;
 // sau đó ẩn cột Ghi chú khi cả tháng trống làm cột dời 104–144px). Tháng trống ghi chú vẫn có cột, ô hiện "—";
-// dạng thẻ (390) không hiện nhãn "Ghi chú:" trơ trọi. Cột "Được giao" chỉ có khi khác số đăng ký (NV-28): cả hai tháng đều có
+// dạng thẻ (390) không hiện nhãn "Ghi chú:" trơ trọi. Cột "Được giao" chỉ có khi khác số đăng ký: cả hai tháng đều có
 // một dòng bị hủy bớt để cùng bộ cột, phép đo chỉ còn bắt cột co giãn theo chữ
 test('Vòng8 Lịch sử: đổi tháng không dời cột bảng chi tiết', async ({ page, request }, info) => {
   await skipNewPeriodPopup(page);
@@ -179,7 +179,7 @@ test('Vòng8 Lịch sử: đổi tháng không dời cột bảng chi tiết', a
   try {
     if (isMobile(info)) {
       await page.goto(`/history/${ymA}`);
-      // NV-30: 390 mỗi món một dòng, không bảng/thẻ nhiều cặp nhãn
+      // 390 mỗi món một dòng, không bảng/thẻ nhiều cặp nhãn
       await expect(page.getByRole('list', { name: /^Phiếu tháng/ })).toBeVisible();
       await expect(page.locator('.hs-table')).toHaveCount(0);
       return;

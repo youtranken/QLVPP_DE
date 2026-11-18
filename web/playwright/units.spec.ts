@@ -28,7 +28,7 @@ async function memberOtherItemUnits(browser: Browser, info: TestInfo, sub: strin
   try {
     await page.goto('/');
     const addOther = page.getByRole('region', { name: 'Danh mục món' }).getByRole('button', { name: /Không thấy món cần\?/ });
-    // NV-11: lối thêm món khác là thẻ cuối lưới (không còn nút ở thanh lọc) nên cuộn tới thẻ đó
+    // lối thêm món khác là thẻ cuối lưới (không còn nút ở thanh lọc) nên cuộn tới thẻ đó
     await addOther.scrollIntoViewIfNeeded();
     await expect(addOther).toBeInViewport();
     await addOther.click();

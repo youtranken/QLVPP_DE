@@ -131,5 +131,5 @@ input[type='search']::-webkit-search-decoration { -webkit-appearance: none; appe
    Member: Tab tới ô dưới thanh "Xem phiếu/Lưu phiếu" + thanh dưới thì trang cuộn chừa đủ chỗ
    (thanh dưới 58 + lề 12 + thanh phiếu ~64). Admin 390 chừa chỗ thanh hàng loạt ở m1/base.css (scroll-margin) */
 html:has(body[data-shell='member'] .rq-bar) { scroll-padding-bottom: calc(58px + 12px + 64px + env(safe-area-inset-bottom)); }
-/* VI/EN và mọi bộ "chọn một giá trị": kiểu C (TC-03) — xanh đặc ở mọi khung, kể cả trên nền rail */
+/* VI/EN và mọi bộ "chọn một giá trị": kiểu C — xanh đặc ở mọi khung, kể cả trên nền rail */
 [data-shell] .seg.seg--value button[aria-checked='true'], .seg.seg--value button[aria-checked='true'] { background: var(--c-acc); color: var(--c-on-acc); }

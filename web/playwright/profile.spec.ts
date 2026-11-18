@@ -43,7 +43,7 @@ test.describe('V2C-T7 hộp tài khoản nhân viên', () => {
         await page.keyboard.press('Escape');
         await expect(box).toBeHidden();
       } else {
-        // NV-01: thanh trên không còn VI/EN — đổi ngôn ngữ trong hộp tài khoản
+        // thanh trên không còn VI/EN — đổi ngôn ngữ trong hộp tài khoản
         // hộp tài khoản nằm trong banner: mọi VI/EN trong banner phải là của hộp
         await expect(page.getByRole('banner').getByRole('radio')).toHaveCount(await box.getByRole('radio').count());
         await box.getByRole('radio', { name: 'English', exact: true }).click();

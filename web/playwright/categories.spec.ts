@@ -114,7 +114,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await expect(page.getByRole('region', { name: 'Nhân viên sẽ thấy' })).toHaveCount(0);
       await expect(page.getByRole('button', { name: `Thao tác cho ${category}` })).toHaveCount(0);
       await expect(catRow.getByRole('button', { name: `Sửa nhóm ${category}` })).toBeVisible();
-      // TC-11: Sửa nhóm là ngăn kéo phải, bảng vẫn thấy phía sau; chưa tìm thì không có "Đang hiện" (AD-47)
+      // Sửa nhóm là ngăn kéo phải, bảng vẫn thấy phía sau; chưa tìm thì không có "Đang hiện"
       await expect(page.getByText(/^Đang hiện \d+\/\d+ nhóm$/)).toHaveCount(0);
       await catRow.getByRole('button', { name: `Sửa nhóm ${category}` }).click();
       const edit = page.getByRole('dialog', { name: 'Sửa nhóm' });

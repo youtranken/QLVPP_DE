@@ -60,12 +60,12 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await page.reload();
       await expect(page.getByRole('region', { name: /^Đăng ký văn phòng phẩm/ }).getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
       await openCart(page, info);
-      // NV-19: giỏ một chế độ — phiếu đã lưu có ngay ô số lượng, không còn "Sửa phiếu"
+      // giỏ một chế độ — phiếu đã lưu có ngay ô số lượng, không còn "Sửa phiếu"
       await expect(cart.getByRole('button', { name: 'Sửa phiếu' })).toHaveCount(0);
       for (const [item, qty] of [[a, 1], [b, 2], [c, 1]] as const) {
         await expect(cart.getByRole('spinbutton', { name: item.name, exact: true })).toHaveValue(String(qty));
       }
-      // Chưa đổi gì: không nút Lưu (NV-20), không "Hủy"; đổi rồi thì "Hủy" là nút phụ bỏ thay đổi (NV-22)
+      // Chưa đổi gì: không nút Lưu, không "Hủy"; đổi rồi thì "Hủy" là nút phụ bỏ thay đổi
       await expect(cart.getByRole('button', { name: /Lưu phiếu/ })).toHaveCount(0);
       await expect(cart.getByRole('button', { name: 'Hủy', exact: true })).toHaveCount(0);
       await cart.getByRole('button', { name: `Thêm ${a.name}`, exact: true }).click();

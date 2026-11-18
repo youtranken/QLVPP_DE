@@ -136,12 +136,12 @@
   /* Ô dính nào cũng là một lớp riêng: ô đang mở menu ⋯ phải nổi trên ô dính của dòng dưới và tiêu đề */
   [data-shell='admin'] :where(.table-wrap) td.col-actions:has([aria-expanded='true']) { z-index: 4; }
 }
-/* Dòng cần chú ý (TC-08): vạch trái 3px vẽ bằng bóng trong (không xô cột) + nền nhạt cùng tông. Cam = người đã nghỉ, đỏ = quá hạn / chờ duyệt lâu */
+/* Dòng cần chú ý: vạch trái 3px vẽ bằng bóng trong (không xô cột) + nền nhạt cùng tông. Cam = người đã nghỉ, đỏ = quá hạn / chờ duyệt lâu */
 [data-shell='admin'] .table tr.row--attn-warn td { background: var(--c-warn-soft); }
 [data-shell='admin'] .table tr.row--attn-warn td:first-child { box-shadow: inset 3px 0 0 var(--c-warn-fill); }
 [data-shell='admin'] .table tr.row--attn-danger td { background: var(--c-danger-tint); }
 [data-shell='admin'] .table tr.row--attn-danger td:first-child { box-shadow: inset 3px 0 0 var(--c-danger); }
-/* Bảng thành thẻ ở điện thoại (TC-16): ô đầu là tên dòng cả hàng; dòng cần chú ý vẽ vạch trên cả thẻ vì ô đầu chỉ còn là một hàng */
+/* Bảng thành thẻ ở điện thoại: ô đầu là tên dòng cả hàng; dòng cần chú ý vẽ vạch trên cả thẻ vì ô đầu chỉ còn là một hàng */
 @media (max-width: 680px) {
   /* :is(.table-wrap) nhân đôi độ ưu tiên: thắng ".ct-page .table-wrap { overflow-x: auto }" (≤767) nạp sau — thẻ không nằm trong khung cuộn */
   [data-shell='admin'] .table-wrap:is(.table-wrap):has(> .table--cards) { overflow: visible; border-radius: 0; background: transparent; box-shadow: none; }

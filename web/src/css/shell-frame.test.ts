@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-// TC-01: khung admin theo họ QLHS/QLTS
+// khung admin theo họ app PMH
 const shell = readFileSync(resolve(process.cwd(), 'src/css/m1/shell.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
   // chỉ luật ngoài @media (áp mọi bề rộng)
   .replace(/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, '');

@@ -37,8 +37,8 @@ const PAIRS: [fg: string, bg: string][] = [
 const DOTS: [fg: string, bg: string][] = [['--c-bar-fill', '--c-rail'], ['--c-warn-fill', '--c-rail']];
 
 describe('tương phản token bảng màu v3', () => {
-  it('bảng màu mang tiêu đề v3 họ QLHS/QLTS', () => {
-    expect(css).toContain('BẢNG MÀU v3 "Họ QLHS/QLTS"');
+  it('bảng màu mang tiêu đề v3 họ app PMH', () => {
+    expect(css).toContain('BẢNG MÀU v3 "Họ app PMH"');
   });
   it('chữ trên rail (trắng 76%) trên navy ≥ 4.5', () => {
     // rgb(255 255 255 / .76) trên #0F1F3D trộn ra màu đặc rồi đo

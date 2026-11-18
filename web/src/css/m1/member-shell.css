@@ -1,4 +1,4 @@
-/* Khung Nhân viên họ QLHS/QLTS (TC-14/15): thanh trên rail navy + tab vạch dưới, nền trang sáng, thanh dưới điện thoại rail đặc. Mọi luật nằm trong phạm vi member. */
+/* Khung Nhân viên họ app PMH: thanh trên rail navy + tab vạch dưới, nền trang sáng, thanh dưới điện thoại rail đặc. Mọi luật nằm trong phạm vi member. */
 [data-shell='member'] .m-shell { min-height: 100vh; background: var(--c-page); color: var(--c-ink); }
 [data-shell='member'] .m-shell .skip-link { background: var(--c-surface); color: var(--c-ink); }
 [data-shell='member'] .m-shell > main { outline: none; padding-top: var(--s-5); }

@@ -88,7 +88,7 @@ export function ImageField({
               {busy ? t('catalog.form.imageUploading') : t('catalog.form.imageChange')}
               {fileInput(t('catalog.form.imageChange'))}
             </label>
-            {/* Ảnh bắt buộc: xóa xong không lưu được nên chỉ cho đổi (AD-46) */}
+            {/* Ảnh bắt buộc: xóa xong không lưu được nên chỉ cho đổi */}
             {!required && (
               <button type="button" className="btn btn--ghost btn--sm" disabled={busy} onClick={() => onChange(null)}>
                 {t('catalog.form.imageRemove')}

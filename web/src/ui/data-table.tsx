@@ -89,7 +89,7 @@ export function DataTable<T>({
   rowProps,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
-  // Thu/mở nhóm chỉ có khi trang tự quản (Sản phẩm thu sẵn nhóm tạm ngưng); bảng khác không có nút thu/mở (TN-11)
+  // Thu/mở nhóm chỉ có khi trang tự quản (Sản phẩm thu sẵn nhóm tạm ngưng); bảng khác không có nút thu/mở
   const collapsed = controlledCollapsed ?? NONE;
   const setCollapsed = onCollapsedChange;
   const [internalSort, setInternalSort] = useState<SortingState>(initialSort);

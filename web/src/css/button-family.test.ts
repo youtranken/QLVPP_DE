@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-// TC-13, TC-09, TN-02/04/05/07: một bộ nút, một khuôn nhãn trạng thái
+// một bộ nút, một khuôn nhãn trạng thái
 const root = resolve(process.cwd(), 'src');
 const walk = (dir: string, ext: RegExp): string[] =>
   readdirSync(dir).flatMap((n) => {

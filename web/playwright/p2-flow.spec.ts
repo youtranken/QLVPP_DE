@@ -120,7 +120,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       admin = undefined;
 
       await page.goto(`/history/${LOCKED_YM}`);
-      // NV-30: 390 mỗi món một dòng danh sách thay cho dòng bảng
+      // 390 mỗi món một dòng danh sách thay cho dòng bảng
       const line = (name: string) => page.getByRole(isMobile(info) ? 'listitem' : 'row').filter({ hasText: name });
       await expect(line(x.name)).toBeVisible();
       // R-D6.11: dòng bị bỏ vẫn hiện ở Lịch sử kèm lý do của Hành chính

@@ -32,14 +32,14 @@ describe('AppRoutes — đường dẫn lạ', () => {
 
 describe('AppRoutes — chuyển hướng đường cũ của Adm D&E (giữ nguyên query)', () => {
   it.each([
-    ['/admin', '/admin/today', ''] /* TC-06: trang đầu là Việc hôm nay */,
+    ['/admin', '/admin/today', ''] /* trang đầu là Việc hôm nay */,
     ['/admin/home', '/admin/month', ''],
     ['/admin/summary?ym=2026-10&q=an&request=r1', '/admin/month', '?ym=2026-10&q=an&request=r1'],
     ['/admin/summary?ym=2026-11&left=1', '/admin/month', '?ym=2026-11&left=1'],
     ['/admin/summary?ym=2026-10&filter=pending_delivery', '/admin/month', '?ym=2026-10&chip=undelivered'] /* ?filter cũ đổi thành chip */,
     ['/admin/send-adm?ym=2026-10', '/admin/reports', '?ym=2026-10'],
     ['/admin/units?x=1', '/admin/categories/units', '?x=1'],
-    ['/admin/issues', '/admin/stock', '?tab=history&kind=issue'] /* AD-38: Xuất lẻ gộp vào Tủ/Kho */,
+    ['/admin/issues', '/admin/stock', '?tab=history&kind=issue'] /* Xuất lẻ gộp vào Tủ/Kho */,
     ['/admin/issues?ym=2026-10', '/admin/stock', '?tab=history&kind=issue&ym=2026-10'],
   ])('%s → %s%s', (from, path, query) => {
     mockViewport(1280);

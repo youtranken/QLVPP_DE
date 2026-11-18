@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-// TC-01: thanh trên trắng ≥ 768 — đường dẫn "QLVPP › trang", chuông và tài khoản ở bên phải; sidebar không còn khối người dùng
+// thanh trên trắng ≥ 768 — đường dẫn "QLVPP › trang", chuông và tài khoản ở bên phải; sidebar không còn khối người dùng
 function open(path: string, width = 1280) {
   mockViewport(width);
   stubShellApi({}, () => jsonResponse(500, { code: 'INTERNAL' }));

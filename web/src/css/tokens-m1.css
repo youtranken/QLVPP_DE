@@ -1,4 +1,4 @@
-/* ===== BẢNG MÀU v3 "Họ QLHS/QLTS" — cùng token QLHS/QLTS (chủ dự án chốt 18/11/2026); thay cả khối khi đổi bảng màu ===== */
+/* ===== BẢNG MÀU v3 "Họ app PMH" — cùng token họ app PMH (chủ dự án chốt 18/11/2026); thay cả khối khi đổi bảng màu ===== */
 :root {
   /* nền & mặt */
   --c-page: #F3F6FB;  --c-surface: #FFFFFF;  --c-canvas: #F7F9FC;  --c-surface-2: #F7F9FC;  --c-surface-hover: #F2F5FA;  --c-surface-sunk: #EEF2F8;
@@ -12,7 +12,7 @@
   --c-count: #FDB022;  --c-count-ink: #3B2500;
   /* viền */
   --c-line: #DDE3EE;  --c-line-strong: #C6CFDF;  --c-line-input: #7D879B; /* viền ô nhập/checkbox ≥ 3:1 */
-  /* nhấn duy nhất: xanh dương họ QLHS/QLTS. Đang chọn kiểu B = nền --c-acc-soft + viền --c-acc-line + chữ --c-acc-ink; kiểu C = nền --c-acc */
+  /* nhấn duy nhất: xanh dương họ app PMH. Đang chọn kiểu B = nền --c-acc-soft + viền --c-acc-line + chữ --c-acc-ink; kiểu C = nền --c-acc */
   --c-acc: #1D4ED8;  --c-acc-hover: #1E40AF;  --c-acc-press: #1E3A8A;  --c-acc-soft: #EFF4FF;  --c-acc-tint: #F5F8FF;  --c-on-acc: #FFFFFF;  --c-acc-ink: #1E3A8A;  --c-acc-line: #C7D7FE;
   /* ngữ nghĩa: chữ / nền nhạt / vạch (fill chỉ cho thanh, chấm — không cho chữ) */
   --c-ok: #067647;     --c-ok-soft: #ECFDF3;     --c-ok-fill: #17B26A;   --c-ok-line: #ABEFC6;
@@ -97,7 +97,7 @@
   --c-on-dark-fill: rgb(255 255 255 / .14);  --c-on-tone: rgb(255 255 255 / .65);
   --hit: 44px;
 }
-/* Dùng chuột trên máy tính: nút + ô nhập cao 40 (gần họ QLHS/QLTS); cảm ứng/điện thoại giữ 44 vùng chạm */
+/* Dùng chuột trên máy tính: nút + ô nhập cao 40 (gần họ app PMH); cảm ứng/điện thoại giữ 44 vùng chạm */
 @media (min-width: 768px) and (pointer: fine) {
   :root { --hit: 40px; }
 }

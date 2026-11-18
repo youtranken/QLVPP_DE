@@ -1,4 +1,4 @@
-/* Tìm nhanh Ctrl K (TC-17): dòng đang trỏ dùng kiểu B + vạch trái như sidebar */
+/* Tìm nhanh Ctrl K: dòng đang trỏ dùng kiểu B + vạch trái như sidebar */
 [data-shell='admin'] .qs-trigger { display: flex; flex: 0 1 280px; align-items: center; gap: var(--s-2); min-width: 160px; height: 36px; padding: 0 var(--s-1) 0 var(--s-3); border: 0; border-radius: var(--r-sm); background: var(--c-surface-2); box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-muted); font: var(--t-sm); cursor: pointer; }
 [data-shell='admin'] .qs-trigger:hover { box-shadow: inset 0 0 0 1px var(--c-line-strong); color: var(--c-ink-2); }
 [data-shell='admin'] .qs-trigger:focus-visible { outline: none; box-shadow: var(--focus); }

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-// TC-03: đang chọn chỉ có 3 kiểu — A rail (nền trắng 10%), B xem/lọc (nền xanh nhạt), C chọn một giá trị (xanh đặc).
+// đang chọn chỉ có 3 kiểu — A rail (nền trắng 10%), B xem/lọc (nền xanh nhạt), C chọn một giá trị (xanh đặc).
 // Nền tối --c-sel/--c-dark, nền trắng nổi, viền 2px cho trạng thái chọn đều bị cấm.
 const root = resolve(process.cwd(), 'src');
 const ALLOWED = [/var\(--c-acc-soft\)/, /var\(--c-acc\)/, /var\(--c-rail-on\)/, /transparent/, /none/];

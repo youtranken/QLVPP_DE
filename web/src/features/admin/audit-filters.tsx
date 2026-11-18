@@ -28,7 +28,7 @@ function useActorUser(sub: string): DirectoryUser | null {
   }, [sub, names, t]);
 }
 
-// Lọc ngay khi đổi ô như mọi màn khác (AD-51): người chọn từ gợi ý, hành động, khoảng ngày đều ghi thẳng lên URL
+// Lọc ngay khi đổi ô như mọi màn khác: người chọn từ gợi ý, hành động, khoảng ngày đều ghi thẳng lên URL
 export function AuditFilterBar({ applied, serverError, onPatch, onClear }: Props) {
   const { t, i18n } = useTranslation();
   const system = applied.actor === SYSTEM_ACTOR;

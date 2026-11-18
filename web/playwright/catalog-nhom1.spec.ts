@@ -13,7 +13,7 @@ test.describe('Nhóm 1 · Sản phẩm (dev-identity admin)', () => {
       await expect(page.getByRole('button', { name: /^Tất cả \d/ })).toHaveAttribute('aria-pressed', 'true');
       await page.getByRole('searchbox', { name: /^Tìm trong \d+ sản phẩm$/ }).fill(name);
       const card = page.getByRole('article').filter({ hasText: name });
-      // AD-43: thẻ chỉ còn "Sửa"; Tạm ngưng / Dùng lại ở chân ngăn Sửa
+      // thẻ chỉ còn "Sửa"; Tạm ngưng / Dùng lại ở chân ngăn Sửa
       await expect(card.getByRole('button', { name: `Tạm ngưng ${name}` })).toHaveCount(0);
       await card.getByRole('button', { name: `Sửa ${name}` }).click();
       const drawer = page.getByRole('dialog', { name: `Sửa món ${name}` });
@@ -91,7 +91,7 @@ test.describe('Nhóm 1 · Sản phẩm (dev-identity admin)', () => {
       const view = page.getByRole('group', { name: 'Chế độ xem' });
       const chips = page.getByRole('group', { name: 'Lọc theo nhóm' });
       await expect(chips).toBeVisible();
-      // AD-44: màn hẹp không có Lưới/Bảng
+      // màn hẹp không có Lưới/Bảng
       if (isMobile(info)) await expect(view).toBeHidden();
       const [s, st, c] = await Promise.all([search, status, chips].map(async (l) => (await l.boundingBox())!));
       if (!isMobile(info)) {

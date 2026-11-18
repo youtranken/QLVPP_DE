@@ -14,7 +14,7 @@
   [data-shell='admin'] .flt-search input { font-size: 16px; }
   [data-shell='admin'] .flt-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
 }
-/* Thanh lọc một khuôn (TC-10): khung trắng chứa ô tìm + ô chọn, đổi là lọc; dưới là hàng "Đang lọc" */
+/* Thanh lọc một khuôn: khung trắng chứa ô tìm + ô chọn, đổi là lọc; dưới là hàng "Đang lọc" */
 [data-shell='admin'] .filterbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); padding: var(--s-2); border-radius: var(--r-md); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); }
 [data-shell='admin'] .active-filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin-top: var(--s-2); }
 [data-shell='admin'] .active-filters__label { font: var(--t-micro); letter-spacing: .06em; text-transform: uppercase; color: var(--c-muted); }

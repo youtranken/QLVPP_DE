@@ -25,7 +25,7 @@ const personOf = (r: LedgerRow) => (r.reason === 'delivery' || r.reason === 'iss
 type Col = ColumnDef<LedgerRow, unknown>;
 type Cell = { row: { original: LedgerRow } };
 
-// Lọc Xuất lẻ (AD-38, thay trang Xuất lẻ cũ): mọi dòng cùng loại nên bỏ cột Loại, tách Người nhận / Người xuất
+// Lọc Xuất lẻ (thay trang Xuất lẻ cũ): mọi dòng cùng loại nên bỏ cột Loại, tách Người nhận / Người xuất
 function issueColumns(t: TFunction): Col[] {
   return [
     { id: 'recipient', header: t('stock.issues.colRecipient'), meta: { minWidth: '8rem' }, cell: ({ row }: Cell) => row.original.recipient_name ?? t('stock.issues.shared') },

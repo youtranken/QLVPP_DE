@@ -27,7 +27,7 @@ test.describe('E0-S9 khung nhân viên (dev-identity member)', () => {
     }
     const account = page.getByRole('dialog', { name: 'Tài khoản' });
     await expect(account).toBeVisible();
-    // NV-31: nhân viên không thấy chữ "· Nhân viên" dưới tên
+    // nhân viên không thấy chữ "· Nhân viên" dưới tên
     await expect(account.getByText(/Nhân viên$/)).toHaveCount(0);
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'member-me');
@@ -82,7 +82,7 @@ test.describe('E0-S9 khung Adm D&E (dev-identity admin)', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Products' })).toBeVisible();
   });
 
-  // TC-06: trang đầu của Adm D&E là Việc hôm nay (h1 là lời chào), không còn Kỳ tháng
+  // trang đầu của Adm D&E là Việc hôm nay (h1 là lời chào), không còn Kỳ tháng
   test('E9-S0 Adm D&E không có phiếu: đăng nhập vào thẳng Việc hôm nay, mở / bị đưa về /admin, sidebar không có Phiếu của tôi', async ({ page }, info) => {
     await page.goto('/');
     await expect(page).toHaveURL(/\/admin\/today$/);

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-// TN-15: bảng màu cũ (teal v2, lục đời trước) không còn sót ở đâu ngoài test
+// bảng màu cũ (teal v2, lục đời trước) không còn sót ở đâu ngoài test
 const OLD = ['0E6A7B', '0E2A33', '14231C', '51645B', 'C9D5CE', '08303B', '0A5868', 'DDF1F5'];
 const root = resolve(process.cwd(), 'src');
 

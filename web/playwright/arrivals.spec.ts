@@ -40,7 +40,7 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
       await expect(page.getByRole('link', { name: 'Xem bản in', exact: true })).toBeVisible();
       // Chưa chọn nhóm nào: không có dòng "Đã chọn …" và nút nhận hàng loạt
       await expect(page.getByText(/^Đã chọn \d+ nhóm/)).toHaveCount(0);
-      // AD-26: kỳ riêng chỉ có 2 món PW, ô tìm khớp cả 2/2 nên không hiện "Đang hiện" (chỉ hiện khi lọc bớt dòng)
+      // kỳ riêng chỉ có 2 món PW, ô tìm khớp cả 2/2 nên không hiện "Đang hiện" (chỉ hiện khi lọc bớt dòng)
       await expect(page.getByText(/^Đang hiện \d+\/\d+ món$/)).toHaveCount(0);
       const boxA = page.getByRole('spinbutton', { name: `Nhận đợt này: ${a.name}` });
       const boxB = page.getByRole('spinbutton', { name: `Nhận đợt này: ${b.name}` });

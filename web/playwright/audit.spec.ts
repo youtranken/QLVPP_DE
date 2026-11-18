@@ -55,7 +55,7 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
     await expect(detail).toHaveCount(0);
     await expect(page.getByRole('cell', { name: 'moi-50', exact: true })).toHaveCount(0);
 
-    // AD-52: "Hôm nay" là lựa chọn trong ô Khoảng ngày, không còn hàng "Nhanh:"
+    // "Hôm nay" là lựa chọn trong ô Khoảng ngày, không còn hàng "Nhanh:"
     await expect(page.getByRole('group', { name: 'Nhanh:' })).toHaveCount(0);
     await page.getByRole('button', { name: /^Khoảng ngày/ }).click();
     await page.getByRole('dialog', { name: 'Khoảng ngày' }).getByRole('button', { name: 'Hôm nay', exact: true }).click();

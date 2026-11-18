@@ -6,7 +6,7 @@ export function ListMeta({ children }: { children: ReactNode }) {
   return <div className="list-meta">{children}</div>;
 }
 
-// "Đang hiện x/y" chỉ có nghĩa khi đang lọc/tìm và thật sự bớt dòng; ngoài ra trùng số trên chip "Tất cả" (TN-13)
+// "Đang hiện x/y" chỉ có nghĩa khi đang lọc/tìm và thật sự bớt dòng; ngoài ra trùng số trên chip "Tất cả"
 export function ShownCount({ shown, total, filtering, children }: { shown: number; total: number; filtering: boolean; children: ReactNode }) {
   if (!filtering || shown >= total) return null;
   return (
@@ -22,7 +22,7 @@ export interface ActiveFilter {
   onRemove: () => void;
 }
 
-// Hàng "Đang lọc" dưới thanh lọc: mỗi điều kiện một chip gỡ được + "Xóa lọc" (TC-10)
+// Hàng "Đang lọc" dưới thanh lọc: mỗi điều kiện một chip gỡ được + "Xóa lọc"
 export function ActiveFilters({ items, onClearAll, count }: { items: ActiveFilter[]; onClearAll: () => void; count?: ReactNode }) {
   const { t } = useTranslation();
   if (items.length === 0) return null;

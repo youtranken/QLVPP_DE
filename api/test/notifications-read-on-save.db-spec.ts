@@ -1,6 +1,6 @@
 import { AFTER_DEADLINE, meRequestFixture } from './me-request.fixture';
 
-// NV-03: lưu phiếu thì chuông "chưa đăng ký tháng X" của đúng người, đúng kỳ tự đọc (Postgres thật, app thật)
+// lưu phiếu thì chuông "chưa đăng ký tháng X" của đúng người, đúng kỳ tự đọc (Postgres thật, app thật)
 describe('PUT me/request/lines — chuông nhắc chưa đăng ký tự đọc khi lưu phiếu', () => {
   const { A, B, SUFFIX, at, freeze, save, newItem, pool, onCleanup } =
     meRequestFixture('read-on-save');

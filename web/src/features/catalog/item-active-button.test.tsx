@@ -39,7 +39,7 @@ function renderButton(item = PEN, groupActive = true) {
 
 afterEach(() => vi.unstubAllGlobals());
 
-// Nút Tạm ngưng / Dùng lại còn ở dòng bảng Sản phẩm (thẻ lưới đã bỏ, AD-43)
+// Nút Tạm ngưng / Dùng lại còn ở dòng bảng Sản phẩm (thẻ lưới đã bỏ)
 describe('Tạm ngưng / Dùng lại ở dòng bảng', () => {
   it('món đang dùng: "Tạm ngưng" viền đỏ (btn--danger-line, không đỏ đặc); bấm → hỏi "Tạm ngưng Bút bi xanh?" → xác nhận → PATCH {active:false} → toast thường, không "Hoàn tác"', async () => {
     const f = stub();

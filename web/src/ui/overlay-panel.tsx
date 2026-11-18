@@ -26,7 +26,7 @@ interface Props {
   // Dòng phụ nhỏ trên tiêu đề (kỳ · tổ…)
   eyebrow?: string;
   onCloseFocus?: () => boolean;
-  // Form sửa món/nhóm: ngăn rộng 560 để form hai cột không chật (TC-11)
+  // Form sửa món/nhóm: ngăn rộng 560 để form hai cột không chật
   wide?: boolean;
   children: ReactNode;
 }

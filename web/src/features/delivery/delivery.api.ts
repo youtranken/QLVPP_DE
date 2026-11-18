@@ -8,7 +8,7 @@ export interface DeliverBody {
 
 export interface DeliverResult {
   request_complete?: boolean;
-  // Hoàn tác 5 giây (TC-18)
+  // Hoàn tác 5 giây
   undo_id?: string;
 }
 

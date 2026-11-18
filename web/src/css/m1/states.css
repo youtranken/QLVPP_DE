@@ -10,7 +10,7 @@
 [data-shell='admin'] .toast__action { all: unset; cursor: pointer; font-weight: 700; text-decoration: underline; border-radius: var(--r-xs); }
 [data-shell='admin'] .toast__action:focus-visible { box-shadow: var(--focus); }
 @keyframes m1-toast-in { from { opacity: 0; transform: translateY(8px); } }
-/* Hoàn tác 5 giây (TC-18): chữ xanh sáng không gạch chân, vạch đáy chạy hết trong đúng 5 s */
+/* Hoàn tác 5 giây: chữ xanh sáng không gạch chân, vạch đáy chạy hết trong đúng 5 s */
 [data-shell='admin'] .toast:has(.toast__bar) { position: relative; overflow: hidden; }
 [data-shell='admin'] .toast__undo { color: var(--c-rail-bar); text-decoration: none; font-variant-numeric: tabular-nums; white-space: nowrap; }
 [data-shell='admin'] .toast__undo:disabled { opacity: .6; cursor: default; }

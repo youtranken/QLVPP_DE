@@ -97,7 +97,7 @@ export function useItemForm({ item, defaultCategoryId, onClose }: { item: AdminI
     }
   };
 
-  // TC-18: xóa làm lại được trong 5 giây nên không hỏi "Bạn chắc chưa?"
+  // xóa làm lại được trong 5 giây nên không hỏi "Bạn chắc chưa?"
   const remove = async () => {
     if (!item || inFlight.current) return;
     inFlight.current = true;

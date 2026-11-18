@@ -6,7 +6,7 @@ export interface ToastSpec {
   action?: { label: string; onClick: () => void };
   // Ở lại tới khi chủ toast gỡ (dismiss) hoặc người dùng bấm nút: dùng khi nút là lối duy nhất để làm tiếp
   persist?: boolean;
-  // Hoàn tác 5 giây (TC-18): nút "Hoàn tác (n)" đếm ngược, không dừng khi rê chuột vì cửa sổ do server tính
+  // Hoàn tác 5 giây: nút "Hoàn tác (n)" đếm ngược, không dừng khi rê chuột vì cửa sổ do server tính
   undo?: () => Promise<unknown>;
   // Mốc (Date.now) server bắt đầu tính 5 giây; thao tác nhiều bước truyền giờ gửi bước đầu để nút tắt không muộn hơn server
   undoSince?: number;

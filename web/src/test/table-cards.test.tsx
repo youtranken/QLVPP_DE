@@ -9,7 +9,7 @@ import { AN, BINH, CHI, openUsers, stubUsers } from '@/features/directory/users-
 import { openAudit, stubApi as stubAudit } from '@/features/admin/audit-test-fixtures';
 import { STOCK, stubStockApi } from '@/features/stock/stock-fixtures';
 
-// TC-16: ≤ 680 px mỗi dòng Danh bạ / Nhật ký / Tủ/Kho là một thẻ "nhãn · giá trị", dòng cần chú ý vẫn có vạch trái
+// ≤ 680 px mỗi dòng Danh bạ / Nhật ký / Tủ/Kho là một thẻ "nhãn · giá trị", dòng cần chú ý vẫn có vạch trái
 const css = readFileSync(resolve(process.cwd(), 'src/css/m1/table.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const mediaBlock = (query: string) => {
   const at = css.indexOf(`@media ${query} {`);

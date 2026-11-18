@@ -32,7 +32,7 @@
 /* Bỏ bóng nút Lọc nhưng chừa lúc focus: không thì đè vòng .btn:focus-visible, Tab tới Lọc không thấy gì */
 [data-shell='admin'] .au-filters .btn--primary:not(:focus-visible) { box-shadow: none; }
 /* Dòng đếm + "Đang lọc" luôn một hàng riêng dưới chip Nhanh: lọc thì hàng dài thêm nhưng bảng không bị đẩy xuống */
-/* Chip đang chọn: kiểu B như các trang khác (TC-03) */
+/* Chip đang chọn: kiểu B như các trang khác */
 [data-shell='admin'] .table td.au-nowrap { white-space: nowrap; }
 [data-shell='admin'] .au-object { overflow-wrap: anywhere; }
 [data-shell='admin'] .au-muted { color: var(--c-muted); font: var(--t-cap); }

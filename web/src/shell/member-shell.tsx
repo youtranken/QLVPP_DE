@@ -58,7 +58,7 @@ export function MemberShell() {
             </nav>
           )}
           <span className="sp" />
-          {/* Ngôn ngữ nằm trong hộp tài khoản (NV-01); ≤ 900 tài khoản ở "Tôi" (thanh dưới) */}
+          {/* Ngôn ngữ nằm trong hộp tài khoản; ≤ 900 tài khoản ở "Tôi" (thanh dưới) */}
           <NotificationBell />
           {!narrow && (
             <AccountMenu

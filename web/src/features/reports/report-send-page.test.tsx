@@ -20,7 +20,7 @@ describe('Báo cáo & gửi NCC: bảng và ô Đề nghị', () => {
     await qtyBox('Bút bi');
     expect(t.getAllByRole('columnheader').map((h) => h.textContent?.replace(/Cách tính Tổng cần/, ''))).toEqual(['Món', 'ĐVT', 'Đăng ký', 'Nợ tháng trước', 'Tủ', 'Tổng cần', 'Đề nghị', 'Ai đăng ký']);
     expect(t.getByText('2 món')).toBeInTheDocument();
-    // AD-21 AD-22: dòng nhóm nền trung tính (không data-tone tô màu), không nút thu/mở
+    // dòng nhóm nền trung tính (không data-tone tô màu), không nút thu/mở
     const group = t.getByText('2 món').closest('tr')!;
     expect(group.querySelector('[data-tone]')).toBeNull();
     expect(within(group).queryByRole('button')).toBeNull();

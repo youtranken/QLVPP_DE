@@ -41,7 +41,7 @@ function RedirectKeepSearch({ to }: { to: string }) {
   return <Navigate to={{ pathname: to, search }} replace />;
 }
 
-// Xuất lẻ gộp vào Tủ / Kho (AD-38): link cũ trong chuông, sổ tay vẫn tới đúng bảng, giữ tháng
+// Xuất lẻ gộp vào Tủ / Kho: link cũ trong chuông, sổ tay vẫn tới đúng bảng, giữ tháng
 function IssuesRedirect() {
   const ym = new URLSearchParams(useLocation().search).get('ym');
   const search = new URLSearchParams({ tab: 'history', kind: 'issue', ...(ym ? { ym } : {}) });

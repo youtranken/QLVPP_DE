@@ -74,7 +74,7 @@ export function SignatureBoxesBlock({ state }: { state: ConfigBlockState<BoxDraf
         >
           {t('config.signers.add')}
         </button>
-        {/* Server nhận tới 3 ô nhưng tờ in chỉ có chỗ 2 ô: nói cả hai giới hạn một lần cạnh nút (AD-56) */}
+        {/* Server nhận tới 3 ô nhưng tờ in chỉ có chỗ 2 ô: nói cả hai giới hạn một lần cạnh nút */}
         <span id={fullId} className="cf-box__full">
           {t('config.signers.limit', { max: BOXES_MAX, n: MAX_SIGN_BOXES })}
         </span>

@@ -6,7 +6,7 @@ import { QuickSearch } from '@/shell/quick-search';
 
 const PAGES = ADMIN_NAV.flatMap((g) => g.pages);
 
-// Thanh trên trắng ≥ 768 theo họ QLHS/QLTS (TC-01): đường dẫn bên trái, Tìm nhanh, chuông + tài khoản bên phải
+// Thanh trên trắng ≥ 768 theo họ app PMH: đường dẫn bên trái, Tìm nhanh, chuông + tài khoản bên phải
 export function AdminHeader() {
   const { t } = useTranslation();
   const { pathname } = useLocation();

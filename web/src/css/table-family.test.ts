@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-// TC-07, TC-08, TC-10, TN-11: một khuôn bảng, dòng cần chú ý, thanh lọc
+// một khuôn bảng, dòng cần chú ý, thanh lọc
 const read = (p: string) => readFileSync(resolve(process.cwd(), 'src', p), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const table = read('css/m1/table.css');
 const filter = read('css/m1/filter.css');

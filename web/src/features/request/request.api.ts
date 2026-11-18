@@ -174,7 +174,7 @@ export function useSetMyRequest() {
     qc.setQueryData(ownRequestKey(ym), view);
     // Danh sách lịch sử có kỳ này (tổng dòng/đơn vị) → phải tải lại
     void qc.invalidateQueries({ queryKey: HISTORY_KEY });
-    // Server vừa đánh dấu đọc chuông nhắc của kỳ này (NV-03)
+    // Server vừa đánh dấu đọc chuông nhắc của kỳ này
     void qc.invalidateQueries({ queryKey: NOTIFICATIONS_KEY });
   };
 }

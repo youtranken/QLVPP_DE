@@ -202,7 +202,7 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
       psql(`UPDATE items SET image_file_id = NULL WHERE id = '${id}'`);
       deleteTestFiles([oldImage]);
       await page.goto('/admin/catalog');
-      // AD-44: màn hẹp luôn là lưới, không có công tắc Lưới / Bảng
+      // màn hẹp luôn là lưới, không có công tắc Lưới / Bảng
       if (isMobile(info)) await expect(page.getByRole('group', { name: 'Chế độ xem' })).toBeHidden();
       else await expect(page.getByRole('group', { name: 'Chế độ xem' }).getByRole('button', { name: 'Lưới' })).toHaveAttribute('aria-pressed', 'true');
       await page.getByRole('button', { name: /^Chưa có ảnh/ }).click();

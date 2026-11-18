@@ -6,12 +6,12 @@ import { LanguageSwitch } from '@/ui/language-switch';
 import './profile.m1.css';
 
 // Nội dung tài khoản dùng chung cho hộp ở đầu trang (máy tính), sheet điện thoại và trang /me.
-// language: mọi nơi mở tài khoản đều đổi được ngôn ngữ — thanh trên không còn VI/EN (NV-01)
+// language: mọi nơi mở tài khoản đều đổi được ngôn ngữ — thanh trên không còn VI/EN
 export function AccountContent({ language = false }: { language?: boolean }) {
   const { t } = useTranslation();
   const me = useMe();
   const name = me.fullName ?? me.sub;
-  // Nhân viên không cần biết mình "là nhân viên" (NV-31); Adm D&E vẫn thấy vai
+  // Nhân viên không cần biết mình "là nhân viên"; Adm D&E vẫn thấy vai
   const who = [me.department, me.role === 'member' ? null : t(`common.roles.${me.role}`)].filter(Boolean).join(' · ');
   const rows: [string, string | null][] = [
     ['profile.email', me.email],

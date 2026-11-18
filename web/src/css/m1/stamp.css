@@ -1,4 +1,4 @@
-/* Số đếm trong chip đang chọn (kiểu B, TC-03): cùng màu chữ xanh đậm của chip */
+/* Số đếm trong chip đang chọn (kiểu B): cùng màu chữ xanh đậm của chip */
 [data-shell='admin'] .ct-chip[aria-pressed='true'] .ct-chip__n,
 [data-shell='admin'] .ct-chip[aria-checked='true'] .ct-chip__n { color: var(--c-acc-ink); }
 [data-shell='admin'] .flt-chip[aria-pressed='true'] .flt-cnt { color: var(--c-acc-ink); opacity: 1; }

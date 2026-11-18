@@ -105,7 +105,7 @@ test.describe('Hệ điều khiển', () => {
     await page.getByRole('menuitem', { name: 'Xem phiếu' }).click();
     const sheet = page.getByRole('dialog');
     await expect(sheet).toBeVisible();
-    // AD-13: ngăn Phiếu của … chỉ còn nút ✕ "Đóng" ở đầu, không có chân
+    // ngăn Phiếu của … chỉ còn nút ✕ "Đóng" ở đầu, không có chân
     const close = sheet.getByRole('button', { name: 'Đóng' });
     await expect(close).toHaveCount(1);
     await expect(close).toBeInViewport({ ratio: 1 });

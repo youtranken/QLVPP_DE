@@ -176,7 +176,7 @@ describe('Bố cục theo route', () => {
     expect(css).toMatch(/\.table--fixed \{ table-layout: fixed; min-width: var\(--dt-min, 0\); \}/);
   });
 
-  // TC-05: dải chấm nối là tiến trình nên giữ một hàng cả ở 390 (hai hàng thì đường nối gãy)
+  // dải chấm nối là tiến trình nên giữ một hàng cả ở 390 (hai hàng thì đường nối gãy)
   it('Kỳ tháng: dải 4 bước một hàng bốn cột ở mọi bề rộng; bảng dùng hết bề ngang', () => {
     const css = readFileSync(join(SRC, 'features/month/month.m1.css'), 'utf8');
     expect(css).toMatch(/\.mk-strip \{[^}]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);

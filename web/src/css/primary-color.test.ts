@@ -8,7 +8,7 @@ const ruleBody = (css: string, selector: string) => {
   return at < 0 ? '' : css.slice(at, css.indexOf('}', at));
 };
 
-describe('màu chính họ QLHS/QLTS (TC-00)', () => {
+describe('màu chính họ app PMH (TC-00)', () => {
   it('--c-acc = #1D4ED8, sidebar navy #0F1F3D, vạch đang chọn #60A5FA', () => {
     const block = read('css/tokens-m1.css').split('HẾT BẢNG MÀU')[0];
     expect(block).toMatch(/--c-acc:\s*#1D4ED8\b/i);

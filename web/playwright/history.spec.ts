@@ -12,7 +12,7 @@ async function snap(page: Page, info: TestInfo, name: string) {
 // Kỳ quá khứ chỉ V2D-21 dùng (khác PRIVATE_YM của Gửi ADM/Hàng về): cũ trước
 const OWED_YMS = ['2000-03', '2000-04'] as const;
 
-// NV-28/NV-30: 1280 bảng "Đăng ký · Đã nhận · Còn chờ"; 390 mỗi món một dòng "tên · sl đvt — đã nhận a, còn chờ b"
+// 1280 bảng "Đăng ký · Đã nhận · Còn chờ"; 390 mỗi món một dòng "tên · sl đvt — đã nhận a, còn chờ b"
 async function expectLine(page: Page, info: TestInfo, name: string, n: { registered: number; received: number; waiting: number }) {
   if (isMobile(info)) {
     const li = page.getByRole('listitem').filter({ hasText: name });
@@ -261,13 +261,13 @@ test.describe('E2-S6 lịch sử', () => {
         await expect(page.getByRole('heading', { level: 2, name: `Phiếu tháng ${prevMonth}/${prevYm.slice(0, 4)}` })).toBeVisible();
         await expect(link).toHaveAttribute('aria-current', 'page');
         const row = page.getByRole('row').filter({ hasText: a.name });
-        // NV-27…29: nhãn "Còn chờ n món", cột Còn chờ, "Nhận lần cuối" chỉ giờ ngày; không cột Được giao khi bằng số đăng ký
+        // nhãn "Còn chờ n món", cột Còn chờ, "Nhận lần cuối" chỉ giờ ngày; không cột Được giao khi bằng số đăng ký
         await expect(master.getByText('Còn chờ 1 món', { exact: true })).toBeVisible();
         await expect(page.getByText('Còn chờ 1 món', { exact: true }), 'danh sách và đầu phiếu đếm cùng một cách (NV-06)').toHaveCount(2);
         await expect(page.getByRole('columnheader', { name: 'Được giao' })).toHaveCount(0);
         await expect(page.getByRole('columnheader', { name: 'Nhận lần cuối' })).toBeVisible();
         await expect(row.getByText(`09:10 08/${prevYm.slice(5)}`, { exact: true })).toBeVisible();
-        // NV-25: 1280 dòng tháng không có mũi tên
+        // 1280 dòng tháng không có mũi tên
         await expect(link.locator('svg')).toHaveCount(0);
         await snap(page, info, 'master-detail');
       }

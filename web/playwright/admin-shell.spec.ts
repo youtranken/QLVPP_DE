@@ -223,7 +223,7 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
       await expect(crumbs).toBeHidden();
       await page.getByRole('button', { name: OPEN_MENU }).click();
     } else {
-      // TC-01: đường dẫn nằm ở thanh trên, đầu trang không lặp
+      // đường dẫn nằm ở thanh trên, đầu trang không lặp
       await expect(crumbs).toBeHidden();
       await expect(page.getByRole('navigation', { name: 'Đường dẫn' })).toContainText('Tủ / Kho');
     }
@@ -238,7 +238,7 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     for (const height of [800, 720]) {
       await page.setViewportSize({ width: 1280, height });
       await page.goto('/admin/stock');
-      // 12 mục (V2D-20, AD-38 bỏ Xuất lẻ, TC-06 thêm Việc hôm nay): ở 720 nav tự cuộn, mục cuối vẫn tới được; khối tài khoản không cuộn theo
+      // 12 mục (bỏ Xuất lẻ, thêm Việc hôm nay): ở 720 nav tự cuộn, mục cuối vẫn tới được; khối tài khoản không cuộn theo
       await side.getByRole('link', { name: /^Cấu hình/ }).scrollIntoViewIfNeeded();
       await expect(side.getByRole('link', { name: /^Cấu hình/ })).toBeInViewport({ ratio: 1 });
       await expect(page.getByRole('button', { name: /^Đăng xuất/ })).toBeInViewport({ ratio: 1 });

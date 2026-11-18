@@ -28,7 +28,7 @@
 .month-switch button { width: 32px; border: 0; background: transparent; color: var(--ink-2); font-size: 16px; }
 .month-switch button:hover:not(:disabled) { background: var(--card-2); }
 .month-switch button:disabled { color: var(--line-2); cursor: not-allowed; }
-/* :not([hidden]): chữ lý do › tắt (AD-15) là span hidden cho aria-describedby; display ở đây đè hidden làm tràn ngang 390 */
+/* :not([hidden]): chữ lý do › tắt là span hidden cho aria-describedby; display ở đây đè hidden làm tràn ngang 390 */
 .month-switch span:not([hidden]) { display: inline-flex; align-items: center; padding: 0 12px; border-inline: 1px solid var(--line); font-weight: 600; white-space: nowrap; }
 @media (max-width: 680px) {
   .month-switch { height: 40px; }

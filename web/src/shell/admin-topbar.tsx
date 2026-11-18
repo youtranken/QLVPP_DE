@@ -10,7 +10,7 @@ import { AdminMenuSheet } from '@/shell/admin-menu-sheet';
 import { QuickSearch } from '@/shell/quick-search';
 
 
-// Thanh trên không lặp tiêu đề trang (đã có h1): dòng phụ nói kỳ hiện tại, giống nhau ở mọi màn (AD-03)
+// Thanh trên không lặp tiêu đề trang (đã có h1): dòng phụ nói kỳ hiện tại, giống nhau ở mọi màn
 function usePeriodContext(): string | undefined {
   const { t } = useTranslation();
   const period = useQuery(currentPeriodQuery());

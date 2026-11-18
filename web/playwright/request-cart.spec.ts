@@ -136,7 +136,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await adds.nth(1).click();
       const open = page.getByRole('button', { name: 'Xem phiếu (2 món)' });
       await expect(open).toBeVisible();
-      // NV-21: nút Lưu của thanh nổi ghi đúng "Lưu phiếu" một dòng (số thay đổi chỉ cho trình đọc màn hình)
+      // nút Lưu của thanh nổi ghi đúng "Lưu phiếu" một dòng (số thay đổi chỉ cho trình đọc màn hình)
       const barSave = page.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu phiếu' }).last();
       await expect(barSave).toBeVisible();
       const shown = await barSave.evaluate((el) => [...el.childNodes].filter((n) => !(n instanceof HTMLElement && n.classList.contains('sr-only'))).map((n) => n.textContent).join('').trim());
@@ -170,7 +170,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await expect(sheet).toBeHidden();
       await expect(page.getByText(`Đã lưu phiếu tháng ${month}`)).toBeVisible();
       await expect(open).toBeFocused();
-      // NV-20: đã lưu, không đổi gì → thanh nổi không còn nút "Lưu phiếu" mờ
+      // đã lưu, không đổi gì → thanh nổi không còn nút "Lưu phiếu" mờ
       await expect(page.getByRole('button', { name: /Lưu phiếu/ })).toHaveCount(0);
     } finally {
       await group.cleanup(me.sub);
