@@ -1,7 +1,6 @@
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, useContext, useId, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
-import { initialsOf } from '@/lib/initials';
 import { DataTable } from '@/ui/data-table';
 import { SelectBox } from '@/ui/data-table-row';
 import { Progress } from '@/ui/progress';
@@ -11,17 +10,9 @@ import type { DeliveryPerson } from './delivery-people.api';
 import type { Shortage } from './deliver-plan';
 import { isOpenLine } from './people-filter';
 
-export function PersonAvatar({ name, large = false }: { name: string; large?: boolean }) {
-  return (
-    <span className={`pp-avatar${large ? ' pp-avatar--lg' : ''}`} aria-hidden="true">
-      {initialsOf(name)}
-    </span>
-  );
-}
-
-// Bật: "Giao…" (có bước xác nhận); vô hiệu thì nói lý do
-function actionLabel(person: DeliveryPerson, canDeliver: boolean, t: (k: string) => string) {
-  if (canDeliver) return t('delivery.people.card.action');
+// Nút luôn ghi "Giao…"; tắt thì lý do ở chú thích, không thay chữ nút (chữ dài đẩy ⋯ xuống dòng)
+function blockedReason(person: DeliveryPerson, canDeliver: boolean, t: (k: string) => string) {
+  if (canDeliver) return null;
   if (person.status === 'done') return t('delivery.people.card.delivered');
   if (!person.lines.some(isOpenLine)) return t('delivery.people.card.waitingReview');
   return t('delivery.people.card.noStock');
@@ -131,13 +122,28 @@ function PickCell({ person }: { person: DeliveryPerson }) {
 function ActionsCell({ person }: { person: DeliveryPerson }) {
   const { t } = useTranslation();
   const { canDeliver, onView, onDeliver, onHistory } = useCtx();
+  const reasonId = useId();
   const can = canDeliver(person);
-  const label = actionLabel(person, can, t);
+  const reason = blockedReason(person, can, t);
+  const label = t('delivery.people.card.action');
   return (
     <span className="pt-acts__in">
-      <button type="button" className="btn btn--sm" aria-label={`${label}, ${nameOf(person)}`} disabled={!can} onClick={() => onDeliver(person.user_sub)}>
+      <button
+        type="button"
+        className="btn btn--sm"
+        aria-label={`${label}, ${nameOf(person)}`}
+        aria-describedby={reason ? reasonId : undefined}
+        title={reason ?? undefined}
+        disabled={!can}
+        onClick={() => onDeliver(person.user_sub)}
+      >
         {label}
       </button>
+      {reason && (
+        <span id={reasonId} className="sr-only">
+          {reason}
+        </span>
+      )}
       <RowMenu
         label={t('delivery.people.more', { name: nameOf(person) })}
         items={[
@@ -160,7 +166,6 @@ function useColumns() {
         header: t('delivery.people.cols.person'),
         cell: ({ row: { original: r } }) => (
           <label className="pt-person" htmlFor={pickId(r)}>
-            <PersonAvatar name={nameOf(r)} />
             <span className="pt-person__text">
               <b>{nameOf(r)}</b>
               <small>{r.department ?? t('delivery.people.card.noDepartment')}</small>

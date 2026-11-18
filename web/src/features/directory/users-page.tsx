@@ -5,7 +5,7 @@ import { useMe } from '@/lib/me';
 import { usePanelParam } from '@/lib/use-panel-param';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
 import { FilterNotice } from '@/ui/filter-notice';
-import { ListMeta } from '@/ui/list-meta';
+import { ListMeta, ShownCount } from '@/ui/list-meta';
 import { LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { Select } from '@/ui/select';
@@ -16,7 +16,7 @@ import { SyncNotice, type SyncState } from './sync-result';
 import { UserDrawer } from './user-drawer';
 import { SyncStatusLine } from './sync-status';
 import { SYNC_STATUS_KEY } from './use-sync-status';
-import { UsersStats } from './users-stats';
+import { UsersStats, type UsersStatKey } from './users-stats';
 import { UsersTable, type UserRow } from './users-table';
 import { applyUsersView, DEFAULT_USERS_FILTER, departmentsOf, regOf, STATUS_OPTIONS, usersStats, type UsersFilter } from './users-rows';
 import { useOpenRegistration } from './use-open-registration';
@@ -111,13 +111,16 @@ export function UsersPage() {
   const notice = filter !== DEFAULT_USERS_FILTER && filter !== 'all';
   // Xóa lọc về mặc định (Đang dùng, không lọc khác): chỉ mời khi đang hẹp hơn mặc định, cùng điều kiện với FilterNotice
   const narrowed = notice || p.view.reg !== null || p.view.dept !== '' || p.view.q !== '';
-  const regCard =
-    reg.month === null ? null : { month: reg.month, count: reg.sets ? reg.sets.unregistered.size : null, pressed: p.view.reg === 'no', onClick: () => p.toggleReg('no') };
+  const regCard = reg.month === null ? null : { month: reg.month, count: reg.sets ? reg.sets.unregistered.size : null };
+  const statSelected: UsersStatKey | null = p.view.reg === 'no' ? 'reg' : p.view.reg ? null : filter === 'all' || filter === DELETED ? null : filter;
+  const selectStat = (key: UsersStatKey) => (key === 'reg' ? p.toggleReg('no') : p.toggleFilter(key));
+  // Thẻ số đang chọn đã nói số người; "Đang hiện x/y" chỉ khi tìm hoặc lọc phòng bớt thêm dòng
+  const partial = dir.overflow && !showDeleted;
   return (
     <div className="ct-page dr-page">
       {header}
       <SyncNotice state={sync.state} onRetry={sync.run} onClose={sync.close} />
-      {!dir.loading && !dir.overflow && <UsersStats stats={usersStats(dir.users)} filter={p.view.reg ? null : filter} onFilter={p.toggleFilter} reg={regCard} />}
+      {!dir.loading && !dir.overflow && <UsersStats stats={usersStats(dir.users)} selected={statSelected} onSelect={selectStat} reg={regCard} />}
       {reg.failed && <LoadError onRetry={reg.retry} />}
       {dir.overflow && !showDeleted && <p role="note" className="alert">{t('users.page.overflow')}</p>}
       <Toolbar search={{ value: search, onChange: setSearch, label: t('users.page.searchLabel'), placeholder: t('users.page.search'), maxLength: MAX_SEARCH }}>
@@ -137,10 +140,15 @@ export function UsersPage() {
         />
         {(!dir.loading || notice || (p.view.reg && reg.month !== null)) && (
           <ListMeta>
-            {!dir.loading && (
+            {!dir.loading && partial && (
               <p className="dr-count" role="status">
-                {t(dir.overflow && !showDeleted ? 'users.page.shownPartial' : 'users.page.shown', { shown: rows.length, total: list.length })}
+                {t('users.page.shownPartial', { shown: rows.length })}
               </p>
+            )}
+            {!dir.loading && !partial && (
+              <ShownCount shown={rows.length} total={list.length} filtering={p.view.q !== '' || p.view.dept !== ''}>
+                {t('users.page.shown', { shown: rows.length, total: list.length })}
+              </ShownCount>
             )}
             {notice && <FilterNotice label={t(`users.stats.${filter}`)} count={rows.length} onClear={p.clearFilter} />}
             {p.view.reg && reg.month !== null && <FilterNotice label={t(p.view.reg === 'yes' ? 'users.reg.yes' : 'users.reg.no', { month: reg.month })} count={rows.length} onClear={p.clearReg} />}

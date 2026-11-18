@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { AN, BINH, CHI, DEL, DUNG, openUsers, regOf, stubUsers } from './users-fixtures';
 
-const card = (name: RegExp) => screen.getByRole('button', { name });
+const card = (name: RegExp) => screen.getByRole('tab', { name });
 const bodyRows = () => within(screen.getByRole('table')).getAllByRole('row').slice(1);
 
 afterEach(() => vi.unstubAllGlobals());
@@ -21,7 +21,8 @@ describe('UsersPage — lọc trạng thái', () => {
     await userEvent.keyboard('{Escape}');
     expect(bodyRows().map((r) => within(r).getByRole('button').textContent)).toEqual(['Phạm Minh Đức', 'Trần Chi']);
     expect(screen.queryByText('Lê Thị Bình')).toBeNull();
-    expect(screen.getByText('Đang hiện 2/4 người')).toBeInTheDocument();
+    // Thẻ Đang dùng đang chọn đã nói đúng số người: không thêm "Đang hiện 2/4 người"
+    expect(screen.queryByText(/^Đang hiện/)).toBeNull();
     // Mặc định không phải "đang lọc" — không có dòng Đang lọc/Xóa lọc
     expect(screen.queryByText(/^Đang lọc:/)).toBeNull();
     await pickOption(status, 'Mọi trạng thái');
@@ -32,7 +33,7 @@ describe('UsersPage — lọc trạng thái', () => {
     expect(binh).toHaveClass('is-inactive');
     await pickOption(status, 'Đã khóa');
     expect(bodyRows().map((r) => within(r).getByRole('button').textContent)).toEqual(['Lê Thị Bình']);
-    expect(card(/^Đã khóa/)).toHaveAttribute('aria-pressed', 'true');
+    expect(card(/^Đã khóa/)).toHaveAttribute('aria-selected', 'true');
   });
 
   it('người đã xóa ẩn mặc định; chọn "Đã xóa" mới thấy, nhãn Đã xóa, và quay lại thì ẩn', async () => {
@@ -49,19 +50,19 @@ describe('UsersPage — lọc trạng thái', () => {
     expect(screen.getByText('Phạm Minh Đức')).toBeInTheDocument();
   });
 
-  it('bấm thẻ Chưa đăng ký: một thẻ sáng, số dòng = số trên thẻ (kể cả người đã khóa chưa đăng ký); bấm lại → về mặc định', async () => {
+  it('bấm thẻ Chưa đặt phiếu: một thẻ sáng, số dòng = số trên thẻ (kể cả người đã khóa chưa đăng ký); bấm lại → về mặc định', async () => {
     stubUsers([AN, BINH, CHI, DUNG], undefined, regOf([CHI, BINH], ['u-an']));
     await openUsers();
-    const reg = await screen.findByRole('button', { name: /^Chưa đăng ký tháng 11/ });
+    const reg = await screen.findByRole('tab', { name: /^Chưa đặt phiếu tháng 11/ });
     await waitFor(() => expect(reg).toHaveTextContent(/2\s*người/));
     await userEvent.click(reg);
     expect(new URLSearchParams(screen.getByTestId('location-search').textContent ?? '').get('status')).toBe('all');
-    expect(reg).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getAllByRole('button', { pressed: true })).toEqual([reg]);
+    expect(reg).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getAllByRole('tab', { selected: true })).toEqual([reg]);
     expect(bodyRows().map((r) => within(r).getAllByRole('button')[0].textContent).sort()).toEqual(['Lê Thị Bình', 'Trần Chi']);
     await userEvent.click(reg);
     expect(screen.getByTestId('location-search')).not.toHaveTextContent(/status=|reg=/);
-    expect(card(/^Đang dùng/)).toHaveAttribute('aria-pressed', 'true');
+    expect(card(/^Đang dùng/)).toHaveAttribute('aria-selected', 'true');
   });
 
   it.each([
@@ -71,7 +72,7 @@ describe('UsersPage — lọc trạng thái', () => {
     stubUsers([DEL]);
     mockViewport(1280);
     renderApp(makeMe('admin'), `/admin/users?${query}`);
-    expect(await screen.findByText(/Đang hiện 0\/0/)).toBeInTheDocument();
+    expect(await screen.findByText(/^Không có ai khớp/)).toBeInTheDocument();
     expect(screen.queryAllByRole('button', { name: 'Xóa lọc' }).length > 0).toBe(offered);
   });
 

@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, within } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 import type { DeliveryPerson } from './delivery-people.api';
-import { A, C, D, PEOPLE, person, pLine } from './people-fixtures';
+import { PEOPLE, person, pLine } from './people-fixtures';
 
 function open(people: DeliveryPerson[]) {
   stubShellApi({
@@ -13,21 +13,16 @@ function open(people: DeliveryPerson[]) {
     '/api/admin/periods/2026-10/delivery-people': () => jsonResponse(200, { ym: '2026-10', people }),
   });
   mockViewport(1280);
-  renderApp(makeMe('admin'), '/admin/delivery?tab=all');
+  renderApp(makeMe('admin'), '/admin/delivery');
 }
 const card = (name: string) => screen.getByText(name, { selector: '.pt-person b' }).closest('tr') as HTMLElement;
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('DeliveryPeoplePage — Chưa nhận / Còn nợ chồng nhau', () => {
-  it('B có cả hai → ghi chú "1 người có cả hai" dưới tab', async () => {
+describe('DeliveryPeoplePage — bỏ dòng "người có cả hai" (AD-27)', () => {
+  it('B vừa chưa nhận vừa còn nợ → không có câu "1 người có cả hai"', async () => {
     open(PEOPLE);
-    expect(await screen.findByText('1 người có cả hai')).toBeInTheDocument();
-  });
-
-  it('không ai có cả hai → không có ghi chú', async () => {
-    open([A, C, D]);
-    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
+    await screen.findByText('Lê Thị Bình', { selector: '.pt-person b' });
     expect(screen.queryByText(/người có cả hai/)).toBeNull();
   });
 });
@@ -45,6 +40,7 @@ describe('DeliveryPeoplePage — Tiến độ giao và Còn nợ (G4, đếm đ�
     expect(within(card('Người Hai')).getByText('0/3')).toBeInTheDocument();
     expect(within(card('Người Ba')).getByText('0/2')).toBeInTheDocument();
     expect(within(card('Người Ba')).getByText('1 món · T9')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('tab', { name: /^Đã nhận đủ/ }));
     expect(within(card('Người Bốn')).getByText('2/2')).toBeInTheDocument();
   });
 });

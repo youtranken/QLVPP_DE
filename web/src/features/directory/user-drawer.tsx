@@ -3,9 +3,8 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { OrderHistoryDialog } from '@/features/summary/order-history-dialog';
-import { DialogClose } from '@/ui/dialog';
 import { OverlayPanel, type PanelNav } from '@/ui/overlay-panel';
-import { LastLogin, StatusBadge, UserAvatar, type UserRow } from './users-table';
+import { LastLogin, StatusBadge, type UserRow } from './users-table';
 import { nameOf } from './users-rows';
 
 interface Props {
@@ -32,16 +31,8 @@ export function UserDrawer({ user, nav, onClose }: Props) {
       onClose={onClose}
       title={t('users.drawer.title')}
       nav={{ ...nav, prevLabel: t('users.drawer.prev'), nextLabel: t('users.drawer.next') }}
-      footer={
-        <DialogClose asChild>
-          <button type="button" className="btn">
-            {t('common.close')}
-          </button>
-        </DialogClose>
-      }
     >
       <div className="dr-who">
-        <UserAvatar user={user} large />
         <span className="dr-who__text">
           <b>{nameOf(user)}</b>
           <small className="dr-muted">{user.department ?? empty}</small>

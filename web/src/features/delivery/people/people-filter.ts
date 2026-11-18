@@ -1,28 +1,4 @@
-import { matchesSearch } from '@/features/request/request-format';
 import type { DeliveryPerson, DeliveryPersonLine } from './delivery-people.api';
-
-export type PeopleTab = 'pending' | 'debt' | 'done' | 'all';
-
-// Tab theo cờ chứ không theo status: người vừa chưa nhận vừa còn nợ có ở cả hai tab
-const IN_TAB: Record<PeopleTab, (p: DeliveryPerson) => boolean> = {
-  pending: (p) => p.has_pending,
-  debt: (p) => p.has_debt,
-  done: (p) => !p.has_pending && !p.has_debt,
-  all: () => true,
-};
-
-// Có từ khóa thì tìm trên mọi trạng thái: người đứng trước quầy cần thấy ngay dù đã nhận
-export function filterPeople(people: DeliveryPerson[], tab: PeopleTab, q: string): DeliveryPerson[] {
-  if (q.trim()) return people.filter((p) => matchesSearch(`${p.full_name ?? ''} ${p.department ?? ''}`, q));
-  return people.filter(IN_TAB[tab]);
-}
-
-export function tabCounts(people: DeliveryPerson[]): Record<PeopleTab, number> {
-  const count = (tab: PeopleTab) => people.filter(IN_TAB[tab]).length;
-  return { pending: count('pending'), debt: count('debt'), done: count('done'), all: people.length };
-}
-
-export const overlapCount = (people: DeliveryPerson[]) => people.filter((p) => p.has_pending && p.has_debt).length;
 
 export interface Waiting {
   people: number;

@@ -10,15 +10,6 @@ import { nameOf, type RegFilter } from './users-rows';
 // reg: undefined khi chưa tải danh sách đăng ký; null khi người không thuộc danh sách kỳ
 export type UserRow = AdminUser & { id: string; reg?: RegFilter | null };
 
-export function UserAvatar({ user, large = false }: { user: Pick<AdminUser, 'sub' | 'fullName'>; large?: boolean }) {
-  const letter = nameOf(user).trim().charAt(0).toUpperCase();
-  return (
-    <span className={large ? 'dr-avatar dr-avatar--lg' : 'dr-avatar'} aria-hidden="true">
-      {letter}
-    </span>
-  );
-}
-
 export function StatusBadge({ status }: { status: AdminUser['status'] }) {
   const { t } = useTranslation();
   // Cùng màu với thẻ số ở đầu trang: Đã khóa đỏ, Mất quyền (PMH ID gỡ app) xanh thông tin
@@ -31,7 +22,7 @@ export function LastLogin({ iso }: { iso: string | null }) {
   return iso ? <>{formatVnStamp(iso, true)}</> : <span className="dr-muted">{t('users.page.neverLoggedIn')}</span>;
 }
 
-// Chỉ đã/chưa đăng ký, không món/số lượng; người ngoài danh sách kỳ (khóa, Hành chính…) ghi "—"
+// Chỉ đã/chưa đặt phiếu, không món/số lượng; người ngoài danh sách kỳ (khóa, Hành chính…) ghi "—"
 function RegCell({ reg }: { reg: RegFilter | null | undefined }) {
   const { t } = useTranslation();
   if (reg === undefined) return null;
@@ -64,7 +55,6 @@ function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
           meta: { minWidth: '13rem' },
           cell: ({ row: { original: u } }) => (
             <span className="dr-person">
-              <UserAvatar user={u} />
               <span className="dr-person__text">
                 <button
                   type="button"
@@ -95,8 +85,7 @@ function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
         },
         { id: 'code', header: t('users.page.colCode'), meta: { width: '5.5rem' }, cell: ({ row }) => <Clip text={row.original.employeeCode} line /> },
         { id: 'department', header: t('users.page.colDepartment'), meta: { width: '6.5rem' }, cell: ({ row }) => <Clip text={row.original.department} /> },
-        // Tháng vừa khít chữ dài nhất ("Đã đăng ký" 84px + đệm 24), Nhóm bớt 4px: ở 1024 bảng chỉ rộng 54rem nên mỗi px
-        // cột khác lấy từ cột Họ tên — hai cột này nhường lại 16px cho Họ tên giữ 208px
+        // Ở 1024 bảng chỉ rộng 54rem nên mỗi px cột khác lấy từ cột Họ tên; tiêu đề "Phiếu tháng 11" xuống hai dòng được, ô chỉ cần vừa "Chưa đặt"
         ...(regMonth === null ? [] : [{ id: 'reg', header: t('users.reg.col', { month: regMonth }), meta: { width: '6.75rem' }, cell: ({ row }: { row: { original: UserRow } }) => <RegCell reg={row.original.reg} /> }]),
         { id: 'team', header: t('users.page.colTeam'), meta: { width: '5.25rem' }, cell: ({ row }) => <Clip text={row.original.team} line /> },
         {

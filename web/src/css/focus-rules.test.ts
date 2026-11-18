@@ -104,7 +104,7 @@ describe('luật vòng focus', () => {
 
   it('khung cuộn/khung cắt: một luật chung vẽ vòng focus vào trong, nạp sau mọi CSS chung', () => {
     const focus = read('css/focus.css');
-    for (const box of ['.rv-tabs', '.pp-tabs__scroll', '.month-switch', '.flt-chips', '.seg-m1', '.ct-chips', '.ct-seg-scroll', '.ct-gchips-scroll', '.au-quick', '.rq-f-scroll']) expect(focus).toContain(box);
+    for (const box of ['.rv-tabs', '.month-switch', '.flt-chips', '.seg-m1', '.ct-chips', '.ct-seg-scroll', '.ct-gchips-scroll', '.au-quick', '.rq-f-scroll']) expect(focus).toContain(box);
     expect(focus).toMatch(/:focus-visible\s*\{[^}]*box-shadow:\s*var\(--focus-inset\)/);
     expect(read('css/tokens-m1.css')).toMatch(/--focus-inset:\s*inset/);
     const imports = [...read('main.tsx').matchAll(/import '(@\/css\/[^']+\.css)'/g)].map((m) => m[1]);

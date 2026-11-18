@@ -38,11 +38,11 @@ const admin = {
       more: 'Xem thêm',
     },
     reg: {
-      no: 'Chưa đăng ký tháng {{month}}',
-      yes: 'Đã đăng ký tháng {{month}}',
-      col: 'Tháng {{month}}',
-      cellYes: 'Đã đăng ký',
-      cellNo: 'Chưa',
+      no: 'Chưa đặt phiếu tháng {{month}}',
+      yes: 'Đã đặt phiếu tháng {{month}}',
+      col: 'Phiếu tháng {{month}}',
+      cellYes: 'Đã đặt',
+      cellNo: 'Chưa đặt',
     },
     stats: {
       label: 'Lọc theo tình trạng',

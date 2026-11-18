@@ -189,21 +189,14 @@ test.describe('Điện thoại và màn vừa: khối không bị cắt (vòng 8
     await expect(dialog.locator('thead')).toBeHidden();
   });
 
-  test('360: tab Giao hàng giữ đệm ≥ 12px hai bên chữ (thiếu chỗ thì cuộn ngang)', async ({ page }, info) => {
+  test('360: năm thẻ số Giao hàng xếp hai cột, thẻ nào cũng nằm trọn trong màn', async ({ page }, info) => {
     test.skip(!isMobile(info), 'điện thoại');
     await page.setViewportSize({ width: 360, height: 800 });
     await as(page, 'admin');
     await settle(page, '/admin/delivery');
-    const pads = await page.locator('.pp-tabs .seg-m1 button').evaluateAll((buttons) =>
-      buttons.map((b) => {
-        const box = b.getBoundingClientRect();
-        const range = document.createRange();
-        range.selectNodeContents(b);
-        const rects = [...range.getClientRects()];
-        return Math.min(Math.min(...rects.map((r) => r.left)) - box.left, box.right - Math.max(...rects.map((r) => r.right)));
-      }),
-    );
-    for (const pad of pads) expect(pad).toBeGreaterThanOrEqual(11);
+    const boxes = await page.getByRole('tablist', { name: 'Lọc theo trạng thái' }).getByRole('tab').evaluateAll((tabs) => tabs.map((t) => t.getBoundingClientRect().toJSON() as DOMRect));
+    expect(boxes).toHaveLength(5);
+    for (const box of boxes) expect(box.left >= 0 && box.right <= 360).toBe(true);
   });
 
   test('390: Nhận hàng — đầu nhóm trải hết bề ngang thẻ', async ({ page }, info) => {

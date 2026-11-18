@@ -60,7 +60,7 @@ async function expectSameBox(page: Page, base: Box, where: string, selector?: st
 test.describe('Bảng quản lý', () => {
   asRole('admin');
 
-  const ROUTES = ['/admin/month', '/admin/reports', '/admin/backlog', '/admin/delivery?tab=all', '/admin/arrivals', '/admin/stock', '/admin/users', '/admin/audit', '/admin/catalog?view=table', '/admin/categories'];
+  const ROUTES = ['/admin/month', '/admin/reports', '/admin/backlog', '/admin/delivery', '/admin/arrivals', '/admin/stock', '/admin/users', '/admin/audit', '/admin/catalog?view=table', '/admin/categories'];
 
   for (const width of [768, 900, 1024]) {
     test(`Vòng8 ${width}px: không bảng nào bị cắt trong khung không cuộn được`, async ({ page }, info) => {
@@ -102,7 +102,7 @@ test.describe('Bảng quản lý', () => {
   test('Vòng8 1280px: ô chọn trong bảng có vùng bấm 44×44', async ({ page }, info) => {
     test.skip(isMobile(info), '390 đã đo ở admin-mobile.spec');
     await page.setViewportSize({ width: 1280, height: 900 });
-    for (const route of ['/admin/catalog?view=table', '/admin/delivery?tab=all', '/admin/arrivals']) {
+    for (const route of ['/admin/catalog?view=table', '/admin/delivery', '/admin/arrivals']) {
       await page.goto(route);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
       await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
@@ -118,7 +118,7 @@ test.describe('Bảng quản lý', () => {
 
   // Trạng thái ghi trong URL; base là trạng thái gốc. Cột (x, bề rộng) và đỉnh bảng phải giữ nguyên
   const STATES: { name: string; base: string; states: string[] }[] = [
-    { name: 'Giao hàng', base: '/admin/delivery', states: ['/admin/delivery?tab=debt', '/admin/delivery?tab=done', '/admin/delivery?tab=all'] },
+    { name: 'Giao hàng', base: '/admin/delivery', states: ['/admin/delivery?tab=ready', '/admin/delivery?tab=partial', '/admin/delivery?tab=done'] },
     { name: 'Tủ / Kho', base: '/admin/stock', states: ['/admin/stock?filter=incoming', '/admin/stock?filter=low', '/admin/stock?filter=none'] },
     { name: 'Danh bạ', base: '/admin/users', states: ['/admin/users?status=active', '/admin/users?status=locked', '/admin/users?reg=no'] },
     { name: 'Nhật ký', base: '/admin/audit', states: ['/admin/audit?action=stock.receipt', '/admin/audit?action=auth.login_denied_idp'] },

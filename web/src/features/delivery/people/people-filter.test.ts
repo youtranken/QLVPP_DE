@@ -1,46 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { cardSummary, filterPeople, overlapCount, tabCounts, waitingFor } from './people-filter';
+import { cardSummary, waitingFor } from './people-filter';
 import { A, B, C, D, PEOPLE, person, pLine } from './people-fixtures';
-
-const subs = (xs: { user_sub: string }[]) => xs.map((p) => p.user_sub);
-
-describe('filterPeople', () => {
-  it('tab lọc theo cờ, không theo status: Chưa nhận = has_pending, Còn nợ = has_debt (B có cả hai ở cả hai tab), Đã nhận = không cờ; "Tất cả" giữ hết', () => {
-    expect(subs(filterPeople(PEOPLE, 'pending', ''))).toEqual(['u-a', 'u-b']);
-    expect(subs(filterPeople(PEOPLE, 'debt', ''))).toEqual(['u-b', 'u-c']);
-    expect(subs(filterPeople(PEOPLE, 'done', ''))).toEqual(['u-d']);
-    expect(subs(filterPeople(PEOPLE, 'all', ''))).toEqual(['u-a', 'u-b', 'u-c', 'u-d']);
-  });
-
-  it('từ khóa bỏ dấu, không phân biệt hoa thường: "binh" khớp "Lê Thị Bình", "KIEN TRUC" khớp phòng', () => {
-    expect(subs(filterPeople(PEOPLE, 'all', 'binh'))).toEqual(['u-b']);
-    expect(subs(filterPeople(PEOPLE, 'all', ' KIEN TRUC '))).toEqual(['u-c']);
-    expect(subs(filterPeople(PEOPLE, 'all', 'do mai'))).toEqual(['u-d']);
-  });
-
-  it('có từ khóa thì tìm trên mọi trạng thái, không giới hạn theo tab (như thiết kế)', () => {
-    expect(subs(filterPeople(PEOPLE, 'pending', 'khoa'))).toEqual(['u-c']);
-  });
-
-  it('không khớp → rỗng; tên null không làm vỡ', () => {
-    expect(filterPeople(PEOPLE, 'all', 'zzz')).toEqual([]);
-    expect(subs(filterPeople([person({ user_sub: 'u-x', full_name: null, department: null })], 'all', 'x'))).toEqual([]);
-  });
-});
-
-describe('tabCounts', () => {
-  it('đếm theo trạng thái trên danh sách đầy đủ, không phụ thuộc từ khóa', () => {
-    expect(tabCounts(PEOPLE)).toEqual({ pending: 2, debt: 2, done: 1, all: 4 });
-    expect(tabCounts([])).toEqual({ pending: 0, debt: 0, done: 0, all: 0 });
-  });
-});
-
-describe('overlapCount', () => {
-  it('số người có cả Chưa nhận và Còn nợ: B → 1; không ai → 0', () => {
-    expect(overlapCount(PEOPLE)).toBe(1);
-    expect(overlapCount([A, C, D])).toBe(0);
-  });
-});
 
 describe('cardSummary', () => {
   it('đếm món (không phải dòng) chưa nhận + nợ còn giao được: nợ + kỳ này cùng bút là 1 món → 3 món · 18 đơn vị; bỏ dòng chờ duyệt và dòng đã giao đủ', () => {

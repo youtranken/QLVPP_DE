@@ -40,11 +40,11 @@ const admin: Messages<typeof vi> = {
       more: 'Load more',
     },
     reg: {
-      no: 'Not signed up for {{month, monthName}}',
-      yes: 'Signed up for {{month, monthName}}',
-      col: '{{month, MonthName}}',
-      cellYes: 'Signed up',
-      cellNo: 'Not yet',
+      no: 'No request for {{month, monthName}}',
+      yes: 'Request placed for {{month, monthName}}',
+      col: '{{month, MonthName}} request',
+      cellYes: 'Ordered',
+      cellNo: 'Not ordered',
     },
     stats: {
       label: 'Filter by status',

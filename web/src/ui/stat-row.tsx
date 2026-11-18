@@ -1,10 +1,15 @@
 import { Children, type ReactNode } from 'react';
+import { StatFilterContext } from '@/ui/stat-filter-context';
 
-// label: hàng thẻ dùng làm bộ lọc thì gom thành một nhóm có tên cho trình đọc màn hình
-export function StatRow({ children, label }: { children: ReactNode; label?: string }) {
+// onSelect: hàng thẻ là bộ lọc (TC-04) — tablist, mỗi thẻ có filterKey là một tab; label: tên nhóm cho trình đọc màn hình
+export function StatRow({ children, label, selected, onSelect }: { children: ReactNode; label?: string; selected?: string; onSelect?: (key: string) => void }) {
+  const filter = onSelect ? { selected: selected ?? '', onSelect } : null;
+  const role = filter ? 'tablist' : label ? 'group' : undefined;
   return (
-    <div className="stat-row" data-count={Children.toArray(children).length} role={label ? 'group' : undefined} aria-label={label}>
-      {children}
-    </div>
+    <StatFilterContext.Provider value={filter}>
+      <div className="stat-row" data-count={Children.toArray(children).length} role={role} aria-label={label}>
+        {children}
+      </div>
+    </StatFilterContext.Provider>
   );
 }
