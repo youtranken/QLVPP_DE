@@ -1,4 +1,4 @@
-import { Link, Navigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/ui/page-header';
 import { Segmented } from '@/ui/segmented';
@@ -29,11 +29,6 @@ export function StockPage() {
         crumbs={[t('nav.groups.stock'), title]}
         title={title}
         description={t('stock.page.description')}
-        secondary={
-          <Link className="btn" to="/admin/catalog">
-            {t('stock.page.catalogLink')}
-          </Link>
-        }
       />
       {/* Trong tủ / Lịch sử nhập xuất (sổ cái toàn kho) */}
       <Segmented

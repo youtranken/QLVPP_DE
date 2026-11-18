@@ -21,7 +21,6 @@ const stock: Messages<typeof vi> = {
     page: {
       title: 'Cupboard',
       description: 'Stock per item and every purchase and one-off issue. Deliveries deduct stock automatically.',
-      catalogLink: 'Products',
       search: 'Search by item name',
       emptyTitle: 'No items match',
       emptyHint: 'Try another name or clear the filter to see all items.',
@@ -42,7 +41,6 @@ const stock: Messages<typeof vi> = {
       ledger: 'Stock in/out history',
       more: 'More actions for {{name}}',
       showMore: 'Show more ({{n}} more items)',
-      shown: 'Showing {{shown}}/{{total}} items',
       issueDisabled: 'Out of stock — purchase first',
       openLedger: 'View stock in/out history for {{name}}',
       noCategory: 'No group',

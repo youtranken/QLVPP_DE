@@ -18,7 +18,6 @@ const stock = {
     page: {
       title: 'Tủ / Kho',
       description: 'Số trong tủ từng món và mọi lần nhập, xuất lẻ. Giao hàng tự trừ khỏi tủ.',
-      catalogLink: 'Sản phẩm',
       search: 'Tìm theo tên món',
       emptyTitle: 'Không có món nào khớp',
       emptyHint: 'Thử tên khác hoặc bỏ bộ lọc để xem tất cả món.',
@@ -39,7 +38,6 @@ const stock = {
       ledger: 'Lịch sử nhập xuất',
       more: 'Thao tác khác cho {{name}}',
       showMore: 'Xem thêm ({{n}} món nữa)',
-      shown: 'Đang hiện {{shown}}/{{total}} món',
       issueDisabled: 'Hết hàng — nhập mua trước',
       openLedger: 'Xem lịch sử nhập xuất {{name}}',
       noCategory: 'Chưa xếp nhóm',

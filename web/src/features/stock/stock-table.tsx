@@ -49,6 +49,11 @@ export function StockBadge({ row }: { row: Pick<StockRow, 'usable' | 'stock_stat
   );
 }
 
+// Món còn đủ để "—": nhãn xanh lặp số ở cột Trong tủ làm nhãn cảnh báo khó nổi
+function StatusCell({ row }: { row: StockRow }) {
+  return stockViewOf(row) === 'ok' ? <EmptyValue /> : <StockBadge row={row} />;
+}
+
 export function IssueButton({ item, onClick, className }: { item: Pick<StockRow, 'stock_qty'>; onClick: () => void; className: string }) {
   const { t } = useTranslation();
   const empty = item.stock_qty <= 0;
@@ -99,7 +104,7 @@ function useColumns(groupName: (r: StockRow) => string, onAction: (a: StockActio
       { id: 'unit', header: t('stock.page.colUnit'), meta: { width: '4.5rem' }, cell: ({ row }) => unitName(row.original.unit) },
       { id: 'stock', header: t('stock.page.colStock'), meta: { className: 'num r', width: '5rem' }, cell: ({ row }) => <b>{row.original.stock_qty}</b> },
       { id: 'restock', header: t('stock.page.colRestock'), meta: { className: 'num r', width: '6.5rem' }, cell: ({ row }) => row.original.restock_level ?? <EmptyValue /> },
-      { id: 'status', header: t('stock.page.colStatus'), meta: { width: '10rem' }, cell: ({ row }) => <StockBadge row={row.original} /> },
+      { id: 'status', header: t('stock.page.colStatus'), meta: { width: '10rem' }, cell: ({ row }) => <StatusCell row={row.original} /> },
       // Cần thêm = phần còn thiếu sau khi trừ hàng NCC đang về (server short)
       { id: 'need', header: t('stock.page.colNeed'), meta: { className: 'num r', width: '5.5rem' }, cell: ({ row }) => (row.original.short > 0 ? <b>{row.original.short}</b> : <EmptyValue />) },
       {

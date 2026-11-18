@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
-import { asRole, expectNoContrastViolations, isMobile, monthRowAction, removeTestItem, seedPwItem } from './helpers';
+import { asRole, expectNoContrastViolations, isMobile, monthRowAction, psql, removeTestItem, seedPwItem } from './helpers';
 
 // Dữ liệu giả cho trang chỉ đọc: không tra người/phiếu/dòng có sẵn của DB dev chung
 const PW_PERSON_LINE = {
@@ -208,6 +208,27 @@ test.describe('V2D-17b panel phủ ở Giao hàng, Tổng hợp, Tủ / Kho, Nh�
       await expect(ledger).toBeVisible();
     } finally {
       await removeTestItem(page.request, item.id);
+    }
+  });
+});
+
+test.describe('Tủ / Kho theo bản Sau (AD-35…37)', () => {
+  asRole('admin');
+
+  test('AD-35/36: không nút "Sản phẩm" đầu trang; mức 10 trống 2 → "Sắp hết", trống 3 → "—"', async ({ page }) => {
+    const low = await seedPwItem(page, { stock: 2 });
+    const ok = await seedPwItem(page, { stock: 3 });
+    try {
+      psql(`UPDATE items SET restock_level = 10 WHERE id IN ('${low.id}', '${ok.id}')`);
+      await page.goto(`/admin/stock?q=${encodeURIComponent('PW món')}`);
+      await expect(page.getByRole('heading', { level: 1, name: 'Tủ / Kho' })).toBeVisible();
+      await expect(page.getByRole('main').getByRole('link', { name: 'Sản phẩm' })).toHaveCount(0);
+      await expect(page.getByRole('row').filter({ hasText: low.name }).getByText('Sắp hết')).toBeVisible();
+      await expect(page.getByRole('row').filter({ hasText: ok.name }).getByText('Sắp hết')).toHaveCount(0);
+      await expect(page.getByText(/^Đang hiện \d+\/\d+ món$/)).toHaveCount(0);
+    } finally {
+      await removeTestItem(page.request, low.id);
+      await removeTestItem(page.request, ok.id);
     }
   });
 });
