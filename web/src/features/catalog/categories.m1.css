@@ -1,8 +1,10 @@
 [data-shell='admin'] .cg-name__text { color: var(--c-ink); font: var(--t-label); overflow-wrap: break-word; }
 [data-shell='admin'] .cg-name-en { overflow-wrap: break-word; }
+/* Tên nhóm dài không dấu cách (mã, tên dán vào) phải xuống dòng trong cột, không tràn sang cột bên */
+[data-shell='admin'] .cg-name > span, [data-shell='admin'] .cg-open > span { min-width: 0; overflow-wrap: anywhere; }
 [data-shell='admin'] .cg-dot { display: inline-block; width: 14px; height: 14px; }
 [data-shell='admin'] .cg-new-tone { display: flex; align-items: center; gap: var(--s-2); margin: 0; color: var(--c-ink-2); font: var(--t-sm); font-weight: 600; }
-[data-shell='admin'] .cg-open { display: inline-flex; align-items: center; min-width: var(--hit); min-height: var(--hit); padding: 0; border: 0; background: transparent; color: var(--c-ink); text-align: left; cursor: pointer; }
+[data-shell='admin'] .cg-open { display: inline-flex; align-items: center; min-width: var(--hit); max-width: 100%; overflow-wrap: anywhere; min-height: var(--hit); padding: 0; border: 0; background: transparent; color: var(--c-ink); text-align: left; cursor: pointer; }
 [data-shell='admin'] .cg-open:hover .cg-name__text { color: var(--c-acc); text-decoration: underline; }
 [data-shell='admin'] .cg-open:focus-visible { box-shadow: var(--focus); outline: none; border-radius: var(--r-sm); }
 [data-shell='admin'] .cg-count { min-width: var(--hit); min-height: var(--hit); white-space: nowrap; }
