@@ -7,7 +7,7 @@ COPY . .
 RUN npm run build
 
 # ---- runtime ----
-FROM nginx:1.30.6-alpine AS runtime
+FROM nginx:1.30.7-alpine AS runtime
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY proxy-api-headers.conf /etc/nginx/proxy-api-headers.conf
 COPY security-headers.conf /etc/nginx/security-headers.conf
