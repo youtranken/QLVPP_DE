@@ -6,16 +6,16 @@ asRole('admin');
 
 const rowOf = (page: Page, name: string) => page.getByRole('row').filter({ has: page.getByText(name, { exact: true }) });
 
-// Người đã nghỉ có phiếu kỳ khóa: bút 10 đã giao 4, giấy 2 chưa giao
+// Người đã nghỉ có phiếu kỳ khóa: bút 10 đã giao 4, giấy 2 chưa giao; tủ còn 1 bút để nút Giao… mở được
 function seedLeft(tag: string, ym: string) {
   const sub = `pw-cr-${tag}`;
   const name = `PW Nghỉ ${tag}`;
   psql(`INSERT INTO users (sub, full_name, email, department, status) VALUES ('${sub}', '${name}', '${sub}@example.test', 'PW Phòng', 'locked')`);
-  const pen = psql(`INSERT INTO items (name, unit, stock_qty) VALUES ('PW Bút hủy ${tag}', 'cai', 0) RETURNING id`);
+  const pen = psql(`INSERT INTO items (name, unit, stock_qty) VALUES ('PW Bút hủy ${tag}', 'cai', 1) RETURNING id`);
   const paper = psql(`INSERT INTO items (name, unit, stock_qty) VALUES ('PW Giấy hủy ${tag}', 'cai', 0) RETURNING id`);
   const createdPeriod = psql(`INSERT INTO periods (ym, deadline) VALUES ('${ym}-01', '${ym}-10T17:00:00Z') ON CONFLICT DO NOTHING RETURNING ym`) !== '';
   psql(`WITH r AS (INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('${ym}-01', '${sub}', '${sub}') RETURNING id)
-    INSERT INTO request_lines (request_id, item_id, qty, delivered_qty) SELECT id, '${pen}', 10, 4 FROM r UNION ALL SELECT id, '${paper}', 2, 0 FROM r`);
+    INSERT INTO request_lines (request_id, item_id, qty, delivered_qty) SELECT id, '${pen}'::uuid, 10, 4 FROM r UNION ALL SELECT id, '${paper}'::uuid, 2, 0 FROM r`);
   const cleanup = () => {
     psql(`DELETE FROM undo_actions WHERE payload->>'request_id' IN (SELECT id::text FROM requests WHERE user_sub = '${sub}');
       DELETE FROM requests WHERE user_sub = '${sub}';

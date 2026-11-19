@@ -31,9 +31,9 @@ function restoreOrder(values: string) {
   if (values) psql(`UPDATE item_categories c SET sort_order = v.s FROM (VALUES ${values}) AS v(id, s) WHERE c.id = v.id AND c.sort_order <> v.s`);
 }
 
-// Nhóm thử còn sót từ các lần chạy trước (không có món) làm lệch vị trí/màu của test
+// Nhóm thử còn sót từ các lần chạy trước (không có món) làm lệch vị trí/màu của test; chỉ xóa nhóm cũ để không xóa nhóm spec khác (catalog) vừa tạo khi chạy song song
 function deleteTestCategories() {
-  psql(`DELETE FROM item_categories c WHERE c.name LIKE 'PW nhóm %' AND NOT EXISTS (SELECT 1 FROM items i WHERE i.category_id = c.id)`);
+  psql(`DELETE FROM item_categories c WHERE c.name LIKE 'PW nhóm %' AND c.created_at < now() - interval '15 minutes' AND NOT EXISTS (SELECT 1 FROM items i WHERE i.category_id = c.id)`);
 }
 
 const menuButtons = (page: Page) => page.getByRole('table').getByRole('button', { name: /^Sửa nhóm / });

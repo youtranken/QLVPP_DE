@@ -157,8 +157,7 @@ test.describe('E0-S9 màn vào (chưa đăng nhập)', () => {
     await expect(
       page.getByRole('heading', { name: 'Không có quyền truy cập' }),
     ).toBeVisible();
-    await expect(page.getByText(/Liên hệ .+ để được cấp quyền\./)).toBeVisible();
-    await expect(page.getByText(/Tài khoản của bạn không có quyền vào QLVPP\./)).toBeVisible();
+    await expect(page.getByText('Tài khoản của bạn không có quyền vào QLVPP. Liên hệ Adm D&E để được hỗ trợ.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Đăng nhập bằng tài khoản khác' })).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'forbidden');

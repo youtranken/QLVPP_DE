@@ -53,7 +53,7 @@ test.describe('E2-S5 ảnh từ camera', () => {
       const body = (await res.json()) as { id: string; size_bytes: number; mime: string };
       fileId = body.id;
       expect(body.size_bytes).toBeLessThanOrEqual(MAX_UPLOAD);
-      expect(body.mime).toBe('image/jpeg');
+      expect(body.mime).toBe('image/webp');
       const preview = dialog.getByRole('img', { name: 'Ảnh món' });
       await expect(preview).toBeVisible();
       const longEdge = () => preview.evaluate((img: HTMLImageElement) => Math.max(img.naturalWidth, img.naturalHeight));
