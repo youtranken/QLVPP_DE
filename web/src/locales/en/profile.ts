@@ -8,6 +8,7 @@ const profile: Messages<typeof vi> = {
     openMenu: 'Open account for {{name}}',
     email: 'Email',
     employeeCode: 'Employee ID',
+    support: 'Contact D&E Admin for support.',
   },
 };
 

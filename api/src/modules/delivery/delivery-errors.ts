@@ -64,6 +64,22 @@ export const cancelReasonRequired = () =>
     message: 'Chọn lý do hủy nợ; lý do "Khác" cần ghi chú ít nhất 3 ký tự.',
   });
 
+export const userNotLeft = () =>
+  new ConflictException({
+    code: 'USER_NOT_LEFT',
+    message: 'Chủ phiếu vẫn đang làm — chỉ hủy cả phiếu khi người đã nghỉ.',
+  });
+
+// Kèm phần còn lại hiện tại từng dòng để hộp xác nhận vẽ lại
+export const staleRequestCancel = (
+  lines: { line_id: string; remaining: number }[],
+) =>
+  new ConflictException({
+    code: 'STALE_UPDATE',
+    message: 'Phiếu vừa đổi ở nơi khác — tải lại để xem phần còn lại.',
+    lines,
+  });
+
 export const notDebtYet = () =>
   new ConflictException({
     code: 'NOT_DEBT_YET',

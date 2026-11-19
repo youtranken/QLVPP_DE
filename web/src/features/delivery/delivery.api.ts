@@ -38,7 +38,22 @@ export function deliverMax(remaining: number, stock: number | null, cap?: number
   return Math.max(0, Math.min(remaining, stock ?? remaining, cap ?? remaining));
 }
 
-export const deliverLine = (lineId: string, body: DeliverBody, csrfToken: string | null) =>
+export interface CancelRequestResult {
+  user_sub: string;
+  cancelled_now: number;
+  lines: { id: string; cancelled_now: number }[];
+  undo_id: string | null;
+}
+
+// Hủy mọi phiếu người đã nghỉ trong một lần gọi: gửi đúng phần còn lại đang hiện; server lệch một dòng → STALE_UPDATE, không phiếu nào bị hủy
+export const cancelUserRequests = (userSub: string, expected: { line_id: string; remaining: number }[], csrfToken: string | null) =>
+  apiFetch<CancelRequestResult>(`/api/admin/users/${encodeURIComponent(userSub)}/cancel-remaining`, {
+    method: 'POST',
+    body: JSON.stringify({ expected_lines: expected }),
+    csrfToken,
+  });
+
+export const deliverLine =(lineId: string, body: DeliverBody, csrfToken: string | null) =>
   apiFetch<DeliverResult>(`/api/admin/lines/${lineId}/deliver`, { method: 'POST', body: JSON.stringify(body), csrfToken });
 
 

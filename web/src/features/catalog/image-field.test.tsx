@@ -15,7 +15,7 @@ describe('ImageField — chữ dưới ô ảnh', () => {
         <ImageField fileId={null} onChange={vi.fn()} onBusyChange={vi.fn()} />
       </MeContext.Provider>,
     );
-    expect(screen.getByText(/^JPG\/PNG tới 5 MB/)).toBeInTheDocument();
+    expect(screen.getByText(/^JPG, PNG hoặc WEBP tới 5 MB/)).toBeInTheDocument();
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
@@ -26,7 +26,7 @@ describe('ImageField — chữ dưới ô ảnh', () => {
       </MeContext.Provider>,
     );
     const input = screen.getByLabelText('Chụp hoặc chọn ảnh');
-    await userEvent.upload(input, new File(['x'], 'a.heic', { type: 'image/heic' }));
+    await userEvent.upload(input, new File(['x'], 'hong.jpg', { type: 'image/jpeg' }));
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Chọn ảnh JPG, PNG hoặc WebP');
     expect(input).toHaveAttribute('aria-describedby', alert.id);

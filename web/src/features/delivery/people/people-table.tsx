@@ -9,6 +9,7 @@ import { EmptyValue } from '@/ui/empty-cell';
 import type { DeliveryPerson } from './delivery-people.api';
 import type { Shortage } from './deliver-plan';
 import { isOpenLine } from './people-filter';
+import { canCancelRequest } from './cancel-request-lines';
 
 // Nút luôn ghi "Giao…"; tắt thì lý do ở chú thích, không thay chữ nút (chữ dài đẩy ⋯ xuống dòng)
 function blockedReason(person: DeliveryPerson, canDeliver: boolean, t: (k: string) => string) {
@@ -29,6 +30,7 @@ interface Props {
   onToggleAll: (checked: boolean) => void;
   onView: (sub: string) => void;
   onDeliver: (sub: string) => void;
+  onCancelRequest?: (sub: string) => void;
   onHistory: (sub: string) => void;
 }
 
@@ -121,13 +123,23 @@ function PickCell({ person }: { person: DeliveryPerson }) {
 
 function ActionsCell({ person }: { person: DeliveryPerson }) {
   const { t } = useTranslation();
-  const { canDeliver, onView, onDeliver, onHistory } = useCtx();
+  const { canDeliver, onView, onDeliver, onHistory, onCancelRequest } = useCtx();
   const reasonId = useId();
   const can = canDeliver(person);
   const reason = blockedReason(person, can, t);
   const label = t('delivery.people.card.action');
   return (
     <span className="pt-acts__in">
+      {onCancelRequest && canCancelRequest(person) && (
+        <button
+          type="button"
+          className="btn btn--sm btn--danger-line"
+          aria-label={t('delivery.cancelRequest.actionFor', { name: nameOf(person) })}
+          onClick={() => onCancelRequest(person.user_sub)}
+        >
+          {t('delivery.cancelRequest.action')}
+        </button>
+      )}
       <button
         type="button"
         className="btn btn--sm"
@@ -168,6 +180,7 @@ function useColumns() {
           <label className="pt-person" htmlFor={pickId(r)}>
             <span className="pt-person__text">
               <b>{nameOf(r)}</b>
+              {r.user_status !== 'active' && <small className="pt-person__left">{t('delivery.confirm.leftUser')}</small>}
               <small>{r.department ?? t('delivery.people.card.noDepartment')}</small>
             </span>
           </label>

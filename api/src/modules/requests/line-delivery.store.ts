@@ -26,6 +26,14 @@ export interface LockedLine {
   review_status: string;
 }
 
+export interface RequestHead {
+  id: string;
+  period_ym: string;
+  user_sub: string;
+}
+
+export type OpenLine = LockedLine & { remaining: number };
+
 export interface CancelledLine {
   id: string;
   qty: number;
@@ -119,6 +127,48 @@ export class LineDeliveryStore {
       ORDER BY l.id FOR UPDATE OF l
     `);
     return rows;
+  }
+
+  // Dòng của phiếu kỳ chưa khóa (period_ym ≥ kỳ mở) mà người gọi gửi lên: chỉ đọc, không khóa
+  async unlockedLineIds(
+    ex: Executor,
+    userSub: string,
+    openYm: string,
+    lineIds: string[],
+  ): Promise<string[]> {
+    const { rows } = await ex.execute<{ id: string }>(sql`
+      SELECT l.id FROM request_lines l JOIN requests r ON r.id = l.request_id
+      WHERE r.user_sub = ${userSub} AND r.period_ym >= ${ymToDate(openYm)}::date
+        AND l.id = ANY(${sql.param(lineIds)}::uuid[])
+    `);
+    return rows.map((r) => r.id);
+  }
+
+  // Hủy mọi phiếu của một người: chỉ phiếu kỳ đã khóa, khóa phiếu theo id rồi dòng theo id;
+  // chỉ khóa dòng còn nợ hoặc dòng được gửi lên (để báo STALE_UPDATE đúng số)
+  async lockUserOpenLines(
+    tx: Tx,
+    userSub: string,
+    openYm: string,
+    sentIds: string[],
+  ): Promise<{ heads: RequestHead[]; lines: OpenLine[] }> {
+    const heads = await tx.execute<RequestHead & Record<string, unknown>>(sql`
+      SELECT r.id, to_char(r.period_ym, 'YYYY-MM') AS period_ym, r.user_sub
+      FROM requests r
+      WHERE r.user_sub = ${userSub} AND r.period_ym < ${ymToDate(openYm)}::date
+      ORDER BY r.id FOR UPDATE
+    `);
+    if (heads.rows.length === 0) return { heads: [], lines: [] };
+    const ids = heads.rows.map((h) => h.id);
+    const { rows } = await tx.execute<OpenLine & Record<string, unknown>>(sql`
+      SELECT ${LINE_COLUMNS},
+        CASE WHEN ${UNDELIVERED_LINE} THEN ${REMAINING_QTY} ELSE 0 END AS remaining
+      FROM request_lines l JOIN requests r ON r.id = l.request_id
+      WHERE l.request_id = ANY(${sql.param(ids)}::uuid[])
+        AND (${UNDELIVERED_LINE} OR l.id = ANY(${sql.param(sentIds)}::uuid[]))
+      ORDER BY l.id FOR UPDATE OF l
+    `);
+    return { heads: heads.rows, lines: rows };
   }
 
   async addDelivered(

@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
-import { acquireLock, asRole, auditRows, devHeaders, expectNoContrastViolations, isMobile, openAuditDetail, seedActiveUser, shot } from './helpers';
+import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, seedActiveUser, shot } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
 
 const ACTIVE = { sub: 'pw-dir-active', name: 'PW Danh bạ An' };
@@ -51,7 +51,7 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
   test.afterAll(async () => {
     try {
       if (api && original) {
-        const res = await api.put('/api/admin/config', { data: { admin_contact: original.admin_contact } });
+        const res = await api.put('/api/admin/config', { data: { registration_last_day: original.registration_last_day } });
         expect(res.ok()).toBe(true);
       }
     } finally {
@@ -60,11 +60,10 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
     }
   });
 
-  test('E0-S8 ngày hạn 29 bị chặn tại ô; lưu admin_contact → trang "Chưa được cấp quyền" hiện đúng tên; nhật ký ghi config.updated', async ({
+  test('E0-S8 ngày hạn 29 bị chặn tại ô; không còn khối liên hệ, trang "Chưa được cấp quyền" nói câu cố định (A7)', async ({
     page,
     browser,
   }, info) => {
-    const contact = `PW Adm D&E ${info.project.name} ${Date.now()}`;
     await page.goto('/admin/config');
     await expect(page.getByRole('heading', { level: 1, name: 'Cấu hình' })).toBeVisible();
     // R-D8.19: dòng sống nói kỳ đang mở giữ hạn cũ, hạn mới áp từ kỳ sau
@@ -76,29 +75,16 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
     await expect(page.getByRole('button', { name: 'Lưu kỳ đăng ký' })).toBeDisabled();
     await expect(page.getByText('Nhập số từ 3 đến 28.')).toBeVisible();
 
-    const contactForm = page.getByRole('form', { name: 'Liên hệ Adm D&E và báo sắp hết hàng' });
-    await page.getByLabel('Tên và cách liên hệ Adm D&E').fill(contact);
-    await contactForm.getByRole('button', { name: 'Lưu liên hệ' }).click();
-    await expect(contactForm.getByRole('status')).toHaveText('Đã lưu.');
+    await expect(page.getByRole('form', { name: 'Liên hệ Adm D&E và báo sắp hết hàng' })).toHaveCount(0);
+    await expect(page.getByLabel('Tên và cách liên hệ Adm D&E')).toHaveCount(0);
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'admin-config');
 
     const guest = await browser.newContext({ baseURL: info.project.use.baseURL });
     const forbidden = await guest.newPage();
     await forbidden.goto('/?login=forbidden');
-    await expect(forbidden.getByText(`Liên hệ ${contact} để được cấp quyền.`)).toBeVisible();
+    await expect(forbidden.getByText('Tài khoản của bạn không có quyền vào QLVPP. Liên hệ Adm D&E để được hỗ trợ.')).toBeVisible();
     await guest.close();
-
-    await page.goto('/admin/audit?action=config.updated');
-    await expect(page.getByRole('heading', { level: 1, name: 'Nhật ký' })).toBeVisible();
-    const entry = auditRows(page).first();
-    const detail = await openAuditDetail(page, entry);
-    const diff = detail.getByRole('table');
-    const changed = diff.getByRole('row').filter({ has: page.getByRole('rowheader', { name: 'Liên hệ Adm D&E', exact: true }) });
-    await expect(changed.getByRole('cell').last()).toHaveText(contact);
-    await expect(detail.getByText('Chi tiết kỹ thuật')).toHaveCount(0);
-    if (isMobile(info)) await expectNoContrastViolations(page);
-    await shot(page, info, 'admin-audit');
   });
 });
 

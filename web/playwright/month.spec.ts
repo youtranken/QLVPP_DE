@@ -203,3 +203,18 @@ test.describe('Kỳ tháng 390: việc chính thấy ngay khi mở', () => {
     expect(top).toBeLessThan(844);
   });
 });
+
+test.describe('A3 Kỳ tháng: dải 4 bước giãn hết bề ngang', () => {
+  test('A3 bước 4 chạm mép phải dải (lệch ≤ 24 px), 4 bước cùng một hàng, không cuộn ngang', async ({ page }) => {
+    await openMonth(page);
+    const list = steps(page);
+    const items = list.getByRole('listitem');
+    await expect(items).toHaveCount(4);
+    const box = (await list.boundingBox())!;
+    const lastText = (await items.nth(3).locator('.mk-step__text').boundingBox())!;
+    const tops = await items.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+    expect(new Set(tops).size).toBe(1);
+    expect(box.x + box.width - (lastText.x + lastText.width)).toBeLessThanOrEqual(24);
+    expect(await fitsWidth(page)).toBe(true);
+  });
+});

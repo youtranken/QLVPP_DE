@@ -35,8 +35,7 @@ const auth = {
     },
     forbidden: {
       title: 'Không có quyền truy cập',
-      body: 'Tài khoản của bạn không có quyền vào QLVPP. Liên hệ {{admin_contact}} để được cấp quyền.',
-      defaultContact: 'Adm D&E',
+      body: 'Tài khoản của bạn không có quyền vào QLVPP. Liên hệ Adm D&E để được hỗ trợ.',
       switchAccount: 'Đăng nhập bằng tài khoản khác',
       portal: 'Về trang Tài khoản D&E',
     },

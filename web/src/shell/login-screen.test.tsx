@@ -226,7 +226,7 @@ describe('LoginScreen', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Phiên đăng nhập đã hết hạn. Đăng nhập lại để tiếp tục.');
   });
 
-  it('?login=forbidden → trang "Chưa được cấp quyền" lấy admin_contact từ /api/public-config', async () => {
+  it('?login=forbidden → trang "Chưa được cấp quyền" nói câu cố định "Liên hệ Adm D&E để được hỗ trợ." (server cũ còn gửi admin_contact cũng bỏ qua)', async () => {
     at('/?login=forbidden');
     const fetchMock = vi
       .fn()
@@ -244,8 +244,9 @@ describe('LoginScreen', () => {
     // Cùng khung đăng nhập (ảnh tòa nhà + logo PMH), không có ô nhập
     expect(container.querySelector('.auth-media img')).not.toBeNull();
     expect(container.querySelector('input')).toBeNull();
-    expect(await screen.findByText(/chị Bình \(Adm D&E\) — 0909 123 456/)).toBeInTheDocument();
-    expect(screen.getByText('Tài khoản của bạn không có quyền vào QLVPP. Liên hệ chị Bình (Adm D&E) — 0909 123 456 để được cấp quyền.')).toBeInTheDocument();
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(screen.getByText('Tài khoản của bạn không có quyền vào QLVPP. Liên hệ Adm D&E để được hỗ trợ.')).toBeInTheDocument();
+    expect(screen.queryByText(/chị Bình/)).toBeNull();
     expect(screen.queryByText(/nhóm/i)).toBeNull();
     expect(fetchMock).toHaveBeenCalledWith('/api/public-config', undefined);
     await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập bằng tài khoản khác' }));
@@ -269,13 +270,6 @@ describe('LoginScreen', () => {
     expect(portalFallback({ protocol: 'https:', hostname: 'dev-vpp.pmh.com.vn', port: '8443' })).toBe('https://dev-admin.pmh.com.vn:8443/');
     expect(portalFallback({ protocol: 'https:', hostname: 'de-vpp.pmh.com.vn', port: '' })).toBe('https://de-admin.pmh.com.vn/');
     expect(portalFallback({ protocol: 'http:', hostname: 'localhost', port: '5173' })).toBe('https://de-admin.pmh.com.vn:8443/');
-  });
-
-  it('forbidden khi admin_contact rỗng → dùng "Adm D&E", không để trống', async () => {
-    at('/?login=forbidden');
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, { admin_contact: '' })));
-    renderWithI18n(<LoginScreen />);
-    expect(await screen.findByText(/Liên hệ Adm D&E/)).toBeInTheDocument();
   });
 
   describe('Tài khoản thử (chỉ bản dev)', () => {

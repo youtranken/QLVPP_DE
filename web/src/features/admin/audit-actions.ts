@@ -50,6 +50,7 @@ export const AUDIT_ACTIONS: readonly string[] = [
   'unit.deleted',
   'unit.updated',
   'users.access_restored',
+  'users.cancel_remaining',
   'users.access_revoked',
   'users.directory_reconcile_aborted',
   'users.directory_sync_failed',

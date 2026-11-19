@@ -40,6 +40,7 @@ describe('Câu chữ còn lệch sau rà soát giao diện A', () => {
     expect(VI('stock.dialog.current', { qty: 20, unit: 'ram' })).toBe('Tủ: 20 ram');
     expect(VI('stock.dialog.after', { qty: 3 })).toBe('Tủ sau khi lưu 3');
     const vi = JSON.stringify(i18n.getResourceBundle('vi', 'translation'));
+    expect(VI('stock.page.colRestock')).toBe('Số trong tủ sau lần nhập');
     expect(vi).not.toMatch(/Tồn kho|Tồn hiện tại|Tồn sau/);
   });
 });

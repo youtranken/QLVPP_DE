@@ -149,19 +149,19 @@ describe('NotificationScheduler.runHourly — sắp hết báo một lần tới
     ]);
   });
 
-  it('low_stock_notify = false → không chuông, món không bị đánh dấu; bật lại true → đúng 1 bản ghi mỗi admin', async () => {
+  it('chuông sắp hết luôn bật (A7): DB cũ còn low_stock_notify = false vẫn báo đúng 1 bản ghi mỗi admin', async () => {
     const id = await newItem('Thước kẻ');
     const buy = await purchase(id, 10);
     await issueTo(id, 8);
-    await f.setConfig({ low_stock_notify: false });
+    await f.q(
+      `INSERT INTO config (key, value) VALUES ('low_stock_notify', 'false'::jsonb)
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+    );
     try {
-      expect((await f.run(NOW)).low_stock).toBe(0);
-      expect(await lowEvents(id)).toEqual([]);
-      expect(await notifiedAt(id)).toBeNull();
+      await f.run(NOW);
     } finally {
-      await f.setConfig({ low_stock_notify: true });
+      await f.q("DELETE FROM config WHERE key = 'low_stock_notify'");
     }
-    await f.run(NOW);
     expect(await lowEvents(id)).toEqual([
       { user_sub: A1, event_id: `low_stock:${id}:${buy}` },
       { user_sub: A2, event_id: `low_stock:${id}:${buy}` },

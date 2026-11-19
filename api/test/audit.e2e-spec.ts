@@ -261,8 +261,8 @@ describe('GET admin/audit — thao tác của SA local vẫn hiện tên SA', ()
       .set('Cookie', `vpp_sid=${sid}`)
       .set('X-CSRF-Token', csrf)
       .send({
-        admin_contact: (current.body as { admin_contact: string })
-          .admin_contact,
+        default_max_qty: (current.body as { default_max_qty: number })
+          .default_max_qty,
       })
       .expect(200);
     for (const action of ['auth.sa_login', 'config.updated']) {

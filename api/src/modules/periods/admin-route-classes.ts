@@ -33,6 +33,7 @@ export const ADMIN_ROUTE_CLASSES: Record<`${Method} ${string}`, RouteClass> = {
   'PUT /api/admin/requests/:id/lines': 'by-id',
   'POST /api/admin/lines/:id/deliver': 'by-id',
   'POST /api/admin/lines/:id/cancel-remaining': 'by-id',
+  'POST /api/admin/users/:sub/cancel-remaining': 'by-id',
   'POST /api/admin/lines/:id/review': 'by-id',
   'GET /api/admin/lines/:id/deliveries': 'by-id',
   // Khóa kỳ kiểm theo từng phiếu trong thân yêu cầu: kỳ mở → kết quả PERIOD_NOT_LOCKED của phiếu đó (200), không 409 cả lô

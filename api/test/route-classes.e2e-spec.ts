@@ -104,6 +104,7 @@ describe('phân loại route /admin/* và guard kỳ khóa (e2e)', () => {
       .split(' ')[1]
       .replace(':ym', OPEN)
       .replace(/requests\/:id/, `requests/${ids.request}`)
+      .replace(/users\/:sub/, `users/${A}`)
       .replace(/lines\/:id/, `lines/${ids.customLine}`)
       .replace(/snapshots\/:id/, `snapshots/${ids.snapshot}`)
       .replace(':line_key', ids.item);
@@ -132,6 +133,8 @@ describe('phân loại route /admin/* và guard kỳ khóa (e2e)', () => {
     }
     if (route.endsWith('/deliver'))
       return { qty: 1, expected_delivered_qty: 0 };
+    if (route.endsWith('users/:sub/cancel-remaining'))
+      return { expected_lines: [{ line_id: ids.itemLine, remaining: 2 }] };
     if (route.endsWith('/cancel-remaining'))
       return {
         reason_code: 'not_needed',

@@ -31,9 +31,10 @@ function restoreOrder(values: string) {
   if (values) psql(`UPDATE item_categories c SET sort_order = v.s FROM (VALUES ${values}) AS v(id, s) WHERE c.id = v.id AND c.sort_order <> v.s`);
 }
 
-// Nhóm thử còn sót từ các lần chạy trước (không có món) làm lệch vị trí/màu của test
-function deleteTestCategories() {
-  psql(`DELETE FROM item_categories c WHERE c.name LIKE 'PW nhóm %' AND NOT EXISTS (SELECT 1 FROM items i WHERE i.category_id = c.id)`);
+// Nhóm thử sót (không có món) làm lệch vị trí/màu: xóa mọi nhóm thử của spec này cùng project (tên có hậu tố sau project, khác nhóm của catalog); nhóm project khác chỉ xóa khi đã cũ vì có thể đang chạy song song
+function deleteTestCategories(project: string) {
+  const own = project.replace(/'/g, "''");
+  psql(`DELETE FROM item_categories c WHERE c.name LIKE 'PW nhóm %' AND (c.name LIKE '%-${own} %' OR c.created_at < now() - interval '15 minutes') AND NOT EXISTS (SELECT 1 FROM items i WHERE i.category_id = c.id)`);
 }
 
 const menuButtons = (page: Page) => page.getByRole('table').getByRole('button', { name: /^Sửa nhóm / });
@@ -49,11 +50,13 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
     const stamp = `${Date.now()}-${info.project.name}`;
     const first = `PW nhóm ${stamp} A`;
     const second = `PW nhóm ${stamp} B`;
-    deleteTestCategories();
+    deleteTestCategories(info.project.name);
     const original = snapshotOrder();
     try {
-      await createCategory(request, first, 900_000);
-      await createCategory(request, second, 900_010);
+      // Đứng sau mọi nhóm hiện có, kể cả nhóm thử sót còn món mà dọn không xóa được
+      const tail = Number(psql(`SELECT COALESCE(MAX(sort_order), 0) FROM item_categories`)) + 10;
+      await createCategory(request, first, tail);
+      await createCategory(request, second, tail + 10);
       await page.goto('/admin/categories');
       await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
       await expect(nameOf(page, 'last')).toHaveAttribute('aria-label', `Sửa nhóm ${second}`);
@@ -93,7 +96,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await expect(dialog).toBeHidden();
       if (isMobile(info)) await expectNoContrastViolations(page);
     } finally {
-      deleteTestCategories();
+      deleteTestCategories(info.project.name);
       restoreOrder(original);
     }
   });
@@ -103,7 +106,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
     const category = `PW nhóm ${stamp} ngừng`;
     const names = [`PW món ${stamp} 1`, `PW món ${stamp} 2`];
     const itemIds: string[] = [];
-    deleteTestCategories();
+    deleteTestCategories(info.project.name);
     try {
       const catId = await createCategory(request, category);
       for (const name of names) itemIds.push(await createItem(request, { name, name_en: `PW item EN ${name.slice(-1)}`, category_id: catId }));
@@ -151,7 +154,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await expect(catRow.getByRole('button', { name: `Tạm ngưng nhóm ${category}` })).toBeVisible();
     } finally {
       for (const id of itemIds) await removeTestItem(request, id);
-      deleteTestCategories();
+      deleteTestCategories(info.project.name);
     }
   });
 
@@ -173,7 +176,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
     const category = `PW nhóm ${stamp} panel`;
     const names = [`PW món ${stamp} 1`, `PW món ${stamp} 2`, `PW món ${stamp} 3`];
     const itemIds: string[] = [];
-    deleteTestCategories();
+    deleteTestCategories(info.project.name);
     try {
       const catId = await createCategory(request, category);
       for (const name of names) itemIds.push(await createItem(request, { name, name_en: `PW item EN ${name.slice(-1)}`, category_id: catId }));
@@ -196,6 +199,8 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
         if ((await one.getAttribute('aria-checked')) === 'true') await one.click();
         await expect(one).toHaveAttribute('aria-checked', 'false', { timeout: 1_000 });
       }).toPass();
+      // Công tắc đổi lạc quan trước khi server lưu; chờ lưu xong thì hộp ngừng nhóm mới đếm đúng 2 món
+      await expect.poll(() => psql(`SELECT active FROM items WHERE id = '${itemIds[0]}'`)).toBe('f');
 
       await panel.getByRole('switch', { name: `Nhóm ${category}` }).click();
       const confirm = page.getByRole('dialog', { name: `Ngừng nhóm “${category}”?` });
@@ -215,7 +220,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await shot(page, info, 'v2d-15-group-panel', false);
     } finally {
       for (const id of itemIds) await removeTestItem(request, id);
-      deleteTestCategories();
+      deleteTestCategories(info.project.name);
     }
   });
 });

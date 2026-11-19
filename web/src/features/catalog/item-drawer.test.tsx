@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, within, pickOption, optionLabels } from '@/test/test-utils';
 import { compressImage } from '@/lib/image-compress';
 import { PAPER, PEN, adminItem } from './catalog-fixtures';
+import { uploadCropped } from '@/test/fake-crop-source';
 import { bodyOf, callsTo, png, renderDrawer, stubDrawerApi } from './item-drawer-fixtures';
 
+vi.mock('@/lib/crop-source', async () => (await import('@/test/fake-crop-source')).cropSourceMock);
 vi.mock('@/lib/image-compress', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/image-compress')>();
   return { ...actual, compressImage: vi.fn(actual.compressImage) };
@@ -19,7 +21,7 @@ afterEach(() => vi.unstubAllGlobals());
 async function fillNew(name = 'Bút chì') {
   await userEvent.type(screen.getByLabelText(/^Tên sản phẩm/), name);
   await pickOption(screen.getByLabelText(/^Đơn vị tính/), 'cây');
-  await userEvent.upload(screen.getByLabelText(PICK), png());
+  await uploadCropped(screen.getByLabelText(PICK), png());
   await screen.findByRole('img', { name: 'Ảnh món' });
 }
 
@@ -42,7 +44,7 @@ describe('Ngăn kéo Thêm sản phẩm', () => {
     stubDrawerApi();
     renderDrawer();
     await userEvent.type(screen.getByLabelText(/^Tên sản phẩm/), 'Bút chì');
-    await userEvent.upload(screen.getByLabelText(PICK), png());
+    await uploadCropped(screen.getByLabelText(PICK), png());
     await screen.findByRole('img', { name: 'Ảnh món' });
     await submitAdd();
     expect(screen.getByRole('alert')).toHaveTextContent('Cần thêm: ĐVT.');
@@ -52,33 +54,37 @@ describe('Ngăn kéo Thêm sản phẩm', () => {
   it('ô ảnh trống là khung "Chụp hoặc chọn ảnh" kèm gợi ý 5 MB; có ảnh → chỉ "Đổi ảnh", không "Xóa ảnh" vì ảnh bắt buộc (AD-46)', async () => {
     stubDrawerApi();
     renderDrawer();
-    expect(screen.getByText('JPG/PNG tới 5 MB. Nhân viên chọn món bằng ảnh nên ảnh là bắt buộc.')).toBeInTheDocument();
-    await userEvent.upload(screen.getByLabelText(PICK), png());
+    expect(screen.getByText('JPG, PNG hoặc WEBP tới 5 MB. Nhân viên chọn món bằng ảnh nên ảnh là bắt buộc.')).toBeInTheDocument();
+    await uploadCropped(screen.getByLabelText(PICK), png());
     expect(await screen.findByRole('img', { name: 'Ảnh món' })).toHaveAttribute('src', '/api/files/f-new');
     expect(screen.getByLabelText('Đổi ảnh')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Xóa ảnh' })).toBeNull();
   });
 
-  it('chọn ảnh HEIC → "Chọn ảnh JPG, PNG hoặc WebP" tại ô ảnh, không tải lên', async () => {
+  it('chọn ảnh HEIC (bỏ qua bộ lọc accept) → "Chỉ nhận ảnh JPG, PNG hoặc WEBP" tại ô ảnh, không tải lên', async () => {
     const actual = await vi.importActual<typeof import('@/lib/image-compress')>('@/lib/image-compress');
     vi.mocked(compressImage).mockImplementation(actual.compressImage);
     const f = stubDrawerApi();
     renderDrawer();
-    await userEvent.upload(screen.getByLabelText(PICK), new File([new Uint8Array([0])], 'IMG.HEIC', { type: 'image/heic' }));
-    expect(await screen.findByText('Chọn ảnh JPG, PNG hoặc WebP')).toBeInTheDocument();
+    await userEvent.upload(screen.getByLabelText(PICK), new File([new Uint8Array([0])], 'IMG.HEIC', { type: 'image/heic' }), {
+      applyAccept: false,
+    });
+    expect(await screen.findByText('Chỉ nhận ảnh JPG, PNG hoặc WEBP')).toBeInTheDocument();
     expect(f).not.toHaveBeenCalledWith('/api/files', expect.anything());
   });
 
   it.each([
     ['FILE_TOO_LARGE', 413, 'Ảnh lớn hơn 5 MB — chọn ảnh nhỏ hơn.'],
     ['FILE_TYPE_INVALID', 400, 'Chọn ảnh JPG, PNG hoặc WebP'],
-  ])('tải ảnh lỗi %s → câu lỗi ở ô ảnh, ô aria-invalid', async (code, status, text) => {
+  ])('tải ảnh lỗi %s → câu lỗi trong màn cắt (màn cắt không đóng); bấm Hủy → đóng và xóa lỗi', async (code, status, text) => {
     stubDrawerApi((url) => (url === '/api/files' ? jsonResponse(status, { code, message: 'x' }) : undefined));
     renderDrawer();
-    await userEvent.upload(screen.getByLabelText(PICK), png());
-    expect(await screen.findByText(text)).toBeInTheDocument();
-    expect(screen.getByLabelText(PICK)).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.getByLabelText(PICK)).toHaveAccessibleDescription(text);
+    await uploadCropped(screen.getByLabelText(PICK), png());
+    const cropper = screen.getByRole('dialog', { name: 'Cắt ảnh món' });
+    expect(await within(cropper).findByRole('alert')).toHaveTextContent(text);
+    await userEvent.click(within(cropper).getByRole('button', { name: 'Hủy' }));
+    expect(screen.queryByText(text)).toBeNull();
+    expect(screen.getByLabelText(PICK)).not.toHaveAttribute('aria-invalid');
   });
 
   it('server trả IMAGE_REQUIRED → câu lỗi ở ô ảnh', async () => {

@@ -126,6 +126,7 @@ const admin = {
       unit: { created: 'Thêm đơn vị tính', updated: 'Sửa đơn vị tính', deleted: 'Xóa đơn vị tính' },
       users: {
         directory_sync: 'Đồng bộ danh bạ',
+        cancel_remaining: 'Hủy phiếu người đã nghỉ',
         role_changed: 'Đổi vai theo Tài khoản D&E',
         access_revoked: 'Mất quyền vào VPP',
         access_restored: 'Được cấp lại quyền vào VPP',
@@ -141,7 +142,6 @@ const admin = {
       actorSearch: 'Tìm người thực hiện',
       actorHint: 'Tên hoặc email',
       system: 'Hệ thống (tự động)',
-      systemOnly: 'Chỉ việc tự động',
       action: 'Hành động',
       anyAction: 'Mọi hành động',
       from: 'Từ ngày',

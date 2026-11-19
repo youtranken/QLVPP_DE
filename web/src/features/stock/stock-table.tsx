@@ -9,6 +9,7 @@ import type { ReactNode } from 'react';
 import { EmptyValue } from '@/ui/empty-cell';
 import { periodShortOf, stockViewOf, type StockRow, type StockStatus } from './stock-rows';
 import { useDisabledReason } from '@/ui/disabled-reason';
+import { InfoTip } from '@/ui/info-tip';
 
 export type StockAction = 'purchase' | 'issue' | 'ledger';
 
@@ -79,6 +80,18 @@ function RowActions({ row: r, onAction }: { row: StockRow; onAction: (a: StockAc
   return <RowMenu label={t('stock.page.more', { name: r.name })} items={items} />;
 }
 
+function RestockHeader() {
+  const { t } = useTranslation();
+  return (
+    <>
+      {t('stock.page.colRestock')}
+      <InfoTip label={t('stock.page.colRestockInfo')}>
+        <p>{t('stock.page.colRestockHelp')}</p>
+      </InfoTip>
+    </>
+  );
+}
+
 function useColumns(groupName: (r: StockRow) => string, onAction: (a: StockAction, r: StockRow) => void) {
   const { t } = useTranslation();
   const unitName = useUnitNames();
@@ -103,7 +116,7 @@ function useColumns(groupName: (r: StockRow) => string, onAction: (a: StockActio
       },
       { id: 'unit', header: t('stock.page.colUnit'), meta: { width: '4.5rem' }, cell: ({ row }) => unitName(row.original.unit) },
       { id: 'stock', header: t('stock.page.colStock'), meta: { className: 'num r', width: '5rem' }, cell: ({ row }) => <b>{row.original.stock_qty}</b> },
-      { id: 'restock', header: t('stock.page.colRestock'), meta: { className: 'num r', width: '6.5rem' }, cell: ({ row }) => row.original.restock_level ?? <EmptyValue /> },
+      { id: 'restock', header: () => <RestockHeader />, meta: { className: 'num r', width: '6.5rem', label: t('stock.page.colRestock') }, cell: ({ row }) => row.original.restock_level ?? <EmptyValue /> },
       { id: 'status', header: t('stock.page.colStatus'), meta: { width: '10rem' }, cell: ({ row }) => <StatusCell row={row.original} /> },
       // Cần thêm = phần còn thiếu sau khi trừ hàng NCC đang về (server short)
       { id: 'need', header: t('stock.page.colNeed'), meta: { className: 'num r', width: '5.5rem' }, cell: ({ row }) => (row.original.short > 0 ? <b>{row.original.short}</b> : <EmptyValue />) },

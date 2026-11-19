@@ -36,6 +36,7 @@ async function createCategoryAndItem(page: Page, category: string, itemName: str
   await pickOption(form.getByRole('combobox', { name: 'Nhóm', exact: true }), category);
   const uploaded = page.waitForResponse((r) => r.url().endsWith('/api/files') && r.request().method() === 'POST');
   await form.getByLabel('Chụp hoặc chọn ảnh').setInputFiles('playwright/fixtures/item.png');
+  await form.page().getByRole('dialog', { name: 'Cắt ảnh món' }).getByRole('button', { name: 'Dùng ảnh' }).click();
   const upload = await uploaded;
   expect(upload.status()).toBe(201);
   await expect(form.getByRole('img', { name: 'Ảnh món' })).toBeVisible();

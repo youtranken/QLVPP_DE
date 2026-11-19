@@ -3,9 +3,11 @@
 [data-shell='admin'] .mk-head > .page-head__text { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); }
 [data-shell='admin'] .mk-head h1 { margin: 0; font: var(--t-h1); letter-spacing: -0.02em; }
 /* Dải tiến trình: chấm nối nhau, bước qua ✓ xanh lá, bước đang làm quầng xanh; không bấm được */
-[data-shell='admin'] .mk-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; padding: var(--s-4); list-style: none; counter-reset: mk-step; border-radius: var(--r-md); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); }
+[data-shell='admin'] .mk-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; margin: 0; padding: var(--s-4); list-style: none; counter-reset: mk-step; border-radius: var(--r-md); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); }
 [data-shell='admin'] .mk-step { position: relative; display: grid; gap: var(--s-2); justify-items: start; min-width: 0; padding-right: var(--s-3); counter-increment: mk-step; }
 [data-shell='admin'] .mk-step:not(:last-child)::after { content: ''; position: absolute; top: 13px; left: 36px; right: var(--s-2); height: 2px; border-radius: var(--r-xs); background: var(--c-line-strong); }
+/* Bước cuối vừa nội dung, ba bước đầu chia phần còn lại: dải chạm hai mép */
+[data-shell='admin'] .mk-step:last-child { padding-right: 0; }
 [data-shell='admin'] .mk-step[data-state='done']:not(:last-child)::after { background: var(--c-ok-fill); }
 [data-shell='admin'] .mk-step__dot { position: relative; z-index: 1; display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--r-pill); background: var(--c-surface); box-shadow: inset 0 0 0 2px var(--c-line-strong); color: var(--c-muted); font: var(--t-cap); }
 [data-shell='admin'] .mk-step__dot:empty::before { content: counter(mk-step); }

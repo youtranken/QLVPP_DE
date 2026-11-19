@@ -128,6 +128,7 @@ const admin: Messages<typeof vi> = {
       unit: { created: 'Unit added', updated: 'Unit edited', deleted: 'Unit deleted' },
       users: {
         directory_sync: 'Directory synced',
+        cancel_remaining: 'Requests cancelled (person left)',
         role_changed: 'Role changed by D&E Account',
         access_revoked: 'VPP access revoked',
         access_restored: 'VPP access restored',
@@ -143,7 +144,6 @@ const admin: Messages<typeof vi> = {
       actorSearch: 'Find actor',
       actorHint: 'Name or email',
       system: 'System (automatic)',
-      systemOnly: 'Automated jobs only',
       action: 'Action',
       anyAction: 'Any action',
       from: 'From',

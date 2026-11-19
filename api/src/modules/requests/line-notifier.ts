@@ -55,6 +55,10 @@ export class LineNotifier {
     return (await this.users.findBySub(userSub))?.status === 'active';
   }
 
+  lockOwnerStatus(tx: Tx, userSub: string): Promise<string | null> {
+    return this.users.lockStatusWithin(tx, userSub);
+  }
+
   // Gộp theo ngày: params tính lại từ mọi bản ghi trong ngày; lần lưu chỉ có user_left hoặc chủ phiếu đã nghỉ thì không chuông
   async linesAdjusted(
     tx: Tx,

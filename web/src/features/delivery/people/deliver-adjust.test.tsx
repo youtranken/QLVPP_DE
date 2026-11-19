@@ -50,11 +50,11 @@ const deliver = () => screen.getByRole('dialog', { name: 'Giao cho Nguyễn Văn
 // Ô "Còn chờ" của dòng (cột số thứ hai, sau tên món)
 const waitingQty = () => within(within(deliver()).getByRole('row', { name: /Bút bi xanh/ })).getAllByRole('cell')[1]!.textContent;
 
-describe('DeliverDialog — "Từ chối / giảm dòng…" (G4)', () => {
+describe('DeliverDialog — "Từ chối / giảm S/Lượng…" (G4)', () => {
   it('mở đúng hộp Điều chỉnh phiếu của phiếu đang giao; hộp Giao ẩn trong lúc đó (không đè lên), đóng Điều chỉnh thì hiện lại', async () => {
     stubAdjust();
     renderWithI18n(ui(BEFORE));
-    await userEvent.click(within(deliver()).getByRole('button', { name: 'Từ chối / giảm dòng…' }));
+    await userEvent.click(within(deliver()).getByRole('button', { name: 'Từ chối / giảm S/Lượng…' }));
     expect(await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Nguyễn Văn An' })).toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: 'Giao cho Nguyễn Văn An?' })).toBeNull();
     await userEvent.keyboard('{Escape}');
@@ -64,7 +64,7 @@ describe('DeliverDialog — "Từ chối / giảm dòng…" (G4)', () => {
   it('người chỉ còn nợ tháng trước (không có phiếu tháng đang giao) → không có nút', async () => {
     stubAdjust();
     renderWithI18n(ui(person({ request_id: null, lines: [pLine({ is_debt: true, period_ym: '2026-09' })] })));
-    expect(within(deliver()).queryByRole('button', { name: 'Từ chối / giảm dòng…' })).toBeNull();
+    expect(within(deliver()).queryByRole('button', { name: 'Từ chối / giảm S/Lượng…' })).toBeNull();
   });
 
   it('lưu điều chỉnh xong → hộp Giao lấy lại số còn chờ mới (7 → 2)', async () => {
@@ -73,7 +73,7 @@ describe('DeliverDialog — "Từ chối / giảm dòng…" (G4)', () => {
     renderWithI18n(live());
     await screen.findByRole('dialog', { name: 'Giao cho Nguyễn Văn An?' });
     expect(waitingQty()).toBe('7');
-    await userEvent.click(within(deliver()).getByRole('button', { name: 'Từ chối / giảm dòng…' }));
+    await userEvent.click(within(deliver()).getByRole('button', { name: 'Từ chối / giảm S/Lượng…' }));
     const adjust = await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Nguyễn Văn An' });
     await userEvent.click(await within(adjust).findByRole('checkbox', { name: 'Chọn Bút bi xanh' }));
     const reduce = within(adjust).getByRole('spinbutton', { name: 'Giảm còn: Bút bi xanh' });
@@ -90,7 +90,7 @@ describe('DeliverDialog — "Từ chối / giảm dòng…" (G4)', () => {
   it('mở Điều chỉnh rồi hủy, danh sách nạp lại sau đó → hộp Giao giữ số đang hiện (chỉ chụp lại sau khi lưu)', async () => {
     stubAdjust();
     const { rerender } = renderWithI18n(ui(BEFORE));
-    await userEvent.click(within(deliver()).getByRole('button', { name: 'Từ chối / giảm dòng…' }));
+    await userEvent.click(within(deliver()).getByRole('button', { name: 'Từ chối / giảm S/Lượng…' }));
     await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Nguyễn Văn An' });
     await userEvent.keyboard('{Escape}');
     await screen.findByRole('dialog', { name: 'Giao cho Nguyễn Văn An?' });
@@ -104,7 +104,7 @@ describe('DeliverDialog — "Từ chối / giảm dòng…" (G4)', () => {
     source.current = BEFORE;
     renderWithI18n(live());
     await screen.findByRole('dialog', { name: 'Giao cho Nguyễn Văn An?' });
-    await userEvent.click(within(deliver()).getByRole('button', { name: 'Từ chối / giảm dòng…' }));
+    await userEvent.click(within(deliver()).getByRole('button', { name: 'Từ chối / giảm S/Lượng…' }));
     const adjust = await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Nguyễn Văn An' });
     await userEvent.click(await within(adjust).findByRole('checkbox', { name: 'Chọn Bút bi xanh' }));
     const reduce = within(adjust).getByRole('spinbutton', { name: 'Giảm còn: Bút bi xanh' });

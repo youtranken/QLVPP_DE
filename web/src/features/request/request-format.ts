@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { useUnitNames } from '@/features/units/units.api';
-import { useMe } from '@/lib/me';
 import type { LineView } from './request.api';
 import type { CartLabel } from './use-cart';
 
@@ -48,12 +47,6 @@ export function useRequestFormat() {
     limit: (code: string | null, max: number | null | undefined) => (max ? t('request.grid.unitMax', { unit: unitName(code), max }) : unitName(code)),
     name: (l: Pick<CartLabel, 'name' | 'name_en'>) => nameIn(l, i18n.language),
   };
-}
-
-// Tên/cách liên hệ Hành chính lấy từ Cấu hình (_SPEC), chưa đặt thì gọi chung "Hành chính"
-export function useAdminContact(): string {
-  const { t } = useTranslation();
-  return useMe().config.admin_contact.trim() || t('request.contactFallback');
 }
 
 export { matchesSearch } from '@/lib/search';

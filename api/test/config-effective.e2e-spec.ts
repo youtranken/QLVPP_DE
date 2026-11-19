@@ -122,12 +122,12 @@ describe('PUT admin/config: đổi ngày cuối đăng ký ghi kỳ áp dụng (
     });
   });
 
-  it('đổi khóa không thuộc hạn kỳ (liên hệ) → audit không có effective_from_ym', async () => {
-    const contact = (
-      await pool.query("SELECT value FROM config WHERE key = 'admin_contact'")
-    ).rows[0]?.value as string | undefined;
-    await put({ admin_contact: `e2e ${ADMIN}` });
+  it('đổi khóa không thuộc hạn kỳ (số tối đa mặc định) → audit không có effective_from_ym', async () => {
+    const max = (
+      await pool.query("SELECT value FROM config WHERE key = 'default_max_qty'")
+    ).rows[0]?.value as number | undefined;
+    await put({ default_max_qty: 77 });
     expect(await lastAudit()).not.toHaveProperty('effective_from_ym');
-    await put({ admin_contact: contact ?? '' });
+    await put({ default_max_qty: max ?? 20 });
   });
 });

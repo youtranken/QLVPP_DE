@@ -9,6 +9,7 @@ export function ProfilePage() {
       <section className="pf-card">
         <AccountContent language />
       </section>
+      <p className="pf-support">{t('profile.support')}</p>
     </MemberPage>
   );
 }

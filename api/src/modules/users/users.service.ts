@@ -240,6 +240,14 @@ export class UsersService {
     return this.access.applyRole(sub, role, source);
   }
 
+  // Khóa chia sẻ dòng người trong tx của người gọi: đổi trạng thái (khôi phục quyền) phải chờ tx đó xong
+  async lockStatusWithin(ex: Executor, sub: string): Promise<string | null> {
+    const { rows } = await ex.execute<{ status: string }>(
+      sql`SELECT status FROM users WHERE sub = ${sub} FOR SHARE`,
+    );
+    return rows[0]?.status ?? null;
+  }
+
   async findBySub(sub: string) {
     const rows = await this.db
       .select()

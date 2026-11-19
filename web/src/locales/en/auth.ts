@@ -38,8 +38,7 @@ const auth: Messages<typeof vi> = {
     },
     forbidden: {
       title: 'No access',
-      body: 'Your account does not have access to QLVPP. Contact {{admin_contact}} to be granted access.',
-      defaultContact: 'D&E Admin',
+      body: 'Your account does not have access to QLVPP. Contact D&E Admin for support.',
       switchAccount: 'Sign in with another account',
       portal: 'Back to D&E Account',
     },

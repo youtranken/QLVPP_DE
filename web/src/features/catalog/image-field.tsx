@@ -1,12 +1,12 @@
-import { useId, useState } from 'react';
+import { useId } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { compressImage } from '@/lib/image-compress';
+import { ACCEPT_ATTR } from '@/lib/image-input';
 import type { Tone } from '@/lib/group-tone';
-import { useMe } from '@/lib/me';
 import { Icon } from '@/ui/icon';
-import { fileUrl, uploadItemImage } from '@/features/catalog/catalog.api';
-import { catalogErrorKey } from '@/features/catalog/catalog-errors';
+import { ImageCropper } from '@/ui/image-cropper';
+import { fileUrl } from '@/features/catalog/catalog.api';
+import { useItemImage } from '@/features/catalog/use-item-image';
 import '@/features/catalog/catalog.m1.css';
 
 export function ImageField({
@@ -25,48 +25,23 @@ export function ImageField({
   onBusyChange: (busy: boolean) => void;
 }) {
   const { t } = useTranslation();
-  const { csrfToken } = useMe();
   const noteId = useId();
-  const [busy, setBusy] = useState(false);
-  const [localError, setLocalError] = useState<string | null>(null);
+  const img = useItemImage(onChange, onBusyChange);
+  const { busy } = img;
+  const localError = img.error;
   const shownError = localError ?? error;
-
-  const setBusyBoth = (b: boolean) => {
-    setBusy(b);
-    onBusyChange(b);
-  };
-
-  const pick = async (file: File | undefined) => {
-    if (!file) return;
-    setLocalError(null);
-    setBusyBoth(true);
-    try {
-      const out = await compressImage(file);
-      if ('error' in out) {
-        setLocalError(t('catalog.errors.IMAGE_UNSUPPORTED'));
-        return;
-      }
-      const { id } = await uploadItemImage(out.blob, out.mime, csrfToken);
-      onChange(id);
-    } catch (e) {
-      const key = catalogErrorKey(e);
-      setLocalError(t(key === 'catalog.errors.UNKNOWN' ? 'catalog.errors.UPLOAD_FAILED' : key));
-    } finally {
-      setBusyBoth(false);
-    }
-  };
 
   const fileInput = (label: string) => (
     <input
       type="file"
       className="sr-only"
-      accept="image/*"
+      accept={ACCEPT_ATTR}
       aria-label={label}
       aria-invalid={shownError ? true : undefined}
       aria-describedby={noteId}
       disabled={busy}
       onChange={(e: ChangeEvent<HTMLInputElement>) => {
-        void pick(e.target.files?.[0]);
+        img.pick(e.target.files?.[0]);
         e.target.value = '';
       }}
     />
@@ -88,6 +63,9 @@ export function ImageField({
               {busy ? t('catalog.form.imageUploading') : t('catalog.form.imageChange')}
               {fileInput(t('catalog.form.imageChange'))}
             </label>
+            <button type="button" className="btn btn--sm" disabled={busy} onClick={() => img.recrop(fileId)}>
+              {t('catalog.form.imageRecrop')}
+            </button>
             {/* Ảnh bắt buộc: xóa xong không lưu được nên chỉ cho đổi */}
             {!required && (
               <button type="button" className="btn btn--ghost btn--sm" disabled={busy} onClick={() => onChange(null)}>
@@ -106,7 +84,7 @@ export function ImageField({
       {/* Lỗi tải ảnh xảy ra ngoài lúc bấm Lưu: phần tử mới role=alert để trình đọc màn hình đọc ngay.
           Lỗi từ form (prop error) đã có hộp tóm tắt đầu form báo, không đọc trùng */}
       {shownError ? (
-        <p key="error" id={noteId} role={localError ? 'alert' : undefined} className="ff-error">
+        <p key="error" id={noteId} role={localError && !img.source ? 'alert' : undefined} className="ff-error">
           {shownError}
         </p>
       ) : (
@@ -114,6 +92,26 @@ export function ImageField({
           {t('catalog.form.imageHint')}
         </p>
       )}
+      {!busy && !isTouchOnly() && (
+        <p className="ff-hint">
+          {t('catalog.form.imagePasteHint')}
+        </p>
+      )}
+      {img.source && (
+        <ImageCropper
+          title={t('catalog.form.cropTitle')}
+          source={img.source}
+          busy={busy}
+          error={localError}
+          onConfirm={(r) => void img.confirm(r)}
+          onCancel={img.cancel}
+        />
+      )}
     </fieldset>
   );
+}
+
+// Màn cảm ứng không có bàn phím để Ctrl+V
+function isTouchOnly(): boolean {
+  return typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
 }

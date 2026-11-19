@@ -6,7 +6,7 @@ import { Stepper } from '@/ui/stepper';
 import { groupTone, type Tone } from '@/lib/group-tone';
 import { Icon } from '@/ui/icon';
 import { ItemThumb } from '@/ui/item-thumb';
-import { useAdminContact, useRequestFormat } from './request-format';
+import { useRequestFormat } from './request-format';
 import type { CartLine } from './use-cart';
 
 const REVIEW_TONE = { pending: 'tag--warn', accepted: 'tag--ok', rejected: 'tag--danger' } as const;
@@ -45,7 +45,6 @@ function CartRow({
 }) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
-  const contact = useAdminContact();
   const errorId = useId();
   const name = fmt.name(line.label);
   const lowered = !!line.lowered && !line.readonly && line.qty > line.lowered.max;
@@ -69,7 +68,7 @@ function CartRow({
         {lowered && <span className="rq-line-alert">{t('request.cart.loweredMax', { max: line.lowered!.max, qty: line.qty })}</span>}
         {line.stopped && <span className="rq-line-alert">{t('request.cart.stopped')}</span>}
         {line.added_by_admin && (
-          <span className="tag" title={t('request.cart.adminAddedHint', { contact })}>
+          <span className="tag" title={t('request.cart.adminAddedHint', { contact: t('request.contactFallback') })}>
             {t('request.cart.adminAdded')}
           </span>
         )}
