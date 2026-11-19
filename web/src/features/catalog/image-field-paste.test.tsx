@@ -62,6 +62,14 @@ describe('ImageField — dán ảnh Ctrl+V', () => {
     );
   });
 
+  it('màn cảm ứng (pointer: coarse) không có bàn phím: ẩn gợi ý Ctrl+V, vẫn chọn ảnh được', () => {
+    vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('pointer: coarse'), media: q, addEventListener() {}, removeEventListener() {} }));
+    setup();
+    expect(screen.queryByText('Ctrl+V để dán ảnh')).toBeNull();
+    expect(screen.getByLabelText('Chụp hoặc chọn ảnh')).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
   it.each(['image/jpeg', 'image/png', 'image/webp'])('dán %s → mở màn cắt, Dùng ảnh thì tải lên và gán ảnh', async (type) => {
     const { onChange, fetchMock } = setup();
     const ev = pasteEvent(document.body, [{ file: new File(['x'], 'p', { type }) }]);

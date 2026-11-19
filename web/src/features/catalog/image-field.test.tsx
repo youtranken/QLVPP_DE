@@ -15,7 +15,7 @@ describe('ImageField — chữ dưới ô ảnh', () => {
         <ImageField fileId={null} onChange={vi.fn()} onBusyChange={vi.fn()} />
       </MeContext.Provider>,
     );
-    expect(screen.getByText(/^JPG\/PNG tới 5 MB/)).toBeInTheDocument();
+    expect(screen.getByText(/^JPG, PNG hoặc WEBP tới 5 MB/)).toBeInTheDocument();
     expect(screen.queryByRole('alert')).toBeNull();
   });
 

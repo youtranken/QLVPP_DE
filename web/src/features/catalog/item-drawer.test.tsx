@@ -54,7 +54,7 @@ describe('Ngăn kéo Thêm sản phẩm', () => {
   it('ô ảnh trống là khung "Chụp hoặc chọn ảnh" kèm gợi ý 5 MB; có ảnh → chỉ "Đổi ảnh", không "Xóa ảnh" vì ảnh bắt buộc (AD-46)', async () => {
     stubDrawerApi();
     renderDrawer();
-    expect(screen.getByText('JPG/PNG tới 5 MB. Nhân viên chọn món bằng ảnh nên ảnh là bắt buộc.')).toBeInTheDocument();
+    expect(screen.getByText('JPG, PNG hoặc WEBP tới 5 MB. Nhân viên chọn món bằng ảnh nên ảnh là bắt buộc.')).toBeInTheDocument();
     await uploadCropped(screen.getByLabelText(PICK), png());
     expect(await screen.findByRole('img', { name: 'Ảnh món' })).toHaveAttribute('src', '/api/files/f-new');
     expect(screen.getByLabelText('Đổi ảnh')).toBeInTheDocument();

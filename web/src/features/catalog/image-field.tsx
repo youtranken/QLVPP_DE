@@ -92,7 +92,7 @@ export function ImageField({
           {t('catalog.form.imageHint')}
         </p>
       )}
-      {!busy && (
+      {!busy && !isTouchOnly() && (
         <p className="ff-hint">
           {t('catalog.form.imagePasteHint')}
         </p>
@@ -109,4 +109,9 @@ export function ImageField({
       )}
     </fieldset>
   );
+}
+
+// Màn cảm ứng không có bàn phím để Ctrl+V
+function isTouchOnly(): boolean {
+  return typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
 }

@@ -122,7 +122,7 @@ const catalog: Messages<typeof vi> = {
       cropTitle: 'Crop item photo',
       imageRecrop: 'Re-crop',
       imagePasteHint: 'Ctrl+V to paste a photo',
-      imageHint: 'JPG/PNG up to 5 MB. Staff pick items by photo, so a photo is required.',
+      imageHint: 'JPG, PNG or WEBP up to 5 MB. Staff pick items by photo, so a photo is required.',
     },
     drawer: {
       prev: 'Previous item',

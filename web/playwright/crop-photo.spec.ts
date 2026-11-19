@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { asRole, removeTestItem, pickOption } from './helpers';
+import { asRole, isMobile, removeTestItem, pickOption } from './helpers';
 
 // Ảnh 300×200 nền trắng, khối màu 120×80 tại (90,60): dán bằng sự kiện paste như Ctrl+V từ clipboard
 async function pasteWhiteBorderPng(page: Page) {
@@ -31,7 +31,9 @@ test.describe('Cắt ảnh món', () => {
       const drawer = page.getByRole('dialog', { name: 'Thêm sản phẩm' });
       await drawer.getByLabel('Tên sản phẩm').fill(name);
       await pickOption(drawer.getByRole('combobox', { name: 'Đơn vị tính' }), 'cái');
-      await expect(drawer.getByText('Ctrl+V để dán ảnh')).toBeVisible();
+      // Màn cảm ứng không có bàn phím: không gợi ý Ctrl+V
+      if (isMobile(info)) await expect(drawer.getByText('Ctrl+V để dán ảnh')).toHaveCount(0);
+      else await expect(drawer.getByText('Ctrl+V để dán ảnh')).toBeVisible();
 
       await pasteWhiteBorderPng(page);
       const crop = page.getByRole('dialog', { name: 'Cắt ảnh món' });

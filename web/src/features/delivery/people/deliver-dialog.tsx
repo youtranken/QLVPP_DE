@@ -215,7 +215,8 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
               )}
               <DialogClose asChild>
                 <button type="button" className="btn btn--ghost" disabled={sending}>
-                  {t('delivery.confirm.cancel')}
+                  {/* Cạnh nút "Hủy phiếu" thì "Hủy" dễ hiểu nhầm là hủy phiếu */}
+                  {t(onCancelRequest && canCancelRequest(person) ? 'delivery.confirm.close' : 'delivery.confirm.cancel')}
                 </button>
               </DialogClose>
               <button

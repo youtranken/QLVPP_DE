@@ -61,9 +61,16 @@ describe('Hủy phiếu người đã nghỉ — nút ở hộp Giao', () => {
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Hủy phiếu' }));
     expect(onCancel).toHaveBeenCalled();
   });
+  it('người đã nghỉ: nút đóng hộp ghi "Đóng" (không "Hủy" cạnh "Hủy phiếu" dễ nhầm)', () => {
+    open(LEFT);
+    const d = within(screen.getByRole('dialog'));
+    expect(d.getByRole('button', { name: 'Đóng' })).toBeInTheDocument();
+    expect(d.queryByRole('button', { name: 'Hủy' })).toBeNull();
+  });
   it('người đang làm: không có "Hủy phiếu"', () => {
     open(ACTIVE);
     expect(within(screen.getByRole('dialog')).queryByRole('button', { name: 'Hủy phiếu' })).toBeNull();
+    expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'Hủy' })).toBeInTheDocument();
   });
 });
 

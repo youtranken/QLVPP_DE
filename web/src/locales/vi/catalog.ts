@@ -119,7 +119,7 @@ const catalog = {
       cropTitle: 'Cắt ảnh món',
       imageRecrop: 'Cắt lại',
       imagePasteHint: 'Ctrl+V để dán ảnh',
-      imageHint: 'JPG/PNG tới 5 MB. Nhân viên chọn món bằng ảnh nên ảnh là bắt buộc.',
+      imageHint: 'JPG, PNG hoặc WEBP tới 5 MB. Nhân viên chọn món bằng ảnh nên ảnh là bắt buộc.',
     },
     drawer: {
       prev: 'Món trước',
